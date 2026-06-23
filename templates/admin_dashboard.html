@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | NMTG{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}?v={{ version }}">
+{% endblock %}
+
+{% block content %}
+<div class="od-main">
+
+  {# ── Welcome bar ──────────────────────────────────────────────────────── #}
+  <div class="od-welcome">
+    <div class="od-welcome-left">
+      <div class="od-welcome-icon">
+        <i class="fa fa-user-circle" style="color: whitesmoke;"></i>
+      </div>
+      <div>
+        <div class="od-welcome-name">
+          Welcome, {{ session.get("full_name") or session.get("username") }}
+        </div>
+        <div class="od-welcome-sub"></div>
+      </div>
+    </div>
+    <div class="od-welcome-date" id="od-date"></div>
+  </div>
+
+  {# ── Section label ────────────────────────────────────────────────────── #}
+  <div class="od-section-label">
+    <span class="od-section-title">PAGE ACCESS</span>
+    <span class="od-section-rule"></span>
+  </div>
+
+  {# ── Access cards ─────────────────────────────────────────────────────── #}
+  <div class="od-cards-grid">
+
+    <a class="od-card" href="{{ url_for('pages.index') }}">
+      <div class="od-card-icon od-icon-blue">
+        <i class="fa fa-table"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">PPC</div>
+        <div class="od-card-desc">Production Planning &amp; Control</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page2') }}">
+      <div class="od-card-icon od-icon-indigo">
+        <i class="fa fa-sitemap"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Process Master</div>
+        <div class="od-card-desc">Manage process definitions</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page3') }}">
+      <div class="od-card-icon od-icon-teal">
+        <i class="fa fa-road"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Traceability</div>
+        <div class="od-card-desc">Job card stage tracking</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page4') }}">
+      <div class="od-card-icon od-icon-purple">
+        <i class="fa fa-bar-chart"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Analytics</div>
+        <div class="od-card-desc">Performance &amp; trends</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page5') }}">
+      <div class="od-card-icon od-icon-green">
+        <i class="fa fa-database"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Data View</div>
+        <div class="od-card-desc">Browse job card records</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+  </div>
+
+  {# ── Summary stat cards ───────────────────────────────────────────────── #}
+  <div class="od-section-label" style="margin-top: 36px;">
+    <span class="od-section-title">SYSTEM SUMMARY</span>
+    <span class="od-section-rule"></span>
+  </div>
+
+  <div class="od-stats-grid">
+    <div class="od-stat-card" style="cursor:pointer" onclick="openStatModal('total')">
+      <div class="od-stat-icon od-icon-blue"><i class="fa fa-folder-open"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-total-job-cards">…</div>
+        <div class="od-stat-label">Total Job Cards</div>
+      </div>
+    </div>
+
+    <div class="od-stat-card" style="cursor:pointer" onclick="openStatModal('active')">
+      <div class="od-stat-icon od-icon-green"><i class="fa fa-cogs"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-active-job-cards">…</div>
+        <div class="od-stat-label">Active Job Cards</div>
+      </div>
+    </div>
+
+    <div class="od-stat-card" style="cursor:pointer" onclick="openStatModal('completed')">
+      <div class="od-stat-icon od-icon-green"><i class="fa fa-check-circle"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-completed-job-cards">…</div>
+        <div class="od-stat-label">Completed Job Cards</div>
+      </div>
+    </div>
+
+    <div class="od-stat-card" style="cursor:pointer" onclick="openStatModal('critical')">
+      <div class="od-stat-icon od-icon-danger"><i class="fa fa-exclamation-triangle"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-critical-overdue">…</div>
+        <div class="od-stat-label">Critical Overdue (More then 7d)</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Overdue processes section ────────────────────────────────────────── #}
+  <div class="od-section-label" style="margin-top: 36px;">
+    <span class="od-section-title">
+      <i class="fa fa-bullhorn" style="color:#dc2626;margin-right:6px;font-size:18px;"></i>
+      LEAD TIME CROSSED
+    </span>
+    <span class="od-section-rule"></span>
+    <button class="od-refresh-btn" id="od-refresh-btn" onclick="loadDashboard()" title="Refresh">
+      <i class="fa fa-refresh" id="od-refresh-icon"></i>
+    </button>
+  </div>
+
+  <div id="od-notif-container">
+    <div class="od-loading" id="od-loading">
+      <span class="od-spinner"></span>
+      <span>Loading dashboard…</span>
+    </div>
+  </div>
+
+</div>
+
+<div id="stat-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);
+     z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;padding:28px;width:90%;max-width:700px;
+              max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 id="stat-modal-title" style="font-size:18px;font-weight:700;color:#1e3a5f;"></h2>
+      <button onclick="closeStatModal()"
+              style="background:none;border:none;font-size:20px;cursor:pointer;"><i class="fa fa-times"></i></button>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead id="stat-modal-head"></thead>
+      <tbody id="stat-modal-body"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}?v={{ version }}"></script>
+{% endblock %}

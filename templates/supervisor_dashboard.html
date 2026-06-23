@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Supervisor Dashboard | NMTG{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor_dashboard.css') }}?v={{ version }}">
+{% endblock %}
+
+{% block content %}
+<div class="od-main">
+
+  {# ── Welcome bar ──────────────────────────────────────────────────────── #}
+  <div class="od-welcome">
+    <div class="od-welcome-left">
+      <div class="od-welcome-icon">
+        <i class="fa fa-user-circle"></i>
+      </div>
+      <div>
+        <div class="od-welcome-name">
+          Welcome, {{ session.get("full_name") or session.get("username") }}
+        </div>
+      </div>
+    </div>
+    <div class="od-welcome-date" id="od-date"></div>
+  </div>
+
+  {# ── Section label ────────────────────────────────────────────────────── #}
+  <div class="od-section-label">
+    <span class="od-section-title">PAGE ACCESS</span>
+    <span class="od-section-rule"></span>
+  </div>
+
+  {# ── Access cards ─────────────────────────────────────────────────────── #}
+  <div class="od-cards-grid">
+
+    <a class="od-card" href="{{ url_for('pages.page3') }}">
+      <div class="od-card-icon od-icon-teal">
+        <i class="fa fa-road"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Traceability</div>
+        <div class="od-card-desc">Job card stage tracking</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page4') }}">
+      <div class="od-card-icon od-icon-indigo">
+        <i class="fa fa-bar-chart"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Analytics</div>
+        <div class="od-card-desc">Performance &amp; trends</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page5') }}">
+      <div class="od-card-icon od-icon-blue">
+        <i class="fa fa-database"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Data View</div>
+        <div class="od-card-desc">Browse job card records</div>
+      </div>
+      <div class="od-card-badge od-badge-read">
+        <i class="fa fa-eye"></i> Read Only
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+  </div>
+
+  {# ── Summary stat cards ───────────────────────────────────────────────── #}
+  <div class="od-section-label" style="margin-top: 36px;">
+    <span class="od-section-title">OVERDUE SUMMARY</span>
+    <span class="od-section-rule"></span>
+  </div>
+
+  <div class="od-stats-grid">
+    <div class="od-stat-card">
+      <div class="od-stat-icon od-icon-blue"><i class="fa fa-list-alt"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-total-overdue">…</div>
+        <div class="od-stat-label">Total Overdue Processes</div>
+      </div>
+    </div>
+
+    <div class="od-stat-card">
+      <div class="od-stat-icon od-icon-danger"><i class="fa fa-exclamation-triangle"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-critical-overdue">…</div>
+        <div class="od-stat-label">Critical Overdue (&gt; 7d)</div>
+      </div>
+    </div>
+
+    <div class="od-stat-card">
+      <div class="od-stat-icon od-icon-amber"><i class="fa fa-hourglass-half"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-avg-delay">…</div>
+        <div class="od-stat-label">Average Delay (days)</div>
+      </div>
+    </div>
+
+    <div class="od-stat-card">
+      <div class="od-stat-icon od-icon-indigo"><i class="fa fa-arrow-up"></i></div>
+      <div class="od-stat-body">
+        <div class="od-stat-value" id="stat-max-delay">…</div>
+        <div class="od-stat-label">Maximum Delay (days)</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Overdue processes section ────────────────────────────────────────── #}
+  <div class="od-section-label" style="margin-top: 36px;">
+    <span class="od-section-title">
+      <i class="fa fa-bell" style="color:#dc2626;margin-right:6px;"></i>
+      LEAD TIME CROSSED
+    </span>
+    <span class="od-section-rule"></span>
+    <button class="od-refresh-btn" id="od-refresh-btn" onclick="loadDashboard()" title="Refresh">
+      <i class="fa fa-refresh" id="od-refresh-icon"></i>
+    </button>
+  </div>
+
+  <div id="od-notif-container">
+    <div class="od-loading" id="od-loading">
+      <span class="od-spinner"></span>
+      <span>Loading dashboard…</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/supervisor_dashboard.js') }}?v={{ version }}"></script>
+{% endblock %}

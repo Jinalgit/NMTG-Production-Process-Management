@@ -1,0 +1,415 @@
+{% extends "base.html" %} {% set active_page = "page2" %} {% block title
+%}Process Master | NMTG{% endblock %} {% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/page2.css') }}?v={{ version }}"
+/>
+<style>
+  .pm-col-size {
+    width: 120px;
+  }
+  .size-cell {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="main">
+  <div class="page-header">
+    <div>
+      <h1>Process Master</h1>
+      <p>View and manage all items, materials and processes</p>
+    </div>
+    <button class="btn-primary" onclick="openAddModal()">+ Add New Item</button>
+    <button class="btn-bulk" onclick="openBulkModal()">
+      <i class="fa fa-table" aria-hidden="true"></i>&nbsp;Bulk Entry
+    </button>
+    <button class="btn-upload" onclick="openUploadModal('pm')">
+      <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;Upload Excel
+    </button>
+  </div>
+
+  <div class="stats">
+    <!-- <div class="stat-card"><div class="stat-num" id="stat-total">-</div><div class="stat-label">Total Items</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-avg">-</div><div class="stat-label">Avg. Operations</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-materials">-</div><div class="stat-label">Unique Materials</div></div> -->
+  </div>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Search by item name, material, size, part or process..."
+      oninput="filterTable()"
+    />
+  </div>
+  <div id="mobile-cards" class="mobile-cards"></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="pm-col-index">No.</th>
+          <th class="pm-col-item">Item Name</th>
+          <th class="pm-col-material">Material</th>
+          <th class="pm-col-size">Size</th>
+          <th class="pm-col-part">Part Name</th>
+          <th class="pm-col-processes">Processes</th>
+          <th class="pm-col-ops">Ops</th>
+          <th class="pm-col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr class="empty-row">
+          <td colspan="8">Loading Data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pm-pagination" id="pm-pagination"></div>
+</div>
+
+<!-- PROCESS MASTER VIEW DETAILS MODAL -->
+<div class="modal-overlay" id="view-detail-modal">
+  <div class="modal process-detail-modal">
+    <div class="modal-header">
+      <h2>Item Details</h2>
+      <button class="modal-close" onclick="closeProcessDetailModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="process-detail-content" class="process-detail-content"></div>
+  </div>
+</div>
+
+<!-- PROCESS MASTER DESKTOP VIEW MODAL -->
+<div class="modal-overlay" id="item-view-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Item Details</h2>
+      <button class="modal-close" onclick="closeViewModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="item-view-content"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeViewModal()">Close</button>
+      <button
+        class="btn-primary"
+        onclick="
+          closeViewModal();
+          openEditModal(currentViewId);
+        "
+      >
+        Edit This Item
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE ITEM MODAL -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal delete-item-modal">
+    <div class="modal-header">
+      <h2>Delete Item</h2>
+      <button class="modal-close" onclick="closeDeleteModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="delete-modal-body">
+      <div class="delete-warning-icon">
+        <i class="fa fa-trash" aria-hidden="true"></i>
+      </div>
+      <div>
+        <p class="delete-title">Are you sure you want to delete this item?</p>
+        <p class="delete-item-name" id="delete-item-name">-</p>
+        <p class="delete-note">This action cannot be undone.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button
+        class="btn-danger-confirm"
+        id="delete-confirm-btn"
+        onclick="confirmDeleteItem()"
+      >
+        Delete Item
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADD MODAL ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Add New Item</h2>
+      <button class="modal-close" onclick="closeAddModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-group" style="grid-column: 1/-1">
+        <label
+          >Item / Model Name &nbsp;<span style="color: #ef4444">*</span></label
+        >
+        <input type="text" id="m-name" placeholder="e.g. Gear Hub 80x120x60" />
+      </div>
+      <div class="form-group">
+        <label>Material</label>
+        <input type="text" id="m-material" placeholder="e.g. EN8 Steel" />
+      </div>
+      <div class="form-group">
+        <label>Size</label>
+        <input type="text" id="m-size" placeholder="e.g. 42x66x35" />
+      </div>
+      <div class="form-group">
+        <label>Part Name</label>
+        <input type="text" id="m-part-name" placeholder="e.g. Shaft" />
+      </div>
+    </div>
+
+    <div class="section-label">Select Processes in Order</div>
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px">
+      Click processes in the order they should be performed. Selected processes
+      appear on the right.
+    </p>
+
+    <div class="process-selector-layout">
+      <!-- Left: Dropdown -->
+      <div class="process-checkbox-col">
+        <div class="col-label">Available Processes</div>
+        <div id="add-process-checkboxes" class="process-dropdown-list">
+          <!-- Rendered by JS from database process list -->
+        </div>
+      </div>
+
+      <!-- Right: Selected order -->
+      <div class="process-selected-col">
+        <div class="col-label">Selected Order</div>
+        <div id="add-selected-list" class="selected-process-list">
+          <div class="empty-selected" id="empty-selected-msg">
+            No processes selected yet.<br />Click processes on the left to add
+            them.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT MODAL ────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit Item</h2>
+      <button class="modal-close" onclick="closeEditModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+    <input type="hidden" id="e-id" />
+    <div class="form-grid-2">
+      <div class="form-group" style="grid-column: 1/-1">
+        <label
+          >Item / Model Name &nbsp;<span style="color: #ef4444">*</span></label
+        >
+        <input type="text" id="e-name" />
+      </div>
+      <div class="form-group">
+        <label>Material</label>
+        <input type="text" id="e-material" />
+      </div>
+      <div class="form-group">
+        <label>Size</label>
+        <input type="text" id="e-size" placeholder="e.g. 42x66x35" />
+      </div>
+      <div class="form-group">
+        <label>Part Name</label>
+        <input type="text" id="e-part-name" />
+      </div>
+    </div>
+
+    <div class="section-label">Processes — drag to reorder, ✕ to remove</div>
+    <div id="edit-process-list" class="proc-card-list"></div>
+
+    <!-- Add process button -->
+    <div class="add-proc-row">
+      <select
+        id="add-proc-select"
+        class="add-proc-select"
+        onchange="addProcessToEdit()"
+      >
+        <option value="">+ Add a process...</option>
+      </select>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" onclick="updateItem()">Update Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal" style="max-width: 900px; width: 95vw">
+    <div class="modal-header">
+      <h2 id="upload-modal-title">Upload Excel</h2>
+      <button class="modal-close" onclick="closeUploadModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="upload-step-1">
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px">
+        Select your Excel file. System will preview the data before saving.
+      </p>
+      <input
+        type="file"
+        id="upload-file-input"
+        accept=".xlsx,.xls"
+        style="display: none"
+        onchange="handleFileSelect(event)"
+      />
+      <button
+        class="btn-primary"
+        onclick="document.getElementById('upload-file-input').click()"
+      >
+        Select Excel File
+      </button>
+      <span
+        id="upload-filename"
+        style="margin-left: 12px; font-size: 13px; color: var(--muted)"
+      ></span>
+    </div>
+    <div id="upload-step-2" style="display: none">
+      <div
+        id="upload-summary"
+        style="margin-bottom: 12px; font-size: 13px; font-weight: 600"
+      ></div>
+      <div
+        style="
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+        "
+      >
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px">
+          <thead
+            id="upload-preview-head"
+            style="
+              position: sticky;
+              top: 0;
+              background: var(--header-bg);
+              color: #fff;
+            "
+          ></thead>
+          <tbody id="upload-preview-body"></tbody>
+        </table>
+      </div>
+      <div
+        style="
+          margin-top: 14px;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+        "
+      >
+        <button class="btn-cancel" onclick="resetUpload()">
+          Upload Different File
+        </button>
+        <button
+          class="btn-primary"
+          id="confirm-upload-btn"
+          onclick="confirmUpload()"
+        >
+          Confirm Import
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ── BULK ENTRY MODAL ───────────────────────────────────────────────────── -->
+<div id="pm-bulk-modal" class="pm-bulk-overlay">
+  <div class="pm-bulk-box">
+    <div class="pm-bulk-header">
+      <h2><i class="fa fa-table"></i>&nbsp; Bulk Item Entry</h2>
+      <button class="pm-bulk-close" onclick="closeBulkModal()">
+        <i class="fa fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="pm-bulk-table-wrap">
+      <table class="pm-bulk-table">
+        <thead>
+          <tr>
+            <th style="width: 36px">#</th>
+            <th style="min-width: 200px">
+              Item Name &nbsp;<span style="color: #ef4444">*</span>
+            </th>
+            <th style="min-width: 140px">Material</th>
+            <th style="min-width: 130px">P1</th>
+            <th style="min-width: 130px">P2</th>
+            <th style="min-width: 130px">P3</th>
+            <th style="min-width: 130px">P4</th>
+            <th style="min-width: 130px">P5</th>
+            <th style="min-width: 130px">P6</th>
+            <th style="min-width: 130px">P7</th>
+            <th style="min-width: 130px">P8</th>
+            <th style="min-width: 130px">P9</th>
+            <th style="min-width: 130px">P10</th>
+            <th style="min-width: 130px">P11</th>
+            <th style="min-width: 130px">P12</th>
+            <th style="min-width: 130px">P13</th>
+            <th style="min-width: 130px">P14</th>
+            <th style="min-width: 130px">P15</th>
+            <th style="min-width: 130px">P16</th>
+            <th style="min-width: 130px">P17</th>
+            <th style="min-width: 130px">P18</th>
+            <th style="min-width: 130px">P19</th>
+            <th style="min-width: 130px">P20</th>
+            <th style="min-width: 130px">P21</th>
+            <th style="min-width: 130px">P22</th>
+            <th style="min-width: 130px">P23</th>
+            <th style="min-width: 130px">P24</th>
+            <th style="min-width: 130px">P25</th>
+            <th style="width: 40px"></th>
+          </tr>
+        </thead>
+        <tbody id="pm-bulk-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="pm-bulk-footer">
+      <div class="pm-bulk-footer-left">
+        <button class="btn-upload" onclick="addBulkRow()">
+          <i class="fa fa-plus"></i> Add Row
+        </button>
+        <button class="btn-cancel" onclick="clearBulkAll()">
+          <i class="fa fa-refresh"></i> Clear All
+        </button>
+      </div>
+      <button class="btn-primary" id="pm-bulk-save-btn" onclick="saveBulkAll()">
+        <i class="fa fa-save"></i> Save All
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_scripts %}
+<script>
+  window.PROCESS_MASTER_PROCESS_LIST = {{ process_names | default([]) | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/page2.js') }}?v={{ version }}"></script>
+<script src="{{ url_for('static', filename='js/upload.js') }}?v={{ version }}"></script>
+{% endblock %}

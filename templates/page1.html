@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% set active_page = "page1" %}
+{% block title %}Job Card Entry | NMTG{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page1.css') }}?v={{ version }}" />
+{% endblock %} {% block content %}
+<div class="main">
+  <div class="page-header">
+    <h1>
+      Job Card Entry
+      <span
+        style="
+          font-size: 16px;
+          font-weight: 500;
+          color: var(--muted);
+          margin-left: 8px;
+        "
+      ></span>
+    </h1>
+    <p>Create a new job card &nbsp;&nbsp;</p>
+  </div>
+
+  <!-- Order Info -->
+  <div class="card">
+    <div class="card-title">
+      📋 Order Information &nbsp;<span
+        style="
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--muted);
+          text-transform: none;
+        "
+      ></span>
+    </div>
+    <div class="order-info-layout">
+      <div class="order-info-column">
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Job Card No &nbsp;<span style="color: #ef4444;">*</span></span><span class="gu"></span
+          ></label>
+          <input
+            type="text"
+            id="job_card_no"
+            placeholder="e.g. 108553 or 108554/108701"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Sale Order No</span><span class="gu"></span
+          ></label>
+          <div class="prefix-input-wrap">
+            <span class="prefix">S</span>
+            <input
+              type="text"
+              id="so_no"
+              placeholder="42219"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Work Order No</span><span class="gu"></span
+          ></label>
+          <div class="prefix-input-wrap">
+            <span class="prefix">WO</span>
+            <input
+              type="text"
+              id="work_order_no"
+              placeholder="1001"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Finished Goods Code</span><span class="gu"></span
+          ></label>
+          <input
+            type="text"
+            id="parent_code"
+            placeholder="Enter parent code"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Customer Name &nbsp;<span style="color: #ef4444;">*</span></span><span class="gu"></span
+          ></label>
+          <input type="text" id="customer_name" placeholder="Enter customer name" required />
+        </div>
+        
+      </div>
+
+      <div class="order-info-column">
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">SO Date</span><span class="gu"></span
+          ></label>
+          <input type="date" id="so_date" />
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Job Card Date</span><span class="gu"></span
+          ></label>
+          <input type="date" id="job_card_date" />
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Work Order Date</span><span class="gu"></span
+          ></label>
+          <input type="date" id="work_order_date" />
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Semi-finished Goods Code</span><span class="gu"></span
+          ></label>
+          <input type="text" id="child_code" placeholder="Enter child code" />
+        </div>
+
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Final Delivery Date &nbsp;<span style="color: #ef4444;">*</span></span><span class="gu"></span
+          ></label>
+          <input type="date" id="delivery_date" required />
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Item Information -->
+  <div class="card">
+    <div class="card-title">
+      <i class="fa fa-box" aria-hidden="true"></i>&nbsp;Item Information &nbsp;<span
+        style="
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--muted);
+          text-transform: none;
+        "
+      ></span>
+    </div>
+
+    <div class="item-row">
+      <div class="form-group ac-wrap">
+        <label class="bilingual"
+          ><span class="en">Item Name &nbsp;<span style="color: #ef4444;">*</span></span></span><span class="gu"></span
+        ></label>
+        <input
+          type="text"
+          id="item_name"
+          placeholder="Type to search item..."
+          autocomplete="off"
+          oninput="onItemNameInput()"
+          onkeydown="onItemNameKeydown(event)"
+        />
+        <div class="ac-list" id="ac-list"></div>
+      </div>
+      <div class="form-group">
+        <label class="bilingual"
+          ><span class="en">Quantity &nbsp;<span style="color: #ef4444;">*</span></span></span><span class="gu"></span
+        ></label>
+        <input type="number" id="item_qty" placeholder="Enter qty" min="1" />
+      </div>
+      <div class="form-group">
+        <label class="bilingual"
+          ><span class="en">Advance Stock</span><span class="gu"></span
+        ></label>
+        <input type="text" id="advance_stock" placeholder="Enter advance stock" />
+      </div>
+    </div>
+    <div class="priority-row" style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px;">
+      <button type="button" id="priority-chip" style="display: inline-flex; align-items: center; gap: 6px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer;" onclick="this.classList.toggle('active'); document.getElementById('is_priority').checked = this.classList.contains('active'); this.style.background = this.classList.contains('active') ? '#dc2626' : '#fef2f2'; this.style.color = this.classList.contains('active') ? '#fff' : '#b91c1c';" this.fontFamily="IBM Plex Sans, sans-serif">
+        Most Urgent
+      </button>
+      <input type="checkbox" id="is_priority" style="display: none;" />
+    </div>
+    
+
+    <!-- Auto-filled section -->
+    <div id="item-autofill" class="autofill-section" style="display: none">
+      <div class="autofill-header">
+        ✅ Auto-filled from Process Master &nbsp;<span
+          style="font-size: 10px; text-transform: none"
+        ></span>
+      </div>
+
+      <div class="form-grid" style="margin-bottom: 16px">
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Material</span><span class="gu"></span
+          ></label>
+          <input type="text" id="af_material" class="af-field" />
+        </div>
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Size</span><span class="gu"></span
+          ></label>
+          <input type="text" id="af_size" readonly class="af-field" />
+        </div>
+        <div class="form-group">
+          <label class="bilingual"
+            ><span class="en">Part Name</span><span class="gu"></span
+          ></label>
+          <input type="text" id="af_part_name" readonly class="af-field" />
+        </div>
+      </div>
+
+      <!-- Process days -->
+      <div id="process-days-section">
+        <div
+          style="
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--header-bg);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+          "
+        >
+          Process Days &nbsp;<span
+            style="
+              font-size: 10px;
+              font-weight: 500;
+              text-transform: none;
+              color: var(--muted);
+            "
+          >
+            (editable)</span
+          >
+        </div>
+        <div id="process-days-grid" class="process-days-grid"></div>
+        <div class="total-days-row">
+          <span class="total-label"
+            >Total Days &nbsp;<span
+              style="font-size: 10px; font-weight: 400"
+            ></span
+          ></span>
+          <span class="total-value" id="total-days-display">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remarks -->
+  <div class="card">
+    <div class="form-group">
+      <label class="bilingual">
+        <span class="en">Remarks</span>
+        <span class="gu"></span>
+      </label>
+      <textarea
+        id="remarks"
+        placeholder="Add remarks (optional)..."
+        style="
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+          font-size: 14px;
+          padding: 9px 12px;
+          min-height: 70px;
+          resize: vertical;
+          width: 100%;
+          color: var(--text);
+          outline: none;
+          transition: border-color 0.15s;
+        "
+        onfocus="this.style.borderColor = 'var(--accent)'"
+        onblur="this.style.borderColor = 'var(--border)'"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="form-footer">
+    <button class="btn-bulk" onclick="openBulkModal()">
+      <i class="fa fa-table" aria-hidden="true"></i>&nbsp;Bulk Entry
+    </button>
+    <button class="btn-reset" onclick="resetForm()">
+      <i class="fa fa-refresh" aria-hidden="true"></i>&nbsp;Reset &nbsp;<span style="font-size: 11px; font-weight: 400"></span>
+    </button>
+    <button class="btn-upload" onclick="openUploadModal('jc')">
+      <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;Upload Excel
+    </button>
+    <button class="btn-submit" onclick="submitJobCard()">
+      <i class="fa fa-floppy-o" aria-hidden="true"></i>&nbsp;Save Job Card &nbsp;<span
+        style="font-size: 12px; font-weight: 500"
+      ></span>
+    </button>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal" style="max-width: 900px; width: 95vw">
+    <div class="modal-header">
+      <h2 id="upload-modal-title">Upload Excel</h2>
+      <button class="modal-close" onclick="closeUploadModal()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+    <div id="upload-step-1">
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px">
+        Select your Excel file. System will preview the data before saving.
+      </p>
+      <input
+        type="file"
+        id="upload-file-input"
+        accept=".xlsx,.xls"
+        style="display: none"
+        onchange="handleFileSelect(event)"
+      />
+      <button
+        class="btn-primary"
+        onclick="document.getElementById('upload-file-input').click()"
+      >
+        Select Excel File
+      </button>
+      <span
+        id="upload-filename"
+        style="margin-left: 12px; font-size: 13px; color: var(--muted)"
+      ></span>
+    </div>
+    <div id="upload-step-2" style="display: none">
+      <div
+        id="upload-summary"
+        style="margin-bottom: 12px; font-size: 13px; font-weight: 600"
+      ></div>
+      <div
+        style="
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+        "
+      >
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px">
+          <thead
+            id="upload-preview-head"
+            style="
+              position: sticky;
+              top: 0;
+              background: var(--header-bg);
+              color: #fff;
+            "
+          ></thead>
+          <tbody id="upload-preview-body"></tbody>
+        </table>
+      </div>
+      <div
+        style="
+          margin-top: 14px;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+        "
+      >
+        <button class="btn-cancel" onclick="resetUpload()">
+          Upload Different File
+        </button>
+        <button
+          class="btn-primary"
+          id="confirm-upload-btn"
+          onclick="confirmUpload()"
+        >
+          Confirm Import
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bulk Entry Modal ──────────────────────────────────────────────────── -->
+<div id="bulk-modal" class="bulk-modal-overlay">
+  <div class="bulk-modal">
+    <div class="bulk-modal-header">
+      <h2><i class="fa fa-table"></i> &nbsp;Bulk Job Card Entry</h2>
+      <button class="bulk-modal-close" onclick="closeBulkModal()"><i class="fa fa-times"></i></button>
+    </div>
+
+    <!-- Common fields for all rows -->
+    <div class="bulk-common-fields">
+      <div class="form-group">
+        <label>SO No (applies to all)</label>
+        <div class="prefix-input-wrap">
+          <span class="prefix">S</span>
+          <input
+            type="text"
+            id="bulk-so"
+            placeholder="42219"
+            inputmode="numeric"
+            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Work Order No (applies to all)</label>
+        <div class="prefix-input-wrap">
+          <span class="prefix">WO</span>
+          <input
+            type="text"
+            id="bulk-wo"
+            placeholder="1001"
+            inputmode="numeric"
+            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>SO Date (applies to all)</label>
+        <input type="date" id="bulk-so-date" />
+      </div>
+      <div class="form-group">
+        <label>JC Date (applies to all)</label>
+        <input type="date" id="bulk-jc-date" />
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bulk-table-wrap">
+      <table class="bulk-table">
+        <thead>
+          <tr>
+            <th style="width: 40px">#</th>
+            <th style="width: 130px">JC No &nbsp;<span style="color: #ef4444;">*</span></th>
+            <th>Item Name &nbsp;<span style="color: #ef4444;">*</span></th>
+            <th style="width: 80px">Qty &nbsp;<span style="color: #ef4444;">*</span></th>
+            <th style="width: 140px">Advance Stock</th>
+            <th style="width: 140px">Delivery Date &nbsp;<span style="color: #ef4444;">*</span></th>
+            <th style="width: 40px"></th>
+          </tr>
+        </thead>
+        <tbody id="bulk-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="bulk-footer">
+      <div class="bulk-footer-left">
+        <button class="btn-upload" onclick="addBulkRow()">
+          <i class="fa fa-plus"></i> Add Row
+        </button>
+        <button class="btn-reset" onclick="clearBulkAll()">
+          <i class="fa fa-refresh"></i> Clear All
+        </button>
+      </div>
+      <button class="btn-submit" id="bulk-save-btn" onclick="saveBulkAll()">
+        <i class="fa fa-save"></i> Save All
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/page1.js') }}?v={{ version }}"></script>
+<script src="{{ url_for('static', filename='js/upload.js') }}?v={{ version }}"></script>
+{% endblock %}

@@ -1,0 +1,416 @@
+{% extends "base.html" %} {% set active_page = "page3" %} {% block title
+%}Tracibility | NMTG{% endblock %} {% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/page3.css') }}?v={{ version }}"
+/>
+{% endblock %} {% block content %}
+<div class="main">
+  <div class="page-header">
+    <h1>Traceability</h1>
+    <p>
+      Enter Job Card number to load all details and record quality inspection
+    </p>
+  </div>
+
+  <div class="search-card">
+    <div class="search-title">
+      Enter Job Card Number&nbsp;<span style="color: #ef4444">*</span>
+    </div>
+    <div class="search-row">
+      <input
+        type="text"
+        id="jc-input"
+        placeholder="e.g. 108553 or 108554/108701"
+        onkeydown="if (event.key === 'Enter') fetchJobCard();"
+        required
+      />
+      <button class="btn-fetch" onclick="fetchJobCard()">
+        <i class="fa fa-search"></i>&nbsp;Fetch Records
+      </button>
+    </div>
+  </div>
+
+  <div class="placeholder" id="placeholder">
+    <div class="icon">
+      <i
+        class="fa fa-exclamation-triangle"
+        aria-hidden="true"
+        style="font-size: 100px; color: #f59e0b"
+      ></i>
+    </div>
+    <h3>No Job Card Loaded</h3>
+    <p>Enter a job card number above and click Fetch Records to begin</p>
+  </div>
+
+  <div id="results-section">
+    <div class="jc-info" id="jc-info-bar"></div>
+    <div id="items-container"></div>
+    <div class="submit-bar">
+      <div class="supervisor-bottom">
+        <label class="sup-label"
+          ><i class="fa fa-user" aria-hidden="true"></i> Supervisor&nbsp;<span
+            style="color: #ef4444"
+            >*</span
+          ></label
+        >
+        <select
+          id="bottom-supervisor"
+          class="sup-select-bottom native-supervisor-select"
+          tabindex="-1"
+          aria-hidden="true"
+          required
+        >
+          <option value="">-- Select Supervisor --</option>
+        </select>
+        <div class="supervisor-picker" id="supervisor-picker">
+          <button
+            class="supervisor-picker-btn"
+            id="supervisor-picker-btn"
+            type="button"
+            onclick="toggleSupervisorPicker()"
+          >
+            -- Select Supervisor --
+          </button>
+          <div class="supervisor-picker-list" id="supervisor-picker-list"></div>
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 6px;
+        "
+      >
+        <div class="submit-info" id="submit-info"></div>
+        <button class="btn-submit" onclick="submitQualityCheck()">
+          <i class="fa fa-paper-plane" aria-hidden="true"></i> Submit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ONE MODAL for all stage operations ─────────────────────────────────── -->
+<div id="stage-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Change Stage?</div>
+    <div class="modal-body">
+      <div class="modal-qty-row">
+        <div class="modal-qty-field">
+          <span class="modal-qty-label">Planned Qty</span>
+          <input
+            class="modal-qty-input"
+            type="number"
+            id="modal-planned-qty"
+            min="0"
+            readonly
+          />
+        </div>
+        <div class="modal-qty-field">
+          <span class="modal-qty-label">Actual Qty</span>
+          <input
+            class="modal-qty-input"
+            type="number"
+            id="modal-actual-qty"
+            min="0"
+          />
+        </div>
+      </div>
+
+      <!-- Current process being completed -->
+      <div id="modal-current-row" style="margin-bottom: 12px">
+        <div
+          style="
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+          "
+        >
+          Complete Current Process
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span
+            style="
+              background: #f0fdf4;
+              border: 1px solid #86efac;
+              color: #16a34a;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 13px;
+              font-weight: 700;
+            "
+          >
+            <span id="modal-current-process"></span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Next process moving to -->
+      <div style="margin-bottom: 14px">
+        <div
+          style="
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+          "
+        >
+          Move To
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span
+            style="
+              background: #eff6ff;
+              border: 1px solid #bfdbfe;
+              color: #1a56db;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 13px;
+              font-weight: 700;
+            "
+          >
+            <i class="fa fa-check" aria-hidden="true"></i
+            ><span id="modal-next-process"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-note" id="modal-note">
+        Supervisor must be selected at the bottom before confirming.
+      </div>
+
+      <!-- ── Reject / Rework section (UI disabled — backend unchanged) ──────
+      <div id="rej-rework-section" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        ... (removed from view; restore this block and the complete-revoke-modal below to re-enable)
+      </div>
+      ──────────────────────────────────────────────────────────────────── -->
+
+      <!-- Subcontracting option -->
+      <div
+        id="subcontract-section"
+        style="
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px solid var(--border);
+        "
+      >
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #92400e;
+          "
+        >
+          <input
+            type="checkbox"
+            id="subcontract-checkbox"
+            style="width: 16px; height: 16px; cursor: pointer"
+            onchange="toggleSubcontractVendor(this.checked)"
+          />
+          <i class="fa fa-truck"></i> Send Next Stage to Subcontracting
+        </label>
+        <div id="vendor-row" style="display: none; margin-top: 10px">
+          <div style="margin-bottom: 8px">
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #92400e;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                display: block;
+                margin-bottom: 4px;
+              "
+            >
+              Vendor &nbsp;<span style="color: #ef4444">*</span>
+            </label>
+            <input
+              type="text"
+              id="modal-vendor-name"
+              placeholder="Enter vendor / subcontractor name"
+              style="
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #fde68a;
+                border-radius: 4px;
+                font-size: 13px;
+                font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+                outline: none;
+                background: #fffbeb;
+              "
+            />
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #92400e;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                display: block;
+                margin-bottom: 4px;
+              "
+            >
+              Lead Days
+              <span
+                style="
+                  font-size: 10px;
+                  font-weight: 400;
+                  text-transform: none;
+                  color: var(--muted);
+                  margin-left: 6px;
+                "
+              >
+              </span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <input
+                type="number"
+                id="modal-lead-days"
+                min="1"
+                max="365"
+                placeholder="e.g. 5"
+                style="
+                  width: 100px;
+                  padding: 8px 12px;
+                  border: 1px solid #fde68a;
+                  border-radius: 4px;
+                  font-size: 13px;
+                  font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+                  outline: none;
+                  background: #fffbeb;
+                "
+                oninput="updateExpectedDate()"
+              />
+              <span
+                id="modal-expected-date-label"
+                style="font-size: 12px; color: var(--muted); font-weight: 500"
+              ></span>
+            </div>
+            <small
+              id="lead-days-hint"
+              style="
+                font-size: 11px;
+                color: var(--muted);
+                margin-top: 4px;
+                display: block;
+              "
+            ></small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeStageModal()">
+        Cancel
+      </button>
+      <button
+        class="btn-modal-confirm"
+        id="modal-confirm-btn"
+        onclick="confirmStageChange()"
+      >
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ── Complete Revoke Modal (UI disabled — restore with rej-rework-section above to re-enable) ──
+<div id="complete-revoke-modal" class="modal-overlay"> ... </div>
+── -->
+
+<!-- ── Stage Change Confirmation Modal ──────────────────── -->
+<div id="confirm-stage-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 400px">
+    <div class="modal-title" style="color: #dc2626">
+      <i class="fa fa-exclamation-triangle"></i> Confirm Stage Change
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 14px; color: var(--text); margin-bottom: 12px">
+        You are going back to the previous stage.
+      </p>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        "
+      >
+        <span
+          id="csm-from"
+          style="
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #16a34a;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+          "
+        ></span>
+        <i class="fa fa-arrow-right" style="color: var(--muted)"></i>
+        <span
+          id="csm-to"
+          style="
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1a56db;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+          "
+        ></span>
+      </div>
+      <div
+        style="
+          background: #fef2f2;
+          border: 1px solid #fca5a5;
+          border-radius: 6px;
+          padding: 10px 14px;
+          font-size: 13px;
+          color: #dc2626;
+          font-weight: 500;
+        "
+      >
+        <i class="fa fa-lock"></i>&nbsp; This action
+        <strong>cannot be undone</strong>. Make sure the current stage is fully
+        complete.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeConfirmStageModal()">
+        Cancel
+      </button>
+      <button
+        class="btn-modal-confirm"
+        id="csm-confirm-btn"
+        style="background: #dc2626"
+        onclick="proceedStageChange()"
+      >
+        Yes, Advance Stage
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  window.JMS_USER_ROLE = "{{ session.get('role') }}";
+  window.JMS_CURRENT_USER =
+    "{{ (session.get('full_name') or session.get('username') or '') | e }}";
+</script>
+<script src="{{ url_for('static', filename='js/page3.js') }}?v={{ version }}"></script>
+{% endblock %}

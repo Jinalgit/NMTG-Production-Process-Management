@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Operator Dashboard | NMTG{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/operator_dashboard.css') }}?v={{ version }}">
+{% endblock %}
+
+{% block content %}
+<div class="od-main">
+
+  {# ── Welcome bar ──────────────────────────────────────────────────────── #}
+  <div class="od-welcome">
+    <div class="od-welcome-left">
+      <div class="od-welcome-icon">
+        <i class="fa fa-user-circle"></i>
+      </div>
+      <div>
+        <div class="od-welcome-name">
+          Welcome, {{ session.get("full_name") or session.get("username") }}
+        </div>
+      </div>
+    </div>
+    <div class="od-welcome-date" id="od-date"></div>
+  </div>
+
+  {# ── Section label ────────────────────────────────────────────────────── #}
+  <div class="od-section-label">
+    <span class="od-section-title">PAGE ACCESS</span>
+    <span class="od-section-rule"></span>
+  </div>
+
+  {# ── Access cards ─────────────────────────────────────────────────────── #}
+  <div class="od-cards-grid">
+
+    <a class="od-card" href="{{ url_for('pages.index') }}">
+      <div class="od-card-icon od-icon-blue">
+        <i class="fa fa-table"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">PPC</div>
+        <div class="od-card-desc">Production Planning &amp; Control</div>
+      </div>
+      <div class="od-card-badge od-badge-create">
+        <i class="fa fa-plus-circle"></i> Create Job Cards
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page2') }}">
+      <div class="od-card-icon od-icon-indigo">
+        <i class="fa fa-sitemap"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Process Master</div>
+        <div class="od-card-desc">Manage process definitions</div>
+      </div>
+      <div class="od-card-badge od-badge-full">
+        <i class="fa fa-check-circle"></i> Full Access
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+    <a class="od-card" href="{{ url_for('pages.page3') }}">
+      <div class="od-card-icon od-icon-teal">
+        <i class="fa fa-road"></i>
+      </div>
+      <div class="od-card-body">
+        <div class="od-card-title">Traceability</div>
+        <div class="od-card-desc">Job card stage tracking</div>
+      </div>
+      <div class="od-card-badge od-badge-read">
+        <i class="fa fa-eye"></i> Read Only
+      </div>
+      <i class="fa fa-chevron-right od-card-arrow"></i>
+    </a>
+
+  </div>
+
+  {# ── Notifications section ─────────────────────────────────────────────── #}
+  <div class="od-section-label" style="margin-top: 36px;">
+    <span class="od-section-title">
+      <i class="fa fa-bell" style="color:#dc2626;margin-right:6px;"></i>
+      LEAD TIME CROSSED
+    </span>
+    <span class="od-section-rule"></span>
+    <button class="od-refresh-btn" id="od-refresh-btn" onclick="loadLeadTimeNotifications()" title="Refresh">
+      <i class="fa fa-refresh" id="od-refresh-icon"></i>
+    </button>
+  </div>
+
+  <div id="od-notif-container">
+    {# JS fills this #}
+    <div class="od-loading" id="od-loading">
+      <span class="od-spinner"></span>
+      <span>Loading notifications…</span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/operator_dashboard.js') }}?v={{ version }}"></script>
+{% endblock %}

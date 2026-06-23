@@ -1,0 +1,269 @@
+{# ============================================================ Base layout -
+Demo 2 ============================================================ #}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}JMS{% endblock %}</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="{{ url_for('static', filename='img/nmtg_logo_color_back.svg') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/base.css') }}?v={{ version }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/responsive.css') }}?v={{ version }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/skeleton.css') }}?v={{ version }}">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <style>
+      .bilingual {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .bilingual .en {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        line-height: 1.3;
+      }
+      .nav-link-bi {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0px;
+        padding: 6px 18px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--header-bg);
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .nav-link-bi:hover {
+        background: rgba(30, 58, 95, 0.08);
+      }
+      .nav-link-bi.active {
+        border-bottom: 2px solid #f59e0b;
+      }
+      .header-actions {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+    </style>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="{{ 'has-sidebar' if session.get('username') else 'auth-page' }}">
+    {% if session.get("username") %}
+    <button
+      class="sidebar-mobile-toggle"
+      type="button"
+      aria-label="Toggle sidebar"
+      onclick="toggleSidebarMobile()"
+    >
+      ☰
+    </button>
+
+    <aside id="main-sidebar" class="main-sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          {% block nav_brand %}
+          <img
+            src="{{ url_for('static', filename='img/nmtg_logo_color_back.svg') }}"
+            alt="NMTG"
+          />
+          {% endblock %}
+        </div>
+      </div>
+
+      <div class="sidebar-links">
+        {% if session.get("role") == "admin" %}
+        <a
+          href="{{ url_for('pages.admin_dashboard') }}"
+          class="sidebar-link {{ 'active' if active_page == 'admin_dashboard' else '' }}"
+        >
+          <span class="sidebar-text">Dashboard</span>
+        </a>
+        {% endif %} {% if session.get("role") == "supervisor" %}
+        <a
+          href="{{ url_for('pages.supervisor_dashboard') }}"
+          class="sidebar-link {{ 'active' if active_page == 'supervisor_dashboard' else '' }}"
+        >
+          <span class="sidebar-text">Dashboard</span>
+        </a>
+        {% endif %} {% if session.get("role") == "operator" %}
+        <a
+          href="{{ url_for('pages.operator_dashboard') }}"
+          class="sidebar-link {{ 'active' if active_page == 'operator_dashboard' else '' }}"
+        >
+          <span class="sidebar-text">Dashboard</span>
+        </a>
+        {% endif %} {% if session.get("role") in ["admin", "operator"] %}
+        <a
+          href="{{ url_for('pages.index') }}"
+          class="sidebar-link {{ 'active' if active_page == 'page1' else '' }}"
+        >
+          <span class="sidebar-text">PPC</span>
+        </a>
+        {% endif %} {% if session.get("role") in ["admin", "operator"] %}
+        <a
+          href="{{ url_for('pages.page2') }}"
+          class="sidebar-link {{ 'active' if active_page == 'page2' else '' }}"
+        >
+          <span class="sidebar-text">Process Master</span>
+        </a>
+        {% endif %} {% if session.get("role") in ["admin", "supervisor",
+        "operator"] %}
+        <a
+          href="{{ url_for('pages.page3') }}"
+          class="sidebar-link {{ 'active' if active_page == 'page3' else '' }}"
+        >
+          <span class="sidebar-text">Traceability</span>
+        </a>
+        {% endif %} {% if session.get("role") in ["admin", "supervisor"] %}
+        <a
+          href="{{ url_for('pages.page4') }}"
+          class="sidebar-link {{ 'active' if active_page == 'page4' else '' }}"
+        >
+          <span class="sidebar-text">Analytics</span>
+        </a>
+        {% endif %} {% if session.get("role") in ["admin", "supervisor"] %}
+        <a
+          href="{{ url_for('pages.page5') }}"
+          class="sidebar-link {{ 'active' if active_page == 'page5' else '' }}"
+        >
+          <span class="sidebar-text">Data View</span>
+        </a>
+        {% endif %} {% if session.get("role") == "admin" %}
+        <a
+          href="{{ url_for('pages.user_management') }}"
+          class="sidebar-link {{ 'active' if active_page == 'user_management' else '' }}"
+        >
+          <span class="sidebar-text">User Management</span>
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="sidebar-user">
+        {% if session.get("username") %}
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">
+            {{ session.get("full_name") or session.get("username") }}
+          </div>
+          <div class="sidebar-user-role">{{ session.get("role") }}</div>
+        </div>
+
+        <a
+          href="{{ url_for('auth.logout') }}"
+          class="sidebar-logout"
+          onclick="return openLogoutModal(event)"
+        >
+          <span class="sidebar-icon"
+            ><i class="fa fa-sign-out" aria-hidden="true"></i>
+          </span>
+          <span class="sidebar-text">Logout</span>
+        </a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="sidebar-link">
+          <span class="sidebar-text">Login</span>
+        </a>
+        {% endif %}
+      </div>
+    </aside>
+
+    <div
+      id="sidebar-overlay"
+      class="sidebar-overlay"
+      onclick="toggleSidebarMobile()"
+    ></div>
+
+    {% if session.pop("show_welcome", false) %}
+    <div
+      id="welcome-modal"
+      class="auth-modal-overlay open"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="welcome-modal-title"
+    >
+      <div class="auth-modal-box">
+        <div class="auth-modal-icon">
+          <i class="fa fa-handshake-o" aria-hidden="true"></i>
+        </div>
+        <h3 class="auth-modal-title" id="welcome-modal-title">
+          Welcome, {{ session.get("full_name") or session.get("username") }}!
+        </h3>
+        <p class="auth-modal-text">
+          You are logged in as <strong>{{ session.get("role") }}</strong>.
+        </p>
+        <div class="auth-modal-actions auth-modal-actions-center">
+          <button
+            type="button"
+            class="auth-modal-btn auth-modal-btn-primary"
+            onclick="closeWelcomeModal()"
+          >
+            Get Started
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div
+      id="logout-modal"
+      class="auth-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="logout-modal-title"
+    >
+      <div class="auth-modal-box">
+        <div class="auth-modal-icon auth-modal-icon-danger">
+          <i class="fa fa-sign-out" aria-hidden="true"></i>
+        </div>
+        <h3 class="auth-modal-title" id="logout-modal-title">Confirm Logout</h3>
+        <p class="auth-modal-text">
+          Are you sure you want to log out,
+          <strong
+            >{{ session.get("full_name") or session.get("username") }}</strong
+          >?
+        </p>
+        <div class="auth-modal-actions auth-modal-actions-center">
+          <button
+            type="button"
+            class="auth-modal-btn auth-modal-btn-ghost"
+            onclick="closeLogoutModal()"
+          >
+            Cancel
+          </button>
+          <a
+            href="{{ url_for('auth.logout') }}"
+            class="auth-modal-btn auth-modal-btn-danger"
+          >
+            Logout
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %} {% block content %}{% endblock %}
+
+    <div class="toast" id="toast"></div>
+    <script src="{{ url_for('static', filename='js/base.js') }}?v={{ version }}"></script>
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

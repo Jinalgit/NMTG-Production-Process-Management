@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Login | NMTG{% endblock %}
+
+{% block extra_head %}
+<style>
+  .login-shell {
+    width: min(420px, calc(100% - 32px));
+    margin: 72px auto;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  }
+
+  .login-card h2 {
+    color: var(--header-bg);
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .login-error {
+    color: var(--danger);
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .login-field label {
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .login-field input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font: inherit;
+    outline: none;
+  }
+
+  .login-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
+  }
+
+  .login-submit {
+    width: 100%;
+    background: var(--accent);
+    color: #ffffff;
+    border: 0;
+    border-radius: 6px;
+    padding: 11px 16px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .login-submit:hover {
+    background: #1648c0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="login-shell">
+  <section class="login-card" aria-labelledby="login-title">
+    <h2 id="login-title">NMTG Login</h2>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="login-error">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="login-field">
+        <label for="username">Username &nbsp;<span style="color: #ef4444;">*</span></label>
+        
+        <input id="username" type="text" name="username" autocomplete="username" required />
+      </div>
+
+      <div class="login-field">
+        <label for="password">Password &nbsp;<span style="color: #ef4444;">*</span></label>
+        <input id="password" type="password" name="password" autocomplete="current-password" required />
+      </div>
+
+      <button type="submit" class="login-submit">Login</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

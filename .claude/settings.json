@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(& \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root -padmin@123 jms_demo2 -e \"ALTER TABLE job_card_process_days ADD COLUMN lead_date DATE DEFAULT NULL, ADD COLUMN end_date DATE DEFAULT NULL;\" 2>$null)",
-      "PowerShell(& \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root -padmin@123 jms_demo2 -e \"SELECT wip_status, remaining_days, total_days FROM job_card_items WHERE job_card_no = '108553';\" 2>$null)"
-    ]
-  }
-}

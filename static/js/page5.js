@@ -381,7 +381,11 @@ function renderBody(cols, rows) {
       const rawValue = row[c.key];
       let v = c.key === "wip_stage_days" ? (rawValue ?? 0) : formatCellValue(c.key, rawValue);
       if (c.key === "job_card_no" && v) {
+        const editableKeys = ["job_card_no", "so_no", "customer_name", "parent_code", "child_code", "item_name", "so_qty"];
         v = `<a class="jc-link" onclick="goToPage3('${String(v).replace(/'/g, "\\'")}')">${v}</a>`;
+        if (typeof isEditableUser === "function" && isEditableUser()) {
+          v += ` <i class="fa fa-pencil" style="margin-left:6px;color:var(--accent);cursor:pointer;font-size:11px;" title="Edit fields" onclick="event.stopPropagation(); openEditJobCardModalById('${String(row.job_card_no).replace(/'/g, "\\'")}', '${String(row.item_name).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')"></i>`;
+        }
       }
       if (c.key === "is_priority") {
         v = `<input type="checkbox" ${row.is_priority ? "checked" : ""} onchange="togglePriorityImmediate(${Number(row.item_id) || 0}, '${row.job_card_no}', '${encodeURIComponent(row.item_name)}', this.checked, this)" style="width:16px;height:16px;cursor:pointer;accent-color:#dc2626;" />`;
@@ -1051,6 +1055,74 @@ async function proceedSharedStageChange() {
       // Reload whichever Page 5 view is currently active
       if (activeTab === "pr") loadProcessReport();
       else loadData();
+    } else {
+      showToast(data.error || "Update failed", "error");
+    }
+  } catch (e) {
+    showToast("Server error", "error");
+  }
+}
+
+// ── Editable Job Card Fields Modal (username "gaurang" only, for now) ───────
+const EDITABLE_BY_USERNAME = "gaurang";
+let editRowData = null;
+
+function isEditableUser() {
+  return (window.JMS_CURRENT_USERNAME || "").toLowerCase() === EDITABLE_BY_USERNAME;
+}
+
+function openEditJobCardModalById(jcNo, itemName) {
+  if (!isEditableUser()) return;
+  const row = (allData || []).find(r => String(r.job_card_no) === String(jcNo) && r.item_name === itemName);
+  if (!row) { showToast("Could not find this record in the current view", "error"); return; }
+  openEditJobCardModal(row);
+}
+
+function openEditJobCardModal(row) {
+  if (!isEditableUser()) return;
+  editRowData = row;
+
+  document.getElementById("ejc-job-card-no").value = row.job_card_no || "";
+  document.getElementById("ejc-so-no").value = row.so_no || "";
+  document.getElementById("ejc-customer-name").value = row.customer_name || "";
+  document.getElementById("ejc-parent-code").value = row.parent_code || "";
+  document.getElementById("ejc-child-code").value = row.child_code || "";
+  document.getElementById("ejc-item-name").value = row.item_name || "";
+  document.getElementById("ejc-so-qty").value = row.so_qty ?? "";
+
+  document.getElementById("edit-jobcard-modal").classList.add("open");
+}
+
+function closeEditJobCardModal() {
+  document.getElementById("edit-jobcard-modal").classList.remove("open");
+  editRowData = null;
+}
+
+async function saveEditJobCard() {
+  if (!editRowData) return;
+  const payload = {
+    job_card_no: editRowData.job_card_no, // identifies which row (original JC No)
+    new_job_card_no: document.getElementById("ejc-job-card-no").value.trim(),
+    so_no: document.getElementById("ejc-so-no").value.trim(),
+    customer_name: document.getElementById("ejc-customer-name").value.trim(),
+    parent_code: document.getElementById("ejc-parent-code").value.trim(),
+    child_code: document.getElementById("ejc-child-code").value.trim(),
+    item_name: document.getElementById("ejc-item-name").value.trim(),
+    so_qty: parseInt(document.getElementById("ejc-so-qty").value) || 0,
+    original_item_name: editRowData.item_name,
+  };
+
+  try {
+    const res = await fetch("/api/job_card/update_fields", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message || "Updated", "success");
+      closeEditJobCardModal();
+      loadData();
     } else {
       showToast(data.error || "Update failed", "error");
     }

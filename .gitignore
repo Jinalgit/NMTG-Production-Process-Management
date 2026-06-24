@@ -1,0 +1,37 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment / secrets — never commit
+.env
+
+# IDE / tool config
+.claude/
+.vscode/
+.idea/
+.agents/
+
+# Backups and snapshots
+backups/
+
+# Dev and test scripts
+load_data.py
+test.py
+test_api_endpoints.py
+test_calc.py
+
+# Generated reports
+performance_report.md
+
+# Unused assets
+static/img/nmtg_logo_color_back.jpg
+
+# OS
+.DS_Store
+Thumbs.db

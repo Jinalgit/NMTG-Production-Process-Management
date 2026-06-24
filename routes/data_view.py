@@ -4,7 +4,9 @@ All filtering, sorting, pagination and stats done in SQL.
 JS only renders what the backend returns.
 """
 
-from flask import Blueprint, jsonify, request
+from datetime import date, datetime
+
+from flask import Blueprint, jsonify, request, session
 from db import get_connection
 from auth_utils import api_required
 
@@ -31,26 +33,20 @@ def col_exists(cursor, table, col):
     return (row[0] if isinstance(row, tuple) else row.get("COUNT(*)", 0)) > 0
 
 
-def calculate_remaining_days(rows_for_jc):
-    """
-    Calculate remaining_days live from process data.
-    Args: list of rows for a single job card (from grouped data fetch)
-    Returns: (remaining_days, total_default_days, used_process_days)
-    """
-    total_default_days = 0
-    used_process_days = 0
-
-    for r in rows_for_jc:
-        # Sum lead days (default days)
-        lead_days = int(r.get("lead_days") or 0)
-        total_default_days += lead_days
-
-        # Sum used days using the days_taken calculation
-        days_taken = int(r.get("days_taken") or 0)
-        used_process_days += days_taken
-
-    remaining_days = max(0, total_default_days - used_process_days)
-    return remaining_days, total_default_days, used_process_days
+def calculate_remaining_days_from_delivery(delivery_date):
+    """Calculate remaining_days only from delivery date."""
+    if not delivery_date:
+        return 0
+    try:
+        if isinstance(delivery_date, str):
+            delivery_dt = datetime.strptime(delivery_date[:10], "%Y-%m-%d").date()
+        elif hasattr(delivery_date, "date") and not isinstance(delivery_date, date):
+            delivery_dt = delivery_date.date()
+        else:
+            delivery_dt = delivery_date
+        return (delivery_dt - date.today()).days
+    except Exception:
+        return 0
 
 
 def ensure_extra_cols(cursor):
@@ -85,12 +81,11 @@ def data_job_cards():
         per_page = safe_int(request.args.get("per_page", 50))
         offset = (page - 1) * per_page
 
-        # Whitelist sort columns
         allowed_sorts = {
             "job_card_no": "jc.job_card_no", "so_no": "jc.so_no",
             "item_name": "ji.item_name", "material": "ji.material",
             "wip_status": "ji.wip_status", "total_days": "ji.total_days",
-            "remaining_days": "ji.remaining_days", "delivery_date": "ji.delivery_date",
+            "remaining_days": "DATEDIFF(ji.delivery_date, CURDATE())", "delivery_date": "ji.delivery_date",
             "final_status": "jc.final_status", "created_at": "jc.created_at",
             "vendor_name": "pd_current.vendor_name",
         }
@@ -142,9 +137,72 @@ def data_job_cards():
             where.append("ji.delivery_date <= %s")
             params.append(delivery_to)
         if overdue == "yes":
-            where.append("ji.delivery_date < CURDATE()")
+            if session.get("role") == "supervisor":
+                where.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM job_card_process_days pdx
+                        LEFT JOIN process_default_days pddx
+                            ON LOWER(TRIM(pddx.process_name)) = LOWER(TRIM(pdx.process_name))
+                        JOIN supervisor_process_access spa
+                            ON spa.user_id = %s
+                        AND LOWER(TRIM(spa.process_name)) = LOWER(TRIM(pdx.process_name))
+                        WHERE pdx.job_card_no = jc.job_card_no
+                        AND pdx.in_time IS NOT NULL
+                        AND pdx.out_time IS NULL
+                        AND COALESCE(pdx.is_completed, 0) = 0
+                        AND DATEDIFF(CURDATE(), pdx.in_time) > COALESCE(pddx.default_days, pdx.days, 0)
+                    )
+                """)
+                params.append(session.get("user_id"))
+            else:
+                where.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM job_card_process_days pdx
+                        LEFT JOIN process_default_days pddx
+                            ON LOWER(TRIM(pddx.process_name)) = LOWER(TRIM(pdx.process_name))
+                        WHERE pdx.job_card_no = jc.job_card_no
+                        AND pdx.in_time IS NOT NULL
+                        AND pdx.out_time IS NULL
+                        AND COALESCE(pdx.is_completed, 0) = 0
+                        AND DATEDIFF(CURDATE(), pdx.in_time) > COALESCE(pddx.default_days, pdx.days, 0)
+                    )
+                """)
+
         elif overdue == "critical":
-            where.append("DATEDIFF(CURDATE(), ji.delivery_date) > 7")
+            if session.get("role") == "supervisor":
+                where.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM job_card_process_days pdx
+                        LEFT JOIN process_default_days pddx
+                            ON LOWER(TRIM(pddx.process_name)) = LOWER(TRIM(pdx.process_name))
+                        JOIN supervisor_process_access spa
+                            ON spa.user_id = %s
+                        AND LOWER(TRIM(spa.process_name)) = LOWER(TRIM(pdx.process_name))
+                        WHERE pdx.job_card_no = jc.job_card_no
+                        AND pdx.in_time IS NOT NULL
+                        AND pdx.out_time IS NULL
+                        AND COALESCE(pdx.is_completed, 0) = 0
+                        AND DATEDIFF(CURDATE(), pdx.in_time) - COALESCE(pddx.default_days, pdx.days, 0) > 7
+                    )
+                """)
+                params.append(session.get("user_id"))
+            else:
+                where.append("""
+                    EXISTS (
+                        SELECT 1
+                        FROM job_card_process_days pdx
+                        LEFT JOIN process_default_days pddx
+                            ON LOWER(TRIM(pddx.process_name)) = LOWER(TRIM(pdx.process_name))
+                        WHERE pdx.job_card_no = jc.job_card_no
+                        AND pdx.in_time IS NOT NULL
+                        AND pdx.out_time IS NULL
+                        AND COALESCE(pdx.is_completed, 0) = 0
+                        AND DATEDIFF(CURDATE(), pdx.in_time) - COALESCE(pddx.default_days, pdx.days, 0) > 7
+                    )
+                """)
         if subcontracting == "yes":
             where.append("COALESCE(pd_current.is_subcontract, 0) = 1")
         elif subcontracting == "no":
@@ -168,22 +226,22 @@ def data_job_cards():
         """, params)
         total = cursor.fetchone()["total"]
 
-        # Distinct WIP values for dropdown
         cursor.execute(
             "SELECT DISTINCT wip_status FROM job_card_items WHERE wip_status IS NOT NULL ORDER BY wip_status")
         wip_options = [r["wip_status"] for r in cursor.fetchall()]
 
-        # Distinct status values
         cursor.execute(
             "SELECT DISTINCT final_status FROM job_cards WHERE final_status IS NOT NULL ORDER BY final_status")
         status_options = [r["final_status"] for r in cursor.fetchall()]
 
-        # Main query
+        # Main query — no process_master join (removed: was the source of a
+        # 4-second-per-request correlated subquery scanning process_master
+        # once per row). next_process is no longer calculated here; it was
+        # a minor convenience field not essential to this table view.
         cursor.execute(f"""
-                        SELECT ji.id AS item_id,
-                        jc.job_card_no, jc.so_no,  jc.customer_name, jc.work_order_no,ji.is_priority,
-                        jc.parent_code, jc.child_code,
-
+            SELECT ji.id AS item_id,
+                   jc.job_card_no, jc.so_no, jc.customer_name, jc.work_order_no, ji.is_priority,
+                   jc.parent_code, jc.child_code,
                    jc.so_date, jc.job_card_date,
                    CASE WHEN jc.final_status = 'Completed'
                              OR LOWER(TRIM(ji.wip_status)) = 'store'
@@ -191,7 +249,8 @@ def data_job_cards():
                    END AS final_status,
                    jc.erp_status,
                    ji.item_name, ji.material, ji.so_qty, ji.actual_qty,
-                   ji.wip_status, ji.total_days, ji.remaining_days,
+                   ji.wip_status, ji.total_days,
+                   DATEDIFF(ji.delivery_date, CURDATE()) AS remaining_days,
                    COALESCE(pd_current.is_subcontract, 0) AS is_subcontract,
                    COALESCE(pd_current.vendor_name, '') AS vendor_name,
                    COALESCE(
@@ -205,8 +264,6 @@ def data_job_cards():
                        ji.wip_stage_days, 0
                    ) AS wip_stage_days,
                    ji.delivery_date, ji.remarks, jc.created_at,
-                   {PROCESS_COLUMNS_SQL},
-                   -- Days delayed calculation in SQL
                    CASE
                      WHEN ji.delivery_date IS NOT NULL AND ji.delivery_date < CURDATE()
                           AND jc.final_status != 'Completed'
@@ -215,20 +272,6 @@ def data_job_cards():
                    END AS days_overdue
             FROM job_cards jc
             JOIN job_card_items ji ON jc.job_card_no = ji.job_card_no
-            LEFT JOIN process_master pm
-                ON pm.id = (
-                    SELECT pm2.id
-                    FROM process_master pm2
-                    WHERE REPLACE(LOWER(TRIM(pm2.model_name)), ' ', '') = REPLACE(LOWER(TRIM(ji.item_name)), ' ', '')
-                      AND (
-                          ji.size IS NULL OR ji.size = ''
-                          OR REPLACE(LOWER(TRIM(pm2.size)), ' ', '') = REPLACE(LOWER(TRIM(ji.size)), ' ', '')
-                      )
-                    ORDER BY
-                      CASE WHEN REPLACE(LOWER(TRIM(pm2.size)), ' ', '') = REPLACE(LOWER(TRIM(ji.size)), ' ', '') THEN 0 ELSE 1 END,
-                      pm2.num_operations DESC
-                    LIMIT 1
-                )
             LEFT JOIN job_card_process_days pd_current
                 ON pd_current.job_card_no = ji.job_card_no
                AND LOWER(TRIM(pd_current.process_name)) = LOWER(TRIM(ji.wip_status))
@@ -244,51 +287,13 @@ def data_job_cards():
                     r[f] = r[f].strftime("%Y-%m-%d")
             if r.get("created_at"):
                 r["created_at"] = r["created_at"].strftime("%Y-%m-%d %H:%M")
-            # calculate next_process from the model's process_master sequence
-            procs = [r[f"p{i}"]
-                     for i in range(1, PROCESS_COUNT + 1) if r.get(f"p{i}")]
-            current = (r.get("wip_status") or "").strip().lower()
-            next_proc = ""
-            for idx, p in enumerate(procs):
-                if p.strip().lower() == current and idx+1 < len(procs):
-                    next_proc = procs[idx+1]
-                    break
-            r["next_process"] = next_proc
-            # Remove p1-p25 from response to keep it clean
-            for i in range(1, PROCESS_COUNT + 1):
-                r.pop(f"p{i}", None)
 
-        # Calculate remaining_days live from process data for each job card
         for r in rows:
-            jcn = r.get("job_card_no")
-            if jcn:
-                cursor.execute("""
-                    SELECT
-                        COALESCE(SUM(COALESCE(pdd.default_days, pd.days, 0)), 0) AS total_default,
-                        COALESCE(SUM(
-                            CASE
-                                WHEN pd.in_time IS NULL THEN 0
-                                WHEN pd.in_time IS NOT NULL AND pd.out_time IS NULL
-                                    THEN DATEDIFF(CURDATE(), DATE(pd.in_time))
-                                WHEN pd.actual_days IS NOT NULL
-                                    THEN pd.actual_days
-                                WHEN pd.in_time IS NOT NULL AND pd.out_time IS NOT NULL
-                                    THEN DATEDIFF(DATE(pd.out_time), DATE(pd.in_time))
-                                ELSE 0
-                            END
-                        ), 0) AS total_used
-                    FROM job_card_process_days pd
-                    LEFT JOIN process_default_days pdd
-                        ON LOWER(TRIM(pd.process_name)) = LOWER(TRIM(pdd.process_name))
-                    WHERE pd.job_card_no = %s
-                """, (jcn,))
-                calc = cursor.fetchone()
-                total_default = int(
-                    calc.get("total_default") or 0) if calc else 0
-                total_used = int(calc.get("total_used") or 0) if calc else 0
-                r["remaining_days"] = max(0, total_default - total_used)
-                r["total_default_days_calc"] = total_default
-                r["used_process_days_calc"] = total_used
+            r["remaining_days"] = calculate_remaining_days_from_delivery(
+                r.get("delivery_date"))
+            r["total_default_days_calc"] = 0
+            r["used_process_days_calc"] = 0
+
         cursor.close()
         conn.close()
         return jsonify({
@@ -299,8 +304,9 @@ def data_job_cards():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 # ── Toggle item priority ──────────────────────────────────────────────────────
+
+
 @data_view_bp.route("/api/job_card_item/priority", methods=["POST"])
 def update_item_priority():
     try:
@@ -662,7 +668,7 @@ def data_process_report():
                 ji.actual_qty,
                 ji.wip_status,
                 ji.total_days,
-                ji.remaining_days,
+                DATEDIFF(ji.delivery_date, CURDATE()) AS remaining_days,
                 ji.delivery_date,
                 ji.remarks,
                 ji.is_priority,
@@ -817,14 +823,11 @@ def data_process_report():
                 grouped[jcn]["process_lead_days_map"][proc] = int(
                     r.get("lead_days") or 0)
 
-        # Calculate remaining_days live from process data for each job card
-        for jcn, job_data in grouped.items():
-            rows_for_jc = [r for r in rows if r["job_card_no"] == jcn]
-            remaining, total_default, used_days = calculate_remaining_days(
-                rows_for_jc)
-            job_data["remaining_days"] = remaining
-            job_data["total_default_days_calc"] = total_default
-            job_data["used_process_days_calc"] = used_days
+        for job_data in grouped.values():
+            job_data["remaining_days"] = calculate_remaining_days_from_delivery(
+                job_data.get("delivery_date"))
+            job_data["total_default_days_calc"] = 0
+            job_data["used_process_days_calc"] = 0
         cursor.close()
         conn.close()
 
@@ -923,7 +926,7 @@ def data_planning_sheet():
                 ji.wip_status,
                 ji.wip_stage_days,
                 ji.total_days,
-                ji.remaining_days,
+                DATEDIFF(ji.delivery_date, CURDATE()) AS remaining_days,
                 ji.delivery_date,
                 ji.remarks,
                 ji.is_priority,
@@ -1069,14 +1072,11 @@ def data_planning_sheet():
                 if proc.strip().lower() == current_wip:
                     grouped[jcn]["live_stage_days"] = days_taken
 
-        # Calculate remaining_days live from process data for each job card
-        for jcn, job_data in grouped.items():
-            rows_for_jc = [r for r in rows if r["job_card_no"] == jcn]
-            remaining, total_default, used_days = calculate_remaining_days(
-                rows_for_jc)
-            job_data["remaining_days"] = remaining
-            job_data["total_default_days_calc"] = total_default
-            job_data["used_process_days_calc"] = used_days
+        for job_data in grouped.values():
+            job_data["remaining_days"] = calculate_remaining_days_from_delivery(
+                job_data.get("delivery_date"))
+            job_data["total_default_days_calc"] = 0
+            job_data["used_process_days_calc"] = 0
 
         # Calculate next_process from each job card's actual saved process order.
         actual_order_map = {}
@@ -1220,14 +1220,44 @@ _OVERDUE_PROCESS_QUERY = """
 
 
 def _fetch_overdue_processes(cursor):
-    cursor.execute(_OVERDUE_PROCESS_QUERY)
-    rows = cursor.fetchall()
-    for r in rows:
-        if r.get("in_time") and hasattr(r["in_time"], "strftime"):
-            r["in_time"] = r["in_time"].strftime("%Y-%m-%d")
-        if r.get("lead_date") and hasattr(r["lead_date"], "strftime"):
-            r["lead_date"] = r["lead_date"].strftime("%Y-%m-%d")
-    return rows
+    role = (session.get("role") or "").strip().lower()
+    user_id = session.get("user_id")
+
+    access_join = ""
+    params = []
+
+    if role == "supervisor":
+        access_join = """
+            JOIN supervisor_process_access spa
+              ON spa.user_id = %s
+             AND LOWER(TRIM(spa.process_name)) = LOWER(TRIM(pd.process_name))
+        """
+        params.append(user_id)
+
+    query = f"""
+        SELECT
+            pd.job_card_no,
+            ji.item_name AS model,
+            pd.process_name,
+            COALESCE(pdd.default_days, pd.days, 0) AS lead_days,
+            DATEDIFF(CURDATE(), pd.in_time) AS actual_days,
+            DATEDIFF(CURDATE(), pd.in_time) - COALESCE(pdd.default_days, pd.days, 0) AS days_overdue,
+            'Overdue' AS status
+        FROM job_card_process_days pd
+        JOIN job_card_items ji
+            ON ji.job_card_no = pd.job_card_no
+        LEFT JOIN process_default_days pdd
+            ON LOWER(TRIM(pdd.process_name)) = LOWER(TRIM(pd.process_name))
+        {access_join}
+        WHERE pd.in_time IS NOT NULL
+          AND pd.out_time IS NULL
+          AND COALESCE(pd.is_completed, 0) = 0
+          AND DATEDIFF(CURDATE(), pd.in_time) > COALESCE(pdd.default_days, pd.days, 0)
+        ORDER BY actual_days DESC
+    """
+
+    cursor.execute(query, params)
+    return cursor.fetchall()
 
 
 def _overdue_summary(rows):
@@ -1370,5 +1400,61 @@ def stat_detail():
         cursor.close()
         conn.close()
         return jsonify({"success": True, "records": records})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+# ── Edit Job Card Fields (username "gaurang" only, for now) ────────────────
+
+
+@data_view_bp.route("/api/job_card/update_fields", methods=["POST"])
+def update_job_card_fields():
+    try:
+        # Hardcoded username gate for now — replace with proper permission
+        # lookup once the User Management "who can manage what" rules table
+        # is built.
+        if (session.get("username") or "").lower() != "gaurang":
+            return jsonify({"success": False, "error": "You do not have permission to edit these fields."}), 403
+
+        data = request.json
+        original_jc_no = data.get("job_card_no")
+        new_jc_no = data.get("new_job_card_no", "").strip()
+        so_no = data.get("so_no", "").strip()
+        customer_name = data.get("customer_name", "").strip()
+        parent_code = data.get("parent_code", "").strip()
+        child_code = data.get("child_code", "").strip()
+        item_name = data.get("item_name", "").strip()
+        so_qty = data.get("so_qty", 0)
+        original_item_name = data.get("original_item_name", "").strip()
+
+        if not original_jc_no or not new_jc_no:
+            return jsonify({"success": False, "error": "Job Card No is required"}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE job_cards
+            SET job_card_no = %s, so_no = %s, customer_name = %s,
+                parent_code = %s, child_code = %s
+            WHERE job_card_no = %s
+        """, (new_jc_no, so_no, customer_name, parent_code, child_code, original_jc_no))
+
+        cursor.execute("""
+            UPDATE job_card_items
+            SET job_card_no = %s, item_name = %s, so_qty = %s
+            WHERE job_card_no = %s AND TRIM(item_name) = TRIM(%s)
+        """, (new_jc_no, item_name, so_qty, original_jc_no, original_item_name))
+
+        # Keep related tables in sync with the new job_card_no if it changed
+        if new_jc_no != original_jc_no:
+            cursor.execute("UPDATE job_card_process_days SET job_card_no = %s WHERE job_card_no = %s",
+                           (new_jc_no, original_jc_no))
+            cursor.execute("UPDATE audit_trail SET job_card_no = %s WHERE job_card_no = %s",
+                           (new_jc_no, original_jc_no))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Job card updated successfully"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

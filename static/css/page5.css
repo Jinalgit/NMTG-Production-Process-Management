@@ -1184,8 +1184,7 @@ tbody tr.row-priority td:first-child {
 }
 
 /* ── Shared Stage-Change Modal (added for PPC/Process Report inline actions) ── */
-#stage-modal.modal-overlay,
-#confirm-stage-modal.modal-overlay {
+.modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -1196,8 +1195,7 @@ tbody tr.row-priority td:first-child {
   padding: 16px;
 }
 
-#stage-modal.modal-overlay.open,
-#confirm-stage-modal.modal-overlay.open {
+.modal-overlay.open {
   display: flex;
 }
 

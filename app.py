@@ -2,9 +2,20 @@
 Demo 2 — Flask application entry point.
 """
 
+import os
 import time
 from flask import Flask
 from flask_cors import CORS
+
+# Load .env for local development; production sets env vars through the server config.
+_env_path = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(_env_path):
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 from routes.auth           import auth_bp
 from routes.analytics      import analytics_bp
@@ -18,7 +29,7 @@ from routes.users          import users_bp
 
 
 app = Flask(__name__)
-app.secret_key = "8db1cd4eca12bd711c3edd2ddf8d24d753e81fcf7e27428dfd9944d610ef1bde"
+app.secret_key = os.environ["FLASK_SECRET_KEY"]
 CORS(app)
 
 app.config["TEMPLATES_AUTO_RELOAD"]  = True

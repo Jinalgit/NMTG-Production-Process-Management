@@ -511,6 +511,189 @@ View | NMTG{% endblock %} {% block extra_head %}
     </div>
   </div>
 </div>
+
+<!-- ── Edit Job Card Fields Modal (username "gaurang" only, for now) ──── -->
+<div id="edit-jobcard-modal" class="modal-overlay">
+  <div class="modal-box" style="width: 520px">
+    <div class="modal-title">Edit Job Card Fields</div>
+    <div class="modal-body">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+        <div>
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Job Card No</label
+          >
+          <input
+            type="text"
+            id="ejc-job-card-no"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div>
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >SO No</label
+          >
+          <input
+            type="text"
+            id="ejc-so-no"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div style="grid-column: 1/-1">
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Customer Name</label
+          >
+          <input
+            type="text"
+            id="ejc-customer-name"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div>
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Parent Code</label
+          >
+          <input
+            type="text"
+            id="ejc-parent-code"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div>
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Child Code</label
+          >
+          <input
+            type="text"
+            id="ejc-child-code"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div style="grid-column: 1/-1">
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Item Name</label
+          >
+          <input
+            type="text"
+            id="ejc-item-name"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div>
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >SO Qty</label
+          >
+          <input
+            type="number"
+            id="ejc-so-qty"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeEditJobCardModal()">
+        Cancel
+      </button>
+      <button class="btn-modal-confirm" onclick="saveEditJobCard()">
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock %} {% block extra_scripts %}
+<script>
+  window.JMS_CURRENT_USERNAME = "{{ session.get('username', '') }}";
+</script>
 <script src="{{ url_for('static', filename='js/page5.js') }}?v={{ version }}"></script>
 {% endblock %}

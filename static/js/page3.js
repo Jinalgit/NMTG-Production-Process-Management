@@ -21,10 +21,9 @@ async function fetchJobCard() {
       return;
     }
     currentData = data;
+    window.myAccessibleProcesses = data.my_accessible_processes; // null = admin / unrestricted
     renderResults(data);
-    currentData = data;
-    window.myAccessibleProcesses = data.my_accessible_processes; // null = not a supervisor (admin, no restriction)
-    renderResults(data);
+    loadPage3KanbanSummary();
   } catch (e) {
     showToast("Server error. Is Flask running?", "error");
   }
@@ -345,7 +344,7 @@ function renderResults(data) {
       <div class="item-header item-header-clean">
         <div class="item-header-left">
           <div class="item-name">${item.item_name}
-  <span onclick="event.stopPropagation(); togglePage3Priority(${Number(item.id) || 0}, '${jc.job_card_no}', '${item.item_name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}', ${item.is_priority ? 0 : 1}, this)"
+  <span onclick="event.stopPropagation(); togglePage3Priority(${Number(item.id) || 0}, '${jc.job_card_no}', '${encodeURIComponent(item.item_name || "")}', ${item.is_priority ? 0 : 1}, this)"
         style="cursor:pointer; margin-left:8px; display:inline-flex; align-items:center; gap:4px; background:${item.is_priority ? '#dc2626' : '#f3f4f6'}; color:${item.is_priority ? '#fff' : '#6b7280'}; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px; vertical-align:middle; border:1px solid ${item.is_priority ? '#dc2626' : '#d1d5db'};"
         title="Click to ${item.is_priority ? 'remove' : 'mark'} urgent status">
     ${item.is_priority ? '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> URGENT' : '○ Regular'}
@@ -880,20 +879,14 @@ function openStageModal(pillEl) {
     const actualInput = document.getElementById(`actual_${iIdx}`);
     if (actualInput) actualInput.value = this.value;
     updateRejectedQty(iIdx);
-    updateRejReworkSection();
-    document.getElementById("modal-actual-qty").oninput = function () {
-      const actualInput = document.getElementById(`actual_${iIdx}`);
+    const planned = parseInt(document.getElementById("modal-planned-qty").value) || 0;
+    const actual = parseInt(this.value) || 0;
+    if (actual > planned) {
+      this.value = planned;
       if (actualInput) actualInput.value = this.value;
-      updateRejectedQty(iIdx);
-      // Prevent actual qty > planned qty
-      const planned = parseInt(document.getElementById("modal-planned-qty").value) || 0;
-      const actual = parseInt(this.value) || 0;
-      if (actual > planned) {
-        this.value = planned;
-        showToast(`Actual qty cannot exceed planned qty (${planned})`, "warning");
-      }
-      updateRejReworkSection();
-    };
+      showToast(`Actual qty cannot exceed planned qty (${planned})`, "warning");
+    }
+    updateRejReworkSection();
   };
 
   document.getElementById("modal-current-process").textContent = currentWIP;
@@ -1124,12 +1117,18 @@ async function proceedStageChange() {
   const reworkRemarks = "";
 
   try {
+    const modalActualQtyValue = document.getElementById("modal-actual-qty")?.value || null;
+    console.log("Sending actual_qty:", modalActualQtyValue);
+
     const res = await fetch("/api/wip/update", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        job_card_no: jcNo, item_name: itemName, new_stage: newStage,
+        job_card_no: jcNo,
+        item_name: itemName,
+        new_stage: newStage,
         changed_by: supervisor,
-        actual_qty: parseInt(document.getElementById("modal-actual-qty")?.value) || 0,
+        actual_qty: modalActualQtyValue,
         rejected_qty: rejectedQty,
         rework_qty: reworkQty,
         rework_remarks: reworkRemarks
@@ -1239,25 +1238,45 @@ async function advanceReworkStage(reworkStageId, revokeId) { ... }
 ── */
 async function togglePage3Priority(itemId, jobCardNo, itemName, newValue, badgeEl) {
   try {
+    const cleanItemName = decodeURIComponent(itemName || "");
+
     const res = await fetch("/api/job_card_item/priority", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ item_id: itemId || null, job_card_no: jobCardNo, item_name: itemName, is_priority: newValue })
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        item_id: itemId || null,
+        job_card_no: jobCardNo,
+        item_name: cleanItemName,
+        is_priority: newValue
+      })
     });
+
     const data = await res.json();
+
     if (data.success) {
-      showToast(newValue ? "Marked as Urgent" : "Marked as Regular", "success");
-      badgeEl.innerHTML = newValue ? "<i class=\"fa fa-exclamation-triangle\" aria-hidden=\"true\"></i> URGENT" : "<i class=\"fa fa-circle\" aria-hidden=\"true\"></i> Regular";
       badgeEl.style.background = newValue ? "#dc2626" : "#f3f4f6";
       badgeEl.style.color = newValue ? "#fff" : "#6b7280";
-      badgeEl.style.borderColor = newValue ? "#dc2626" : "#d1d5db";
-      badgeEl.setAttribute("onclick", `event.stopPropagation(); togglePage3Priority(${Number(itemId) || 0}, '${jobCardNo}', '${itemName.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}', ${newValue ? 0 : 1}, this)`);
-      badgeEl.title = `Click to ${newValue ? "remove" : "mark"} urgent status`;
+      badgeEl.style.border = `1px solid ${newValue ? "#dc2626" : "#d1d5db"}`;
+      badgeEl.innerHTML = newValue
+        ? '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> URGENT'
+        : "○ Regular";
+
+      const safeItemName = encodeURIComponent(cleanItemName);
+
+      badgeEl.setAttribute(
+        "onclick",
+        `event.stopPropagation(); togglePage3Priority(${Number(itemId) || 0}, '${jobCardNo}', '${safeItemName}', ${newValue ? 0 : 1}, this)`
+      );
+
+      showToast("Priority updated successfully", "success");
     } else {
       showToast(data.error || "Failed to update priority", "error");
     }
-  } catch (e) {
-    showToast("Server error", "error");
+  } catch (err) {
+    console.error("Priority update error:", err);
+    showToast("Priority update failed", "error");
   }
 }
 function renderCardSkeleton(cardCount = 2) {
@@ -1267,3 +1286,136 @@ function renderCardSkeleton(cardCount = 2) {
   }
   return `<div class="skeleton-wrap">${cards}</div>`;
 }
+async function loadPage3KanbanSummary() {
+  try {
+    const res = await fetch("/api/page3/kanban_summary");
+    const data = await res.json();
+
+    if (!data.success) {
+      console.error("Kanban summary error:", data.error);
+      return;
+    }
+
+    renderPage3KanbanSummary(data);
+  } catch (err) {
+    console.error("Kanban summary failed:", err);
+  }
+}
+
+function ensureKanbanSummaryHost() {
+  let host = document.getElementById("page3-kanban-summary");
+
+  if (host) return host;
+
+  host = document.createElement("div");
+  host.id = "page3-kanban-summary";
+
+  const resultsSection = document.getElementById("results-section");
+  const placeholder = document.getElementById("placeholder");
+
+  if (resultsSection && resultsSection.parentNode) {
+    resultsSection.parentNode.insertBefore(host, resultsSection);
+  } else if (placeholder && placeholder.parentNode) {
+    placeholder.parentNode.insertBefore(host, placeholder);
+  } else {
+    document.body.prepend(host);
+  }
+
+  return host;
+}
+
+function renderPage3KanbanSummary(data) {
+  const host = ensureKanbanSummaryHost();
+  const summary = data.summary || {};
+  const processes = data.processes || [];
+  const cards = data.cards || [];
+
+  const processCardsHtml = processes.map(p => {
+    const procName = p.process_name || "-";
+    const procCards = cards.filter(c => String(c.process_name || "").trim().toLowerCase() === String(procName).trim().toLowerCase());
+
+    const pendingCards = procCards.filter(c => c.card_status === "pending");
+    const completedCards = procCards.filter(c => c.card_status === "completed");
+
+    const renderMiniCard = (c) => `
+      <div class="kanban-mini-card ${c.card_status === "completed" ? "done" : "pending"}"
+           onclick="document.getElementById('jc-input').value='${esc(c.job_card_no)}'; fetchJobCard();">
+        <div class="kanban-mini-card-top">
+          <strong>JC ${esc(c.job_card_no)}</strong>
+          ${c.is_priority ? `<span class="kanban-urgent">URGENT</span>` : ""}
+        </div>
+        <div class="kanban-mini-item">${esc(c.item_name || "-")}</div>
+        <div class="kanban-mini-meta">
+          <span>SO: ${esc(c.so_no || "-")}</span>
+          <span>${c.card_status === "completed" ? "Completed" : "Pending"}</span>
+        </div>
+      </div>
+    `;
+
+    return `
+      <div class="kanban-process-column">
+        <div class="kanban-process-head">
+          <div>
+            <div class="kanban-process-title">${esc(procName)}</div>
+            <div class="kanban-process-sub">${p.total_jobcards || 0} total</div>
+          </div>
+          <div class="kanban-process-counts">
+            <span class="pending">${p.pending_jobcards || 0} Pending</span>
+            <span class="completed">${p.completed_jobcards || 0} Completed</span>
+          </div>
+        </div>
+
+        <div class="kanban-status-title">Pending Job Cards</div>
+        <div class="kanban-card-list">
+          ${pendingCards.length ? pendingCards.map(renderMiniCard).join("") : `<div class="kanban-empty">No pending job card</div>`}
+        </div>
+
+        <div class="kanban-status-title completed-title">Completed Job Cards</div>
+        <div class="kanban-card-list completed-list">
+          ${completedCards.length ? completedCards.slice(0, 10).map(renderMiniCard).join("") : `<div class="kanban-empty">No completed job card</div>`}
+          ${completedCards.length > 10 ? `<div class="kanban-more">+${completedCards.length - 10} more completed</div>` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  host.innerHTML = `
+    <div class="page3-kanban-wrap">
+      <div class="kanban-main-head">
+        <div>
+          <div class="kanban-title">My Process</div>
+          <div class="kanban-subtitle">
+            ${window.JMS_USER_ROLE === "supervisor" ? "Showing only your assigned processes" : "Admin view - all processes"}
+          </div>
+        </div>
+
+        <button type="button" class="kanban-refresh-btn" onclick="loadPage3KanbanSummary()">
+          Refresh
+        </button>
+      </div>
+
+      <div class="kanban-summary-grid">
+        <div class="kanban-summary-box total">
+          <span>Total</span>
+          <strong>${summary.total_jobcards || 0}</strong>
+        </div>
+        <div class="kanban-summary-box pending">
+          <span>Pending</span>
+          <strong>${summary.pending_jobcards || 0}</strong>
+        </div>
+        <div class="kanban-summary-box completed">
+          <span>Completed</span>
+          <strong>${summary.completed_jobcards || 0}</strong>
+        </div>
+      </div>
+
+      <div class="kanban-process-grid">
+        ${processCardsHtml || `<div class="kanban-empty">No process data found.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  loadPage3KanbanSummary();
+});

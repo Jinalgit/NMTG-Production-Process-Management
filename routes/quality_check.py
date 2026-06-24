@@ -4,7 +4,7 @@ Includes WIP status tracking, in/out time recording, and audit trail.
 """
 
 import re
-from datetime import date as date_cls
+from datetime import date as date_cls, datetime
 
 from flask import Blueprint, jsonify, request, session
 from mysql.connector import Error
@@ -176,6 +176,19 @@ def _is_store_stage(stage):
     return (stage or "").strip().lower() == "store"
 
 
+def _remaining_days_from_delivery(delivery_date):
+    if not delivery_date:
+        return 0
+    try:
+        if isinstance(delivery_date, str):
+            delivery_date = datetime.strptime(delivery_date[:10], "%Y-%m-%d").date()
+        elif hasattr(delivery_date, "date") and not isinstance(delivery_date, date_cls):
+            delivery_date = delivery_date.date()
+        return (delivery_date - date_cls.today()).days
+    except Exception:
+        return 0
+
+
 def _pending_previous_stage_error(cursor, job_card_no, processes, new_idx, old_idx, new_stage):
     if new_idx is None or not _has_column(cursor, "job_card_process_days", "in_time"):
         return None
@@ -336,6 +349,7 @@ def fetch_for_quality_check(job_card_no):
                         processes.append(str(p).strip())
 
             delivery = item.get("delivery_date")
+            remaining_days = _remaining_days_from_delivery(delivery)
             if delivery and hasattr(delivery, "strftime"):
                 delivery = delivery.strftime("%Y-%m-%d")
 
@@ -351,7 +365,7 @@ def fetch_for_quality_check(job_card_no):
                     "wip_status": item.get("wip_status") or "Pending",
                     "wip_stage_days": item.get("wip_stage_days") or 0,
                     "total_days": item.get("total_days") or 0,
-                    "remaining_days": item.get("remaining_days") or 0,
+                    "remaining_days": remaining_days,
                     "delivery_date": delivery,
                     "remarks": item.get("remarks") or "",
                     "part": item.get("part") or (pm.get("part_name") if pm else "") or "",
@@ -533,13 +547,199 @@ def fetch_for_quality_check(job_card_no):
             pass
 
 
+@quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+def page3_kanban_summary():
+    conn = None
+    cursor = None
+
+    try:
+        role = (session.get("role") or "").strip().lower()
+        user_id = session.get("user_id")
+
+        if role not in ["admin", "supervisor"]:
+            return jsonify({
+                "success": True,
+                "summary": {
+                    "total_jobcards": 0,
+                    "pending_jobcards": 0,
+                    "completed_jobcards": 0
+                },
+                "processes": [],
+                "cards": []
+            })
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Admin = all process access
+        # Supervisor = only assigned processes from supervisor_process_access
+        if role == "supervisor":
+            access_join = """
+                JOIN supervisor_process_access spa
+                  ON spa.user_id = %s
+                 AND LOWER(TRIM(spa.process_name)) = LOWER(TRIM(jpd.process_name))
+            """
+            access_params = [user_id]
+        else:
+            access_join = ""
+            access_params = []
+
+        # IMPORTANT:
+        # This condition excludes future untouched stages.
+        # It shows only:
+        # 1) Current/pending stage
+        # 2) Already completed stage
+        active_condition = """
+            AND (
+                   LOWER(TRIM(ji.wip_status)) = LOWER(TRIM(jpd.process_name))
+                OR jpd.out_time IS NOT NULL
+                OR COALESCE(jpd.is_completed, 0) = 1
+            )
+        """
+
+        # 1) Overall summary
+        summary_sql = f"""
+            SELECT
+                COUNT(DISTINCT jpd.id) AS total_jobcards,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(TRIM(ji.wip_status)) = LOWER(TRIM(jpd.process_name))
+                     AND jpd.out_time IS NULL
+                     AND COALESCE(jpd.is_completed, 0) = 0
+                    THEN jpd.id
+                END) AS pending_jobcards,
+
+                COUNT(DISTINCT CASE
+                    WHEN jpd.out_time IS NOT NULL
+                      OR COALESCE(jpd.is_completed, 0) = 1
+                    THEN jpd.id
+                END) AS completed_jobcards
+
+            FROM job_card_process_days jpd
+            JOIN job_card_items ji
+              ON ji.job_card_no = jpd.job_card_no
+            {access_join}
+            WHERE 1 = 1
+            {active_condition}
+        """
+
+        cursor.execute(summary_sql, access_params)
+        summary = cursor.fetchone() or {}
+
+        # 2) Process-wise summary
+        process_sql = f"""
+            SELECT
+                jpd.process_name,
+
+                COUNT(DISTINCT jpd.id) AS total_jobcards,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(TRIM(ji.wip_status)) = LOWER(TRIM(jpd.process_name))
+                     AND jpd.out_time IS NULL
+                     AND COALESCE(jpd.is_completed, 0) = 0
+                    THEN jpd.id
+                END) AS pending_jobcards,
+
+                COUNT(DISTINCT CASE
+                    WHEN jpd.out_time IS NOT NULL
+                      OR COALESCE(jpd.is_completed, 0) = 1
+                    THEN jpd.id
+                END) AS completed_jobcards
+
+            FROM job_card_process_days jpd
+            JOIN job_card_items ji
+              ON ji.job_card_no = jpd.job_card_no
+            {access_join}
+            WHERE 1 = 1
+            {active_condition}
+            GROUP BY jpd.process_name
+            ORDER BY jpd.process_name
+        """
+
+        cursor.execute(process_sql, access_params)
+        processes = cursor.fetchall()
+
+        # 3) Cards for Kanban process view
+        cards_sql = f"""
+            SELECT
+                jpd.id AS process_day_id,
+                jpd.job_card_no,
+                jc.so_no,
+                jpd.process_name,
+                ji.item_name,
+                ji.wip_status,
+                ji.is_priority,
+                ji.delivery_date,
+                jpd.in_time,
+                jpd.out_time,
+                COALESCE(jpd.is_completed, 0) AS is_completed,
+
+                CASE
+                    WHEN jpd.out_time IS NOT NULL
+                      OR COALESCE(jpd.is_completed, 0) = 1
+                    THEN 'completed'
+                    ELSE 'pending'
+                END AS card_status
+
+            FROM job_card_process_days jpd
+            JOIN job_card_items ji
+              ON ji.job_card_no = jpd.job_card_no
+            LEFT JOIN job_cards jc
+              ON jc.job_card_no = jpd.job_card_no
+            {access_join}
+            WHERE 1 = 1
+            {active_condition}
+            ORDER BY
+                jpd.process_name,
+                CASE
+                    WHEN jpd.out_time IS NOT NULL
+                      OR COALESCE(jpd.is_completed, 0) = 1
+                    THEN 1 ELSE 0
+                END,
+                jpd.job_card_no
+            LIMIT 500
+        """
+
+        cursor.execute(cards_sql, access_params)
+        cards = cursor.fetchall()
+
+        for c in cards:
+            for df in ["delivery_date", "in_time", "out_time"]:
+                if c.get(df) and hasattr(c[df], "strftime"):
+                    c[df] = c[df].strftime("%Y-%m-%d")
+
+        return jsonify({
+            "success": True,
+            "summary": {
+                "total_jobcards": int(summary.get("total_jobcards") or 0),
+                "pending_jobcards": int(summary.get("pending_jobcards") or 0),
+                "completed_jobcards": int(summary.get("completed_jobcards") or 0),
+            },
+            "processes": processes,
+            "cards": cards
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
 @quality_check_bp.route("/api/wip/update", methods=["POST"])
 def update_wip():
     conn = None
     cursor = None
 
     try:
-        data = request.json
+        data = request.json or {}
+        print("WIP UPDATE PAYLOAD:", data)
 
         job_card_no = data.get("job_card_no")
         item_name = data.get("item_name")
@@ -547,6 +747,12 @@ def update_wip():
         changed_by = data.get("changed_by")
         revoke_qty = int(data.get("revoke_qty") or 0)
         revoke_remarks = (data.get("revoke_remarks") or "").strip()
+        actual_qty = data.get("actual_qty")
+        try:
+            actual_qty = int(actual_qty) if actual_qty not in [None, ""] else None
+        except Exception:
+            actual_qty = None
+        print("ACTUAL QTY RECEIVED:", actual_qty)
 
         if not all([job_card_no, item_name, new_stage, changed_by]):
             return jsonify({"success": False, "error": "All fields required"}), 400
@@ -560,7 +766,7 @@ def update_wip():
 
         cursor.execute(
             """
-            SELECT wip_status, remaining_days, total_days
+            SELECT wip_status, total_days, delivery_date
             FROM job_card_items
             WHERE job_card_no = %s
               AND TRIM(item_name) = TRIM(%s)
@@ -576,7 +782,6 @@ def update_wip():
             }), 404
 
         old_stage = row["wip_status"] or "Pending"
-        remaining = row["remaining_days"] or 0
         total = row["total_days"] or 0
 
         if _is_store_stage(old_stage):
@@ -674,7 +879,7 @@ def update_wip():
 
         process_found = pd_row is not None
         stage_days = int(pd_row["stage_days"] or 0) if pd_row else 0
-        new_remaining = max(0, remaining - stage_days)
+        new_remaining = _remaining_days_from_delivery(row.get("delivery_date"))
 
         has_time_cols = _has_column(cursor, "job_card_process_days", "in_time")
 
@@ -820,11 +1025,12 @@ def update_wip():
             UPDATE job_card_items
             SET wip_status = %s,
                 remaining_days = %s,
-                wip_stage_days = 0
+                wip_stage_days = 0,
+                actual_qty = COALESCE(%s, actual_qty)
             WHERE job_card_no = %s
               AND TRIM(item_name) = TRIM(%s)
             """,
-            (new_stage, new_remaining, job_card_no, item_name.strip()),
+            (new_stage, new_remaining, actual_qty, job_card_no, item_name.strip()),
         )
 
         cursor.execute(
@@ -1276,22 +1482,13 @@ def complete_subcontract():
             next_stage = procs[proc_idx + 1]
 
         cursor.execute("""
-            SELECT remaining_days FROM job_card_items
+            SELECT delivery_date FROM job_card_items
             WHERE job_card_no = %s AND TRIM(item_name) = TRIM(%s)
         """, (job_card_no, item_name.strip()))
-        row = cursor.fetchone()
-        remaining = row["remaining_days"] if row else 0
-
-        cursor.execute("""
-            SELECT COALESCE(pdd.default_days, jpd.days, 0) AS stage_days
-            FROM job_card_process_days jpd
-            LEFT JOIN process_default_days pdd
-              ON LOWER(TRIM(jpd.process_name)) = LOWER(TRIM(pdd.process_name))
-            WHERE jpd.job_card_no = %s AND LOWER(TRIM(jpd.process_name)) = LOWER(TRIM(%s))
-        """, (job_card_no, process))
-        pd = cursor.fetchone()
-        stage_days = int(pd["stage_days"] or 0) if pd else 0
-        new_remaining = max(0, remaining - stage_days)
+        delivery_row = cursor.fetchone()
+        new_remaining = _remaining_days_from_delivery(
+            delivery_row.get("delivery_date") if delivery_row else None
+        )
 
         new_wip = next_stage if next_stage else "Store"
         cursor.execute("""

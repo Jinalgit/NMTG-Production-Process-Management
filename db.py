@@ -3,14 +3,15 @@ Database connection helper for Demo 2.
 All route blueprints import get_connection() from this module.
 """
 
+import os
 import mysql.connector
 
 DB_CONFIG = {
-    "host": "127.0.0.1",
-    "port": 3306,
-    "database": "jms_demo2",
-    "user": "root",
-    "password": "admin@123",
+    "host": os.environ.get("DB_HOST", "127.0.0.1"),
+    "port": int(os.environ.get("DB_PORT", 3306)),
+    "database": os.environ.get("DB_NAME", "jms_demo2"),
+    "user": os.environ.get("DB_USER", "root"),
+    "password": os.environ["DB_PASSWORD"],
     "connection_timeout": 10,
     "auth_plugin": "mysql_native_password",
 }

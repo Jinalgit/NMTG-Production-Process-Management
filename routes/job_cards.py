@@ -5,6 +5,8 @@ Job card numbers have NO prefix â€” stored as plain numbers/slash format.
 
 import traceback
 import logging
+from datetime import date, datetime, timedelta
+
 from flask import Blueprint, jsonify, request
 from mysql.connector import Error
 from db import get_connection
@@ -29,6 +31,21 @@ def safe_int(val, default=0):
         return int(float(val))
     except (ValueError, TypeError):
         return default
+
+
+def remaining_days_from_delivery(delivery_date):
+    if not delivery_date:
+        return 0
+    try:
+        if isinstance(delivery_date, str):
+            delivery_dt = datetime.strptime(delivery_date[:10], "%Y-%m-%d").date()
+        elif hasattr(delivery_date, "date") and not isinstance(delivery_date, date):
+            delivery_dt = delivery_date.date()
+        else:
+            delivery_dt = delivery_date
+        return (delivery_dt - date.today()).days
+    except Exception:
+        return 0
 
 
 def column_exists(cursor, table, column):
@@ -239,6 +256,7 @@ def save_job_card():
         if not delivery_date:
             logger.warning("Missing required field: delivery_date")
             return jsonify({"success": False, "error": "Final Delivery Date is required"}), 400
+        remaining_days = remaining_days_from_delivery(delivery_date)
 
         conn = get_connection()
         cursor = conn.cursor()
@@ -275,7 +293,7 @@ VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 # ← was hardcoded 'Pending'
                 item.get("first_process") or "Pending",
                 total_days,
-                total_days,
+                remaining_days,
                 delivery_date,
                 remarks,
                 int(item.get("is_priority", 0))
@@ -566,9 +584,9 @@ def upload_confirm_job_cards():
 
             delivery_date = r.get("delivery_date") or None
             if not delivery_date:
-                from datetime import date, timedelta
                 delivery_date = (
                     date.today() + timedelta(days=30)).strftime("%Y-%m-%d")
+            remaining_days = remaining_days_from_delivery(delivery_date)
 
             so_date = r.get("so_date") or None
             child_code = r.get("child_code") or ""
@@ -597,7 +615,7 @@ def upload_confirm_job_cards():
                         job_card_qty,
                         r.get("wip_status", "Pending"),
                         safe_int(r.get("total_days")),
-                        safe_int(r.get("total_days")),
+                        remaining_days,
                         delivery_date,
                         r.get("advance_stock") or None,
                         size, part, dia, length,
@@ -621,7 +639,7 @@ def upload_confirm_job_cards():
                         r.get("advance_stock") or None,
                         r.get("wip_status", "Pending"),
                         safe_int(r.get("total_days")),
-                        safe_int(r.get("total_days")),
+                        remaining_days,
                         delivery_date,
                         size, part, dia, length,
                     ))

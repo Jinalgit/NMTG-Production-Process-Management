@@ -132,11 +132,12 @@ def data_job_cards():
             where.append("""(
                 jc.job_card_no LIKE %s OR jc.so_no LIKE %s OR
                 jc.customer_name LIKE %s OR
+                jc.parent_code LIKE %s OR jc.child_code LIKE %s OR
                 ji.item_name LIKE %s OR ji.material LIKE %s OR
                 ji.wip_status LIKE %s
             )""")
             s = f"%{search}%"
-            params += [s, s, s, s, s, s]
+            params += [s, s, s, s, s, s, s, s]
 
         if wip:
             where.append("ji.wip_status = %s")

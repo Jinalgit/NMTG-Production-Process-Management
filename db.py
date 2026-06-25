@@ -16,6 +16,13 @@ DB_CONFIG = {
     "auth_plugin": "mysql_native_password",
 }
 
+# DigitalOcean's Managed MySQL requires SSL. Locally, DB_SSL_CA won't be set,
+# so this block is simply skipped and nothing changes for your local setup.
+DB_SSL_CA = os.environ.get("DB_SSL_CA")
+if DB_SSL_CA:
+    DB_CONFIG["ssl_ca"] = DB_SSL_CA
+    DB_CONFIG["ssl_verify_cert"] = True
+
 
 def get_connection():
     conn = mysql.connector.connect(**DB_CONFIG)

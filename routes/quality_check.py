@@ -9,6 +9,12 @@ from datetime import date as date_cls, datetime
 from flask import Blueprint, jsonify, request, session
 from mysql.connector import Error
 from db import get_connection
+from permission_utils import (
+    PAGE3_TRACEABILITY,
+    can_user_edit_field,
+    ensure_permission_tables,
+    seed_default_permissions,
+)
 
 quality_check_bp = Blueprint("quality_check", __name__)
 
@@ -40,6 +46,17 @@ def _has_column(cursor, table, column):
         (table, column),
     )
     return cursor.fetchone()["cnt"] > 0
+
+
+def supervisor_has_process_access(cursor, user_id, process_name):
+    cursor.execute("""
+        SELECT 1
+        FROM supervisor_process_access
+        WHERE user_id = %s
+          AND LOWER(TRIM(process_name)) = LOWER(TRIM(%s))
+        LIMIT 1
+    """, (user_id, process_name or ""))
+    return cursor.fetchone() is not None
 
 
 def _match_processes(a, b):
@@ -742,6 +759,10 @@ def update_wip():
         data = request.json or {}
         print("WIP UPDATE PAYLOAD:", data)
 
+        role = (session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
+            return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
+
         job_card_no = data.get("job_card_no")
         item_name = data.get("item_name")
         new_stage = data.get("new_stage")
@@ -760,6 +781,9 @@ def update_wip():
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
+        ensure_permission_tables(cursor)
+        seed_default_permissions(cursor)
+        conn.commit()
         actual_job_card_no = _resolve_job_card_no(cursor, job_card_no)
         if not actual_job_card_no:
             return jsonify({"success": False, "error": f"Job Card not found: {job_card_no}"}), 404
@@ -794,19 +818,24 @@ def update_wip():
         # ── Supervisor process-access check ────────────────────────────────────
         # Supervisors can only move a job card OUT of a process they manage.
         # Admins bypass this check entirely.
-        if session.get("role") == "supervisor":
-            cursor.execute("""
-                SELECT 1 FROM supervisor_process_access
-                WHERE user_id = %s
-                  AND LOWER(TRIM(process_name)) = LOWER(TRIM(%s))
-                LIMIT 1
-            """, (session.get("user_id"), old_stage))
-            has_access = cursor.fetchone()
-            if not has_access:
-                return jsonify({
-                    "success": False,
-                    "error": f"You do not have permission to move items out of '{old_stage}'."
-                }), 403
+        if role == "supervisor" and not supervisor_has_process_access(
+            cursor, session.get("user_id"), old_stage
+        ):
+            return jsonify({
+                "success": False,
+                "error": f"You do not have rights to update process: {old_stage}"
+            }), 403
+        if (
+            role == "supervisor"
+            and actual_qty is not None
+            and not can_user_edit_field(
+                cursor, role, session.get("user_id"), PAGE3_TRACEABILITY, "actual_qty"
+            )
+        ):
+            return jsonify({
+                "success": False,
+                "error": "You do not have rights to update actual_qty"
+            }), 403
 
         cursor.execute(
             """
@@ -1034,6 +1063,36 @@ def update_wip():
             (new_stage, new_remaining, actual_qty, job_card_no, item_name.strip()),
         )
 
+        # Sync parent job card final_status based on all item WIP statuses
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total_items,
+                SUM(
+                    CASE
+                        WHEN LOWER(TRIM(wip_status)) IN ('completed', 'store')
+                        THEN 1 ELSE 0
+                    END
+                ) AS completed_items
+            FROM job_card_items
+            WHERE job_card_no = %s
+        """, (job_card_no,))
+
+        status_row = cursor.fetchone()
+
+        if status_row and int(status_row["total_items"] or 0) == int(status_row["completed_items"] or 0):
+            cursor.execute("""
+                UPDATE job_cards
+                SET final_status = 'Completed'
+                WHERE job_card_no = %s
+            """, (job_card_no,))
+        else:
+            cursor.execute("""
+                UPDATE job_cards
+                SET final_status = 'Pending'
+                WHERE job_card_no = %s
+                AND final_status = 'Completed'
+            """, (job_card_no,))
+
         cursor.execute(
             """
             INSERT INTO audit_trail
@@ -1176,11 +1235,58 @@ def update_wip():
 def save_quality_check():
     try:
         data = request.json
+        role = (session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
+            return jsonify({"success": False, "error": "Operator has read-only access"}), 403
+
         job_card_no = data.get("job_card_no")
         details = data.get("details", [])
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
+        ensure_permission_tables(cursor)
+        seed_default_permissions(cursor)
+        conn.commit()
+
+        if role == "supervisor":
+            for d in details:
+                item_name = (d.get("item_name") or "").strip()
+                cursor.execute("""
+                    SELECT wip_status
+                    FROM job_card_items
+                    WHERE job_card_no = %s
+                      AND TRIM(item_name) = TRIM(%s)
+                    LIMIT 1
+                """, (job_card_no, item_name))
+                item_row = cursor.fetchone()
+                current_process = item_row["wip_status"] if item_row else ""
+                if not supervisor_has_process_access(
+                    cursor, session.get("user_id"), current_process
+                ):
+                    cursor.close()
+                    conn.close()
+                    return jsonify({
+                        "success": False,
+                        "error": f"You do not have rights to update process: {current_process}"
+                    }), 403
+                if not can_user_edit_field(
+                    cursor, role, session.get("user_id"), PAGE3_TRACEABILITY, "actual_qty"
+                ):
+                    cursor.close()
+                    conn.close()
+                    return jsonify({
+                        "success": False,
+                        "error": "You do not have rights to update actual_qty"
+                    }), 403
+                if (d.get("remarks") or "").strip() and not can_user_edit_field(
+                    cursor, role, session.get("user_id"), PAGE3_TRACEABILITY, "remarks"
+                ):
+                    cursor.close()
+                    conn.close()
+                    return jsonify({
+                        "success": False,
+                        "error": "You do not have rights to update remarks"
+                    }), 403
 
         cursor.execute(
             "INSERT INTO quality_checks (job_card_no) VALUES (%s)", (job_card_no,)
@@ -1288,6 +1394,10 @@ def set_subcontract():
     cursor = None
     try:
         data = request.json
+        role = (session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
+            return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
+
         job_card_no = data.get("job_card_no")
         item_name = data.get("item_name")
         process = data.get("process")
@@ -1334,19 +1444,13 @@ def set_subcontract():
             return jsonify({"success": False, "error": validation_error}), 400
 
         # ── Supervisor process-access check ────────────────────────────────────
-        if session.get("role") == "supervisor":
-            cursor.execute("""
-                SELECT 1 FROM supervisor_process_access
-                WHERE user_id = %s
-                  AND LOWER(TRIM(process_name)) = LOWER(TRIM(%s))
-                LIMIT 1
-            """, (session.get("user_id"), current_wip))
-            has_access = cursor.fetchone()
-            if not has_access:
-                return jsonify({
-                    "success": False,
-                    "error": f"You do not have permission to move items out of '{current_wip}'."
-                }), 403
+        if role == "supervisor" and not supervisor_has_process_access(
+            cursor, session.get("user_id"), current_wip
+        ):
+            return jsonify({
+                "success": False,
+                "error": f"You do not have rights to update process: {current_wip}"
+            }), 403
 
         cursor.execute("""
             UPDATE job_card_process_days
@@ -1403,6 +1507,10 @@ def set_subcontract():
 def complete_subcontract():
     try:
         data = request.json
+        role = (session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
+            return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
+
         job_card_no = data.get("job_card_no")
         item_name = data.get("item_name")
         process = data.get("process")
@@ -1415,21 +1523,15 @@ def complete_subcontract():
         cursor = conn.cursor(dictionary=True)
 
         # ── Supervisor process-access check ────────────────────────────────────
-        if session.get("role") == "supervisor":
-            cursor.execute("""
-                SELECT 1 FROM supervisor_process_access
-                WHERE user_id = %s
-                  AND LOWER(TRIM(process_name)) = LOWER(TRIM(%s))
-                LIMIT 1
-            """, (session.get("user_id"), process))
-            has_access = cursor.fetchone()
-            if not has_access:
-                cursor.close()
-                conn.close()
-                return jsonify({
-                    "success": False,
-                    "error": f"You do not have permission to complete subcontracting for '{process}'."
-                }), 403
+        if role == "supervisor" and not supervisor_has_process_access(
+            cursor, session.get("user_id"), process
+        ):
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "success": False,
+                "error": f"You do not have rights to update process: {process}"
+            }), 403
 
         cursor.execute("""
             SELECT id, in_time FROM job_card_process_days

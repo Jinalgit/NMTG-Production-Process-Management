@@ -5,10 +5,12 @@ from flask import jsonify, redirect, session, url_for
 PAGE_ACCESS = {
     "page1": {
         "admin": "full",
+        "supervisor": "full",
         "operator": "create",
     },
     "page2": {
         "admin": "full",
+        "supervisor": "full",
         "operator": "full",
     },
     "page3": {

@@ -381,9 +381,8 @@ function renderBody(cols, rows) {
       const rawValue = row[c.key];
       let v = c.key === "wip_stage_days" ? (rawValue ?? 0) : formatCellValue(c.key, rawValue);
       if (c.key === "job_card_no" && v) {
-        const editableKeys = ["job_card_no", "so_no", "customer_name", "parent_code", "child_code", "item_name", "so_qty"];
         v = `<a class="jc-link" onclick="goToPage3('${String(v).replace(/'/g, "\\'")}')">${v}</a>`;
-        if (typeof isEditableUser === "function" && isEditableUser()) {
+        if (typeof canEditRowFields === "function" && canEditRowFields(row)) {
           v += ` <i class="fa fa-pencil" style="margin-left:6px;color:var(--accent);cursor:pointer;font-size:11px;" title="Edit fields" onclick="event.stopPropagation(); openEditJobCardModalById('${String(row.job_card_no).replace(/'/g, "\\'")}', '${String(row.item_name).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')"></i>`;
         }
       }
@@ -401,7 +400,7 @@ function renderBody(cols, rows) {
         const cls = getWipBadgeClass(row, v);
         const vendor = isSubcontracted(row) && row.vendor_name ? ` title="Subcontracting: ${row.vendor_name}"` : "";
         const isStoreOrPending = ["store", "pending"].includes(String(rawValue || "").trim().toLowerCase());
-        const clickAttr = isStoreOrPending ? "" : ` style="cursor:pointer;" onclick='openSharedStageModal(${JSON.stringify(row.job_card_no)}, ${JSON.stringify(row.item_name)})'`;
+        const clickAttr = (isStoreOrPending || !canEditRowProcess(row)) ? "" : ` style="cursor:pointer;" onclick='openSharedStageModal(${JSON.stringify(row.job_card_no)}, ${JSON.stringify(row.item_name)})'`;
         v = `<span class="${cls}"${vendor}${clickAttr}>${v}</span>`;
       }
       if (c.key === "final_status" && v) {
@@ -973,8 +972,11 @@ async function openSharedStageModal(jcNo, itemName) {
 
     sharedPendingChange = { jcNo, itemName, currentStage: currentWIP, newStage: nextStageName };
 
-    document.getElementById("modal-planned-qty").value = item.so_qty || item.job_card_qty || "";
-    document.getElementById("modal-actual-qty").value = item.actual_qty || "";
+    const plannedQty = item.so_qty || item.job_card_qty || "";
+    const actualQtyInput = document.getElementById("modal-actual-qty");
+    document.getElementById("modal-planned-qty").value = plannedQty;
+    actualQtyInput.value = item.actual_qty || "";
+    actualQtyInput.max = plannedQty || "";
     document.getElementById("modal-current-process").textContent = currentWIP;
     document.getElementById("modal-next-process").textContent = nextStageName;
     document.getElementById("modal-title").textContent = "Change Stage?";
@@ -1005,6 +1007,7 @@ function closeSharedStageModal() {
 
 async function confirmSharedStageChange() {
   if (!sharedPendingChange) return;
+  if (!validateSharedStageActualQty()) return;
   document.getElementById("csm-from").textContent = sharedPendingChange.currentStage;
   document.getElementById("csm-to").textContent = sharedPendingChange.newStage;
   document.getElementById("confirm-stage-modal").classList.add("open");
@@ -1017,6 +1020,7 @@ function closeSharedConfirmModal() {
 async function proceedSharedStageChange() {
   closeSharedConfirmModal();
   if (!sharedPendingChange) return;
+  if (!validateSharedStageActualQty()) return;
 
   const { jcNo, itemName, newStage } = sharedPendingChange;
   const supervisor = document.getElementById("shared-bottom-supervisor")?.value || "Not Assigned";
@@ -1063,12 +1067,80 @@ async function proceedSharedStageChange() {
   }
 }
 
-// ── Editable Job Card Fields Modal (username "gaurang" only, for now) ───────
-const EDITABLE_BY_USERNAME = "gaurang";
+function validateSharedStageActualQty() {
+  const plannedQty = parseFloat(document.getElementById("modal-planned-qty")?.value);
+  const actualRaw = document.getElementById("modal-actual-qty")?.value;
+  if (actualRaw === "" || actualRaw == null || Number.isNaN(plannedQty)) return true;
+
+  const actualQty = parseFloat(actualRaw);
+  if (!Number.isNaN(actualQty) && actualQty > plannedQty) {
+    showToast("Actual Qty cannot be more than Planned Qty", "error");
+    document.getElementById("modal-actual-qty")?.focus();
+    return false;
+  }
+  return true;
+}
+
+// ── Editable Job Card Fields Modal ──────────────────────────────────────────
 let editRowData = null;
 
+function currentUserRole() {
+  return String(window.JMS_USER_ROLE || "").trim().toLowerCase();
+}
+
+function isAdminUser() {
+  return currentUserRole() === "admin";
+}
+
+function isSupervisorUser() {
+  return currentUserRole() === "supervisor";
+}
+
 function isEditableUser() {
-  return (window.JMS_CURRENT_USERNAME || "").toLowerCase() === EDITABLE_BY_USERNAME;
+  return isAdminUser() || isSupervisorUser();
+}
+
+function canEditWipStage() {
+  return isAdminUser() || isSupervisorUser();
+}
+
+function canEditRowProcess(row) {
+  if (isAdminUser()) return true;
+  if (!isSupervisorUser()) return false;
+  return row?.can_edit_current_process === true || row?.can_edit_current_process === 1;
+}
+
+function hasPage5Field(row, fieldName) {
+  if (isAdminUser()) return true;
+  const fields = Array.isArray(row?.page5_editable_fields) ? row.page5_editable_fields : [];
+  return fields.includes(fieldName);
+}
+
+function canEditRowFields(row) {
+  return isAdminUser() || (isSupervisorUser() && Array.isArray(row?.page5_editable_fields) && row.page5_editable_fields.length > 0);
+}
+
+function setEditInputState(id, enabled) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.disabled = !enabled;
+  el.style.background = enabled ? "" : "#f8fafc";
+  el.style.color = enabled ? "" : "var(--muted)";
+  el.style.cursor = enabled ? "" : "not-allowed";
+}
+
+function applyEditFieldPermissions() {
+  const row = editRowData || {};
+  setEditInputState("ejc-job-card-no", hasPage5Field(row, "job_card_no"));
+  setEditInputState("ejc-so-no", hasPage5Field(row, "so_no"));
+  setEditInputState("ejc-customer-name", hasPage5Field(row, "customer_name"));
+  setEditInputState("ejc-parent-code", hasPage5Field(row, "parent_code"));
+  setEditInputState("ejc-child-code", hasPage5Field(row, "child_code"));
+  setEditInputState("ejc-item-name", hasPage5Field(row, "item_name"));
+  setEditInputState("ejc-so-qty", hasPage5Field(row, "so_qty"));
+  setEditInputState("ejc-actual-qty", hasPage5Field(row, "actual_qty"));
+  setEditInputState("ejc-remarks", hasPage5Field(row, "remarks"));
+  setEditInputState("ejc-vendor-name", hasPage5Field(row, "vendor_name") || hasPage5Field(row, "subcontractor_name"));
 }
 
 function openEditJobCardModalById(jcNo, itemName) {
@@ -1080,8 +1152,13 @@ function openEditJobCardModalById(jcNo, itemName) {
 
 function openEditJobCardModal(row) {
   if (!isEditableUser()) return;
+  if (!canEditRowFields(row)) {
+    showToast("You do not have rights to update this process.", "error");
+    return;
+  }
   editRowData = row;
 
+  applyEditFieldPermissions();
   document.getElementById("ejc-job-card-no").value = row.job_card_no || "";
   document.getElementById("ejc-so-no").value = row.so_no || "";
   document.getElementById("ejc-customer-name").value = row.customer_name || "";
@@ -1089,6 +1166,9 @@ function openEditJobCardModal(row) {
   document.getElementById("ejc-child-code").value = row.child_code || "";
   document.getElementById("ejc-item-name").value = row.item_name || "";
   document.getElementById("ejc-so-qty").value = row.so_qty ?? "";
+  document.getElementById("ejc-actual-qty").value = row.actual_qty ?? "";
+  document.getElementById("ejc-remarks").value = row.remarks || "";
+  document.getElementById("ejc-vendor-name").value = row.vendor_name || "";
 
   document.getElementById("edit-jobcard-modal").classList.add("open");
 }
@@ -1102,15 +1182,42 @@ async function saveEditJobCard() {
   if (!editRowData) return;
   const payload = {
     job_card_no: editRowData.job_card_no, // identifies which row (original JC No)
-    new_job_card_no: document.getElementById("ejc-job-card-no").value.trim(),
-    so_no: document.getElementById("ejc-so-no").value.trim(),
-    customer_name: document.getElementById("ejc-customer-name").value.trim(),
-    parent_code: document.getElementById("ejc-parent-code").value.trim(),
-    child_code: document.getElementById("ejc-child-code").value.trim(),
-    item_name: document.getElementById("ejc-item-name").value.trim(),
-    so_qty: parseInt(document.getElementById("ejc-so-qty").value) || 0,
+    item_id: editRowData.item_id || null,
     original_item_name: editRowData.item_name,
+    process_name: editRowData.wip_status || "",
   };
+
+  if (hasPage5Field(editRowData, "job_card_no")) {
+    payload.new_job_card_no = document.getElementById("ejc-job-card-no").value.trim();
+  }
+  if (hasPage5Field(editRowData, "so_no")) {
+    payload.so_no = document.getElementById("ejc-so-no").value.trim();
+  }
+  if (hasPage5Field(editRowData, "customer_name")) {
+    payload.customer_name = document.getElementById("ejc-customer-name").value.trim();
+  }
+  if (hasPage5Field(editRowData, "parent_code")) {
+    payload.parent_code = document.getElementById("ejc-parent-code").value.trim();
+  }
+  if (hasPage5Field(editRowData, "child_code")) {
+    payload.child_code = document.getElementById("ejc-child-code").value.trim();
+  }
+  if (hasPage5Field(editRowData, "item_name")) {
+    payload.item_name = document.getElementById("ejc-item-name").value.trim();
+  }
+  if (hasPage5Field(editRowData, "so_qty")) {
+    payload.so_qty = document.getElementById("ejc-so-qty").value;
+  }
+
+  if (hasPage5Field(editRowData, "actual_qty")) {
+    payload.actual_qty = document.getElementById("ejc-actual-qty").value;
+  }
+  if (hasPage5Field(editRowData, "remarks")) {
+    payload.remarks = document.getElementById("ejc-remarks").value.trim();
+  }
+  if (hasPage5Field(editRowData, "vendor_name") || hasPage5Field(editRowData, "subcontractor_name")) {
+    payload.vendor_name = document.getElementById("ejc-vendor-name").value.trim();
+  }
 
   try {
     const res = await fetch("/api/job_card/update_fields", {

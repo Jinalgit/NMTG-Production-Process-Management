@@ -3,6 +3,14 @@ let pendingChange = null;
 
 const IS_OPERATOR_READ_ONLY = window.JMS_USER_ROLE === "operator";
 
+function canEditProcess(processName) {
+  if (window.JMS_USER_ROLE === "admin") return true;
+  if (window.JMS_USER_ROLE !== "supervisor") return false;
+  if (!Array.isArray(window.myAccessibleProcesses)) return false;
+  const current = String(processName || "").trim().toLowerCase();
+  return window.myAccessibleProcesses.some(p => String(p || "").trim().toLowerCase() === current);
+}
+
 // ── Fetch job card ────────────────────────────────────────────────────────────
 async function fetchJobCard() {
   const jcNo = document.getElementById("jc-input").value.trim();
@@ -296,6 +304,7 @@ function renderResults(data) {
     const actualQtyValue = item.actual_qty ?? "-";
     const rejectedQtyValue = calculateRejectedQty(plannedQtyValue, actualQtyValue);
     const rejectedQtyClass = getRejectedQtyClass(rejectedQtyValue);
+    const canEditCurrentProcess = !IS_OPERATOR_READ_ONLY && canEditProcess(item.wip_status);
 
     const readOnlyQtyRow = `
       <div class="actual-qty-row">
@@ -373,7 +382,8 @@ function renderResults(data) {
         <span class="wip-badge ${wipClass}" id="wip-badge-${iIdx}">${item.wip_status || "Pending"}</span>
         ${item.wip_stage_days ? `<span style="font-size:12px;color:var(--muted);font-weight:500">${item.wip_stage_days} days in this stage</span>` : ""}
       </div>
-      ${IS_OPERATOR_READ_ONLY ? readOnlyQtyRow : editableQtyRow}
+      ${canEditCurrentProcess ? editableQtyRow : readOnlyQtyRow}
+      ${(!canEditCurrentProcess && !IS_OPERATOR_READ_ONLY) ? `<div style="padding:8px 20px;color:#dc2626;font-size:12px;font-weight:600;">You do not have rights to update this process.</div>` : ""}
       ${item.processes.length > 0 ? `
         <div class="process-pills-section">
           <div class="pills-section-label">Process Stages</div>
@@ -384,7 +394,7 @@ function renderResults(data) {
         </div>`}
       <div id="timeline-section-${iIdx}"></div>
       <div id="qty-summary-section-${iIdx}"></div>
-      ${IS_OPERATOR_READ_ONLY ? readOnlyQualityRows : editableQualityRows}
+      ${canEditCurrentProcess ? editableQualityRows : readOnlyQualityRows}
     `;
 
     container.appendChild(section);
@@ -1173,6 +1183,11 @@ async function submitQualityCheck() {
 
   currentData.items.forEach((item, iIdx) => {
     if (!valid) return;
+    if (!canEditProcess(item.wip_status)) {
+      valid = false;
+      showToast(`You do not have rights to update process: ${item.wip_status || "-"}`, "error");
+      return;
+    }
     const actualQty = parseInt(document.getElementById(`actual_${iIdx}`)?.value);
     const plannedQty = item.so_qty ?? item.job_card_qty ?? "";
     const rejectedQty = calculateRejectedQty(plannedQty, actualQty);

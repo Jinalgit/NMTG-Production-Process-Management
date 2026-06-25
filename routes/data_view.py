@@ -9,6 +9,15 @@ from datetime import date, datetime
 from flask import Blueprint, jsonify, request, session
 from db import get_connection
 from auth_utils import api_required
+from permission_utils import (
+    PAGE5_BASE_FIELDS,
+    PAGE5_PPC,
+    PROCESS_FIELDS,
+    can_user_edit_field,
+    ensure_permission_tables,
+    has_process_access,
+    seed_default_permissions,
+)
 
 data_view_bp = Blueprint("data_view", __name__)
 
@@ -65,7 +74,25 @@ def ensure_extra_cols(cursor):
                 f"ALTER TABLE job_card_process_days ADD COLUMN {col} {defn}")
 
 
-# â"€â"€ Job Cards tab â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+SUPERVISOR_UPDATE_IDENTIFIERS = {
+    "job_card_no",
+    "item_id",
+    "original_item_name",
+    "process_name",
+    "current_process",
+}
+
+
+def parse_optional_int(value, field_label):
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{field_label} must be a number")
+
+
+# â" € Job Cards tab â"                                                            €
 @data_view_bp.route("/api/data/job_cards", methods=["GET"])
 def data_job_cards():
     try:
@@ -94,6 +121,9 @@ def data_job_cards():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         ensure_extra_cols(cursor)
+        ensure_permission_tables(cursor)
+        seed_default_permissions(cursor)
+        conn.commit()
 
         params = []
         where = ["1=1"]
@@ -101,11 +131,12 @@ def data_job_cards():
         if search:
             where.append("""(
                 jc.job_card_no LIKE %s OR jc.so_no LIKE %s OR
+                jc.customer_name LIKE %s OR
                 ji.item_name LIKE %s OR ji.material LIKE %s OR
                 ji.wip_status LIKE %s
             )""")
             s = f"%{search}%"
-            params += [s, s, s, s, s]
+            params += [s, s, s, s, s, s]
 
         if wip:
             where.append("ji.wip_status = %s")
@@ -293,6 +324,39 @@ def data_job_cards():
                 r.get("delivery_date"))
             r["total_default_days_calc"] = 0
             r["used_process_days_calc"] = 0
+            r["can_edit_current_process"] = session.get("role") == "admin"
+            r["page5_editable_fields"] = []
+
+        role = (session.get("role") or "").strip().lower()
+        user_id = session.get("user_id")
+        if role == "admin":
+            admin_fields = sorted(PAGE5_BASE_FIELDS | PROCESS_FIELDS)
+            for r in rows:
+                r["page5_editable_fields"] = admin_fields
+        elif role == "supervisor" and rows:
+            cursor.execute("""
+                SELECT process_name
+                FROM supervisor_process_access
+                WHERE user_id = %s
+            """, (user_id,))
+            accessible_processes = {
+                (r.get("process_name") or "").strip().lower()
+                for r in cursor.fetchall()
+            }
+            base_fields = [
+                field for field in sorted(PAGE5_BASE_FIELDS)
+                if can_user_edit_field(cursor, role, user_id, PAGE5_PPC, field)
+            ]
+            process_fields = [
+                field for field in sorted(PROCESS_FIELDS)
+                if can_user_edit_field(cursor, role, user_id, PAGE5_PPC, field)
+            ]
+            for r in rows:
+                current_process = (r.get("wip_status") or "").strip().lower()
+                r["can_edit_current_process"] = current_process in accessible_processes
+                r["page5_editable_fields"] = list(base_fields)
+                if r["can_edit_current_process"]:
+                    r["page5_editable_fields"].extend(process_fields)
 
         cursor.close()
         conn.close()
@@ -349,7 +413,7 @@ def update_item_priority():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# â"€â"€ Quality Checks tab â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+# â" € Quality Checks tab â"                                                       €
 @data_view_bp.route("/api/data/quality_checks", methods=["GET"])
 def data_quality_checks():
     try:
@@ -434,7 +498,7 @@ def data_quality_checks():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# â"€â"€ Audit Trail tab â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+# â" € Audit Trail tab â"
 @data_view_bp.route("/api/audit_trail", methods=["GET"])
 def get_audit_trail():
     try:
@@ -531,6 +595,7 @@ def data_process_report():
                 (
                     jc.job_card_no LIKE %s
                     OR jc.so_no LIKE %s
+                    OR jc.customer_name LIKE %s
                     OR ji.item_name LIKE %s
                     OR ji.material LIKE %s
                     OR ji.wip_status LIKE %s
@@ -538,7 +603,7 @@ def data_process_report():
                 )
             """)
             s = f"%{search}%"
-            params += [s, s, s, s, s, s]
+            params += [s, s, s, s, s, s, s]
 
         wip_pr = request.args.get("wip",           "").strip()
         proc_status = request.args.get("proc_status",   "").strip()
@@ -864,6 +929,7 @@ def data_planning_sheet():
                 (
                     jc.job_card_no LIKE %s
                     OR jc.so_no LIKE %s
+                    OR jc.customer_name LIKE %s
                     OR ji.item_name LIKE %s
                     OR ji.material LIKE %s
                     OR ji.wip_status LIKE %s
@@ -871,7 +937,7 @@ def data_planning_sheet():
                 )
             """)
             s = f"%{search}%"
-            params += [s, s, s, s, s, s]
+            params += [s, s, s, s, s, s, s]
 
         if wip:
             where.append("ji.wip_status = %s")
@@ -1185,7 +1251,7 @@ def operator_lead_time_notifications():
         }), 500
 
 
-# â"€â"€ Shared overdue-process helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+
 # Same table/column names + filter logic as
 # /api/operator/lead-time-notifications so every dashboard stays consistent.
 _OVERDUE_PROCESS_QUERY = """
@@ -1275,7 +1341,7 @@ def _overdue_summary(rows):
     }
 
 
-# â"€â"€ Supervisor dashboard summary â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+
 @data_view_bp.route("/api/supervisor/dashboard-summary", methods=["GET"])
 @api_required("supervisor_dashboard", allowed_modes=("full",))
 def supervisor_dashboard_summary():
@@ -1297,7 +1363,7 @@ def supervisor_dashboard_summary():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# â"€â"€ Admin dashboard summary â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+# â" € Admin dashboard summary â"                                               €
 @data_view_bp.route("/api/admin/dashboard-summary", methods=["GET"])
 @api_required("admin_dashboard", allowed_modes=("full",))
 def admin_dashboard_summary():
@@ -1402,59 +1468,230 @@ def stat_detail():
         return jsonify({"success": True, "records": records})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-# ── Edit Job Card Fields (username "gaurang" only, for now) ────────────────
+# ── Edit Job Card Fields ────────────────────────────────────────────────────
 
 
 @data_view_bp.route("/api/job_card/update_fields", methods=["POST"])
 def update_job_card_fields():
+    conn = None
+    cursor = None
     try:
-        # Hardcoded username gate for now — replace with proper permission
-        # lookup once the User Management "who can manage what" rules table
-        # is built.
-        if (session.get("username") or "").lower() != "gaurang":
+        role = (session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
             return jsonify({"success": False, "error": "You do not have permission to edit these fields."}), 403
 
-        data = request.json
-        original_jc_no = data.get("job_card_no")
-        new_jc_no = data.get("new_job_card_no", "").strip()
-        so_no = data.get("so_no", "").strip()
-        customer_name = data.get("customer_name", "").strip()
-        parent_code = data.get("parent_code", "").strip()
-        child_code = data.get("child_code", "").strip()
-        item_name = data.get("item_name", "").strip()
-        so_qty = data.get("so_qty", 0)
-        original_item_name = data.get("original_item_name", "").strip()
+        data = request.json or {}
+        original_jc_no = (data.get("job_card_no") or "").strip()
+        original_item_name = (data.get("original_item_name") or "").strip()
+        item_id = data.get("item_id")
 
-        if not original_jc_no or not new_jc_no:
+        if not original_jc_no:
             return jsonify({"success": False, "error": "Job Card No is required"}), 400
+        if not item_id and not original_item_name:
+            return jsonify({"success": False, "error": "Item identifier is required"}), 400
 
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+        ensure_extra_cols(cursor)
+        ensure_permission_tables(cursor)
+        seed_default_permissions(cursor)
 
-        cursor.execute("""
-            UPDATE job_cards
-            SET job_card_no = %s, so_no = %s, customer_name = %s,
-                parent_code = %s, child_code = %s
-            WHERE job_card_no = %s
-        """, (new_jc_no, so_no, customer_name, parent_code, child_code, original_jc_no))
+        def field_allowed(field_name):
+            return can_user_edit_field(
+                cursor, role, session.get("user_id"), PAGE5_PPC, field_name
+            )
 
-        cursor.execute("""
-            UPDATE job_card_items
-            SET job_card_no = %s, item_name = %s, so_qty = %s
-            WHERE job_card_no = %s AND TRIM(item_name) = TRIM(%s)
-        """, (new_jc_no, item_name, so_qty, original_jc_no, original_item_name))
+        if "wip_status" in data:
+            return jsonify({
+                "success": False,
+                "error": "Use the stage update action to change WIP status."
+            }), 403
 
-        # Keep related tables in sync with the new job_card_no if it changed
+        if role == "supervisor":
+            forbidden = []
+            for key in data.keys():
+                if key in SUPERVISOR_UPDATE_IDENTIFIERS:
+                    continue
+                field_name = "job_card_no" if key == "new_job_card_no" else key
+                if not field_allowed(field_name):
+                    forbidden.append(field_name)
+            if forbidden:
+                return jsonify({
+                    "success": False,
+                    "error": f"Supervisor cannot edit: {', '.join(sorted(set(forbidden)))}"
+                }), 403
+
+        if item_id:
+            cursor.execute("""
+                SELECT id, job_card_no, item_name, wip_status
+                FROM job_card_items
+                WHERE id = %s AND job_card_no = %s
+                LIMIT 1
+            """, (item_id, original_jc_no))
+        else:
+            cursor.execute("""
+                SELECT id, job_card_no, item_name, wip_status
+                FROM job_card_items
+                WHERE job_card_no = %s AND TRIM(item_name) = TRIM(%s)
+                LIMIT 1
+            """, (original_jc_no, original_item_name))
+        item_row = cursor.fetchone()
+        if not item_row:
+            return jsonify({"success": False, "error": "Job card item not found"}), 404
+
+        current_process = item_row.get("wip_status") or ""
+        has_current_process_access = (
+            role != "supervisor"
+            or has_process_access(cursor, session.get("user_id"), current_process)
+        )
+
+        target_jc_no = original_jc_no
+        updated_fields = []
+
+        can_edit_job_card_no = field_allowed("job_card_no")
+        if "new_job_card_no" in data and can_edit_job_card_no:
+            new_jc_no = (data.get("new_job_card_no") or original_jc_no).strip()
+            if not new_jc_no:
+                return jsonify({"success": False, "error": "New Job Card No is required"}), 400
+        else:
+            new_jc_no = original_jc_no
+
+        job_card_field_map = {
+            "so_no": "so_no",
+            "customer_name": "customer_name",
+            "work_order_no": "work_order_no",
+            "parent_code": "parent_code",
+            "child_code": "child_code",
+        }
+        job_card_sets = []
+        job_card_params = []
+        if new_jc_no != original_jc_no or (role == "admin" and "new_job_card_no" in data):
+            job_card_sets = ["job_card_no = %s"]
+            job_card_params = [new_jc_no]
+            updated_fields.append("job_card_no")
+        for payload_key, column_name in job_card_field_map.items():
+            if payload_key in data and field_allowed(payload_key):
+                job_card_sets.append(f"{column_name} = %s")
+                job_card_params.append((data.get(payload_key) or "").strip())
+                updated_fields.append(payload_key)
+        if job_card_sets:
+            job_card_params.append(original_jc_no)
+            cursor.execute(f"""
+                UPDATE job_cards
+                SET {", ".join(job_card_sets)}
+                WHERE job_card_no = %s
+            """, job_card_params)
+            target_jc_no = new_jc_no
+
+            if new_jc_no != original_jc_no:
+                cursor.execute("""
+                    UPDATE job_card_process_days
+                    SET job_card_no = %s
+                    WHERE job_card_no = %s
+                """, (new_jc_no, original_jc_no))
+                cursor.execute("""
+                    UPDATE audit_trail
+                    SET job_card_no = %s
+                    WHERE job_card_no = %s
+                """, (new_jc_no, original_jc_no))
+
+        item_sets = []
+        item_params = []
+
         if new_jc_no != original_jc_no:
-            cursor.execute("UPDATE job_card_process_days SET job_card_no = %s WHERE job_card_no = %s",
-                           (new_jc_no, original_jc_no))
-            cursor.execute("UPDATE audit_trail SET job_card_no = %s WHERE job_card_no = %s",
-                           (new_jc_no, original_jc_no))
+            item_sets.append("job_card_no = %s")
+            item_params.append(target_jc_no)
+        if "item_name" in data and field_allowed("item_name"):
+            item_sets.append("item_name = %s")
+            item_params.append((data.get("item_name") or "").strip())
+            updated_fields.append("item_name")
+        if "material" in data and field_allowed("material"):
+            item_sets.append("material = %s")
+            item_params.append((data.get("material") or "").strip())
+            updated_fields.append("material")
+        if "so_qty" in data and field_allowed("so_qty"):
+            item_sets.append("so_qty = %s")
+            item_params.append(parse_optional_int(data.get("so_qty"), "SO Qty") or 0)
+            updated_fields.append("so_qty")
+
+        if "actual_qty" in data and field_allowed("actual_qty"):
+            if role == "supervisor" and not has_current_process_access:
+                return jsonify({
+                    "success": False,
+                    "error": f"You do not have rights to update process: {current_process}"
+                }), 403
+            item_sets.append("actual_qty = %s")
+            item_params.append(parse_optional_int(data.get("actual_qty"), "Actual Qty"))
+            updated_fields.append("actual_qty")
+        if "remarks" in data and field_allowed("remarks"):
+            if role == "supervisor" and not has_current_process_access:
+                return jsonify({
+                    "success": False,
+                    "error": f"You do not have rights to update process: {current_process}"
+                }), 403
+            item_sets.append("remarks = %s")
+            item_params.append((data.get("remarks") or "").strip())
+            updated_fields.append("remarks")
+
+        if item_sets:
+            item_params.append(item_row["id"])
+            cursor.execute(f"""
+                UPDATE job_card_items
+                SET {", ".join(item_sets)}
+                WHERE id = %s
+            """, item_params)
+
+        vendor_name = None
+        if "vendor_name" in data and field_allowed("vendor_name"):
+            vendor_name = (data.get("vendor_name") or "").strip()
+        elif "subcontractor_name" in data and field_allowed("subcontractor_name"):
+            vendor_name = (data.get("subcontractor_name") or "").strip()
+
+        if vendor_name is not None:
+            process_name = (
+                data.get("process_name")
+                or data.get("current_process")
+                or current_process
+                or ""
+            ).strip()
+            if not process_name:
+                return jsonify({"success": False, "error": "Current process is required for vendor update"}), 400
+            if role == "supervisor" and not has_process_access(
+                cursor, session.get("user_id"), process_name
+            ):
+                return jsonify({
+                    "success": False,
+                    "error": f"You do not have rights to update process: {process_name}"
+                }), 403
+            cursor.execute("""
+                UPDATE job_card_process_days
+                SET vendor_name = %s,
+                    is_subcontract = CASE WHEN %s = '' THEN 0 ELSE 1 END
+                WHERE job_card_no = %s
+                  AND LOWER(TRIM(process_name)) = LOWER(TRIM(%s))
+            """, (vendor_name, vendor_name, target_jc_no, process_name))
+            updated_fields.append("vendor_name")
+
+        if not updated_fields:
+            return jsonify({"success": False, "error": "No editable fields were provided"}), 400
 
         conn.commit()
-        cursor.close()
-        conn.close()
 
-        return jsonify({"success": True, "message": "Job card updated successfully"})
+        return jsonify({
+            "success": True,
+            "message": "Job card updated successfully",
+            "updated_fields": sorted(set(updated_fields)),
+        })
+    except ValueError as e:
+        if conn:
+            conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
+        if conn:
+            conn.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

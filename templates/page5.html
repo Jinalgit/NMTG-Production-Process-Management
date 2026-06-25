@@ -512,9 +512,9 @@ View | NMTG{% endblock %} {% block extra_head %}
   </div>
 </div>
 
-<!-- ── Edit Job Card Fields Modal (username "gaurang" only, for now) ──── -->
+<!-- ── Edit Job Card Fields Modal ──────────────────────────────────────── -->
 <div id="edit-jobcard-modal" class="modal-overlay">
-  <div class="modal-box" style="width: 520px">
+  <div class="modal-box" style="width: 620px">
     <div class="modal-title">Edit Job Card Fields</div>
     <div class="modal-body">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
@@ -679,6 +679,78 @@ View | NMTG{% endblock %} {% block extra_head %}
             "
           />
         </div>
+        <div>
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Actual Qty</label
+          >
+          <input
+            type="number"
+            id="ejc-actual-qty"
+            min="0"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
+        <div style="grid-column: 1/-1">
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Remarks</label
+          >
+          <textarea
+            id="ejc-remarks"
+            rows="3"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+              resize: vertical;
+              font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+            "
+          ></textarea>
+        </div>
+        <div style="grid-column: 1/-1">
+          <label
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              color: var(--muted);
+              display: block;
+              margin-bottom: 4px;
+            "
+            >Subcontractor / Vendor Name</label
+          >
+          <input
+            type="text"
+            id="ejc-vendor-name"
+            style="
+              width: 100%;
+              padding: 8px 10px;
+              border: 1px solid var(--border);
+              border-radius: 4px;
+              font-size: 13px;
+            "
+          />
+        </div>
       </div>
     </div>
     <div class="modal-actions">
@@ -694,6 +766,7 @@ View | NMTG{% endblock %} {% block extra_head %}
 {% endblock %} {% block extra_scripts %}
 <script>
   window.JMS_CURRENT_USERNAME = "{{ session.get('username', '') }}";
+  window.JMS_USER_ROLE = "{{ session.get('role', '') }}";
 </script>
 <script src="{{ url_for('static', filename='js/page5.js') }}?v={{ version }}"></script>
 {% endblock %}

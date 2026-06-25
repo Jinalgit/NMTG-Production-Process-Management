@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% set active_page = "user_management" %} {% block title
-%}User Management | NMTG{% endblock %} {% block extra_head %}
+{% extends "base.html" %} {% set active_page = "user_management" %} {% block
+title %}User Management | NMTG{% endblock %} {% block extra_head %}
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/user_management.css') }}?v={{ version }}"
@@ -11,7 +11,9 @@
       <h1>User Management</h1>
       <p>Create new users and manage system access</p>
     </div>
-    <button class="btn-primary" onclick="openAddUserModal()">+ Add New User</button>
+    <button class="btn-primary" onclick="openAddUserModal()">
+      + Add New User
+    </button>
   </div>
 
   <div class="table-wrap">
@@ -47,25 +49,29 @@
 
     <div class="form-grid-2">
       <div class="form-group" style="grid-column: 1/-1">
-        <label
-          >Username &nbsp;<span style="color: #ef4444">*</span></label
-        >
-        <input type="text" id="u-username" placeholder="e.g. jdoe" autocomplete="off" />
+        <label>Username &nbsp;<span style="color: #ef4444">*</span></label>
+        <input
+          type="text"
+          id="u-username"
+          placeholder="e.g. jdoe"
+          autocomplete="off"
+        />
       </div>
       <div class="form-group" style="grid-column: 1/-1">
-        <label
-          >Password &nbsp;<span style="color: #ef4444">*</span></label
-        >
-        <input type="password" id="u-password" placeholder="Minimum 6 characters" autocomplete="new-password" />
+        <label>Password &nbsp;<span style="color: #ef4444">*</span></label>
+        <input
+          type="password"
+          id="u-password"
+          placeholder="Minimum 6 characters"
+          autocomplete="new-password"
+        />
       </div>
       <div class="form-group">
         <label>Full Name</label>
         <input type="text" id="u-full-name" placeholder="e.g. John Doe" />
       </div>
       <div class="form-group">
-        <label
-          >Role &nbsp;<span style="color: #ef4444">*</span></label
-        >
+        <label>Role &nbsp;<span style="color: #ef4444">*</span></label>
         <select id="u-role">
           <option value="">-- Select Role --</option>
           <option value="admin">Admin</option>
@@ -77,14 +83,20 @@
 
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeAddUserModal()">Cancel</button>
-      <button class="btn-primary" id="add-user-save-btn" onclick="saveNewUser()">Create User</button>
+      <button
+        class="btn-primary"
+        id="add-user-save-btn"
+        onclick="saveNewUser()"
+      >
+        Create User
+      </button>
     </div>
   </div>
 </div>
 
 <!-- ── USER DETAIL MODAL ──────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="user-detail-modal">
-  <div class="modal" style="max-width:460px">
+  <div class="modal" style="max-width: 760px">
     <div class="modal-header">
       <h2>User Details</h2>
       <button class="modal-close" onclick="closeUserDetail()">
@@ -116,14 +128,115 @@
     </div>
 
     <!-- Edit Role section — hidden until "Edit Role" is clicked -->
-    <div id="edit-role-section" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
-      <span class="detail-label" style="display:block;margin-bottom:10px">Select New Role</span>
-      <div class="role-pill-row">
-        <button class="role-pill admin"      id="role-pill-admin"      onclick="selectRolePill('admin')">Admin</button>
-        <button class="role-pill supervisor" id="role-pill-supervisor" onclick="selectRolePill('supervisor')">Supervisor</button>
-        <button class="role-pill operator"   id="role-pill-operator"   onclick="selectRolePill('operator')">Operator</button>
+    <div
+      id="permissions-section"
+      style="
+        display: none;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      "
+    >
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 12px;
+        "
+      >
+        <span class="detail-label">Rights Allocation</span>
+        <button
+          class="btn-primary"
+          id="permissions-save-btn"
+          onclick="savePermissions()"
+        >
+          Save Rights
+        </button>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:14px">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          align-items: start;
+        "
+      >
+        <div>
+          <div class="detail-label" style="margin-bottom: 8px">
+            Process Access
+          </div>
+          <div
+            id="permission-process-list"
+            style="
+              max-height: 220px;
+              overflow: auto;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              padding: 10px;
+            "
+          ></div>
+        </div>
+        <div>
+          <div class="detail-label" style="margin-bottom: 8px">
+            System Page Access
+          </div>
+
+          <div id="permission-page-list" class="page-access-grid"></div>
+          <div class="detail-label" style="margin-bottom: 8px">
+            Field Edit Rights
+          </div>
+          <div
+            id="permission-field-list"
+            style="
+              max-height: 220px;
+              overflow: auto;
+              border: 1px solid var(--border);
+              border-radius: 6px;
+              padding: 10px;
+            "
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="edit-role-section"
+      style="
+        display: none;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      "
+    >
+      <span class="detail-label" style="display: block; margin-bottom: 10px"
+        >Select New Role</span
+      >
+      <div class="role-pill-row">
+        <button
+          class="role-pill admin"
+          id="role-pill-admin"
+          onclick="selectRolePill('admin')"
+        >
+          Admin
+        </button>
+        <button
+          class="role-pill supervisor"
+          id="role-pill-supervisor"
+          onclick="selectRolePill('supervisor')"
+        >
+          Supervisor
+        </button>
+        <button
+          class="role-pill operator"
+          id="role-pill-operator"
+          onclick="selectRolePill('operator')"
+        >
+          Operator
+        </button>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px">
         <button class="btn-cancel" onclick="hideEditRole()">Cancel</button>
       </div>
     </div>
@@ -139,17 +252,31 @@
 
 <!-- ── ROLE CHANGE CONFIRM MODAL ──────────────────────────────────────────── -->
 <div class="modal-overlay" id="role-confirm-modal">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width: 420px">
     <div class="modal-header">
       <h2>Confirm Role Change</h2>
       <button class="modal-close" onclick="cancelRoleChange()">
         <i class="fa fa-close" aria-hidden="true"></i>
       </button>
     </div>
-    <p id="role-confirm-msg" style="font-size:14px;color:var(--text);line-height:1.7;padding:4px 0 20px"></p>
+    <p
+      id="role-confirm-msg"
+      style="
+        font-size: 14px;
+        color: var(--text);
+        line-height: 1.7;
+        padding: 4px 0 20px;
+      "
+    ></p>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="cancelRoleChange()">Cancel</button>
-      <button class="btn-primary" id="role-confirm-btn" onclick="confirmRoleChange()">Confirm</button>
+      <button
+        class="btn-primary"
+        id="role-confirm-btn"
+        onclick="confirmRoleChange()"
+      >
+        Confirm
+      </button>
     </div>
   </div>
 </div>

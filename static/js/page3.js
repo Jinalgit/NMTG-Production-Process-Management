@@ -23,7 +23,8 @@ async function fetchJobCard() {
     currentData = data;
     window.myAccessibleProcesses = data.my_accessible_processes; // null = admin / unrestricted
     renderResults(data);
-    loadPage3KanbanSummary();
+    // Kanban view disabled on Page 3.
+    // loadPage3KanbanSummary();
   } catch (e) {
     showToast("Server error. Is Flask running?", "error");
   }
@@ -1286,6 +1287,12 @@ function renderCardSkeleton(cardCount = 2) {
   }
   return `<div class="skeleton-wrap">${cards}</div>`;
 }
+
+function loadPage3KanbanSummary() {
+  // Kanban view disabled on Page 3.
+}
+
+/* Kanban view disabled on Page 3.
 async function loadPage3KanbanSummary() {
   try {
     const res = await fetch("/api/page3/kanban_summary");
@@ -1419,3 +1426,4 @@ function renderPage3KanbanSummary(data) {
 document.addEventListener("DOMContentLoaded", function () {
   loadPage3KanbanSummary();
 });
+*/

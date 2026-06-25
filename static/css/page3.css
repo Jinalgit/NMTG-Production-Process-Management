@@ -2128,6 +2128,7 @@ body {
   border-color: #4ade80;
 }
 
+/* Kanban view disabled on Page 3.
 .page3-kanban-wrap {
   margin: 14px 0 18px;
   padding: 16px;
@@ -2336,3 +2337,4 @@ body {
   text-align: center;
   padding: 6px;
 }
+*/

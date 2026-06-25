@@ -547,7 +547,8 @@ def fetch_for_quality_check(job_card_no):
             pass
 
 
-@quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+# Kanban view disabled on Page 3.
+# @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
 def page3_kanban_summary():
     conn = None
     cursor = None

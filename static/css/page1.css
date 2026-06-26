@@ -189,6 +189,10 @@ body {
   position: relative;
 }
 
+.customer-ac-wrap {
+  position: relative;
+}
+
 .ac-list {
   position: absolute;
   top: 100%;
@@ -229,6 +233,51 @@ body {
 .ac-item.active {
   background: var(--accent);
   color: #ffffff;
+}
+
+.customer-ac-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: none;
+  max-height: 220px;
+  margin-top: 2px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #d0d7e2;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.customer-ac-list.open {
+  display: block;
+}
+
+.customer-ac-item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  border: 0;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.customer-ac-item:last-child {
+  border-bottom: 0;
+}
+
+.customer-ac-item:hover,
+.customer-ac-item:focus {
+  background: #e8f0fe;
+  outline: 0;
 }
 
 /* Autofill section */

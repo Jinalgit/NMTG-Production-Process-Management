@@ -179,6 +179,52 @@ def get_items():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@job_cards_bp.route("/api/customer-search", methods=["GET"])
+def customer_search():
+    """Return matching customer master values for Page 1."""
+    conn = None
+    cursor = None
+    try:
+        query = request.args.get("q", "").strip()
+        if len(query) < 2:
+            return jsonify([])
+
+        like_query = f"%{query}%"
+        starts_with_query = f"{query}%"
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT full_customer_text AS value
+            FROM customer_master
+            WHERE customer_code LIKE %s
+               OR customer_name LIKE %s
+               OR full_customer_text LIKE %s
+            ORDER BY
+                CASE
+                    WHEN customer_code LIKE %s THEN 0
+                    WHEN customer_name LIKE %s THEN 1
+                    ELSE 2
+                END,
+                full_customer_text
+            LIMIT 15
+        """, (
+            like_query,
+            like_query,
+            like_query,
+            starts_with_query,
+            starts_with_query,
+        ))
+        return jsonify(cursor.fetchall())
+    except Error:
+        logger.exception("Customer search failed")
+        return jsonify({"error": "Unable to search customers"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
 @job_cards_bp.route("/api/process_names", methods=["GET"])
 def get_process_names():
     """Return all unique process names from process_master p1 to p25."""

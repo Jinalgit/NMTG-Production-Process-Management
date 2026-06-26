@@ -1,6 +1,8 @@
 let allItems = [];
 let defaultDays = {}; // process_name â†’ default days
 let selectedItemId = null;
+let customerSearchTimer = null;
+let customerSearchRequestId = 0;
 const PROCESS_STAGE_COUNT = 25;
 
 // â”€â”€ Load items and default days on startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -48,6 +50,64 @@ function getWorkOrderNo() {
 }
 
 // â”€â”€ Date helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function hideCustomerSuggestions() {
+  document.getElementById("customer-ac-list")?.classList.remove("open");
+}
+
+function selectCustomerSuggestion(value) {
+  const input = document.getElementById("customer_name");
+  if (input) input.value = value;
+  hideCustomerSuggestions();
+}
+
+async function searchCustomers(query, requestId) {
+  try {
+    const res = await fetch(`/api/customer-search?q=${encodeURIComponent(query)}`);
+    const customers = await res.json();
+    const list = document.getElementById("customer-ac-list");
+
+    if (!list || requestId !== customerSearchRequestId || !Array.isArray(customers)) return;
+    list.replaceChildren();
+
+    customers.forEach(customer => {
+      if (!customer.value) return;
+      const suggestion = document.createElement("button");
+      suggestion.type = "button";
+      suggestion.className = "customer-ac-item";
+      suggestion.textContent = customer.value;
+      suggestion.setAttribute("role", "option");
+      suggestion.addEventListener("mousedown", event => {
+        event.preventDefault();
+        selectCustomerSuggestion(customer.value);
+      });
+      list.appendChild(suggestion);
+    });
+
+    list.classList.toggle("open", list.childElementCount > 0);
+  } catch (e) {
+    if (requestId === customerSearchRequestId) hideCustomerSuggestions();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const customerInput = document.getElementById("customer_name");
+  if (!customerInput) return;
+
+  customerInput.addEventListener("input", function () {
+    const query = this.value.trim();
+    customerSearchRequestId += 1;
+    const requestId = customerSearchRequestId;
+    clearTimeout(customerSearchTimer);
+
+    if (query.length < 2) {
+      hideCustomerSuggestions();
+      return;
+    }
+
+    customerSearchTimer = setTimeout(() => searchCustomers(query, requestId), 250);
+  });
+});
+
 function getTodayDate() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -159,6 +219,7 @@ function onItemNameKeydown(e) {
 document.addEventListener("click", function (e) {
   if (!e.target.closest(".ac-wrap"))
     document.getElementById("ac-list").classList.remove("open");
+  if (!e.target.closest(".customer-ac-wrap")) hideCustomerSuggestions();
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -316,6 +377,7 @@ function resetForm() {
   document.getElementById("item_qty").value = "";
   document.getElementById("advance_stock").value = "";
   document.getElementById("remarks").value = "";
+  hideCustomerSuggestions();
   setDefaultDates();
   clearAutofill();
 }

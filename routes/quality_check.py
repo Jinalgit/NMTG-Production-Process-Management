@@ -1679,8 +1679,22 @@ def rollback_wip_stage():
                 "error": "Missing required fields"
             }), 400
 
+        role = (session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
+            return jsonify({"success": False, "error": "You do not have permission to rollback WIP stage."}), 403
+
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
+
+        if role == "supervisor" and not supervisor_has_process_access(
+            cursor, session.get("user_id"), current_stage
+        ):
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "success": False,
+                "error": f"You do not have rights to rollback from: {current_stage}"
+            }), 403
 
         cursor.execute("""
             SELECT id, process_name

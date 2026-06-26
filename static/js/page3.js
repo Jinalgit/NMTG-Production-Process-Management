@@ -1042,6 +1042,16 @@ function closeConfirmStageModal() {
 }
 
 function openRollbackModal(jcNo, itemName, currentStage, previousStage) {
+  if (Array.isArray(window.myAccessibleProcesses)) {
+    const currentWip = (currentStage || "").trim().toLowerCase();
+    const hasAccess = window.myAccessibleProcesses.some(
+      p => String(p || "").trim().toLowerCase() === currentWip
+    );
+    if (!hasAccess) {
+      showToast(`You do not have permission to roll back from '${currentStage}'.`, "error");
+      return;
+    }
+  }
   pendingChange = { jcNo, itemName, currentStage, newStage: previousStage, isRollback: true };
   document.getElementById("csm-from").textContent = previousStage;
   document.getElementById("csm-to").textContent = currentStage;

@@ -301,7 +301,18 @@ def data_job_cards():
                           AND jc.final_status != 'Completed'
                      THEN DATEDIFF(CURDATE(), ji.delivery_date)
                      ELSE 0
-                   END AS days_overdue
+                   END AS days_overdue,
+                   (SELECT CONCAT(
+                               COALESCE(at.changed_by, '?'), ' • ',
+                               DATE_FORMAT(at.changed_at, '%d %b %Y %H:%i'), ' • ',
+                               COALESCE(at.old_stage, '?'), ' → ', COALESCE(at.new_stage, '?')
+                           )
+                    FROM audit_trail at
+                    WHERE at.job_card_no = ji.job_card_no
+                      AND at.item_name   = ji.item_name
+                    ORDER BY at.changed_at DESC
+                    LIMIT 1
+                   ) AS last_audit
             FROM job_cards jc
             JOIN job_card_items ji ON jc.job_card_no = ji.job_card_no
             LEFT JOIN job_card_process_days pd_current

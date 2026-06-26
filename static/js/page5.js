@@ -52,7 +52,7 @@ const TAB = {
       { key: "final_status", label: "Status" },
       { key: "delivery_date", label: "Delivery Date" },
       { key: "so_date", label: "SO Date" },
-
+      { key: "last_audit", label: "Last Updated", noSort: true },
     ],
   },
   qc: {
@@ -338,6 +338,7 @@ function renderHead(cols) {
   ];
   const ths = cols.map(c => {
     const rotate = ROTATE_KEYS.includes(c.key) ? "th-rotate" : "";
+    if (c.noSort) return `<th class="${rotate}">${c.label}</th>`;
     return `<th class="${rotate}" onclick="setSort('${c.key}')" style="cursor:pointer">${c.label}${arrows(c.key)}</th>`;
   }).join("");
   document.getElementById("table-head").innerHTML = `<tr>${ths}</tr>`;

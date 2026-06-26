@@ -766,7 +766,9 @@ def update_wip():
         job_card_no = data.get("job_card_no")
         item_name = data.get("item_name")
         new_stage = data.get("new_stage")
-        changed_by = data.get("changed_by")
+        changed_by = data.get("changed_by") or ""
+        if not changed_by or changed_by.strip().lower() in ("not assigned", "system", ""):
+            changed_by = session.get("username") or session.get("full_name") or "System"
         revoke_qty = int(data.get("revoke_qty") or 0)
         revoke_remarks = (data.get("revoke_remarks") or "").strip()
         actual_qty = data.get("actual_qty")
@@ -1403,6 +1405,8 @@ def set_subcontract():
         process = data.get("process")
         vendor_name = data.get("vendor_name", "").strip()
         changed_by = data.get("changed_by", "")
+        if not changed_by or changed_by.strip().lower() in ("not assigned", "system", ""):
+            changed_by = session.get("username") or session.get("full_name") or "System"
 
         if not all([job_card_no, item_name, process]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
@@ -1515,6 +1519,8 @@ def complete_subcontract():
         item_name = data.get("item_name")
         process = data.get("process")
         changed_by = data.get("changed_by", "")
+        if not changed_by or changed_by.strip().lower() in ("not assigned", "system", ""):
+            changed_by = session.get("username") or session.get("full_name") or "System"
 
         if not all([job_card_no, item_name, process]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
@@ -1660,7 +1666,9 @@ def rollback_wip_stage():
         item_name = data.get("item_name")
         current_stage = data.get("current_stage")
         target_stage = data.get("target_stage")
-        changed_by = data.get("changed_by", "System")
+        changed_by = data.get("changed_by", "")
+        if not changed_by or changed_by.strip().lower() in ("not assigned", "system", ""):
+            changed_by = session.get("username") or session.get("full_name") or "System"
 
         if not job_card_no or not item_name or not current_stage or not target_stage:
             return jsonify({

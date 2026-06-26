@@ -1593,7 +1593,7 @@ def update_job_card_fields():
         }
         job_card_sets = []
         job_card_params = []
-        if new_jc_no != original_jc_no or (role == "admin" and "new_job_card_no" in data):
+        if new_jc_no != original_jc_no:
             job_card_sets = ["job_card_no = %s"]
             job_card_params = [new_jc_no]
             updated_fields.append("job_card_no")

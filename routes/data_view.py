@@ -160,6 +160,11 @@ def data_job_cards():
             where.append("jc.so_date <= %s")
             params.append(date_to)
 
+        filter_date = request.args.get("filter_date", "").strip()
+        if filter_date:
+            where.append("DATE(jc.created_at) = %s")
+            params.append(filter_date)
+
         delivery_from = request.args.get("delivery_from", "").strip()
         delivery_to = request.args.get("delivery_to",   "").strip()
         overdue = request.args.get("overdue",        "").strip()
@@ -625,6 +630,10 @@ def data_process_report():
         delivery_from = request.args.get("delivery_from", "").strip()
         delivery_to = request.args.get("delivery_to",   "").strip()
         overdue = request.args.get("overdue",        "").strip()
+        filter_date = request.args.get("filter_date", "").strip()
+        if filter_date:
+            where.append("DATE(jc.created_at) = %s")
+            params.append(filter_date)
 
         if wip_pr:
             where.append("ji.wip_status = %s")
@@ -961,6 +970,10 @@ def data_planning_sheet():
         delivery_from = request.args.get("delivery_from", "").strip()
         delivery_to = request.args.get("delivery_to",   "").strip()
         overdue = request.args.get("overdue",        "").strip()
+        filter_date = request.args.get("filter_date", "").strip()
+        if filter_date:
+            where.append("DATE(jc.created_at) = %s")
+            params.append(filter_date)
 
         if delivery_from:
             where.append("ji.delivery_date >= %s")

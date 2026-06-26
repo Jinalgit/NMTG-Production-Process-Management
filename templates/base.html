@@ -67,6 +67,55 @@ Demo 2 ============================================================ #}
         gap: 16px;
         align-items: center;
       }
+      .sidebar-date-filter {
+        padding: 10px 14px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        margin-top: 6px;
+      }
+      .sidebar-date-filter-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+      }
+      .sidebar-date-filter-row {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .sidebar-date-input {
+        flex: 1;
+        min-width: 0;
+        padding: 5px 7px;
+        border-radius: 4px;
+        border: 1px solid rgba(255,255,255,0.18);
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        font-size: 11px;
+        cursor: pointer;
+      }
+      .sidebar-date-input::-webkit-calendar-picker-indicator {
+        filter: invert(1) opacity(0.7);
+        cursor: pointer;
+      }
+      .sidebar-date-clear {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 4px;
+        color: rgba(255,255,255,0.8);
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 3px 8px;
+        line-height: 1.2;
+        flex-shrink: 0;
+      }
+      .sidebar-date-clear:hover {
+        background: rgba(255,255,255,0.22);
+        color: #fff;
+      }
     </style>
     {% block extra_head %}{% endblock %}
   </head>
@@ -160,6 +209,18 @@ Demo 2 ============================================================ #}
         </a>
         {% endif %}
       </div>
+
+      {% if session.get("role") in ["admin", "supervisor"] %}
+      <div class="sidebar-date-filter">
+        <div class="sidebar-date-filter-label">Filter by Date</div>
+        <div class="sidebar-date-filter-row">
+          <input type="date" id="global-date-filter" class="sidebar-date-input"
+                 onchange="onDateFilterChange()" title="Show records created on this date" />
+          <button type="button" class="sidebar-date-clear"
+                  onclick="clearDateFilter()" title="Clear filter — show all dates">×</button>
+        </div>
+      </div>
+      {% endif %}
 
       <div class="sidebar-user">
         {% if session.get("username") %}
@@ -264,6 +325,52 @@ Demo 2 ============================================================ #}
 
     <div class="toast" id="toast"></div>
     <script src="{{ url_for('static', filename='js/base.js') }}?v={{ version }}"></script>
+    <script>
+      (function () {
+        var FILTER_KEY = "jms_filter_date";
+
+        function todayStr() {
+          var d = new Date();
+          return d.getFullYear() + "-" +
+            String(d.getMonth() + 1).padStart(2, "0") + "-" +
+            String(d.getDate()).padStart(2, "0");
+        }
+
+        // Ensure localStorage always has a value before page-specific JS reads it
+        if (localStorage.getItem(FILTER_KEY) === null) {
+          localStorage.setItem(FILTER_KEY, todayStr());
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          var input = document.getElementById("global-date-filter");
+          if (input) input.value = localStorage.getItem(FILTER_KEY) || "";
+        });
+
+        function refreshPageData() {
+          if (typeof loadData === "function") loadData();
+          if (typeof loadProcessReport === "function") loadProcessReport();
+          if (typeof loadPlanningSheet === "function") loadPlanningSheet();
+        }
+
+        window.onDateFilterChange = function () {
+          var input = document.getElementById("global-date-filter");
+          if (!input) return;
+          if (input.value) {
+            localStorage.setItem(FILTER_KEY, input.value);
+          } else {
+            localStorage.removeItem(FILTER_KEY);
+          }
+          refreshPageData();
+        };
+
+        window.clearDateFilter = function () {
+          localStorage.removeItem(FILTER_KEY);
+          var input = document.getElementById("global-date-filter");
+          if (input) input.value = "";
+          refreshPageData();
+        };
+      })();
+    </script>
     {% block extra_scripts %}{% endblock %}
   </body>
 </html>

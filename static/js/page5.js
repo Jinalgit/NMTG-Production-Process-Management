@@ -289,6 +289,8 @@ function buildParams() {
   const p = new URLSearchParams({ search, page: currentPage, per_page: perPage, sort: sortCol, order: sortOrder });
   document.querySelectorAll("#filter-panel-content select").forEach(sel => { if (sel.value) p.set(sel.dataset.param, sel.value); });
   document.querySelectorAll("#filter-panel-content input[type='date']").forEach(inp => { if (inp.value) p.set(inp.dataset.param, inp.value); });
+  const filterDate = localStorage.getItem("jms_filter_date");
+  if (filterDate) p.set("filter_date", filterDate);
   return p.toString();
 }
 
@@ -524,6 +526,8 @@ async function loadProcessReport() {
   try {
     const search = document.getElementById("pr-search").value.trim();
     const prParams = new URLSearchParams({ search, page: prCurrentPage, per_page: prPerPage });
+    const _prFilterDate = localStorage.getItem("jms_filter_date");
+    if (_prFilterDate) prParams.append("filter_date", _prFilterDate);
     const _prWip = getFilterVal("wip");
     const _prProcStatus = getFilterVal("proc_status");
     const _prDelivFrom = getFilterVal("delivery_from");
@@ -751,6 +755,8 @@ async function loadPlanningSheet() {
     const _psOverdue = getFilterVal("overdue");
     const _psUrgent = getFilterVal("urgent_only");
     const psParams = new URLSearchParams({ search, wip });
+    const _psFilterDate = localStorage.getItem("jms_filter_date");
+    if (_psFilterDate) psParams.append("filter_date", _psFilterDate);
     if (_psDelivFrom) psParams.append("delivery_from", _psDelivFrom);
     if (_psDelivTo) psParams.append("delivery_to", _psDelivTo);
     if (_psOverdue) psParams.append("overdue", _psOverdue);

@@ -7,6 +7,9 @@ import traceback
 import logging
 from datetime import date, datetime, timedelta
 
+_IST = timedelta(hours=5, minutes=30)
+def _to_ist(dt): return dt + _IST if dt else dt
+
 from flask import Blueprint, jsonify, request
 from mysql.connector import Error
 from db import get_connection
@@ -406,7 +409,7 @@ def get_job_cards():
                 r["work_order_date"] = r["work_order_date"].strftime(
                     "%Y-%m-%d") if hasattr(r["work_order_date"], "strftime") else r["work_order_date"]
             if r.get("created_at"):
-                r["created_at"] = r["created_at"].strftime("%Y-%m-%d %H:%M")
+                r["created_at"] = _to_ist(r["created_at"]).strftime("%Y-%m-%d %H:%M")
         cursor.close()
         conn.close()
         return jsonify({"success": True, "job_cards": rows})

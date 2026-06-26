@@ -3,9 +3,14 @@ Audit Trail API routes for Demo 2.
 Returns the full history of WIP stage changes.
 """
 
+from datetime import timedelta
+
 from flask import Blueprint, jsonify
 from mysql.connector import Error
 from db import get_connection
+
+_IST = timedelta(hours=5, minutes=30)
+def _to_ist(dt): return dt + _IST if dt else dt
 
 audit_trail_bp = Blueprint("audit_trail", __name__)
 
@@ -25,7 +30,7 @@ def get_audit_trail():
         rows = cursor.fetchall()
         for r in rows:
             if r.get("changed_at"):
-                r["changed_at"] = r["changed_at"].strftime("%Y-%m-%d %H:%M")
+                r["changed_at"] = _to_ist(r["changed_at"]).strftime("%Y-%m-%d %H:%M")
         cursor.close(); conn.close()
         return jsonify({"success": True, "data": rows})
     except Error as e:
@@ -48,7 +53,7 @@ def get_audit_trail_by_jc(job_card_no):
         rows = cursor.fetchall()
         for r in rows:
             if r.get("changed_at"):
-                r["changed_at"] = r["changed_at"].strftime("%Y-%m-%d %H:%M")
+                r["changed_at"] = _to_ist(r["changed_at"]).strftime("%Y-%m-%d %H:%M")
         cursor.close(); conn.close()
         return jsonify({"success": True, "data": rows})
     except Error as e:

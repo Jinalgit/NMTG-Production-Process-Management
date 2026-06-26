@@ -4,7 +4,10 @@ Includes WIP status tracking, in/out time recording, and audit trail.
 """
 
 import re
-from datetime import date as date_cls, datetime
+from datetime import date as date_cls, datetime, timedelta
+
+_IST = timedelta(hours=5, minutes=30)
+def _to_ist(dt): return dt + _IST if dt else dt
 
 from flask import Blueprint, jsonify, request, session
 from mysql.connector import Error
@@ -1382,7 +1385,7 @@ def get_quality_history(job_card_no):
         rows = cursor.fetchall()
         for r in rows:
             if r.get("checked_at"):
-                r["checked_at"] = r["checked_at"].strftime("%Y-%m-%d %H:%M")
+                r["checked_at"] = _to_ist(r["checked_at"]).strftime("%Y-%m-%d %H:%M")
         cursor.close()
         conn.close()
         return jsonify({"success": True, "history": rows})

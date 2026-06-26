@@ -1,4 +1,9 @@
+from datetime import timedelta
+
 from flask import Blueprint, jsonify, request, session
+
+_IST = timedelta(hours=5, minutes=30)
+def _to_ist(dt): return dt + _IST if dt else dt
 from werkzeug.security import generate_password_hash
 from db import get_connection
 from permission_utils import (
@@ -95,7 +100,7 @@ def list_users():
 
         for u in users:
             if u.get("created_at"):
-                u["created_at"] = u["created_at"].strftime("%Y-%m-%d %H:%M")
+                u["created_at"] = _to_ist(u["created_at"]).strftime("%Y-%m-%d %H:%M")
 
         cursor.close()
         conn.close()

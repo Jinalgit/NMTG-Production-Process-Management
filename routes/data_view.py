@@ -4,7 +4,10 @@ All filtering, sorting, pagination and stats done in SQL.
 JS only renders what the backend returns.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+
+_IST = timedelta(hours=5, minutes=30)
+def _to_ist(dt): return dt + _IST if dt else dt
 
 from flask import Blueprint, jsonify, request, session
 from db import get_connection
@@ -304,7 +307,7 @@ def data_job_cards():
                    END AS days_overdue,
                    (SELECT CONCAT(
                                COALESCE(at.changed_by, '?'), ' • ',
-                               DATE_FORMAT(at.changed_at, '%d %b %Y %H:%i'), ' • ',
+                               DATE_FORMAT(CONVERT_TZ(at.changed_at, '+00:00', '+05:30'), '%d %b %Y %H:%i'), ' • ',
                                COALESCE(at.old_stage, '?'), ' → ', COALESCE(at.new_stage, '?')
                            )
                     FROM audit_trail at
@@ -329,7 +332,7 @@ def data_job_cards():
                 if r.get(f) and hasattr(r[f], "strftime"):
                     r[f] = r[f].strftime("%Y-%m-%d")
             if r.get("created_at"):
-                r["created_at"] = r["created_at"].strftime("%Y-%m-%d %H:%M")
+                r["created_at"] = _to_ist(r["created_at"]).strftime("%Y-%m-%d %H:%M")
 
         for r in rows:
             r["remaining_days"] = calculate_remaining_days_from_delivery(
@@ -501,7 +504,7 @@ def data_quality_checks():
         rows = cursor.fetchall()
         for r in rows:
             if r.get("checked_at"):
-                r["checked_at"] = r["checked_at"].strftime("%Y-%m-%d %H:%M")
+                r["checked_at"] = _to_ist(r["checked_at"]).strftime("%Y-%m-%d %H:%M")
 
         cursor.close()
         conn.close()
@@ -555,7 +558,7 @@ def get_audit_trail():
         rows = cursor.fetchall()
         for r in rows:
             if r.get("changed_at"):
-                r["changed_at"] = r["changed_at"].strftime("%Y-%m-%d %H:%M")
+                r["changed_at"] = _to_ist(r["changed_at"]).strftime("%Y-%m-%d %H:%M")
 
         cursor.close()
         conn.close()
@@ -576,7 +579,7 @@ def get_audit_trail_by_jc(job_card_no):
         rows = cursor.fetchall()
         for r in rows:
             if r.get("changed_at"):
-                r["changed_at"] = r["changed_at"].strftime("%Y-%m-%d %H:%M")
+                r["changed_at"] = _to_ist(r["changed_at"]).strftime("%Y-%m-%d %H:%M")
         cursor.close()
         conn.close()
         return jsonify({"success": True, "data": rows})

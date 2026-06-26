@@ -329,18 +329,6 @@ Demo 2 ============================================================ #}
       (function () {
         var FILTER_KEY = "jms_filter_date";
 
-        function todayStr() {
-          var d = new Date();
-          return d.getFullYear() + "-" +
-            String(d.getMonth() + 1).padStart(2, "0") + "-" +
-            String(d.getDate()).padStart(2, "0");
-        }
-
-        // Ensure localStorage always has a value before page-specific JS reads it
-        if (localStorage.getItem(FILTER_KEY) === null) {
-          localStorage.setItem(FILTER_KEY, todayStr());
-        }
-
         document.addEventListener("DOMContentLoaded", function () {
           var input = document.getElementById("global-date-filter");
           if (input) input.value = localStorage.getItem(FILTER_KEY) || "";

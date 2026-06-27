@@ -19,6 +19,7 @@ from permission_utils import (
     can_user_edit_field,
     ensure_permission_tables,
     has_process_access,
+    is_gaurang_special_user,
     seed_default_permissions,
 )
 
@@ -215,7 +216,7 @@ def data_job_cards():
             where.append("ji.delivery_date <= %s")
             params.append(delivery_to)
         if overdue == "yes":
-            if session.get("role") == "supervisor":
+            if session.get("role") == "supervisor" and not is_gaurang_special_user():
                 where.append("""
                     EXISTS (
                         SELECT 1
@@ -249,7 +250,7 @@ def data_job_cards():
                 """)
 
         elif overdue == "critical":
-            if session.get("role") == "supervisor":
+            if session.get("role") == "supervisor" and not is_gaurang_special_user():
                 where.append("""
                     EXISTS (
                         SELECT 1
@@ -387,12 +388,12 @@ def data_job_cards():
                 r.get("delivery_date"))
             r["total_default_days_calc"] = 0
             r["used_process_days_calc"] = 0
-            r["can_edit_current_process"] = session.get("role") == "admin"
+            r["can_edit_current_process"] = session.get("role") == "admin" or is_gaurang_special_user()
             r["page5_editable_fields"] = []
 
         role = (session.get("role") or "").strip().lower()
         user_id = session.get("user_id")
-        if role == "admin":
+        if role == "admin" or is_gaurang_special_user():
             admin_fields = sorted(PAGE5_BASE_FIELDS | PROCESS_FIELDS)
             for r in rows:
                 r["page5_editable_fields"] = admin_fields
@@ -483,7 +484,7 @@ def soft_delete_job_card_item():
     try:
         role = (session.get("role") or "").strip().lower()
         username = (session.get("username") or "").strip()
-        if role != "admin" and username != "gaurang":
+        if role != "admin" and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "You do not have permission to delete items."}), 403
 
         data = request.json or {}
@@ -1436,7 +1437,7 @@ def _fetch_overdue_processes(cursor):
     access_join = ""
     params = []
 
-    if role == "supervisor":
+    if role == "supervisor" and not is_gaurang_special_user():
         access_join = """
             JOIN supervisor_process_access spa
               ON spa.user_id = %s
@@ -1621,7 +1622,7 @@ def update_job_card_fields():
     cursor = None
     try:
         role = (session.get("role") or "").strip().lower()
-        if role not in ("admin", "supervisor"):
+        if role not in ("admin", "supervisor") and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "You do not have permission to edit these fields."}), 403
 
         data = request.json or {}
@@ -1651,7 +1652,7 @@ def update_job_card_fields():
                 "error": "Use the stage update action to change WIP status."
             }), 403
 
-        if role == "supervisor":
+        if role == "supervisor" and not is_gaurang_special_user():
             forbidden = []
             for key in data.keys():
                 if key in SUPERVISOR_UPDATE_IDENTIFIERS:
@@ -1686,6 +1687,7 @@ def update_job_card_fields():
         current_process = item_row.get("wip_status") or ""
         has_current_process_access = (
             role != "supervisor"
+            or is_gaurang_special_user()
             or has_process_access(cursor, session.get("user_id"), current_process)
         )
 
@@ -1754,7 +1756,7 @@ def update_job_card_fields():
             updated_fields.append("so_qty")
 
         if "actual_qty" in data and field_allowed("actual_qty"):
-            if role == "supervisor" and not has_current_process_access:
+            if role == "supervisor" and not is_gaurang_special_user() and not has_current_process_access:
                 return jsonify({
                     "success": False,
                     "error": f"You do not have rights to update process: {current_process}"
@@ -1763,7 +1765,7 @@ def update_job_card_fields():
             item_params.append(parse_optional_int(data.get("actual_qty"), "Actual Qty"))
             updated_fields.append("actual_qty")
         if "remarks" in data and field_allowed("remarks"):
-            if role == "supervisor" and not has_current_process_access:
+            if role == "supervisor" and not is_gaurang_special_user() and not has_current_process_access:
                 return jsonify({
                     "success": False,
                     "error": f"You do not have rights to update process: {current_process}"
@@ -1795,7 +1797,7 @@ def update_job_card_fields():
             ).strip()
             if not process_name:
                 return jsonify({"success": False, "error": "Current process is required for vendor update"}), 400
-            if role == "supervisor" and not has_process_access(
+            if role == "supervisor" and not is_gaurang_special_user() and not has_process_access(
                 cursor, session.get("user_id"), process_name
             ):
                 return jsonify({

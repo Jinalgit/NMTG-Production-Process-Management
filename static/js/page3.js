@@ -1,9 +1,11 @@
 let currentData = null;
 let pendingChange = null;
 
-const IS_OPERATOR_READ_ONLY = window.JMS_USER_ROLE === "operator";
+const IS_GAURANG_SPECIAL = window.JMS_IS_GAURANG_SPECIAL === true || window.JMS_IS_GAURANG_SPECIAL === "true";
+const IS_OPERATOR_READ_ONLY = window.JMS_USER_ROLE === "operator" && !IS_GAURANG_SPECIAL;
 
 function canEditProcess(processName) {
+  if (IS_GAURANG_SPECIAL) return true;
   if (window.JMS_USER_ROLE === "admin") return true;
   if (window.JMS_USER_ROLE !== "supervisor") return false;
   if (!Array.isArray(window.myAccessibleProcesses)) return false;
@@ -268,7 +270,7 @@ function renderResults(data) {
       const isClickable = !IS_OPERATOR_READ_ONLY && (
         state === "current" || state === "subcontract" || isStoreFinalClickable
       );
-      const canRollback = !IS_OPERATOR_READ_ONLY && (window.JMS_USER_ROLE === "admin" || window.JMS_USER_ROLE === "supervisor");
+      const canRollback = !IS_OPERATOR_READ_ONLY && (IS_GAURANG_SPECIAL || window.JMS_USER_ROLE === "admin" || window.JMS_USER_ROLE === "supervisor");
       const isRollbackPill = canRollback && state === "completed" && pIdx === wipIdx - 1 && wipIdx > 0;
       const pillExtraClass = state === "completed" ? "pill-done" : state === "pending" ? "pill-locked" : "";
       const pillTitle = isRollbackPill
@@ -534,7 +536,7 @@ function toggleQtySummary(iIdx) {
 
 async function renderQtySummary(iIdx, jcNo, itemName) {
   const role = window.JMS_USER_ROLE;
-  if (role !== "admin" && role !== "supervisor") return;
+  if (!IS_GAURANG_SPECIAL && role !== "admin" && role !== "supervisor") return;
   try {
     const res = await fetch(`/api/stage-qty-log/${encodeURIComponent(jcNo)}?item=${encodeURIComponent(itemName)}`);
     const result = await res.json();
@@ -1417,7 +1419,7 @@ function renderPage3KanbanSummary(data) {
         <div>
           <div class="kanban-title">My Process</div>
           <div class="kanban-subtitle">
-            ${window.JMS_USER_ROLE === "supervisor" ? "Showing only your assigned processes" : "Admin view - all processes"}
+            ${window.JMS_USER_ROLE === "supervisor" && !IS_GAURANG_SPECIAL ? "Showing only your assigned processes" : "All process view"}
           </div>
         </div>
 

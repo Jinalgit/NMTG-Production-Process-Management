@@ -1,5 +1,6 @@
 from functools import wraps
 from flask import jsonify, redirect, session, url_for
+from permission_utils import is_gaurang_special_user
 
 
 PAGE_ACCESS = {
@@ -40,6 +41,20 @@ PAGE_ACCESS = {
     },
 }
 
+GAURANG_OPERATIONAL_PAGES = {
+    "supervisor_dashboard",
+    "page1",
+    "page2",
+    "page3",
+    "page4",
+    "page5",
+}
+
+GAURANG_EXCLUDED_PAGES = {
+    "admin_dashboard",
+    "user_management",
+}
+
 
 def login_required(fn):
     @wraps(fn)
@@ -57,8 +72,8 @@ def page_required(page_name):
             if not session.get("user_id"):
                 return redirect(url_for("auth.login"))
 
-            role = session.get("role")
-            if role not in PAGE_ACCESS.get(page_name, {}):
+            access = current_access(page_name)
+            if not access:
                 return redirect(url_for("auth.login"))
 
             return fn(*args, **kwargs)
@@ -83,14 +98,25 @@ def api_required(page_name, allowed_modes=("full",)):
 
 
 def current_access(page_name):
+    # Special operational access for gaurang user_id=5; excludes user management.
+    if is_gaurang_special_user():
+        if page_name in GAURANG_EXCLUDED_PAGES:
+            return None
+        if page_name in GAURANG_OPERATIONAL_PAGES:
+            return "full"
+
     role = session.get("role")
     return PAGE_ACCESS.get(page_name, {}).get(role)
 
 
 def allowed_pages(role):
-    return {
+    pages = {
         page_name: access
         for page_name, role_access in PAGE_ACCESS.items()
         for role_name, access in role_access.items()
         if role_name == role
     }
+    if is_gaurang_special_user():
+        pages = {k: v for k, v in pages.items() if k not in GAURANG_EXCLUDED_PAGES}
+        pages.update({page_name: "full" for page_name in GAURANG_OPERATIONAL_PAGES})
+    return pages

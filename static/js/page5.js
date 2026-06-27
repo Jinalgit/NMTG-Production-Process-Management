@@ -1034,7 +1034,7 @@ async function openSharedStageModal(jcNo, itemName) {
     if (!item) { showToast("Item not found on this job card", "error"); return; }
 
     // Supervisor process-access pre-check (same rule as Page 3)
-    if (Array.isArray(data.my_accessible_processes)) {
+    if (!isGaurangSpecialUser() && Array.isArray(data.my_accessible_processes)) {
       const currentWip = (item.wip_status || "").trim().toLowerCase();
       const hasAccess = data.my_accessible_processes.some(p => p.trim().toLowerCase() === currentWip);
       if (!hasAccess) {
@@ -1177,12 +1177,16 @@ function currentUsername() {
   return String(window.JMS_CURRENT_USERNAME || "").trim();
 }
 
+function isGaurangSpecialUser() {
+  return window.JMS_IS_GAURANG_SPECIAL === true || window.JMS_IS_GAURANG_SPECIAL === "true" || currentUsername().toLowerCase() === "gaurang";
+}
+
 function isAdminUser() {
   return currentUserRole() === "admin";
 }
 
 function canDeletePpcItems() {
-  return isAdminUser() || currentUsername() === "gaurang";
+  return isAdminUser() || isGaurangSpecialUser();
 }
 
 function isSupervisorUser() {
@@ -1190,27 +1194,27 @@ function isSupervisorUser() {
 }
 
 function isEditableUser() {
-  return isAdminUser() || isSupervisorUser();
+  return isAdminUser() || isSupervisorUser() || isGaurangSpecialUser();
 }
 
 function canEditWipStage() {
-  return isAdminUser() || isSupervisorUser();
+  return isAdminUser() || isSupervisorUser() || isGaurangSpecialUser();
 }
 
 function canEditRowProcess(row) {
-  if (isAdminUser()) return true;
+  if (isAdminUser() || isGaurangSpecialUser()) return true;
   if (!isSupervisorUser()) return false;
   return row?.can_edit_current_process === true || row?.can_edit_current_process === 1;
 }
 
 function hasPage5Field(row, fieldName) {
-  if (isAdminUser()) return true;
+  if (isAdminUser() || isGaurangSpecialUser()) return true;
   const fields = Array.isArray(row?.page5_editable_fields) ? row.page5_editable_fields : [];
   return fields.includes(fieldName);
 }
 
 function canEditRowFields(row) {
-  return isAdminUser() || (isSupervisorUser() && Array.isArray(row?.page5_editable_fields) && row.page5_editable_fields.length > 0);
+  return isAdminUser() || isGaurangSpecialUser() || (isSupervisorUser() && Array.isArray(row?.page5_editable_fields) && row.page5_editable_fields.length > 0);
 }
 
 function setEditInputState(id, enabled) {

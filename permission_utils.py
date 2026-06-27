@@ -1,3 +1,5 @@
+from flask import session
+
 PAGE5_PPC = "page5_ppc"
 PAGE3_TRACEABILITY = "page3_traceability"
 
@@ -19,6 +21,23 @@ PROCESS_FIELDS = {
     "vendor_name",
     "subcontractor_name",
 }
+
+
+def is_gaurang_special_identity(user_id=None, username=None):
+    try:
+        if str(user_id or "").strip() == "5":
+            return True
+    except Exception:
+        pass
+    return (username or "").strip().lower() == "gaurang"
+
+
+def is_gaurang_special_user():
+    """Special operational access for gaurang user_id=5; excludes user management."""
+    return is_gaurang_special_identity(
+        session.get("user_id"),
+        session.get("username"),
+    )
 
 
 def ensure_permission_tables(cursor):
@@ -76,6 +95,8 @@ def seed_default_permissions(cursor):
 
 
 def has_process_access(cursor, user_id, process_name):
+    if is_gaurang_special_identity(user_id):
+        return True
     cursor.execute("""
         SELECT 1
         FROM supervisor_process_access
@@ -101,7 +122,7 @@ def has_field_edit_access(cursor, user_id, page_name, field_name):
 
 def can_user_edit_field(cursor, role, user_id, page_name, field_name):
     role = (role or "").strip().lower()
-    if role == "admin":
+    if role == "admin" or is_gaurang_special_identity(user_id):
         return True
     if role == "operator":
         return False

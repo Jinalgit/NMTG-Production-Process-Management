@@ -122,6 +122,7 @@ Demo 2 ============================================================ #}
   </head>
   <body class="{{ 'has-sidebar' if session.get('username') else 'auth-page' }}">
     {% if session.get("username") %}
+    {% set is_gaurang_special = session.get("user_id")|string == "5" or (session.get("username", "")|trim|lower) == "gaurang" %}
     <button
       class="sidebar-mobile-toggle"
       type="button"
@@ -144,35 +145,35 @@ Demo 2 ============================================================ #}
       </div>
 
       <div class="sidebar-links">
-        {% if session.get("role") == "admin" %}
+        {% if session.get("role") == "admin" and not is_gaurang_special %}
         <a
           href="{{ url_for('pages.admin_dashboard') }}"
           class="sidebar-link {{ 'active' if active_page == 'admin_dashboard' else '' }}"
         >
           <span class="sidebar-text">Dashboard</span>
         </a>
-        {% endif %} {% if session.get("role") == "supervisor" %}
+        {% endif %} {% if session.get("role") == "supervisor" or is_gaurang_special %}
         <a
           href="{{ url_for('pages.supervisor_dashboard') }}"
           class="sidebar-link {{ 'active' if active_page == 'supervisor_dashboard' else '' }}"
         >
           <span class="sidebar-text">Dashboard</span>
         </a>
-        {% endif %} {% if session.get("role") == "operator" %}
+        {% endif %} {% if session.get("role") == "operator" and not is_gaurang_special %}
         <a
           href="{{ url_for('pages.operator_dashboard') }}"
           class="sidebar-link {{ 'active' if active_page == 'operator_dashboard' else '' }}"
         >
           <span class="sidebar-text">Dashboard</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "operator"] %}
+        {% endif %} {% if session.get("role") in ["admin", "operator"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.index') }}"
           class="sidebar-link {{ 'active' if active_page == 'page1' else '' }}"
         >
           <span class="sidebar-text">PPC</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "operator"] %}
+        {% endif %} {% if session.get("role") in ["admin", "operator"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.page2') }}"
           class="sidebar-link {{ 'active' if active_page == 'page2' else '' }}"
@@ -180,28 +181,28 @@ Demo 2 ============================================================ #}
           <span class="sidebar-text">Process Master</span>
         </a>
         {% endif %} {% if session.get("role") in ["admin", "supervisor",
-        "operator"] %}
+        "operator"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.page3') }}"
           class="sidebar-link {{ 'active' if active_page == 'page3' else '' }}"
         >
           <span class="sidebar-text">Traceability</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "supervisor"] %}
+        {% endif %} {% if session.get("role") in ["admin", "supervisor"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.page4') }}"
           class="sidebar-link {{ 'active' if active_page == 'page4' else '' }}"
         >
           <span class="sidebar-text">Analytics</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "supervisor"] %}
+        {% endif %} {% if session.get("role") in ["admin", "supervisor"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.page5') }}"
           class="sidebar-link {{ 'active' if active_page == 'page5' else '' }}"
         >
           <span class="sidebar-text">Data View</span>
         </a>
-        {% endif %} {% if session.get("role") == "admin" %}
+        {% endif %} {% if session.get("role") == "admin" and not is_gaurang_special %}
         <a
           href="{{ url_for('pages.user_management') }}"
           class="sidebar-link {{ 'active' if active_page == 'user_management' else '' }}"
@@ -211,7 +212,7 @@ Demo 2 ============================================================ #}
         {% endif %}
       </div>
 
-      {% if session.get("role") in ["admin", "supervisor"] %}
+      {% if session.get("role") in ["admin", "supervisor"] or is_gaurang_special %}
       <div class="sidebar-date-filter">
         <div class="sidebar-date-filter-label">Filter by Date</div>
         <div class="sidebar-date-filter-row">

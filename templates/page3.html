@@ -409,6 +409,8 @@
 {% endblock %} {% block extra_scripts %}
 <script>
   window.JMS_USER_ROLE = "{{ session.get('role') }}";
+  window.JMS_IS_GAURANG_SPECIAL =
+    {{ 'true' if session.get("user_id")|string == "5" or (session.get("username", "")|trim|lower) == "gaurang" else 'false' }};
   window.JMS_CURRENT_USER =
     "{{ (session.get('full_name') or session.get('username') or '') | e }}";
 </script>

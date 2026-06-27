@@ -12,6 +12,7 @@ from permission_utils import (
     PAGE5_PPC,
     PROCESS_FIELDS,
     ensure_permission_tables,
+    is_gaurang_special_user,
     seed_default_permissions,
 )
 
@@ -34,9 +35,14 @@ FIELD_PERMISSION_MASTER = [
 ]
 
 
+def has_user_management_access():
+    # Special operational access for gaurang user_id=5; excludes user management.
+    return session.get("role") == "admin" and not is_gaurang_special_user()
+
+
 @users_bp.route("/api/users/create", methods=["POST"])
 def create_user():
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     data = request.json
@@ -84,7 +90,7 @@ def create_user():
 
 @users_bp.route("/api/users", methods=["GET"])
 def list_users():
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     try:
@@ -118,7 +124,7 @@ def user_management_users():
 
 @users_bp.route("/api/user-management/permission-master", methods=["GET"])
 def permission_master():
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     try:
@@ -151,7 +157,7 @@ def permission_master():
 
 @users_bp.route("/api/user-management/permissions/<int:user_id>", methods=["GET"])
 def get_user_permissions(user_id):
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     try:
@@ -208,7 +214,7 @@ def get_user_permissions(user_id):
 
 @users_bp.route("/api/user-management/save-permissions", methods=["POST"])
 def save_user_permissions():
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     data = request.json or {}
@@ -282,7 +288,7 @@ def save_user_permissions():
 
 @users_bp.route("/api/users/<int:user_id>/toggle-active", methods=["POST"])
 def toggle_user_active(user_id):
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     if session.get("user_id") == user_id:
@@ -318,7 +324,7 @@ def toggle_user_active(user_id):
 
 @users_bp.route("/api/users/<int:user_id>/update-role", methods=["POST"])
 def update_user_role(user_id):
-    if session.get("role") != "admin":
+    if not has_user_management_access():
         return jsonify({"success": False, "error": "Admin access required"}), 403
 
     if session.get("user_id") == user_id:

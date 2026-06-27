@@ -832,6 +832,8 @@ View | NMTG{% endblock %} {% block extra_head %}
 <script>
   window.JMS_CURRENT_USERNAME = "{{ session.get('username', '') }}";
   window.JMS_USER_ROLE = "{{ session.get('role', '') }}";
+  window.JMS_IS_GAURANG_SPECIAL =
+    {{ 'true' if session.get("user_id")|string == "5" or (session.get("username", "")|trim|lower) == "gaurang" else 'false' }};
 </script>
 <script src="{{ url_for('static', filename='js/page5.js') }}?v={{ version }}"></script>
 {% endblock %}

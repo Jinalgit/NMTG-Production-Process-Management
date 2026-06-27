@@ -1,11 +1,16 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import check_password_hash
 from db import get_connection
+from permission_utils import is_gaurang_special_user
 
 auth_bp = Blueprint("auth", __name__)
 
 
 def redirect_by_role(role):
+    # Special operational access for gaurang user_id=5; excludes user management.
+    if is_gaurang_special_user():
+        return redirect(url_for("pages.supervisor_dashboard"))
+
     if role == "admin":
         return redirect(url_for("pages.admin_dashboard"))
 

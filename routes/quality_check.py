@@ -16,6 +16,8 @@ from permission_utils import (
     PAGE3_TRACEABILITY,
     can_user_edit_field,
     ensure_permission_tables,
+    is_gaurang_special_identity,
+    is_gaurang_special_user,
     seed_default_permissions,
 )
 
@@ -52,6 +54,8 @@ def _has_column(cursor, table, column):
 
 
 def supervisor_has_process_access(cursor, user_id, process_name):
+    if is_gaurang_special_identity(user_id) or is_gaurang_special_user():
+        return True
     cursor.execute("""
         SELECT 1
         FROM supervisor_process_access
@@ -526,7 +530,7 @@ def fetch_for_quality_check(job_card_no):
         # it opens, instead of letting the user click through and only failing
         # at the final confirm step.
         my_accessible_processes = None
-        if session.get("role") == "supervisor":
+        if session.get("role") == "supervisor" and not is_gaurang_special_user():
             cursor.execute("""
                 SELECT process_name FROM supervisor_process_access
                 WHERE user_id = %s
@@ -577,7 +581,7 @@ def page3_kanban_summary():
         role = (session.get("role") or "").strip().lower()
         user_id = session.get("user_id")
 
-        if role not in ["admin", "supervisor"]:
+        if role not in ["admin", "supervisor"] and not is_gaurang_special_user():
             return jsonify({
                 "success": True,
                 "summary": {
@@ -594,7 +598,7 @@ def page3_kanban_summary():
 
         # Admin = all process access
         # Supervisor = only assigned processes from supervisor_process_access
-        if role == "supervisor":
+        if role == "supervisor" and not is_gaurang_special_user():
             access_join = """
                 JOIN supervisor_process_access spa
                   ON spa.user_id = %s
@@ -763,7 +767,7 @@ def update_wip():
         print("WIP UPDATE PAYLOAD:", data)
 
         role = (session.get("role") or "").strip().lower()
-        if role not in ("admin", "supervisor"):
+        if role not in ("admin", "supervisor") and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
 
         job_card_no = data.get("job_card_no")
@@ -823,7 +827,7 @@ def update_wip():
         # ── Supervisor process-access check ────────────────────────────────────
         # Supervisors can only move a job card OUT of a process they manage.
         # Admins bypass this check entirely.
-        if role == "supervisor" and not supervisor_has_process_access(
+        if role == "supervisor" and not is_gaurang_special_user() and not supervisor_has_process_access(
             cursor, session.get("user_id"), old_stage
         ):
             return jsonify({
@@ -832,6 +836,7 @@ def update_wip():
             }), 403
         if (
             role == "supervisor"
+            and not is_gaurang_special_user()
             and actual_qty is not None
             and not can_user_edit_field(
                 cursor, role, session.get("user_id"), PAGE3_TRACEABILITY, "actual_qty"
@@ -1241,7 +1246,7 @@ def save_quality_check():
     try:
         data = request.json
         role = (session.get("role") or "").strip().lower()
-        if role not in ("admin", "supervisor"):
+        if role not in ("admin", "supervisor") and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "Operator has read-only access"}), 403
 
         job_card_no = data.get("job_card_no")
@@ -1253,7 +1258,7 @@ def save_quality_check():
         seed_default_permissions(cursor)
         conn.commit()
 
-        if role == "supervisor":
+        if role == "supervisor" and not is_gaurang_special_user():
             for d in details:
                 item_name = (d.get("item_name") or "").strip()
                 cursor.execute("""
@@ -1400,7 +1405,7 @@ def set_subcontract():
     try:
         data = request.json
         role = (session.get("role") or "").strip().lower()
-        if role not in ("admin", "supervisor"):
+        if role not in ("admin", "supervisor") and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
 
         job_card_no = data.get("job_card_no")
@@ -1451,7 +1456,7 @@ def set_subcontract():
             return jsonify({"success": False, "error": validation_error}), 400
 
         # ── Supervisor process-access check ────────────────────────────────────
-        if role == "supervisor" and not supervisor_has_process_access(
+        if role == "supervisor" and not is_gaurang_special_user() and not supervisor_has_process_access(
             cursor, session.get("user_id"), current_wip
         ):
             return jsonify({
@@ -1515,7 +1520,7 @@ def complete_subcontract():
     try:
         data = request.json
         role = (session.get("role") or "").strip().lower()
-        if role not in ("admin", "supervisor"):
+        if role not in ("admin", "supervisor") and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
 
         job_card_no = data.get("job_card_no")
@@ -1532,7 +1537,7 @@ def complete_subcontract():
         cursor = conn.cursor(dictionary=True)
 
         # ── Supervisor process-access check ────────────────────────────────────
-        if role == "supervisor" and not supervisor_has_process_access(
+        if role == "supervisor" and not is_gaurang_special_user() and not supervisor_has_process_access(
             cursor, session.get("user_id"), process
         ):
             cursor.close()
@@ -1680,13 +1685,13 @@ def rollback_wip_stage():
             }), 400
 
         role = (session.get("role") or "").strip().lower()
-        if role not in ("admin", "supervisor"):
+        if role not in ("admin", "supervisor") and not is_gaurang_special_user():
             return jsonify({"success": False, "error": "You do not have permission to rollback WIP stage."}), 403
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        if role == "supervisor" and not supervisor_has_process_access(
+        if role == "supervisor" and not is_gaurang_special_user() and not supervisor_has_process_access(
             cursor, session.get("user_id"), current_stage
         ):
             cursor.close()

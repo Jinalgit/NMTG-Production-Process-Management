@@ -75,6 +75,44 @@ def ensure_extra_cols(cursor):
         if not col_exists(cursor, "job_card_process_days", col):
             cursor.execute(
                 f"ALTER TABLE job_card_process_days ADD COLUMN {col} {defn}")
+    for col, defn in [
+        ("is_deleted", "TINYINT(1) DEFAULT 0"),
+        ("deleted_by", "VARCHAR(100) NULL"),
+        ("deleted_at", "DATETIME NULL"),
+        ("delete_reason", "TEXT NULL"),
+    ]:
+        if not col_exists(cursor, "job_card_items", col):
+            cursor.execute(f"ALTER TABLE job_card_items ADD COLUMN {col} {defn}")
+
+
+def ensure_job_card_number_update_cascade(cursor):
+    """Allow a Job Card No rename to propagate to every dependent table."""
+    foreign_keys = (
+        ("job_card_items", "job_card_items_ibfk_1"),
+        ("job_card_process_days", "job_card_process_days_ibfk_1"),
+        ("quality_checks", "quality_checks_ibfk_1"),
+    )
+    for table_name, constraint_name in foreign_keys:
+        cursor.execute("""
+            SELECT update_rule
+            FROM information_schema.referential_constraints
+            WHERE constraint_schema = DATABASE()
+              AND table_name = %s
+              AND constraint_name = %s
+        """, (table_name, constraint_name))
+        constraint = cursor.fetchone()
+        if not constraint or str(constraint[0]).upper() == "CASCADE":
+            continue
+
+        cursor.execute(
+            f"ALTER TABLE `{table_name}` DROP FOREIGN KEY `{constraint_name}`")
+        cursor.execute(f"""
+            ALTER TABLE `{table_name}`
+            ADD CONSTRAINT `{constraint_name}`
+            FOREIGN KEY (`job_card_no`)
+            REFERENCES `job_cards` (`job_card_no`)
+            ON UPDATE CASCADE
+        """)
 
 
 SUPERVISOR_UPDATE_IDENTIFIERS = {
@@ -129,7 +167,7 @@ def data_job_cards():
         conn.commit()
 
         params = []
-        where = ["1=1"]
+        where = ["COALESCE(ji.is_deleted, 0) = 0"]
 
         if search:
             where.append("""(
@@ -266,8 +304,13 @@ def data_job_cards():
         """, params)
         total = cursor.fetchone()["total"]
 
-        cursor.execute(
-            "SELECT DISTINCT wip_status FROM job_card_items WHERE wip_status IS NOT NULL ORDER BY wip_status")
+        cursor.execute("""
+            SELECT DISTINCT wip_status
+            FROM job_card_items
+            WHERE wip_status IS NOT NULL
+              AND COALESCE(is_deleted, 0) = 0
+            ORDER BY wip_status
+        """)
         wip_options = [r["wip_status"] for r in cursor.fetchall()]
 
         cursor.execute(
@@ -431,6 +474,79 @@ def update_item_priority():
         return jsonify({"success": True, "message": "Priority updated", "is_priority": is_priority})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@data_view_bp.route("/api/job_card_item/soft_delete", methods=["POST"])
+def soft_delete_job_card_item():
+    conn = None
+    cursor = None
+    try:
+        role = (session.get("role") or "").strip().lower()
+        username = (session.get("username") or "").strip()
+        if role != "admin" and username != "gaurang":
+            return jsonify({"success": False, "error": "You do not have permission to delete items."}), 403
+
+        data = request.json or {}
+        item_id = data.get("item_id")
+        job_card_no = (data.get("job_card_no") or "").strip()
+        item_name = (data.get("item_name") or "").strip()
+        delete_reason = (data.get("delete_reason") or "").strip() or None
+
+        if not item_id and (not job_card_no or not item_name):
+            return jsonify({"success": False, "error": "item_id or job_card_no and item_name are required"}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        ensure_extra_cols(cursor)
+
+        if item_id:
+            cursor.execute("""
+                SELECT id, job_card_no, item_name
+                FROM job_card_items
+                WHERE id = %s
+                  AND COALESCE(is_deleted, 0) = 0
+                LIMIT 1
+            """, (item_id,))
+        else:
+            cursor.execute("""
+                SELECT id, job_card_no, item_name
+                FROM job_card_items
+                WHERE job_card_no = %s
+                  AND LOWER(TRIM(item_name)) = LOWER(TRIM(%s))
+                  AND COALESCE(is_deleted, 0) = 0
+                LIMIT 1
+            """, (job_card_no, item_name))
+
+        item = cursor.fetchone()
+        if not item:
+            conn.rollback()
+            return jsonify({"success": False, "error": "Job card item not found or already deleted"}), 404
+
+        cursor.execute("""
+            UPDATE job_card_items
+            SET is_deleted = 1,
+                deleted_by = %s,
+                deleted_at = NOW(),
+                delete_reason = %s
+            WHERE id = %s
+              AND COALESCE(is_deleted, 0) = 0
+        """, (username, delete_reason, item["id"]))
+
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({"success": False, "error": "Job card item not found or already deleted"}), 404
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Item deleted successfully"})
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 # â" € Quality Checks tab â"                                                       €
@@ -1584,6 +1700,9 @@ def update_job_card_fields():
         else:
             new_jc_no = original_jc_no
 
+        if new_jc_no != original_jc_no:
+            ensure_job_card_number_update_cascade(cursor)
+
         job_card_field_map = {
             "so_no": "so_no",
             "customer_name": "customer_name",
@@ -1613,11 +1732,6 @@ def update_job_card_fields():
 
             if new_jc_no != original_jc_no:
                 cursor.execute("""
-                    UPDATE job_card_process_days
-                    SET job_card_no = %s
-                    WHERE job_card_no = %s
-                """, (new_jc_no, original_jc_no))
-                cursor.execute("""
                     UPDATE audit_trail
                     SET job_card_no = %s
                     WHERE job_card_no = %s
@@ -1626,9 +1740,6 @@ def update_job_card_fields():
         item_sets = []
         item_params = []
 
-        if new_jc_no != original_jc_no:
-            item_sets.append("job_card_no = %s")
-            item_params.append(target_jc_no)
         if "item_name" in data and field_allowed("item_name"):
             item_sets.append("item_name = %s")
             item_params.append((data.get("item_name") or "").strip())

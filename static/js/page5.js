@@ -301,8 +301,9 @@ function getFilterVal(param) {
 
 // ── Load data ─────────────────────────────────────────────────────────────────
 async function loadData() {
+  const loadingColspan = (TAB[activeTab]?.cols?.length || 20) + ((activeTab === "jc" && canDeletePpcItems()) ? 1 : 0);
   document.getElementById("table-body").innerHTML =
-    `<tr><td colspan="20">${renderTableSkeleton(8)}</td></tr>`;
+    `<tr><td colspan="${loadingColspan}">${renderTableSkeleton(8)}</td></tr>`;
   try {
     const cfg = TAB[activeTab];
     const res = await fetch(`${cfg.api}?${buildParams()}`);
@@ -343,7 +344,10 @@ function renderHead(cols) {
     if (c.noSort) return `<th class="${rotate}">${c.label}</th>`;
     return `<th class="${rotate}" onclick="setSort('${c.key}')" style="cursor:pointer">${c.label}${arrows(c.key)}</th>`;
   }).join("");
-  document.getElementById("table-head").innerHTML = `<tr>${ths}</tr>`;
+  const actionTh = (activeTab === "jc" && canDeletePpcItems())
+    ? `<th style="text-align:center;min-width:58px;">Actions</th>`
+    : "";
+  document.getElementById("table-head").innerHTML = `<tr>${ths}${actionTh}</tr>`;
 }
 
 function isSubcontracted(row) {
@@ -375,11 +379,12 @@ function getProcessVisualState(process, index, currentIndex, wipStatus) {
 // ── Render body ───────────────────────────────────────────────────────────────
 function renderBody(cols, rows) {
   const tbody = document.getElementById("table-body");
+  const showDeleteAction = activeTab === "jc" && canDeletePpcItems();
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="${cols.length}"><div class="data-state">No records found</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${cols.length + (showDeleteAction ? 1 : 0)}"><div class="data-state">No records found</div></td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map(row => {
+  tbody.innerHTML = rows.map((row, index) => {
     const cells = cols.map(c => {
       const rawValue = row[c.key];
       let v = c.key === "wip_stage_days" ? (rawValue ?? 0) : formatCellValue(c.key, rawValue);
@@ -416,8 +421,15 @@ function renderBody(cols, rows) {
       const tdStyle = isNum ? "text-align:center;min-width:36px;max-width:52px;" : "";
       return `<td title="${String(formatCellValue(c.key, rawValue))}" style="${tdStyle}">${v}</td>`;
     }).join("");
+    const actionCell = showDeleteAction
+      ? `<td style="text-align:center;min-width:58px;max-width:58px;">
+          <button type="button" title="Delete item" onclick="softDeletePpcItem(${index})" style="width:28px;height:28px;border:1px solid #fecaca;border-radius:4px;background:#fef2f2;color:#dc2626;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+            <i class="fa fa-trash" aria-hidden="true"></i>
+          </button>
+        </td>`
+      : "";
     const priorityClass = row.is_priority ? "row-priority" : "";
-    return `<tr class="${priorityClass}">${cells}</tr>`;
+    return `<tr class="${priorityClass}">${cells}${actionCell}</tr>`;
   }).join("");
 }
 
@@ -442,6 +454,72 @@ async function togglePriorityImmediate(itemId, jobCardNo, encodedItemName, isChe
   } catch (e) {
     showToast("Server error", "error");
     if (checkboxEl) checkboxEl.checked = !isChecked;
+  }
+}
+
+let pendingDeleteRow = null;
+
+function softDeletePpcItem(rowIndex) {
+  if (!canDeletePpcItems()) {
+    showToast("You do not have permission to delete items.", "error");
+    return;
+  }
+
+  const row = (allData || [])[rowIndex];
+  if (!row) {
+    showToast("Could not find this item in the current view", "error");
+    return;
+  }
+
+  const label = `${row.job_card_no || ""} - ${row.item_name || ""}`.trim();
+  pendingDeleteRow = row;
+  document.getElementById("delete-item-label").textContent = label;
+  document.getElementById("delete-item-reason").value = "";
+  document.getElementById("delete-item-modal").classList.add("open");
+}
+
+function closeDeleteItemModal() {
+  document.getElementById("delete-item-modal").classList.remove("open");
+  pendingDeleteRow = null;
+}
+
+async function confirmDeleteItem() {
+  if (!pendingDeleteRow) return;
+
+  const row = pendingDeleteRow;
+  const confirmBtn = document.getElementById("delete-item-confirm-btn");
+  const deleteReason = document.getElementById("delete-item-reason")?.value || "";
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Deleting...";
+  }
+
+  try {
+    const res = await fetch("/api/job_card_item/soft_delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        item_id: row.item_id || null,
+        job_card_no: row.job_card_no || "",
+        item_name: row.item_name || "",
+        delete_reason: deleteReason.trim()
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message || "Item deleted successfully", "success");
+      closeDeleteItemModal();
+      loadData();
+    } else {
+      showToast(data.error || "Delete failed", "error");
+    }
+  } catch (e) {
+    showToast("Server error", "error");
+  } finally {
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "Delete";
+    }
   }
 }
 
@@ -1095,8 +1173,16 @@ function currentUserRole() {
   return String(window.JMS_USER_ROLE || "").trim().toLowerCase();
 }
 
+function currentUsername() {
+  return String(window.JMS_CURRENT_USERNAME || "").trim();
+}
+
 function isAdminUser() {
   return currentUserRole() === "admin";
+}
+
+function canDeletePpcItems() {
+  return isAdminUser() || currentUsername() === "gaurang";
 }
 
 function isSupervisorUser() {

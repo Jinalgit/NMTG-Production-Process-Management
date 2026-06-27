@@ -763,6 +763,71 @@ View | NMTG{% endblock %} {% block extra_head %}
     </div>
   </div>
 </div>
+
+<!-- Delete Item Confirmation Modal -->
+<div id="delete-item-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 430px">
+    <div class="modal-title" style="color: #dc2626">
+      <i class="fa fa-trash"></i> Delete Item
+    </div>
+    <div class="modal-body">
+      <div style="font-size: 14px; color: var(--text); margin-bottom: 12px">
+        Delete this item from PPC?
+      </div>
+      <div
+        id="delete-item-label"
+        style="
+          background: #f8fafc;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          padding: 9px 12px;
+          font-size: 13px;
+          font-weight: 700;
+          margin-bottom: 14px;
+        "
+      ></div>
+      <label
+        for="delete-item-reason"
+        style="
+          display: block;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--muted);
+          margin-bottom: 5px;
+        "
+      >
+        Remark
+      </label>
+      <textarea
+        id="delete-item-reason"
+        rows="3"
+        placeholder="Enter delete reason (optional)"
+        style="
+          width: 100%;
+          padding: 8px 10px;
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          font-size: 13px;
+          resize: vertical;
+          font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+        "
+      ></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteItemModal()">
+        Cancel
+      </button>
+      <button
+        class="btn-modal-confirm"
+        id="delete-item-confirm-btn"
+        style="background: #dc2626"
+        onclick="confirmDeleteItem()"
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock %} {% block extra_scripts %}
 <script>
   window.JMS_CURRENT_USERNAME = "{{ session.get('username', '') }}";

@@ -9,7 +9,7 @@ let viewingPermissions = { processes: [], pages: [], fields: [] };
 // ── Load users ───────────────────────────────────────────────────────────────
 async function loadUsers() {
   document.getElementById("users-table-body").innerHTML =
-    `<tr><td colspan="60">${renderTableSkeleton(5)}</td></tr>`;
+    `<tr><td colspan="5">${renderTableSkeleton(5)}</td></tr>`;
   try {
     const res = await fetch("/api/users");
     const data = await res.json();
@@ -24,9 +24,13 @@ async function loadUsers() {
 
 async function loadPermissionMaster() {
   try {
-    const res = await fetch("/api/user-management/permission-master");
+    const res = await fetch("/api/permissions/meta");
     const data = await res.json();
-    if (data.success) permissionMaster = data;
+    if (data.success) permissionMaster = {
+      processes: data.processes || [],
+      pages: data.pages || [],
+      fields: data.fields || [],
+    };
   } catch (e) {
     // Keep the existing user list usable even if permission metadata fails.
   }
@@ -41,10 +45,24 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function getInitials(name, fallback) {
+  const source = (name || fallback || "").trim();
+  if (!source) return "?";
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 function renderUsersTable(users) {
   const tbody = document.getElementById("users-table-body");
   if (!users.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users found</td></tr>';
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">
+      <div class="empty-state">
+        <i class="fa fa-users" aria-hidden="true"></i>
+        <strong>No users found</strong>
+        <span>Click "+ Add New User" to create the first account.</span>
+      </div>
+    </td></tr>`;
     return;
   }
 
@@ -55,13 +73,20 @@ function renderUsersTable(users) {
       : '<span class="status-badge inactive">Inactive</span>';
     const toggleLabel = isActive ? "Deactivate" : "Activate";
     const toggleClass = isActive ? "" : "reactivate";
+    const initials = getInitials(u.full_name, u.username);
 
     return `<tr style="cursor:pointer" onclick="openUserDetail(${u.id})">
-      <td>${escapeHtml(u.username)}</td>
-      <td>${escapeHtml(u.full_name || "-")}</td>
+      <td>
+        <div class="user-cell">
+          <span class="avatar-chip ${escapeHtml(u.role)}">${initials}</span>
+          <div class="user-cell-text">
+            <span class="user-cell-name">${escapeHtml(u.full_name || u.username)}</span>
+            <span class="user-cell-username">@${escapeHtml(u.username)}</span>
+          </div>
+        </div>
+      </td>
       <td><span class="role-badge ${escapeHtml(u.role)}">${escapeHtml(u.role)}</span></td>
       <td>${statusBadge}</td>
-      <td style="font-size:12px;color:var(--muted)">${escapeHtml(u.created_at)}</td>
       <td>
         <button class="btn-toggle-active ${toggleClass}" onclick="event.stopPropagation(); toggleUserActive(${u.id})">
           ${toggleLabel}
@@ -141,13 +166,13 @@ function openUserDetail(userId) {
   const u = allUsers.find(u => u.id === userId);
   if (!u) return;
   viewingUserId = userId;
-  document.getElementById("ud-username").textContent = u.username;
-  document.getElementById("ud-full-name").textContent = u.full_name || "—";
+  document.getElementById("ud-avatar").textContent = getInitials(u.full_name, u.username);
+  document.getElementById("ud-username").textContent = `@${u.username}`;
+  document.getElementById("ud-full-name").textContent = u.full_name || u.username;
   document.getElementById("ud-role").innerHTML = `<span class="role-badge ${escapeHtml(u.role)}">${escapeHtml(u.role)}</span>`;
   document.getElementById("ud-status").innerHTML = u.is_active === 1
     ? '<span class="status-badge active">Active</span>'
     : '<span class="status-badge inactive">Inactive</span>';
-  document.getElementById("ud-created").textContent = u.created_at;
   hideEditRole();
   loadAndRenderPermissions(userId);
   document.getElementById("user-detail-modal").classList.add("open");
@@ -166,13 +191,17 @@ async function loadAndRenderPermissions(userId) {
     if (!(permissionMaster.processes || []).length && !(permissionMaster.fields || []).length) {
       await loadPermissionMaster();
     }
-    const res = await fetch(`/api/user-management/permissions/${userId}`);
+    const res = await fetch(`/api/users/${userId}/permissions`);
     const data = await res.json();
     if (!data.success) {
       showToast(data.error || "Could not load permissions", "error");
       return;
     }
-    viewingPermissions = data;
+    viewingPermissions = {
+      processes: data.process_access || [],
+      pages: (data.page_access || []).map(p => ({ page_name: p, can_access: 1 })),
+      fields: (data.field_access || []).map(f => ({ page_name: f.page_name, field_name: f.field_name, can_edit: 1 })),
+    };
     renderPermissionEditor();
   } catch (e) {
     showToast("Server error", "error");
@@ -183,6 +212,14 @@ function permissionLabel(text) {
   return escapeHtml(String(text || "").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()));
 }
 
+function permChip(kind, value, label, checked, extraAttrs = "") {
+  return `<label class="perm-chip">
+    <input type="checkbox" data-permission-kind="${kind}" ${extraAttrs} value="${escapeHtml(value)}" ${checked ? "checked" : ""}>
+    <span class="chip-check">✓</span>
+    <span>${label}</span>
+  </label>`;
+}
+
 function renderPermissionEditor() {
   const processSet = new Set(viewingPermissions.processes || []);
   const pageSet = new Set((viewingPermissions.pages || []).filter(p => Number(p.can_access) === 1).map(p => p.page_name));
@@ -190,33 +227,26 @@ function renderPermissionEditor() {
 
   const processHost = document.getElementById("permission-process-list");
   if (processHost) {
-    processHost.innerHTML = (permissionMaster.processes || []).map(proc => `
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" data-permission-kind="process" value="${escapeHtml(proc)}" ${processSet.has(proc) ? "checked" : ""}>
-        <span>${escapeHtml(proc)}</span>
-      </label>
-    `).join("") || `<div style="font-size:13px;color:var(--muted)">No processes found</div>`;
+    processHost.innerHTML = (permissionMaster.processes || []).map(proc =>
+      permChip("process", proc, escapeHtml(proc), processSet.has(proc))
+    ).join("") || `<div class="perm-empty">No processes found</div>`;
   }
 
   const pageHost = document.getElementById("permission-page-list");
   if (pageHost) {
-    pageHost.innerHTML = (permissionMaster.pages || []).map(page => `
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" data-permission-kind="page" value="${escapeHtml(page.page_name)}" ${pageSet.has(page.page_name) ? "checked" : ""}>
-        <span>${escapeHtml(page.label || page.page_name)}</span>
-      </label>
-    `).join("") || `<div style="font-size:13px;color:var(--muted)">No pages found</div>`;
+    pageHost.innerHTML = (permissionMaster.pages || []).map(page =>
+      permChip("page", page.page_name, escapeHtml(page.label || page.page_name), pageSet.has(page.page_name))
+    ).join("") || `<div class="perm-empty">No pages found</div>`;
   }
 
   const fieldHost = document.getElementById("permission-field-list");
   if (fieldHost) {
     fieldHost.innerHTML = (permissionMaster.fields || []).map(field => {
       const key = `${field.page_name}::${field.field_name}`;
-      return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;cursor:pointer">
-        <input type="checkbox" data-permission-kind="field" data-page-name="${escapeHtml(field.page_name)}" data-field-name="${escapeHtml(field.field_name)}" ${fieldSet.has(key) ? "checked" : ""}>
-        <span>${escapeHtml(field.page_name)} / ${permissionLabel(field.label || field.field_name)}</span>
-      </label>`;
-    }).join("") || `<div style="font-size:13px;color:var(--muted)">No fields found</div>`;
+      const label = `${escapeHtml(field.page_name)} / ${permissionLabel(field.label || field.field_name)}`;
+      const attrs = `data-page-name="${escapeHtml(field.page_name)}" data-field-name="${escapeHtml(field.field_name)}"`;
+      return permChip("field", key, label, fieldSet.has(key), attrs);
+    }).join("") || `<div class="perm-empty">No fields found</div>`;
   }
 }
 
@@ -242,10 +272,17 @@ async function savePermissions() {
   }
 
   try {
-    const res = await fetch("/api/user-management/save-permissions", {
+    const process_access = processes;
+    const page_access = pages.filter(p => p.can_access === 1).map(p => p.page_name);
+    const field_access = fields.filter(f => f.can_edit === 1).map(f => ({
+      page_name: f.page_name,
+      field_name: f.field_name,
+    }));
+
+    const res = await fetch(`/api/users/${viewingUserId}/permissions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: viewingUserId, processes, pages, fields })
+      body: JSON.stringify({ process_access, page_access, field_access })
     });
     const data = await res.json();
     if (data.success) {
@@ -341,7 +378,6 @@ function renderTableSkeleton(rowCount = 1) {
   let rows = "";
   for (let i = 0; i < rowCount; i++) {
     rows += `<div class="skeleton-table-row">
-      <div class="skeleton-line short"></div>
       <div class="skeleton-line medium"></div>
       <div class="skeleton-line short"></div>
       <div class="skeleton-line short"></div>

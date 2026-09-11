@@ -1,0 +1,1153 @@
+{% extends "base.html" %}
+{% set active_page = "oee_page" %}
+
+{% block title %}OEE | NMTG{% endblock %}
+
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/page5.css') }}?v={{ version }}"
+/>
+
+<style>
+
+  /* OEE_STANDARD_PAGE_LAYOUT */
+  .oee-main {
+    width: 100%;
+    margin: 0;
+    padding: 36px 32px;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 768px) {
+    .oee-main {
+      padding: 24px 14px;
+    }
+  }
+
+  .oee-page-title {
+    margin-bottom: 16px;
+  }
+
+  .oee-page-title h2 {
+    margin: 0;
+  }
+
+  .oee-page-subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .oee-filter-grid {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .oee-filter-grid .form-group {
+    margin: 0;
+  }
+
+  .oee-filter-grid label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .oee-filter-grid input,
+  .oee-filter-grid select {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  .oee-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(125px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .oee-summary-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .oee-summary-value {
+    margin-top: 4px;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .oee-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  #oee-table {
+    display: none;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  #oee-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--header-bg);
+    color: #fff;
+  }
+
+  #oee-loading {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  @media (max-width: 900px) {
+    .oee-summary-grid {
+      grid-template-columns: repeat(2, minmax(125px, 1fr));
+    }
+  }
+
+
+  /* OEE_COMMON_HEADER_FIX */
+
+  .oee-page-title {
+    margin-bottom: 28px;
+  }
+
+  .oee-page-title h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .oee-page-subtitle {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+
+  /* OEE_FILTER_UI_ENHANCE_START */
+
+  .oee-filter-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(145px, 0.8fr))
+      repeat(3, minmax(160px, 1fr))
+      minmax(220px, 1.4fr)
+      auto;
+
+    gap: 12px;
+    align-items: end;
+  }
+
+  .oee-filter-grid .form-group {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .oee-filter-grid label {
+    display: block;
+    margin-bottom: 6px;
+
+    color: #526579;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1px;
+  }
+
+  .oee-filter-grid input,
+  .oee-filter-grid select {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+
+    padding: 0 11px;
+
+    color: #1f2937;
+    background: #f8fafc;
+
+    border: 1px solid #d5dee8;
+    border-radius: 7px;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      background 0.18s ease;
+  }
+
+  .oee-filter-grid input:hover,
+  .oee-filter-grid select:hover {
+    border-color: #b6c5d3;
+    background: #ffffff;
+  }
+
+  .oee-filter-grid input:focus,
+  .oee-filter-grid select:focus {
+    background: #ffffff;
+    border-color: #0b5fa5;
+
+    box-shadow:
+      0 0 0 3px rgba(11, 95, 165, 0.08);
+  }
+
+  #oee-search {
+    padding-left: 12px;
+  }
+
+  #oee-apply-btn {
+    height: 42px !important;
+    min-width: 105px;
+
+    padding: 0 18px !important;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #09336e !important;
+    color: #ffffff !important;
+
+    border: 1px solid #09336e !important;
+    border-radius: 7px !important;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+      0 2px 6px rgba(9, 51, 110, 0.16);
+
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      background 0.15s ease;
+  }
+
+  #oee-apply-btn:hover {
+    background: #0b4b91 !important;
+
+    box-shadow:
+      0 4px 10px rgba(9, 51, 110, 0.20);
+  }
+
+  #oee-apply-btn:active {
+    transform: translateY(1px);
+  }
+
+
+  @media (max-width: 1250px) {
+    .oee-filter-grid {
+      grid-template-columns:
+        repeat(3, minmax(160px, 1fr));
+    }
+
+    #oee-apply-btn {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .oee-filter-grid {
+      grid-template-columns:
+        repeat(2, minmax(140px, 1fr));
+    }
+  }
+
+  @media (max-width: 520px) {
+    .oee-filter-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* OEE_FILTER_UI_ENHANCE_END */
+
+
+
+  /* OEE_FILTER_CARD_STYLE */
+  .oee-filter-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    padding: 20px;
+    margin-bottom: 24px;
+
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+
+  /* OEE_PAGE2_FILTER_STYLE_START */
+
+
+  /* ========================================================
+     Filter card
+     ======================================================== */
+
+  .oee-filter-card {
+    position: relative;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    padding: 10px;
+    margin-bottom: 20px;
+
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+
+  /*
+     Existing .oee-filter-grid becomes only a structural
+     wrapper. New topbar controls its layout.
+  */
+  .oee-filter-grid {
+    display: block;
+  }
+
+
+  /* ========================================================
+     Search | Filters | Clear
+     ======================================================== */
+
+  .oee-filter-topbar {
+    display: grid;
+
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto
+      auto;
+
+    gap: 10px;
+
+    align-items: center;
+  }
+
+
+  .oee-search-wrap {
+    position: relative;
+    min-width: 0;
+  }
+
+
+  .oee-search-icon {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #8494a7;
+
+    font-size: 13px;
+
+    pointer-events: none;
+  }
+
+
+  #oee-search {
+    width: 100%;
+    height: 44px;
+
+    box-sizing: border-box;
+
+    padding:
+      0
+      14px
+      0
+      40px;
+
+    background: #f8fafc;
+
+    border:
+      1px solid
+      #d9e1e8;
+
+    border-radius: 8px;
+
+    color: #1f2937;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      background 0.18s ease;
+  }
+
+
+  #oee-search:focus {
+    background: #ffffff;
+
+    border-color: #0b5fa5;
+
+    box-shadow:
+      0 0 0 3px
+      rgba(11, 95, 165, 0.08);
+  }
+
+
+  /* ========================================================
+     Filters button
+     ======================================================== */
+
+  .oee-filter-toggle {
+    height: 44px;
+    min-width: 116px;
+
+    padding: 0 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    background: #ffffff;
+    color: #17365d;
+
+    border:
+      1px solid
+      #b9c9d8;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+
+  .oee-filter-toggle:hover {
+    background: #f1f7fc;
+
+    color: #0b5fa5;
+
+    border-color: #8baac5;
+  }
+
+
+  .oee-filter-toggle[aria-expanded="true"] {
+    background: #09336e;
+    color: #ffffff;
+
+    border-color: #09336e;
+
+    box-shadow:
+      0 2px 7px
+      rgba(9, 51, 110, 0.20);
+  }
+
+
+  .oee-filter-chevron {
+    margin-left: 2px;
+
+    font-size: 10px;
+
+    transition:
+      transform 0.20s ease;
+  }
+
+
+  .oee-filter-toggle[aria-expanded="true"]
+  .oee-filter-chevron {
+    transform: rotate(180deg);
+  }
+
+
+  /* ========================================================
+     Clear button
+     ======================================================== */
+
+  .oee-filter-clear {
+    height: 44px;
+
+    padding: 0 15px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    background: #f8fafc;
+    color: #475569;
+
+    border:
+      1px solid
+      #cbd5e1;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+
+  .oee-filter-clear:hover {
+    background: #fff5f5;
+    color: #b42318;
+
+    border-color: #f0b8b8;
+  }
+
+
+  /* ========================================================
+     Collapsible advanced filter area
+     ======================================================== */
+
+  .oee-advanced-filters {
+    display: none;
+
+    margin-top: 12px;
+    padding: 14px;
+
+    grid-template-columns:
+      repeat(5, minmax(145px, 1fr))
+      auto;
+
+    gap: 10px;
+
+    align-items: end;
+
+    background: #f8fafc;
+
+    border:
+      1px solid
+      #dfe7ef;
+
+    border-radius: 8px;
+  }
+
+
+  .oee-filter-card.oee-filters-open
+  .oee-advanced-filters {
+    display: grid;
+  }
+
+
+  .oee-advanced-filters .form-group {
+    margin: 0;
+    min-width: 0;
+  }
+
+
+  .oee-advanced-filters label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #526579;
+
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+
+  .oee-advanced-filters input,
+  .oee-advanced-filters select {
+    width: 100%;
+    height: 42px;
+
+    box-sizing: border-box;
+
+    padding: 0 10px;
+
+    background: #ffffff;
+
+    border:
+      1px solid
+      #d5dee8;
+
+    border-radius: 7px;
+
+    color: #1f2937;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+  }
+
+
+  .oee-advanced-filters input:focus,
+  .oee-advanced-filters select:focus {
+    border-color: #0b5fa5;
+
+    box-shadow:
+      0 0 0 2px
+      rgba(11, 95, 165, 0.07);
+  }
+
+
+  #oee-apply-btn {
+    height: 42px !important;
+    min-width: 100px;
+
+    padding:
+      0 18px !important;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    background:
+      #09336e !important;
+
+    color:
+      #ffffff !important;
+
+    border:
+      1px solid
+      #09336e !important;
+
+    border-radius:
+      7px !important;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+  }
+
+
+  #oee-apply-btn:hover {
+    background:
+      #0b4b91 !important;
+  }
+
+
+  /* ========================================================
+     Summary + records in ONE main container
+     ======================================================== */
+
+  .oee-results-card {
+    background: var(--surface);
+
+    border:
+      1px solid
+      var(--border);
+
+    border-radius: 8px;
+
+    padding: 20px;
+
+    margin-bottom: 24px;
+
+    box-shadow:
+      0 1px 3px
+      rgba(0, 0, 0, 0.08);
+  }
+
+
+  .oee-results-card
+  .oee-summary-grid {
+    margin-bottom: 20px;
+  }
+
+
+  /* ========================================================
+     Responsive
+     ======================================================== */
+
+  @media (max-width: 1150px) {
+
+    .oee-advanced-filters {
+      grid-template-columns:
+        repeat(
+          3,
+          minmax(150px, 1fr)
+        );
+    }
+
+    #oee-apply-btn {
+      width: 100%;
+    }
+  }
+
+
+  @media (max-width: 760px) {
+
+    .oee-filter-topbar {
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto
+        auto;
+    }
+
+    .oee-advanced-filters {
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(140px, 1fr)
+        );
+    }
+  }
+
+
+  @media (max-width: 520px) {
+
+    .oee-filter-topbar {
+      grid-template-columns:
+        1fr
+        1fr;
+    }
+
+    .oee-search-wrap {
+      grid-column:
+        1 / -1;
+    }
+
+    .oee-filter-toggle,
+    .oee-filter-clear {
+      width: 100%;
+    }
+
+    .oee-advanced-filters {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+  /* OEE_PAGE2_FILTER_STYLE_END */
+
+
+
+  /* OEE_KPI_CARD_UI_START */
+
+  .oee-summary-grid {
+    gap: 14px;
+  }
+
+  .oee-kpi-card {
+    position: relative;
+    overflow: hidden;
+
+    min-height: 88px;
+    padding: 16px 18px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    background: linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f7fbff 100%
+    );
+
+    border: 1px solid #dbe5ee;
+    border-radius: 8px;
+
+    box-shadow:
+      0 2px 6px rgba(15, 42, 77, 0.06);
+
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  /* NMTG blue accent */
+  .oee-kpi-card::before {
+    content: "";
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background: #0b5fa5;
+  }
+
+  .oee-kpi-card:hover {
+    transform: translateY(-2px);
+
+    border-color: #b8d2e8;
+
+    box-shadow:
+      0 5px 14px rgba(15, 42, 77, 0.10);
+  }
+
+  .oee-kpi-card .oee-summary-label {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+  }
+
+  .oee-kpi-card .oee-summary-value {
+    margin-top: 6px;
+
+    color: #0b1f3a;
+
+    font-size: 27px;
+    line-height: 1;
+    font-weight: 800;
+
+    letter-spacing: -0.4px;
+  }
+
+  @media (max-width: 900px) {
+    .oee-kpi-card {
+      min-height: 82px;
+      padding: 14px 16px;
+    }
+
+    .oee-kpi-card .oee-summary-value {
+      font-size: 24px;
+    }
+  }
+
+  /* OEE_KPI_CARD_UI_END */
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main oee-main">
+
+<div class="oee-page-title">
+  <h2>OEE Performance</h2>
+  <!-- <div class="oee-page-subtitle">
+    Read-only CNC / VMC OEE records
+  </div> -->
+</div>
+
+<div class="card oee-filter-card">
+  <div class="oee-filter-grid">
+
+    <div class="oee-filter-topbar">
+
+      <div class="oee-search-wrap">
+        <i
+          class="fa fa-search oee-search-icon"
+          aria-hidden="true"
+        ></i>
+
+        <input
+          type="text"
+          id="oee-search"
+          placeholder="Search JC / Item / Machine..."
+        />
+      </div>
+
+      <button
+        type="button"
+        class="oee-filter-toggle"
+        id="oee-filter-toggle"
+        onclick="toggleOeeFilters()"
+        aria-expanded="false"
+        aria-controls="oee-advanced-filters"
+      >
+        <i class="fa fa-filter" aria-hidden="true"></i>
+        <span>Filters</span>
+        <i
+          class="fa fa-chevron-down oee-filter-chevron"
+          aria-hidden="true"
+        ></i>
+      </button>
+
+      <button
+        type="button"
+        class="oee-filter-clear"
+        onclick="clearOeeFilters()"
+        title="Clear all OEE filters"
+      >
+        <i class="fa fa-times" aria-hidden="true"></i>
+        <span>Clear</span>
+      </button>
+
+    </div>
+
+    <div
+      class="oee-advanced-filters"
+      id="oee-advanced-filters"
+    >
+
+      <div class="form-group">
+        <label for="oee-from-date">From Date</label>
+        <input type="date" id="oee-from-date" />
+      </div>
+
+      <div class="form-group">
+        <label for="oee-to-date">To Date</label>
+        <input type="date" id="oee-to-date" />
+      </div>
+
+      <div class="form-group">
+        <label for="oee-machine-filter">Machine</label>
+        <select id="oee-machine-filter">
+          <option value="">All Machines</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="oee-process-filter">Process</label>
+        <select id="oee-process-filter">
+          <option value="">All Processes</option>
+        </select>
+      </div>
+
+      <div
+        class="form-group"
+        id="oee-operator-filter-wrap"
+      >
+        <label for="oee-operator-filter">Operator</label>
+        <select id="oee-operator-filter">
+          <option value="">All Operators</option>
+        </select>
+      </div>
+
+      <button
+        type="button"
+        id="oee-apply-btn"
+      >
+        <i class="fa fa-check" aria-hidden="true"></i>
+        Apply
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<div class="oee-results-card">
+
+<div class="oee-summary-grid">
+
+  <div class="card oee-kpi-card">
+    <div class="oee-summary-label">Avg OEE</div>
+    <div class="oee-summary-value" id="oee-summary-oee">-</div>
+  </div>
+
+  <div class="card oee-kpi-card">
+    <div class="oee-summary-label">Avg AR</div>
+    <div class="oee-summary-value" id="oee-summary-ar">-</div>
+  </div>
+
+  <div class="card oee-kpi-card">
+    <div class="oee-summary-label">Avg PR</div>
+    <div class="oee-summary-value" id="oee-summary-pr">-</div>
+  </div>
+
+  <div class="card oee-kpi-card">
+    <div class="oee-summary-label">Avg QR</div>
+    <div class="oee-summary-value" id="oee-summary-qr">-</div>
+  </div>
+
+  <div class="card oee-kpi-card">
+    <div class="oee-summary-label">Avg Plan vs Actual</div>
+    <div class="oee-summary-value" id="oee-summary-plan-vs-actual">-</div>
+  </div>
+
+</div>
+
+<div class="oee-table-wrap">
+
+  <div id="oee-loading">
+    OEE data will load here.
+  </div>
+
+  <table id="oee-table">
+    <thead>
+      <tr>
+        
+        <th>Shift</th>
+        <th>Machine</th>
+        <th>Operator</th>
+        <th>JC No.</th>
+        <th>Item</th>
+        <th>Process</th>
+        <th>OK</th>
+        <th>Reworked</th>
+        <th>Rejected</th>
+        <th>Planned Min</th>
+        <th>Run Min</th>
+              <th>Plan vs Actual</th>
+        
+        
+        <th>AR %</th>
+        <th>PR %</th>
+        <th>QR %</th>
+        <th>OEE %</th>
+      </tr>
+    </thead>
+
+    <tbody id="oee-tbody"></tbody>
+  </table>
+
+</div><!-- /.oee-results-card -->
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  window.JMS_USER_ROLE = "{{ session.get('role', '') }}";
+  window.JMS_CURRENT_USER_ID = "{{ session.get('user_id', '') }}";
+  window.JMS_CURRENT_USERNAME = "{{ session.get('username', '') }}";
+</script>
+
+<script
+  src="{{ url_for('static', filename='js/oee.js') }}?v={{ version }}"
+></script>
+
+<script>
+/* OEE_FILTER_TOGGLE_START */
+
+function toggleOeeFilters() {
+  const card =
+    document.querySelector(
+      ".oee-filter-card"
+    );
+
+  const button =
+    document.getElementById(
+      "oee-filter-toggle"
+    );
+
+  if (!card || !button) return;
+
+  const isOpen =
+    card.classList.toggle(
+      "oee-filters-open"
+    );
+
+  button.setAttribute(
+    "aria-expanded",
+    isOpen ? "true" : "false"
+  );
+}
+
+
+function clearOeeFilters() {
+  const ids = [
+    "oee-from-date",
+    "oee-to-date",
+    "oee-machine-filter",
+    "oee-process-filter",
+    "oee-operator-filter",
+    "oee-search"
+  ];
+
+  ids.forEach(function (id) {
+    const el =
+      document.getElementById(id);
+
+    if (el) {
+      el.value = "";
+    }
+  });
+
+  /*
+     Use the existing Apply button so the
+     current OEE filtering logic remains
+     the source of truth.
+  */
+  const applyButton =
+    document.getElementById(
+      "oee-apply-btn"
+    );
+
+  if (applyButton) {
+    applyButton.click();
+  }
+}
+
+
+/* Close advanced filters when clicking outside */
+document.addEventListener(
+  "click",
+  function (event) {
+
+    const card =
+      document.querySelector(
+        ".oee-filter-card"
+      );
+
+    const button =
+      document.getElementById(
+        "oee-filter-toggle"
+      );
+
+    if (!card || !button) return;
+
+    if (
+      card.classList.contains(
+        "oee-filters-open"
+      ) &&
+      !card.contains(event.target)
+    ) {
+      card.classList.remove(
+        "oee-filters-open"
+      );
+
+      button.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+    }
+  }
+);
+
+/* OEE_FILTER_TOGGLE_END */
+</script>
+
+{% endblock %}

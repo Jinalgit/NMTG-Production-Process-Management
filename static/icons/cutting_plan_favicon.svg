@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 64 64">
+
+    <rect
+        width="64"
+        height="64"
+        rx="12"
+        fill="#0b5fa5"
+    />
+
+    <!-- cutting bar -->
+    <rect
+        x="14"
+        y="17"
+        width="36"
+        height="8"
+        rx="2"
+        fill="white"
+    />
+
+    <rect
+        x="14"
+        y="30"
+        width="25"
+        height="8"
+        rx="2"
+        fill="white"
+    />
+
+    <!-- scissors -->
+    <circle
+        cx="44"
+        cy="43"
+        r="5"
+        fill="none"
+        stroke="white"
+        stroke-width="4"
+    />
+
+    <circle
+        cx="54"
+        cy="43"
+        r="5"
+        fill="none"
+        stroke="white"
+        stroke-width="4"
+    />
+
+    <path
+        d="M48 40 L34 29 M50 40 L57 30"
+        fill="none"
+        stroke="white"
+        stroke-width="4"
+        stroke-linecap="round"
+    />
+
+</svg>

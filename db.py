@@ -4,6 +4,7 @@ All route blueprints import get_connection() from this module.
 """
 
 import os
+
 import mysql.connector
 
 DB_CONFIG = {

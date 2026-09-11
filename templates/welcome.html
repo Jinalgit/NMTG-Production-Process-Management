@@ -1,0 +1,385 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NMTG MES</title>
+
+    <link
+        rel="icon"
+        type="image/jpeg"
+        href="{{ url_for('static', filename='img/nmtg_logo_color_back.jpg') }}"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/welcome.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="welcome-topbar">
+
+    <!-- LEFT: NMTG LOGO -->
+    <div class="topbar-left">
+        <a href="{{ url_for('pages.welcome') }}" class="welcome-brand">
+            <img
+                src="{{ url_for('static', filename='img/image.png') }}"
+                alt="NMTG"
+            >
+        </a>
+    </div>
+
+
+    <!-- CENTER: SEARCH -->
+    <button
+        type="button"
+        class="topbar-search"
+        id="welcome-search-trigger"
+        aria-label="Search modules"
+    >
+        <span class="search-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="M16.5 16.5L21 21"></path>
+            </svg>
+        </span>
+
+        <span class="search-text">Search</span>
+
+        <span class="search-shortcut">Ctrl+K</span>
+    </button>
+
+
+    <!-- RIGHT: USER -->
+    <div class="topbar-right">
+
+        <!-- <button
+            type="button"
+            class="notification-btn"
+            title="Notifications"
+            aria-label="Notifications"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                <path d="M10 21h4"></path>
+            </svg>
+        </button> -->
+
+        <div class="user-area">
+
+            <div class="user-details">
+                <div class="user-name">
+                    {{ session.get("full_name") or session.get("username") }}
+                </div>
+
+                <div class="user-role">
+                    {{ session.get("role")|capitalize }}
+                </div>
+            </div>
+
+            <div class="user-avatar">
+                {{ (session.get("full_name") or session.get("username") or "U")[0:2]|upper }}
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================================
+     MODULE LAUNCHER
+========================================================= -->
+
+<main class="welcome-main">
+
+    {% if is_zone_login %}
+
+    <div class="module-grid module-grid--zone">
+
+        <!-- OEE -->
+        <a class="module" href="/oee-machine/operator"
+            data-search="OEE Overall Equipment Effectiveness CNC VMC Machine"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8"></circle>
+                    <path d="M12 12l4-4"></path>
+                    <path d="M12 6v2"></path>
+                    <path d="M18 12h-2"></path>
+                    <path d="M6 12h2"></path>
+                </svg>
+            </div>
+            <div class="module-name">OEE</div>
+        </a>
+
+        <!-- OEE Summary (secondary — coming soon) -->
+        <a class="module module--disabled" href="#"
+            title="Coming Soon"
+            data-search="OEE Summary Record History"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                    <path d="M4 10h16"></path>
+                    <path d="M9 10v9"></path>
+                    <circle cx="18" cy="7" r="3" fill="currentColor" opacity=".4"></circle>
+                </svg>
+            </div>
+            <div class="module-name">OEE Summary</div>
+        </a>
+
+    </div>
+
+    {% else %}
+
+    <div class="module-grid">
+
+        <!-- PPC -->
+        <a
+            class="module"
+            href="{{ url_for('pages.index') }}"
+            data-search="PPC Production Planning Job Card Job Cards Planning"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                    <path d="M8 8h8"></path>
+                    <path d="M8 12h5"></path>
+                    <path d="M8 16h7"></path>
+                </svg>
+            </div>
+
+            <div class="module-name">PPC</div>
+        </a>
+
+
+        <!-- Process Master -->
+        <a
+            class="module"
+            href="{{ url_for('pages.page2') }}"
+            data-search="Process Master BOM Routing Process Route Manufacturing"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="6" cy="6" r="2"></circle>
+                    <circle cx="18" cy="6" r="2"></circle>
+                    <circle cx="12" cy="18" r="2"></circle>
+                    <path d="M8 6h8"></path>
+                    <path d="M7 8l4 8"></path>
+                    <path d="M17 8l-4 8"></path>
+                </svg>
+            </div>
+
+            <div class="module-name">Process Master</div>
+        </a>
+
+
+        <!-- Traceability -->
+        <a
+            class="module"
+            href="{{ url_for('pages.page3') }}"
+            data-search="Traceability WIP Process Movement Job Card Tracking Quality"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 6h10"></path>
+                    <path d="M15 6l3-3"></path>
+                    <path d="M15 6l3 3"></path>
+                    <path d="M19 18H9"></path>
+                    <path d="M9 18l-3-3"></path>
+                    <path d="M9 18l-3 3"></path>
+                    <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+            </div>
+
+            <div class="module-name">Traceability</div>
+        </a>
+
+
+        <!-- Data View -->
+        <a
+            class="module"
+            href="{{ url_for('pages.page5') }}"
+            data-search="Data View Job Cards WIP Reports Planning Sheet Quality Checks"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                    <path d="M4 10h16"></path>
+                    <path d="M9 10v9"></path>
+                </svg>
+            </div>
+
+            <div class="module-name">Data View</div>
+        </a>
+
+
+        <!-- Dispatch Tracker -->
+        <a
+            class="module"
+            href="{{ url_for('pages.dispatch_tracker') }}"
+            data-search="Dispatch Tracker Customer Sales Order SO Work Order WO Delivery Advance Plan"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 7h11v9H3z"></path>
+                    <path d="M14 10h4l3 3v3h-7z"></path>
+                    <circle cx="7" cy="18" r="2"></circle>
+                    <circle cx="17" cy="18" r="2"></circle>
+                </svg>
+            </div>
+
+            <div class="module-name">Dispatch Tracker</div>
+        </a>
+
+
+        <!-- OEE -->
+        <a
+            class="module"
+            href="{{ url_for('pages.oee_page') }}"
+            data-search="OEE Overall Equipment Effectiveness CNC VMC Machine Performance Availability Quality"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8"></circle>
+                    <path d="M12 12l4-4"></path>
+                    <path d="M12 6v2"></path>
+                    <path d="M18 12h-2"></path>
+                    <path d="M6 12h2"></path>
+                </svg>
+            </div>
+
+            <div class="module-name">OEE</div>
+        </a>
+
+
+        <!-- Analytics -->
+        <a
+            class="module"
+            href="{{ url_for('pages.page4') }}"
+            data-search="Analytics Dashboard Production Performance WIP OTD Reports"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 19V11"></path>
+                    <path d="M10 19V6"></path>
+                    <path d="M15 19v-5"></path>
+                    <path d="M20 19V9"></path>
+                </svg>
+            </div>
+
+            <div class="module-name">Analytics</div>
+        </a>
+
+
+        <!-- User Management -->
+        <a
+            class="module"
+            href="{{ url_for('pages.user_management') }}"
+            data-search="User Management Users Permission Permissions Roles Administration"
+        >
+            <div class="module-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="9" cy="8" r="3"></circle>
+                    <path d="M4 19c0-3 2-5 5-5s5 2 5 5"></path>
+                    <circle cx="17" cy="9" r="2"></circle>
+                    <path d="M16 14c2.5 0 4 1.5 4 4"></path>
+                </svg>
+            </div>
+
+            <div class="module-name">User Management</div>
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</main>
+
+
+<!-- =========================================================
+     SEARCH / COMMAND PALETTE
+========================================================= -->
+
+<div
+    class="command-overlay"
+    id="command-overlay"
+    aria-hidden="true"
+>
+
+    <div
+        class="command-palette"
+        id="command-palette"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search NMTG MES"
+    >
+
+        <div class="command-search-row">
+
+            <svg
+                class="command-search-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="M16.5 16.5L21 21"></path>
+            </svg>
+
+            <input
+                type="text"
+                id="command-search-input"
+                class="command-search-input"
+                placeholder="Search or type a command"
+                autocomplete="off"
+                spellcheck="false"
+            >
+
+        </div>
+
+
+        <div
+            class="command-results"
+            id="command-results"
+        ></div>
+
+
+        <div class="command-footer">
+
+            <div class="command-hint">
+                <kbd>↑</kbd>
+                <kbd>↓</kbd>
+                <span>to navigate</span>
+            </div>
+
+            <div class="command-hint">
+                <kbd>↵</kbd>
+                <span>to select</span>
+            </div>
+
+            <div class="command-hint">
+                <kbd>esc</kbd>
+                <span>to close</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="{{ url_for('static', filename='js/welcome.js') }}"></script>
+
+</body>
+</html>

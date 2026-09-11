@@ -13,6 +13,7 @@ PAGE5_BASE_FIELDS = {
     "item_name",
     "material",
     "so_qty",
+    "is_priority",
 }
 
 PROCESS_FIELDS = {
@@ -118,6 +119,30 @@ def has_field_edit_access(cursor, user_id, page_name, field_name):
         LIMIT 1
     """, (user_id, page_name, field_name))
     return cursor.fetchone() is not None
+
+
+def has_field_view_access(cursor, user_id, page_name, field_name):
+    cursor.execute("""
+        SELECT 1
+        FROM user_field_permissions
+        WHERE user_id = %s
+          AND page_name = %s
+          AND field_name = %s
+          AND (can_view = 1 OR can_edit = 1)
+        LIMIT 1
+    """, (user_id, page_name, field_name))
+    return cursor.fetchone() is not None
+
+
+def can_user_view_field(cursor, role, user_id, page_name, field_name):
+    role = (role or "").strip().lower()
+    if role == "admin" or is_gaurang_special_identity(user_id):
+        return True
+    if role == "operator":
+        return False
+    if role == "supervisor":
+        return has_field_view_access(cursor, user_id, page_name, field_name)
+    return False
 
 
 def can_user_edit_field(cursor, role, user_id, page_name, field_name):

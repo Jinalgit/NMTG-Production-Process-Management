@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set active_page = "user_management" %}
+
+{% block title %}User Management | NMTG{% endblock %}
+
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='vue/user-management/assets/app.css') }}?v={{ version }}"
+/>
+{% endblock %}
+
+{% block content %}
+<div id="user-management-vue-root"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script
+  type="module"
+  src="{{ url_for('static', filename='vue/user-management/assets/app.js') }}?v={{ version }}"
+></script>
+{% endblock %}

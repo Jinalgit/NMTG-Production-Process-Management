@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Raw Material Shortage{% endblock %}
+
+{% block content %}
+
+<style>
+.raw-shortage-page {
+    padding: 22px;
+}
+
+.raw-shortage-header {
+    margin-bottom: 18px;
+}
+
+.raw-shortage-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.raw-shortage-excel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    background: #173f6b;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.raw-shortage-excel-btn:hover {
+    color: #ffffff;
+    text-decoration: none;
+    opacity: 0.92;
+}
+
+.raw-shortage-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.raw-shortage-subtitle {
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.raw-shortage-card {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.raw-shortage-table-wrap {
+    overflow-x: auto;
+}
+
+.raw-shortage-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.raw-shortage-table th,
+.raw-shortage-table td {
+    border: 1px solid #b8b8b8;
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+.raw-shortage-table th {
+    background: #f2f2f2;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.raw-shortage-table td:first-child {
+    font-weight: 500;
+}
+
+.raw-shortage-uom,
+.raw-shortage-qty,
+.raw-shortage-days {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.raw-shortage-qty {
+    font-weight: 700;
+}
+
+.raw-shortage-empty {
+    padding: 35px;
+    text-align: center;
+    color: #6c757d;
+}
+</style>
+
+
+<div class="raw-shortage-page">
+
+    <!-- RAW_MATERIAL_SHORTAGE_EXCEL_BUTTON_V1 -->
+    <div class="raw-shortage-header">
+
+        <div class="raw-shortage-header-row">
+
+            <div>
+                <h2 class="raw-shortage-title">
+                    <i class="fa fa-cubes" aria-hidden="true"></i>
+                    Raw Material Shortage
+                </h2>
+
+                <div class="raw-shortage-subtitle">
+                    Raw material requirement for Job Cards currently at Raw Material stage.
+                </div>
+            </div>
+
+            <a
+                href="{{ url_for('raw_material_shortage.export_excel') }}"
+                class="raw-shortage-excel-btn"
+            >
+                <i class="fa fa-download" aria-hidden="true"></i>
+                Excel
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="raw-shortage-card">
+
+        {% if shortage_rows %}
+
+        <div class="raw-shortage-table-wrap">
+
+            <table class="raw-shortage-table">
+
+                <thead>
+                    <tr>
+                        <th>Raw Material-Pending</th>
+                        <th>UOM</th>
+                        <th>Shortage {{ shortage_date }}</th>
+                        <th>Days in Stage</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for row in shortage_rows %}
+
+                    <tr>
+                        <td>
+                            {{ row.material }}
+                        </td>
+
+                        <td class="raw-shortage-uom">
+                            {{ row.uom }}
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {{ row.shortage_display }}
+                        </td>
+
+                        <td class="raw-shortage-days">
+                            {{ row.days_in_stage }}
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="raw-shortage-empty">
+            No Raw Material pending Job Cards found.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

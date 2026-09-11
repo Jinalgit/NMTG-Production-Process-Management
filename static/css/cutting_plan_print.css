@@ -1,0 +1,1731 @@
+/* ==========================================================
+   NMTG RAW MATERIAL CUTTING PLAN
+   PROFESSIONAL PRINT LAYOUT V1
+   ========================================================== */
+
+
+*{
+    box-sizing:border-box;
+}
+
+
+@page{
+
+    size:A4 landscape;
+
+    margin:
+        8mm
+        8mm
+        8mm
+        8mm;
+
+}
+
+
+html,
+body{
+
+    margin:0;
+
+    padding:0;
+
+    font-family: "IBM Plex Sans", sans-serif;
+
+    color:#162a3d;
+
+    background:#edf1f5;
+
+    font-size:11px;
+
+}
+
+
+
+/* ==========================================================
+   SCREEN PREVIEW
+   ========================================================== */
+
+.screen-actions{
+
+    width:277mm;
+
+    max-width:calc(100% - 30px);
+
+    margin:
+        16px
+        auto
+        10px;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:8px;
+
+}
+
+
+.screen-btn{
+
+    border:0;
+
+    border-radius:7px;
+
+    padding:
+        9px
+        16px;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+}
+
+
+.screen-btn.primary{
+
+    background:#0b4d80;
+
+    color:#ffffff;
+
+}
+
+
+.screen-btn.secondary{
+
+    background:#ffffff;
+
+    color:#30465a;
+
+    border:1px solid #c6d0da;
+
+}
+
+
+
+/* ==========================================================
+   SHEET
+   ========================================================== */
+
+.print-sheet{
+
+    width:277mm;
+
+    min-height:190mm;
+
+    max-width:calc(100% - 30px);
+
+    margin:
+        0
+        auto
+        20px;
+
+    background:#ffffff;
+
+    border:1px solid #c9d4df;
+
+    box-shadow:
+        0
+        4px
+        18px
+        rgba(15,23,42,.12);
+
+}
+
+
+
+/* ==========================================================
+   HEADER
+   ========================================================== */
+
+.document-header{
+
+    display:grid;
+
+    grid-template-columns:
+        1.25fr
+        1fr;
+
+    border-bottom:
+        3px
+        solid
+        #0c5185;
+
+}
+
+
+.brand-section{
+
+    min-height:76px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding:
+        12px
+        16px;
+
+}
+
+
+.nmtg-logo{
+
+    display:block;
+
+    width:auto;
+
+    max-width:125px;
+
+    max-height:52px;
+
+    object-fit:contain;
+
+}
+
+
+.nmtg-wordmark{
+
+    min-width:110px;
+
+    color:#0b4f84;
+
+    font-size:33px;
+
+    line-height:1;
+
+    letter-spacing:-1.5px;
+
+    font-weight:900;
+
+}
+
+
+.company-copy{
+
+    border-left:
+        1px
+        solid
+        #cbd7e2;
+
+    padding-left:15px;
+
+}
+
+
+.company-name{
+
+    color:#122d4a;
+
+    font-size:16px;
+
+    font-weight:800;
+
+    line-height:1.25;
+
+}
+
+
+.company-tagline{
+
+    margin-top:5px;
+
+    color:#0b5c94;
+
+    font-size:8.5px;
+
+    font-weight:800;
+
+    letter-spacing:.4px;
+
+}
+
+
+.company-location{
+
+    margin-top:4px;
+
+    color:#687b8d;
+
+    font-size:9px;
+
+}
+
+
+
+.document-title{
+
+    padding:
+        11px
+        17px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    text-align:right;
+
+    background:#f3f8fc;
+
+    border-left:
+        1px
+        solid
+        #d6e0e9;
+
+}
+
+
+.document-type{
+
+    color:#477089;
+
+    font-size:8px;
+
+    font-weight:800;
+
+    letter-spacing:1px;
+
+}
+
+
+.document-title h1{
+
+    margin:
+        4px
+        0
+        2px;
+
+    color:#0b497a;
+
+    font-size:20px;
+
+    line-height:1.1;
+
+    letter-spacing:.2px;
+
+}
+
+
+.document-subtitle{
+
+    color:#6c7d8d;
+
+    font-size:9px;
+
+}
+
+
+
+/* ==========================================================
+   SUMMARY
+   ========================================================== */
+
+.batch-summary{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            6,
+            1fr
+        );
+
+    border-bottom:
+        1px
+        solid
+        #ccd7e1;
+
+}
+
+
+.summary-item{
+
+    min-height:47px;
+
+    padding:
+        7px
+        10px;
+
+    border-right:
+        1px
+        solid
+        #d7e0e8;
+
+    background:#fbfcfd;
+
+}
+
+
+.summary-item:last-child{
+
+    border-right:0;
+
+}
+
+
+.summary-label{
+
+    display:block;
+
+    color:#728293;
+
+    font-size:8px;
+
+    font-weight:800;
+
+    letter-spacing:.45px;
+
+    text-transform:uppercase;
+
+}
+
+
+.summary-value{
+
+    display:block;
+
+    margin-top:4px;
+
+    color:#123a5b;
+
+    font-size:15px;
+
+    font-weight:800;
+
+}
+
+
+.summary-value.small{
+
+    font-size:10.5px;
+
+}
+
+
+
+/* ==========================================================
+   TABLE
+   ========================================================== */
+
+.table-section{
+
+    padding:
+        12px
+        12px
+        0;
+
+}
+
+
+.cutting-plan-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    table-layout:fixed;
+
+}
+
+
+.cutting-plan-table thead{
+
+    display:table-header-group;
+
+}
+
+
+.cutting-plan-table tr{
+
+    break-inside:avoid;
+
+    page-break-inside:avoid;
+
+}
+
+
+.cutting-plan-table th{
+
+    padding:
+        7px
+        5px;
+
+    border:
+        1px
+        solid
+        #9fb0bf;
+
+    background:#dcebf5;
+
+    color:#163e5c;
+
+    font-size:8px;
+
+    font-weight:800;
+
+    line-height:1.15;
+
+    text-align:center;
+
+    text-transform:uppercase;
+
+}
+
+
+.cutting-plan-table td{
+
+    min-height:28px;
+
+    padding:
+        6px
+        5px;
+
+    border:
+        1px
+        solid
+        #aebdca;
+
+    color:#1e3345;
+
+    font-size:9px;
+
+    line-height:1.25;
+
+    vertical-align:middle;
+
+    word-break:break-word;
+
+}
+
+
+.cutting-plan-table tbody tr:nth-child(even){
+
+    background:#f9fbfc;
+
+}
+
+
+.center{
+
+    text-align:center;
+
+}
+
+
+.strong{
+
+    font-weight:800;
+
+}
+
+
+.jc-cell{
+
+    color:#063f70 !important;
+
+    font-weight:800;
+
+    text-align:center;
+
+}
+
+
+.material-cell{
+
+    font-weight:650;
+
+}
+
+
+.cut-size-cell{
+
+    color:#7a3c00 !important;
+
+    font-weight:800;
+
+}
+
+
+.qty-cell{
+
+    font-size:10px !important;
+
+    font-weight:900;
+
+}
+
+
+.advance-plan{
+
+    color:#0a6093;
+
+    font-weight:700;
+
+}
+
+
+.move-badge{
+
+    display:inline-block;
+
+    min-width:28px;
+
+    padding:
+        3px
+        6px;
+
+    border:
+        1px
+        solid
+        #83a9c2;
+
+    border-radius:10px;
+
+    color:#0b527e;
+
+    background:#edf7fd;
+
+    font-weight:900;
+
+}
+
+
+.total-label{
+
+    text-align:right;
+
+    font-size:9px !important;
+
+    font-weight:900;
+
+    background:#e9f1f6;
+
+}
+
+
+.total-qty{
+
+    text-align:center;
+
+    color:#0b497a !important;
+
+    background:#e9f1f6;
+
+    font-size:11px !important;
+
+    font-weight:900;
+
+}
+
+
+
+/* COLUMN WIDTHS */
+
+.col-sr{
+    width:3%;
+}
+
+.col-jc{
+    width:9%;
+}
+
+.col-date{
+    width:7%;
+}
+
+.col-material{
+    width:15%;
+}
+
+.col-cut{
+    width:8%;
+}
+
+.col-qty{
+    width:5%;
+}
+
+.col-part{
+    width:8%;
+}
+
+.col-model{
+    width:14%;
+}
+
+.col-so{
+    width:8%;
+}
+
+.col-move{
+    width:6%;
+}
+
+.col-remarks{
+    width:17%;
+}
+
+
+
+/* ==========================================================
+   NOTE
+   ========================================================== */
+
+.print-note{
+
+    margin:
+        10px
+        12px
+        0;
+
+    padding:
+        7px
+        9px;
+
+    border:
+        1px
+        solid
+        #ccd9e4;
+
+    border-left:
+        4px
+        solid
+        #0b5b91;
+
+    background:#f5f9fc;
+
+    color:#52687a;
+
+    font-size:8.5px;
+
+}
+
+
+
+/* ==========================================================
+   SIGNATURES
+   ========================================================== */
+
+.signature-section{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            1fr
+        );
+
+    gap:38px;
+
+    padding:
+        15px
+        30px
+        10px;
+
+    margin-top:5px;
+
+}
+
+
+.signature-box{
+
+    text-align:center;
+
+    color:#334b5e;
+
+    font-size:9px;
+
+}
+
+
+.signature-space{
+
+    height:24px;
+
+}
+
+
+.signature-line{
+
+    border-top:
+        1px
+        solid
+        #7f8e9b;
+
+    margin-bottom:5px;
+
+}
+
+
+.signature-box strong{
+
+    display:block;
+
+    font-size:9px;
+
+}
+
+
+.signature-box span{
+
+    display:block;
+
+    margin-top:2px;
+
+    color:#788897;
+
+    font-size:8px;
+
+}
+
+
+
+/* ==========================================================
+   FOOTER
+   ========================================================== */
+
+.document-footer{
+
+    margin:
+        5px
+        12px
+        10px;
+
+    padding-top:6px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:15px;
+
+    border-top:
+        1px
+        solid
+        #c9d5df;
+
+    color:#7a8997;
+
+    font-size:7.5px;
+
+    font-weight:600;
+
+}
+
+
+
+/* ==========================================================
+   PRINT
+   ========================================================== */
+
+@media print{
+
+
+    html,
+    body{
+
+        width:auto;
+
+        min-height:auto;
+
+        background:#ffffff;
+
+        -webkit-print-color-adjust:exact;
+
+        print-color-adjust:exact;
+
+    }
+
+
+    .no-print{
+
+        display:none !important;
+
+    }
+
+
+    .print-sheet{
+
+        width:100%;
+
+        min-height:auto;
+
+        max-width:none;
+
+        margin:0;
+
+        border:0;
+
+        box-shadow:none;
+
+    }
+
+
+    .table-section{
+
+        padding-left:0;
+
+        padding-right:0;
+
+    }
+
+
+    .print-note{
+
+        margin-left:0;
+
+        margin-right:0;
+
+    }
+
+
+    .document-footer{
+
+        margin-left:0;
+
+        margin-right:0;
+
+    }
+
+
+}
+
+
+
+/* ==========================================================
+   SMALL SCREEN PREVIEW
+   ========================================================== */
+
+@media screen and (max-width:1000px){
+
+
+    .print-sheet{
+
+        min-width:1050px;
+
+    }
+
+
+    body{
+
+        overflow-x:auto;
+
+    }
+
+
+}
+
+/* ==========================================================
+   CUTTING PLAN PRINT - BLACK & WHITE / READABLE V2
+   Header remains unchanged.
+   ========================================================== */
+
+
+/* ----------------------------------------------------------
+   GENERAL DOCUMENT CONTENT AFTER HEADER
+   ---------------------------------------------------------- */
+
+.batch-summary,
+.table-section,
+.print-note,
+.signature-section,
+.document-footer {
+
+    color: #111111;
+}
+
+
+/* ----------------------------------------------------------
+   BATCH SUMMARY
+   Clean black & white information strip
+   ---------------------------------------------------------- */
+
+.batch-summary {
+
+    border-bottom: 1.5px solid #555555;
+    background: #ffffff;
+}
+
+
+.summary-item {
+
+    min-height: 52px;
+
+    padding:
+        9px
+        11px;
+
+    border-right: 1px solid #888888;
+
+    background: #ffffff;
+}
+
+
+.summary-label {
+
+    color: #555555;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: .35px;
+}
+
+
+.summary-value {
+
+    margin-top: 5px;
+
+    color: #111111;
+
+    font-size: 16px;
+
+    font-weight: 800;
+}
+
+
+.summary-value.small {
+
+    color: #111111;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}
+
+
+
+/* ----------------------------------------------------------
+   TABLE AREA
+   More breathing space
+   ---------------------------------------------------------- */
+
+.table-section {
+
+    padding:
+        16px
+        12px
+        0;
+}
+
+
+
+/* ----------------------------------------------------------
+   MAIN TABLE
+   ---------------------------------------------------------- */
+
+.cutting-plan-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+
+    color: #111111;
+}
+
+
+
+/* Repeat table header on every printed page */
+
+.cutting-plan-table thead {
+
+    display: table-header-group;
+}
+
+
+
+/* Do not split one JC row between pages */
+
+.cutting-plan-table tr {
+
+    break-inside: avoid;
+
+    page-break-inside: avoid;
+}
+
+
+
+/* ----------------------------------------------------------
+   TABLE HEADER
+   ---------------------------------------------------------- */
+
+.cutting-plan-table th {
+
+    padding:
+        9px
+        6px;
+
+    border:
+        1.4px
+        solid
+        #555555;
+
+    background: #e8e8e8;
+
+    color: #000000;
+
+    font-size: 9.5px;
+
+    font-weight: 800;
+
+    line-height: 1.25;
+
+    text-align: center;
+
+    text-transform: uppercase;
+
+    vertical-align: middle;
+}
+
+
+
+/* ----------------------------------------------------------
+   TABLE BODY
+   ---------------------------------------------------------- */
+
+.cutting-plan-table td {
+
+    padding:
+        8px
+        6px;
+
+    border:
+        1px
+        solid
+        #777777;
+
+    background: #ffffff;
+
+    color: #111111;
+
+    font-size: 10.5px;
+
+    line-height: 1.35;
+
+    vertical-align: middle;
+
+    word-break: normal;
+
+    overflow-wrap: anywhere;
+}
+
+
+
+/* No coloured zebra effect */
+
+.cutting-plan-table tbody tr:nth-child(even) {
+
+    background: #ffffff;
+}
+
+
+.cutting-plan-table tbody tr:nth-child(even) td {
+
+    background: #ffffff;
+}
+
+
+
+/* ----------------------------------------------------------
+   IMPORTANT TABLE VALUES
+   ---------------------------------------------------------- */
+
+.jc-cell {
+
+    color: #000000 !important;
+
+    font-size: 10.5px !important;
+
+    font-weight: 800;
+
+    text-align: center;
+
+    white-space: nowrap;
+}
+
+
+.material-cell {
+
+    color: #111111 !important;
+
+    font-weight: 700;
+}
+
+
+.cut-size-cell {
+
+    color: #000000 !important;
+
+    font-size: 11px !important;
+
+    font-weight: 800;
+}
+
+
+.qty-cell {
+
+    color: #000000 !important;
+
+    font-size: 12px !important;
+
+    font-weight: 900;
+}
+
+
+.advance-plan {
+
+    color: #111111;
+
+    font-weight: 700;
+}
+
+
+
+/* ----------------------------------------------------------
+   MOVE TO
+   Plain B/W instead of blue badge
+   ---------------------------------------------------------- */
+
+.move-badge {
+
+    display: inline-block;
+
+    min-width: 31px;
+
+    padding:
+        4px
+        7px;
+
+    border:
+        1.4px
+        solid
+        #333333;
+
+    border-radius: 4px;
+
+    color: #000000;
+
+    background: #ffffff;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    text-align: center;
+}
+
+
+
+/* ----------------------------------------------------------
+   BATCH TOTAL
+   ---------------------------------------------------------- */
+
+.cutting-plan-table tfoot td {
+
+    border:
+        1.4px
+        solid
+        #555555;
+}
+
+
+.total-label {
+
+    padding:
+        9px
+        7px !important;
+
+    background: #e5e5e5 !important;
+
+    color: #000000 !important;
+
+    text-align: right;
+
+    font-size: 10px !important;
+
+    font-weight: 900;
+}
+
+
+.total-qty {
+
+    padding:
+        9px
+        7px !important;
+
+    background: #e5e5e5 !important;
+
+    color: #000000 !important;
+
+    text-align: center;
+
+    font-size: 13px !important;
+
+    font-weight: 900;
+}
+
+
+
+/* ----------------------------------------------------------
+   REBALANCE COLUMN WIDTHS
+   Give actual production information more space
+   ---------------------------------------------------------- */
+
+.col-sr {
+    width: 3%;
+}
+
+.col-jc {
+    width: 9%;
+}
+
+.col-date {
+    width: 7%;
+}
+
+.col-material {
+    width: 16%;
+}
+
+.col-cut {
+    width: 8%;
+}
+
+.col-qty {
+    width: 5%;
+}
+
+.col-part {
+    width: 8%;
+}
+
+.col-model {
+    width: 15%;
+}
+
+.col-so {
+    width: 8%;
+}
+
+.col-move {
+    width: 6%;
+}
+
+.col-remarks {
+    width: 15%;
+}
+
+
+
+/* ----------------------------------------------------------
+   PLANNING NOTE
+   ---------------------------------------------------------- */
+
+.print-note {
+
+    margin:
+        12px
+        12px
+        0;
+
+    padding:
+        9px
+        10px;
+
+    border:
+        1px
+        solid
+        #777777;
+
+    border-left:
+        3px
+        solid
+        #333333;
+
+    background: #ffffff;
+
+    color: #222222;
+
+    font-size: 9.5px;
+
+    line-height: 1.4;
+}
+
+
+
+/* ----------------------------------------------------------
+   SIGNATURES
+   ---------------------------------------------------------- */
+
+.signature-section {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 50px;
+
+    padding:
+        20px
+        40px
+        14px;
+
+    margin-top: 8px;
+
+    color: #111111;
+}
+
+
+.signature-space {
+
+    height: 34px;
+}
+
+
+.signature-line {
+
+    border-top:
+        1px
+        solid
+        #333333;
+
+    margin-bottom: 6px;
+}
+
+
+.signature-box strong {
+
+    color: #111111;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.signature-box span {
+
+    margin-top: 3px;
+
+    color: #555555;
+
+    font-size: 9px;
+}
+
+
+
+/* ----------------------------------------------------------
+   FOOTER
+   ---------------------------------------------------------- */
+
+.document-footer {
+
+    margin:
+        8px
+        12px
+        12px;
+
+    padding-top: 7px;
+
+    border-top:
+        1px
+        solid
+        #777777;
+
+    color: #555555;
+
+    font-size: 8px;
+
+    font-weight: 600;
+}
+
+
+
+/* ----------------------------------------------------------
+   PRINT SPECIFIC
+   ---------------------------------------------------------- */
+
+@media print {
+
+    /*
+     * Keep HEADER exactly as designed.
+     * Below-header content remains printer-friendly.
+     */
+
+    .batch-summary {
+
+        background: #ffffff !important;
+    }
+
+
+    .summary-item {
+
+        background: #ffffff !important;
+    }
+
+
+    .cutting-plan-table th {
+
+        background: #e8e8e8 !important;
+
+        color: #000000 !important;
+    }
+
+
+    .cutting-plan-table td {
+
+        background: #ffffff !important;
+
+        color: #000000 !important;
+    }
+
+
+    .move-badge {
+
+        background: #ffffff !important;
+
+        color: #000000 !important;
+
+        border-color: #000000 !important;
+    }
+
+
+    .total-label,
+    .total-qty {
+
+        background: #e5e5e5 !important;
+
+        color: #000000 !important;
+    }
+
+
+    /*
+     * Let long batches continue naturally
+     * to additional pages rather than compressing.
+     */
+
+    .print-sheet {
+
+        overflow: visible;
+    }
+
+
+    .table-section {
+
+        overflow: visible;
+    }
+
+}
+
+
+/* CUTTING PLAN PRINT - BLACK & WHITE / READABLE V2 END */
+
+
+
+/* ==========================================================
+   CUTTING PLAN PRINT FONT / HEADER CLEANUP V3
+   ========================================================== */
+
+html,
+body,
+button,
+input,
+select,
+textarea,
+.print-sheet {
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+
+/* Header is simpler now, so vertically centre remaining text. */
+
+.company-copy {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+}
+
+
+.company-name {
+    margin: 0;
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+
+.document-title {
+    justify-content: center;
+}
+
+
+.document-title h1 {
+    margin: 0;
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+
+/* CUTTING PLAN PRINT FONT / HEADER CLEANUP V3 END */
+
+
+
+/* ==========================================================
+   CUTTING_PLAN_ONE_PAGE_COMPACT_V4
+   Compact signature + one-page oriented print
+   ========================================================== */
+
+
+/* Slightly tighter table area */
+
+.table-section {
+
+    padding-top: 10px;
+}
+
+
+
+/* Keep readable table, but save unnecessary vertical space */
+
+.cutting-plan-table th {
+
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+
+.cutting-plan-table td {
+
+    padding-top: 6px;
+    padding-bottom: 6px;
+
+    line-height: 1.25;
+}
+
+
+
+/* ==========================================================
+   COMPACT SIGNATURE SECTION
+   ========================================================== */
+
+.signature-section {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 55px;
+
+    padding:
+        8px
+        42px
+        4px;
+
+    margin-top: 4px;
+
+    page-break-inside: avoid;
+
+    break-inside: avoid;
+}
+
+
+.signature-space {
+
+    height: 18px;
+}
+
+
+.signature-line {
+
+    margin-bottom: 4px;
+
+    border-top:
+        1px solid #333333;
+}
+
+
+.signature-box strong {
+
+    display: block;
+
+    margin: 0;
+
+    color: #111111;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    text-align: center;
+}
+
+
+
+/* No secondary signature description */
+
+.signature-box span {
+
+    display: none !important;
+}
+
+
+
+/* ==========================================================
+   PRINT PAGE OPTIMIZATION
+   ========================================================== */
+
+@media print {
+
+
+    @page {
+
+        size: A4 landscape;
+
+        margin:
+            5mm
+            6mm
+            5mm
+            6mm;
+    }
+
+
+    .print-sheet {
+
+        min-height: auto;
+
+        margin: 0;
+
+        padding: 0;
+    }
+
+
+    .table-section {
+
+        padding-top: 8px;
+    }
+
+
+    .signature-section {
+
+        padding-top: 7px;
+
+        padding-bottom: 0;
+
+        margin-top: 2px;
+    }
+
+
+}
+
+
+/* CUTTING_PLAN_ONE_PAGE_COMPACT_V4_END */
+

@@ -142,13 +142,6 @@ function closeLogoutModal() {
   if (modal) modal.classList.remove("open");
 }
 
-document.addEventListener("click", function (event) {
-  const overlay = event.target.closest(".auth-modal-overlay.open");
-  if (overlay && event.target === overlay) {
-    overlay.classList.remove("open");
-  }
-});
-
 document.addEventListener("keydown", function (event) {
   if (event.key !== "Escape") return;
 
@@ -186,16 +179,6 @@ document.addEventListener("keydown", function (event) {
 
     overlay.classList.remove("open");
   }
-
-  document.addEventListener("click", function (event) {
-    const overlay = event.target.closest(".modal-overlay, .bulk-modal-overlay, .pm-bulk-overlay");
-
-    if (!overlay || event.target !== overlay || !overlay.classList.contains("open")) {
-      return;
-    }
-
-    closeModalOverlay(overlay);
-  });
 
   document.addEventListener("keydown", function (event) {
     if (event.key !== "Escape") return;

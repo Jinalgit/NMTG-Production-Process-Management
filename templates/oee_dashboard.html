@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+{% set active_page = "oee_dashboard" %}
+
+{% block title %}
+OEE Dashboard | NMTG
+{% endblock %}
+
+
+{% block extra_head %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/page4.css') }}?v={{ version }}"
+>
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/oee_dashboard.css') }}?v={{ version }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="main">
+
+
+  <!-- ===================================================== -->
+  <!-- PAGE HEADER -->
+  <!-- ===================================================== -->
+
+  <div class="page-header">
+
+    <div>
+
+      <h1>OEE Dashboard</h1>
+
+      <p id="oee-period-label">
+        Loading OEE reporting period...
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- OVERALL PERFORMANCE KPI -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-dashboard"></i>
+
+      Overall OEE Performance
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div class="kpi-grid">
+
+
+    <div class="kpi-card kpi-blue">
+
+      <div class="kpi-icon">
+        <i class="fa fa-tachometer"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-oee"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Overall OEE
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-green">
+
+      <div class="kpi-icon">
+        <i class="fa fa-clock-o"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-availability"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Availability
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-teal">
+
+      <div class="kpi-icon">
+        <i class="fa fa-bullseye"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-plan"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Plan Achievement
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-purple">
+
+      <div class="kpi-icon">
+        <i class="fa fa-check-circle"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-quality"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Quality
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-blue">
+
+      <div class="kpi-icon">
+        <i class="fa fa-crosshairs"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-target"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Target Qty
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-green">
+
+      <div class="kpi-icon">
+        <i class="fa fa-cogs"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-actual"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Actual Qty
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-red">
+
+      <div class="kpi-icon">
+        <i class="fa fa-exchange"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-gap"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Production Gap
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-amber">
+
+      <div class="kpi-icon">
+        <i class="fa fa-hourglass-half"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-loss"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Total Loss Hours
+        </div>
+
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- DAILY OEE HERO CHART -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-line-chart"></i>
+
+      Daily OEE Trend
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div
+    class="chart-card full-width hero-chart"
+    id="daily-oee-card"
+  >
+
+    <div class="chart-title">
+
+      <i class="fa fa-line-chart"></i>
+
+      Daily OEE vs Plan Achievement
+
+    </div>
+
+
+    <div
+      class="chart-wrap"
+      style="height:380px;"
+    >
+
+      <canvas id="chart-daily-oee"></canvas>
+
+    </div>
+
+
+    <div
+      id="daily-oee-empty"
+      class="empty-state"
+      style="display:none;"
+    >
+
+      No OEE activity in selected period.
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- SHIFT PERFORMANCE -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-exchange"></i>
+
+      Day vs Night Shift
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div class="chart-row">
+
+
+    <div
+      class="chart-card"
+      id="shift-chart-card"
+    >
+
+      <div class="chart-title">
+
+        <i class="fa fa-bar-chart"></i>
+
+        Shift Performance Comparison
+
+      </div>
+
+
+      <div
+        class="chart-wrap"
+        style="height:330px;"
+      >
+
+        <canvas id="chart-shift-performance"></canvas>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="chart-card"
+      id="shift-summary-card"
+    >
+
+      <div class="chart-title">
+
+        <i class="fa fa-bar-chart"></i>
+
+        Shift Capacity & Output
+
+      </div>
+
+
+      <div
+        class="chart-wrap"
+        style="height:330px;"
+      >
+
+        <canvas id="chart-shift-summary"></canvas>
+
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+
+
+  <!-- ===================================================== -->
+  <!-- PLAN VS ACTUAL -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-area-chart"></i>
+
+      Plan vs Actual
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div class="chart-card full-width">
+
+    <div class="chart-title">
+
+      <i class="fa fa-line-chart"></i>
+
+      Daily Target Qty vs Actual Qty
+
+    </div>
+
+
+    <div
+      class="chart-wrap"
+      style="height:360px;"
+    >
+
+      <canvas id="chart-plan-vs-actual"></canvas>
+
+    </div>
+
+
+    <div
+      id="plan-vs-actual-empty"
+      class="empty-state"
+      style="display:none;"
+    >
+      No Plan vs Actual data in selected period.
+    </div>
+
+  </div>
+
+
+
+  <!-- ===================================================== -->
+  <!-- COMPLETE LOSS ANALYSIS -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-exclamation-triangle"></i>
+
+      Complete Loss Analysis
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div class="chart-card full-width">
+
+    <div class="chart-title">
+
+      <i class="fa fa-bar-chart"></i>
+
+      All 27 Loss Categories ? Loss Hours
+
+    </div>
+
+
+    <div class="chart-wrap oee-loss-chart-wrap">
+
+      <canvas id="chart-complete-loss"></canvas>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ===================================================== -->
+  <!-- MACHINE OEE SCORECARD -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-industry"></i>
+
+      Machine OEE Scorecard
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div class="chart-row oee-machine-chart-row">
+
+
+    <div class="chart-card">
+
+      <div class="chart-title">
+
+        <i class="fa fa-trophy"></i>
+
+        Top 10 Machines by OEE
+
+      </div>
+
+
+      <div
+        class="chart-wrap"
+        style="height:440px;"
+      >
+
+        <canvas id="chart-machine-oee"></canvas>
+
+      </div>
+
+
+      <div
+        id="machine-oee-empty"
+        class="empty-state"
+        style="display:none;"
+      >
+        No machine OEE data in selected period.
+      </div>
+
+    </div>
+
+
+    <div class="chart-card">
+
+      <div class="chart-title">
+
+        <i class="fa fa-warning"></i>
+
+        Top 10 Machines by Loss Hours
+
+      </div>
+
+
+      <div
+        class="chart-wrap"
+        style="height:440px;"
+      >
+
+        <canvas id="chart-machine-loss"></canvas>
+
+      </div>
+
+
+      <div
+        id="machine-loss-empty"
+        class="empty-state"
+        style="display:none;"
+      >
+        No machine loss data in selected period.
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- MANPOWER / LOSS SUMMARY -->
+  <!-- ===================================================== -->
+
+  <div class="section-label">
+
+    <span class="section-title">
+
+      <i class="fa fa-users"></i>
+
+      Operator & Loss Overview
+
+    </span>
+
+    <span class="section-rule"></span>
+
+  </div>
+
+
+  <div class="kpi-grid oee-secondary-kpi-grid">
+
+
+    <div class="kpi-card kpi-amber">
+
+      <div class="kpi-icon">
+        <i class="fa fa-user-times"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-no-operator"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          No-Operator Hours
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-purple">
+
+      <div class="kpi-icon">
+        <i class="fa fa-user-plus"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-hiring"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Recommended Hiring
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-blue">
+
+      <div class="kpi-icon">
+        <i class="fa fa-list-alt"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-entry-count"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          OEE Records
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="kpi-card kpi-green">
+
+      <div class="kpi-icon">
+        <i class="fa fa-play-circle"></i>
+      </div>
+
+      <div class="kpi-body">
+
+        <div
+          class="kpi-value"
+          id="kpi-running-hours"
+        >
+          ?
+        </div>
+
+        <div class="kpi-label">
+          Running Hours
+        </div>
+
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+
+<script>
+  window.JMS_USER_ROLE =
+    "{{ session.get('role') }}";
+</script>
+
+<script
+  src="{{ url_for('static', filename='js/oee_dashboard.js') }}?v={{ version }}"
+></script>
+
+{% endblock %}

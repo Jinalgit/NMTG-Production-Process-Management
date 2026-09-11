@@ -83,12 +83,12 @@ nav {
 
 .nav-links a:hover {
   color: var(--header-bg);
-  background: rgba(30, 58, 95, 0.08);
+  background: rgb(168, 199, 239);
 }
 
 .nav-links a.active {
   color: var(--header-bg);
-  border: 2px solid #f59e0b;
+  border: 2px solid #053267;
 }
 
 /* Right slot (future login button lives here) */
@@ -448,18 +448,72 @@ body.auth-page {
   height: 72px;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0 16px;
+  background: #09336e;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.sidebar-brand img {
-  height: 42px;
-  max-width: 120px;
+/* .sidebar-brand .nmtg-neon-brand {
+  background: #ffffff;
+  color: #0c3161;
+  font-size: 35px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  line-height: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+
+  text-shadow:
+    0 0 2px rgba(0, 184, 217, 0.55),
+    0 0 6px rgba(0, 184, 217, 0.30);
+} */
+
+/* .sidebar-brand .nmtg-neon-brand {
+  background: #ffffff;
+  color: #09336e;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  line-height: 1;
+  transform: translateX(-8px);
+  padding: 8px 18px;
+
+  border: 3px solid  #09336e;
+  border-radius: 999px;
+
+  text-shadow:
+    0 0 2px rgba(0, 184, 217, 0.55),
+    0 0 7px rgba(0, 184, 217, 0.30);
+} */
+ .sidebar-brand .nmtg-neon-brand {
+  background: #ffffff;
+  color: #09336e;
+
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  line-height: 1;
+
+  transform: translateX(-8px);
+  padding: 8px 18px;
+
+  border: 3px solid #09336e;
+  border-radius: 999px;
+
+  /* White outer border around logo */
+  box-shadow:
+    0 0 0 5px #ffffff,
+    0 0 10px rgba(255, 255, 255, 0.22);
+
+  text-shadow:
+    0 0 2px rgba(9, 51, 110, 0.35),
+    0 0 6px rgba(9, 51, 110, 0.18);
 }
 
 .sidebar-links {
   flex: 1;
-  padding: 14px 10px;
+  padding: 14px 8px;
   overflow-y: auto;
 }
 
@@ -474,17 +528,17 @@ body.auth-page {
   text-decoration: none;
   color: #0f2a4d;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15.5px;
 }
 
 .sidebar-link:hover,
 .sidebar-logout:hover {
-  background: #f3f6fb;
+  background: #a1bfe7;
 }
 
 .sidebar-link.active {
-  background: #fff7ed;
-  border: 1px solid #f59e0b;
+  background: #c6cee0;
+  border: 2px solid #05378e;
 }
 
 .sidebar-icon {
@@ -607,3 +661,685 @@ body.auth-page {
     padding: 12px;
   }
 }
+/* ── Common Page Header Background ───────────────────────────── */
+.page-header,
+.oee-page-title {
+  background: linear-gradient(
+    110deg,
+    #f7fcff 0%,
+    #f1f8ff 55%,
+    #e5f4ff 100%
+  );
+
+  padding: 18px 22px;
+  border: 1px solid #d7e8f5;
+  border-left: 4px solid #0b5fa5;
+  border-right: 4px solid #0b5fa5;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 3px 10px rgba(15, 42, 77, 0.06);
+
+  margin-bottom: 24px;
+}
+/* =========================================================
+   NMTG BASE THEME SYSTEM V1
+   Authoritative shared Light / Dark theme mapping
+========================================================= */
+
+
+/* =========================================================
+   LIGHT THEME TOKENS
+========================================================= */
+
+:root {
+
+    /* Page */
+    --theme-bg: #f4f6f8;
+
+    /* Surfaces */
+    --theme-surface: #ffffff;
+    --theme-surface-soft: #f8f9fa;
+    --theme-surface-elevated: #ffffff;
+
+    /* Interactive surfaces */
+    --theme-hover: #eef0f2;
+    --theme-hover-strong: #e5e8eb;
+    --theme-active: #ffffff;
+
+    /* Text */
+    --theme-text: #20252b;
+    --theme-text-secondary: #59616a;
+    --theme-text-muted: #858c94;
+
+    /* Border */
+    --theme-border: #dfe3e7;
+    --theme-border-strong: #c9ced4;
+
+    /* Input */
+    --theme-input-bg: #ffffff;
+    --theme-input-text: #252b31;
+    --theme-input-placeholder: #989fa6;
+
+    /* Sidebar */
+    --theme-sidebar-bg: #f8f8f8;
+    --theme-sidebar-hover: #eeeeee;
+    --theme-sidebar-active: #ffffff;
+
+    /* Modal / menu */
+    --theme-overlay: rgba(0, 0, 0, 0.42);
+    --theme-menu-bg: #ffffff;
+
+    /* Shadow */
+    --theme-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.12);
+
+    /* Focus */
+    --theme-focus: rgba(2, 136, 247, 0.14);
+}
+
+
+/* =========================================================
+   DARK THEME TOKENS
+========================================================= */
+
+html.jms-dark-theme {
+
+    color-scheme: dark;
+
+    --theme-bg: #11161c;
+
+    --theme-surface: #1a2027;
+    --theme-surface-soft: #20272e;
+    --theme-surface-elevated: #232a32;
+
+    --theme-hover: #252d35;
+    --theme-hover-strong: #2d3740;
+    --theme-active: #2a333c;
+
+    --theme-text: #edf1f5;
+    --theme-text-secondary: #c6cdd4;
+    --theme-text-muted: #929ca6;
+
+    --theme-border: #343e48;
+    --theme-border-strong: #46525d;
+
+    --theme-input-bg: #151b21;
+    --theme-input-text: #edf1f5;
+    --theme-input-placeholder: #78838d;
+
+    --theme-sidebar-bg: #171d23;
+    --theme-sidebar-hover: #242c34;
+    --theme-sidebar-active: #29323b;
+
+    --theme-overlay: rgba(0, 0, 0, 0.62);
+    --theme-menu-bg: #20272e;
+
+    --theme-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.42);
+
+    --theme-focus: rgba(64, 158, 255, 0.20);
+}
+
+
+/* =========================================================
+   DOCUMENT / BODY
+========================================================= */
+
+body {
+    background: var(--theme-bg);
+    color: var(--theme-text);
+}
+
+
+html.jms-dark-theme body {
+    background: var(--theme-bg) !important;
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   GENERIC TEXT
+========================================================= */
+
+html.jms-dark-theme body h1,
+html.jms-dark-theme body h2,
+html.jms-dark-theme body h3,
+html.jms-dark-theme body h4,
+html.jms-dark-theme body h5,
+html.jms-dark-theme body h6,
+html.jms-dark-theme body legend {
+    color: var(--theme-text);
+}
+
+
+html.jms-dark-theme body p,
+html.jms-dark-theme body label {
+    color: var(--theme-text-secondary);
+}
+
+
+html.jms-dark-theme body small {
+    color: var(--theme-text-muted);
+}
+
+
+/* =========================================================
+   NAV
+========================================================= */
+
+nav {
+    background: var(--theme-surface);
+}
+
+
+.nav-brand,
+.nav-links a {
+    color: var(--theme-text);
+}
+
+
+.nav-links a:hover {
+    color: var(--theme-text);
+    background: var(--theme-hover);
+}
+
+
+.nav-links a.active {
+    color: var(--theme-text);
+    background: var(--theme-active);
+    border-color: var(--theme-border-strong);
+}
+
+
+/* =========================================================
+   MOBILE MENU
+========================================================= */
+
+.mobile-menu-btn {
+    background: var(--theme-surface);
+    color: var(--theme-text);
+    border-color: var(--theme-border);
+}
+
+
+.mobile-menu-btn:hover {
+    background: var(--theme-hover);
+    border-color: var(--theme-border-strong);
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.main-sidebar {
+    background: var(--theme-sidebar-bg) !important;
+    border-color: var(--theme-border) !important;
+}
+
+
+.sidebar-top {
+    border-color: var(--theme-border) !important;
+}
+
+
+.sidebar-links {
+    background: var(--theme-sidebar-bg);
+}
+
+
+.sidebar-link,
+.sidebar-logout {
+    color: var(--theme-text-secondary) !important;
+}
+
+
+.sidebar-link:hover,
+.sidebar-logout:hover {
+    background: var(--theme-sidebar-hover) !important;
+    color: var(--theme-text) !important;
+}
+
+
+.sidebar-link.active {
+    background: var(--theme-sidebar-active) !important;
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border-strong) !important;
+}
+
+
+.sidebar-user {
+    border-color: var(--theme-border) !important;
+}
+
+
+.sidebar-user-info {
+    background: transparent !important;
+}
+
+
+.sidebar-user-name {
+    color: var(--theme-text) !important;
+}
+
+
+.sidebar-user-role {
+    color: var(--theme-text-muted) !important;
+}
+
+
+/* =========================================================
+   GENERIC LINKS
+========================================================= */
+
+html.jms-dark-theme body a:not(.btn):not(.sidebar-link) {
+    color: inherit;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+html.jms-dark-theme body input:not([type="checkbox"]):not([type="radio"]),
+html.jms-dark-theme body select,
+html.jms-dark-theme body textarea {
+
+    background: var(--theme-input-bg) !important;
+
+    color: var(--theme-input-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body input:not([type="checkbox"]):not([type="radio"]):hover,
+html.jms-dark-theme body select:hover,
+html.jms-dark-theme body textarea:hover {
+
+    background: var(--theme-input-bg) !important;
+
+    border-color: var(--theme-border-strong) !important;
+}
+
+
+html.jms-dark-theme body input:not([type="checkbox"]):not([type="radio"]):focus,
+html.jms-dark-theme body select:focus,
+html.jms-dark-theme body textarea:focus {
+
+    background: var(--theme-input-bg) !important;
+
+    color: var(--theme-input-text) !important;
+
+    border-color: var(--theme-border-strong) !important;
+
+    outline-color: var(--theme-focus) !important;
+}
+
+
+html.jms-dark-theme body input::placeholder,
+html.jms-dark-theme body textarea::placeholder {
+    color: var(--theme-input-placeholder) !important;
+}
+
+
+html.jms-dark-theme input[type="date"] {
+    color-scheme: dark;
+}
+
+
+/* =========================================================
+   GENERIC BUTTONS
+========================================================= */
+
+html.jms-dark-theme body button:not(.btn-primary):not(.auth-modal-btn-danger) {
+    color: var(--theme-text-secondary);
+}
+
+
+html.jms-dark-theme body button:not(.btn-primary):not(.auth-modal-btn-danger):hover {
+    color: var(--theme-text);
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+html.jms-dark-theme body .page-header,
+html.jms-dark-theme body .oee-page-title {
+
+    background: var(--theme-surface) !important;
+
+    border-color: var(--theme-border) !important;
+
+    color: var(--theme-text) !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .page-header:hover,
+html.jms-dark-theme body .oee-page-title:hover {
+
+    background: var(--theme-surface) !important;
+}
+
+
+/* =========================================================
+   CARDS / COMMON SURFACES
+========================================================= */
+
+html.jms-dark-theme body .card {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .card:hover {
+
+    background: var(--theme-surface) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* =========================================================
+   AUTH MODALS
+========================================================= */
+
+.auth-modal-overlay {
+    background: var(--theme-overlay);
+}
+
+
+.auth-modal-box {
+
+    background: var(--theme-surface);
+
+    color: var(--theme-text);
+}
+
+
+.auth-modal-title {
+    color: var(--theme-text);
+}
+
+
+.auth-modal-text {
+    color: var(--theme-text-secondary);
+}
+
+
+.auth-modal-btn-ghost {
+
+    background: transparent;
+
+    color: var(--theme-text-secondary);
+
+    border-color: var(--theme-border);
+}
+
+
+.auth-modal-btn-ghost:hover {
+
+    background: var(--theme-hover);
+
+    color: var(--theme-text);
+
+    border-color: var(--theme-border-strong);
+}
+
+
+/* =========================================================
+   SHARED MENUS / DROPDOWNS
+========================================================= */
+
+html.jms-dark-theme body .dropdown-menu,
+html.jms-dark-theme body [role="menu"] {
+
+    background: var(--theme-menu-bg);
+
+    color: var(--theme-text);
+
+    border-color: var(--theme-border);
+}
+
+
+html.jms-dark-theme body .dropdown-menu a:hover,
+html.jms-dark-theme body [role="menu"] [role="menuitem"]:hover {
+
+    background: var(--theme-hover) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+html.jms-dark-theme body table {
+
+    color: var(--theme-text-secondary);
+}
+
+
+html.jms-dark-theme body table thead,
+html.jms-dark-theme body table thead tr,
+html.jms-dark-theme body table th {
+
+    background: var(--theme-surface-elevated);
+
+    color: var(--theme-text);
+
+    border-color: var(--theme-border);
+}
+
+
+html.jms-dark-theme body table td {
+
+    color: var(--theme-text-secondary);
+
+    border-color: var(--theme-border);
+}
+
+
+/*
+   Only apply generic row hover where a page has not assigned
+   an intentional semantic status colour.
+*/
+
+html.jms-dark-theme body
+table tbody tr:not(.urgent-row):not(.danger-row):not(.error-row):hover {
+
+    background: var(--theme-hover);
+}
+
+
+/* =========================================================
+   TOASTS
+   Preserve semantic status colours.
+========================================================= */
+
+html.jms-dark-theme body .toast.success {
+    background: #153322;
+    border-color: #277447;
+    color: #8de7ad;
+}
+
+
+html.jms-dark-theme body .toast.error {
+    background: #3a1e22;
+    border-color: #8a3b45;
+    color: #ff9ea8;
+}
+
+
+html.jms-dark-theme body .toast.info {
+    background: #153333;
+    border-color: #317373;
+    color: #91dddd;
+}
+
+
+html.jms-dark-theme body .toast.warning {
+    background: #3a3018;
+    border-color: #806b2d;
+    color: #f1d77d;
+}
+
+
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
+
+@media (max-width: 768px) {
+
+    html.jms-dark-theme body .sidebar-mobile-toggle {
+
+        background: var(--theme-surface);
+
+        color: var(--theme-text);
+
+        border-color: var(--theme-border);
+    }
+
+
+    html.jms-dark-theme body .sidebar-mobile-toggle:hover {
+
+        background: var(--theme-hover);
+
+        border-color: var(--theme-border-strong);
+    }
+
+
+    html.jms-dark-theme body.sidebar-open .sidebar-mobile-toggle {
+
+        background: var(--theme-active);
+
+        color: var(--theme-text);
+
+        border-color: var(--theme-border-strong);
+    }
+
+
+    html.jms-dark-theme body.sidebar-open .sidebar-overlay {
+
+        background: var(--theme-overlay);
+    }
+
+}
+
+
+/* =========================================================
+   DATE FILTER
+========================================================= */
+
+html.jms-dark-theme body .sidebar-date-filter {
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .sidebar-date-filter-label {
+
+    color: var(--theme-text-muted) !important;
+}
+
+
+html.jms-dark-theme body .sidebar-date-input {
+
+    background: var(--theme-input-bg) !important;
+
+    color: var(--theme-input-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .sidebar-date-input:hover {
+
+    border-color: var(--theme-border-strong) !important;
+}
+
+
+html.jms-dark-theme body .sidebar-date-clear {
+
+    background: var(--theme-surface-soft) !important;
+
+    color: var(--theme-text-secondary) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .sidebar-date-clear:hover {
+
+    background: #3a2226 !important;
+
+    color: #ff9da7 !important;
+
+    border-color: #74414a !important;
+}
+
+
+/* =========================================================
+   FOCUS STATES
+========================================================= */
+
+html.jms-dark-theme body
+button:focus-visible,
+
+html.jms-dark-theme body
+a:focus-visible,
+
+html.jms-dark-theme body
+input:focus-visible,
+
+html.jms-dark-theme body
+select:focus-visible,
+
+html.jms-dark-theme body
+textarea:focus-visible {
+
+    outline: 2px solid rgba(64, 158, 255, 0.55);
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   DISABLE LIGHT THEME LEAKS IN DARK MODE
+========================================================= */
+
+html.jms-dark-theme body
+.sidebar-link:hover,
+
+html.jms-dark-theme body
+.sidebar-logout:hover,
+
+html.jms-dark-theme body
+.nav-links a:hover,
+
+html.jms-dark-theme body
+.auth-modal-btn-ghost:hover,
+
+html.jms-dark-theme body
+.mobile-menu-btn:hover {
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   END NMTG BASE THEME SYSTEM V1
+========================================================= */
+

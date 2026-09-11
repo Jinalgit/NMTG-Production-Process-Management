@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #f0f2f5;
   --surface: #ffffff;
   --surface2: #f8f9fb;
@@ -29,7 +29,7 @@ body {
   max-width: 1400px;
 
   margin: 0 auto;
-  padding: 36px 24px;
+  padding: 36px 32px;
 }
 
 .page-header {
@@ -99,16 +99,16 @@ body {
   min-width: 220px;
   display: flex;
   align-items: center;
-  background: var(--surface);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0 12px;
   transition: border-color 0.15s;
 }
 
-.search-box-wrap:focus-within {
+/* .search-box-wrap:focus-within {
   border: 2px solid var(--accent);
-}
+} */
 
 .search-icon {
   font-size: 14px;
@@ -122,12 +122,19 @@ body {
   flex: 1;
   border: none;
   outline: none;
-  background: transparent;
+  background: #ffffff;
   padding: 10px 0;
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
   font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.search-box-wrap input:-webkit-autofill,
+.search-box-wrap input:-webkit-autofill:hover,
+.search-box-wrap input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: var(--text);
 }
 
 .search-box-wrap input::placeholder {
@@ -306,6 +313,111 @@ body {
 
 .btn-export:hover {
   background: #254a78;
+}
+
+.btn-columns {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--header-bg);
+}
+
+.btn-columns:hover {
+  background: #eff6ff;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.column-chooser-menu {
+  position: absolute;
+  width: 280px;
+  max-width: calc(100vw - 24px);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22);
+  color: #111827;
+  font-family: 'IBM Plex Sans', sans-serif;
+  padding: 10px;
+  z-index: 3100;
+}
+
+.column-chooser-title {
+  color: #1e3a5f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+  padding: 4px 4px 8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.column-chooser-list {
+  max-height: 270px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.column-chooser-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.column-chooser-row:hover {
+  background: #eff6ff;
+}
+
+.column-chooser-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #1a56db;
+}
+
+.column-chooser-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  padding-top: 9px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 8px;
+}
+
+.column-chooser-actions button {
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
+.column-chooser-show-all,
+.column-chooser-cancel {
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.column-chooser-show-all:hover,
+.column-chooser-cancel:hover {
+  background: #f8fafc;
+  color: #1e3a5f;
+}
+
+.column-chooser-apply {
+  background: #1a56db;
+  color: #ffffff;
+  border: 1px solid #1a56db;
+}
+
+.column-chooser-apply:hover {
+  background: #174abe;
 }
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
@@ -1135,18 +1247,54 @@ th:nth-child(n+5) {
 
 /* ── Rotated column headers for narrow numeric columns ───────────────────── */
 thead tr th.th-rotate {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  white-space: nowrap;
-  height: 110px;
-  vertical-align: bottom;
-  padding: 8px 8px 4px 8px;
+  writing-mode: horizontal-tb;
+  transform: none;
+  position: relative;
+  height: 115px;
+  min-width: 44px;
+  max-width: 58px;
+  padding: 6px 4px 28px;
+  text-align: center;
+  vertical-align: middle;
+  overflow: visible;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  min-width: 36px;
-  max-width: 52px;
+}
+
+thead tr th.th-rotate .th-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 78px;
+  max-width: none;
+  padding: 0;
+  margin: 0 auto;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+thead tr th.th-rotate .excel-filter-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  top: auto;
+  right: auto;
+  transform: translateX(-50%);
+  margin: 0;
+  width: 17px;
+  height: 17px;
+  z-index: 45;
+}
+
+thead tr th.th-rotate .col-resize-handle {
+  right: -3px;
+  top: 0;
+  height: 100%;
 }
 
 .proc-current {
@@ -1171,7 +1319,7 @@ thead tr th.th-rotate {
 
 tbody tr.row-priority td {
   /* background: #e67171 !important; */
-  background: #dc2626 !important;
+  background: #e15543 !important;
   color: #ffffff !important;
 }
 
@@ -1285,3 +1433,562 @@ tbody tr.row-priority td:first-child {
   font-weight: 700;
   font-family: 'IBM Plex Sans', sans-serif;
 }
+
+/* ── Excel-like Resizable Columns: Page 5 Standard Table ─────────────────── */
+
+.resizable-table {
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+}
+
+.resizable-table th,
+.resizable-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resizable-th {
+  position: relative;
+}
+
+.th-label {
+  display: inline-block;
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+  user-select: none;
+}
+
+.col-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+body.is-resizing-column {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.is-resizing-column * {
+  cursor: col-resize !important;
+}
+
+/* ── Excel-like Header Filter Buttons ───────────────────────────────────── */
+
+.excel-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  margin-left: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1e3a5f;
+  font-size: 10px;
+  cursor: pointer;
+  vertical-align: middle;
+  padding: 0;
+  position: relative;
+  z-index: 25;
+}
+
+.excel-filter-btn:hover {
+  background: #ffffff;
+  color: #1a56db;
+  border-color: #ffffff;
+}
+
+.excel-filter-btn.active {
+  background: #facc15;
+  color: #1e3a5f;
+  border-color: #fde68a;
+}
+
+/* Keep filter button usable inside rotated/narrow headers */
+/* ── Excel-like Dropdown Menu ────────────────────────────────────────────── */
+
+.excel-filter-menu {
+  position: absolute;
+  width: 260px;
+  max-width: calc(100vw - 24px);
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22);
+  z-index: 3000;
+  padding: 10px;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.excel-filter-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1e3a5f;
+  padding: 4px 4px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.excel-filter-sort-btn {
+  width: 100%;
+  border: 0;
+  background: #ffffff;
+  color: #111827;
+  text-align: left;
+  padding: 7px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.excel-filter-sort-btn:hover {
+  background: #eff6ff;
+  color: #1a56db;
+}
+
+.excel-filter-separator {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 7px 0;
+}
+
+.excel-filter-search {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 7px 8px;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 7px;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.excel-filter-search:focus {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.12);
+}
+
+.excel-filter-values {
+  max-height: 210px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #f8fafc;
+  padding: 4px 0;
+}
+
+.excel-filter-check-row {
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+.excel-filter-check-row:hover {
+  background: #eff6ff;
+}
+
+.excel-filter-check-row label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  color: #111827;
+  font-weight: 500;
+}
+
+.excel-filter-check-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #1a56db;
+}
+
+.excel-filter-subcontract-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.excel-filter-subcontract-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 1px solid #d97706;
+  flex: 0 0 auto;
+}
+
+.excel-filter-select-all-row {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.excel-filter-loading,
+.excel-filter-empty {
+  padding: 12px;
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+.excel-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 9px;
+}
+
+.excel-filter-clear,
+.excel-filter-apply {
+  border-radius: 4px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.excel-filter-clear {
+  background: #ffffff;
+  color: #6b7280;
+  border: 1px solid #cbd5e1;
+}
+
+.excel-filter-clear:hover {
+  color: #dc2626;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.excel-filter-apply {
+  background: #1a56db;
+  color: #ffffff;
+  border: 1px solid #1a56db;
+}
+
+.excel-filter-apply:hover {
+  background: #174abe;
+}
+
+.excel-filter-hide-column {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.excel-filter-hide-column:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e3a5f;
+}
+
+/* ── Fix Excel filter button position inside vertical headers ───────────── */
+
+/* ── Better vertical header + Excel filter layout ───────────────────────── */
+
+/* ── Mobile Fix: Page 5 Controls + Header Filters ───────────────────────── */
+
+@media (max-width: 768px) {
+  /* Keep top controls clean on mobile */
+  #table-view .search-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  #table-view .search-box-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #table-view .export-btns {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-left: 0 !important;
+  }
+
+  #table-view .btn-export,
+  #table-view .btn-columns {
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  /* Make table scroll horizontally instead of squeezing badly */
+  #table-view .table-container {
+    max-height: calc(100vh - 300px) !important;
+    overflow: auto !important;
+  }
+
+  #data-table {
+    table-layout: fixed !important;
+    width: max-content !important;
+    min-width: 980px !important;
+  }
+
+  /* On mobile, disable vertical headers for readability */
+  #table-head th.th-rotate {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    height: 58px !important;
+    min-width: 72px !important;
+    max-width: none !important;
+    padding: 8px 22px 8px 8px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    overflow: visible !important;
+  }
+
+  #table-head th.th-rotate .th-label {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    display: inline-block !important;
+    height: auto !important;
+    max-width: calc(100% - 22px) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Make filter icon visible on all mobile headers */
+  #table-head th .excel-filter-btn,
+  #table-head th.th-rotate .excel-filter-btn {
+    position: absolute !important;
+    top: 50% !important;
+    right: 5px !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    width: 17px !important;
+    height: 17px !important;
+    z-index: 45 !important;
+  }
+
+  /* Keep resize handle working */
+  #table-head th .col-resize-handle,
+  #table-head th.th-rotate .col-resize-handle {
+    right: -3px !important;
+    top: 0 !important;
+    height: 100% !important;
+    z-index: 50 !important;
+  }
+
+  #table-body td {
+    padding: 9px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Keep Excel filter dropdown fully visible */
+.excel-filter-menu {
+  max-height: calc(100vh - 90px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.excel-filter-values {
+  flex: 1 1 auto;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.excel-filter-actions {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 9px;
+}
+/* ── Professional Last Updated Time Filter UI ───────────────────────────── */
+
+.excel-time-filter-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+.excel-time-filter-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1e3a5f;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+  margin-bottom: 8px;
+}
+
+.excel-time-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.excel-time-filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.excel-time-filter-label input,
+.excel-time-filter-label select {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  background: #ffffff;
+  color: #111827;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+  outline: none;
+}
+
+.excel-time-filter-label input:focus,
+.excel-time-filter-label select:focus {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.13);
+}
+
+.excel-filter-menu .excel-filter-search {
+  margin-top: 8px;
+}
+
+.excel-filter-menu {
+  border-radius: 9px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.24);
+}
+
+.excel-filter-actions {
+  padding: 10px;
+  margin: 8px -10px -10px;
+}
+
+/* =========================================================
+   DATA VIEW OVERFLOW FIX V1
+========================================================= */
+
+
+/*
+ * Keep wide tables inside their own container instead of
+ * allowing them to create browser-level horizontal overflow.
+ */
+
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+
+/* Width includes page padding */
+
+.main {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+
+/* Data View content must be allowed to shrink */
+
+#table-view,
+#pr-view,
+#ps-view {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+
+/*
+ * Table remains scrollable when columns exceed available width,
+ * but the visual horizontal/vertical scrollbars are hidden.
+ */
+
+.table-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    box-sizing: border-box;
+
+    overflow: auto !important;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.table-container::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+
+/*
+ * Hide the page scrollbar visually on Data View.
+ * Mouse wheel / touch / keyboard scrolling still works normally.
+ */
+
+html,
+body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+

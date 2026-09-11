@@ -1,4 +1,4 @@
-{# ============================================================ Base layout -
+﻿{# ============================================================ Base layout -
 Demo 2 ============================================================ #}
 <!doctype html>
 <html lang="en">
@@ -6,11 +6,13 @@ Demo 2 ============================================================ #}
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}JMS{% endblock %}</title>
+    {% block favicon %}
     <link
       rel="icon"
       type="image/svg+xml"
       href="{{ url_for('static', filename='img/nmtg_logo_color_back.svg') }}"
     />
+    {% endblock %}
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
@@ -21,11 +23,16 @@ Demo 2 ============================================================ #}
     />
     <link
       rel="stylesheet"
+      href="{{ url_for('static', filename='css/sidebar_erp.css') }}?v={{ version }}"
+    />
+    <link
+      rel="stylesheet"
       href="{{ url_for('static', filename='css/responsive.css') }}?v={{ version }}"
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/skeleton.css') }}?v={{ version }}">
+      href="{{ url_for('static', filename='css/skeleton.css') }}?v={{ version }}"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -119,10 +126,40 @@ Demo 2 ============================================================ #}
       }
     </style>
     {% block extra_head %}{% endblock %}
-  </head>
+    <!-- FINAL THEME LAYER - MUST STAY AFTER PAGE CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/theme.css') }}?v={{ version }}"
+    />
+  <script>
+  (function () {
+    try {
+      if (
+        localStorage.getItem("jms_sidebar_collapsed") === "1"
+      ) {
+        document.documentElement.classList.add(
+          "sidebar-collapsed-preload"
+        );
+      }
+    } catch (e) {
+      /* localStorage unavailable - keep expanded */
+    }
+  })();
+</script>
+<script id="jms-theme-preload">
+  (function () {
+    try {
+      if (localStorage.getItem("jms_theme") === "dark") {
+        document.documentElement.classList.add("jms-dark-theme");
+      }
+    } catch (e) {}
+  })();
+</script>
+</head>
   <body class="{{ 'has-sidebar' if session.get('username') else 'auth-page' }}">
-    {% if session.get("username") %}
-    {% set is_gaurang_special = session.get("user_id")|string == "5" or (session.get("username", "")|trim|lower) == "gaurang" %}
+    {% if session.get("username") %} {% set is_gaurang_special =
+    session.get("user_id")|string == "5" or (session.get("username",
+    "")|trim|lower) == "gaurang" %}
     <button
       class="sidebar-mobile-toggle"
       type="button"
@@ -133,52 +170,205 @@ Demo 2 ============================================================ #}
     </button>
 
     <aside id="main-sidebar" class="main-sidebar">
-      <div class="sidebar-top">
-        <div class="sidebar-brand">
-          {% block nav_brand %}
-          <img
-            src="{{ url_for('static', filename='img/nmtg_logo_color_back.svg') }}"
-            alt="NMTG"
-          />
-          {% endblock %}
-        </div>
-      </div>
+      <div class="sidebar-top erp-sidebar-top">
 
-      <div class="sidebar-links">
-        {% if session.get("role") == "admin" and not is_gaurang_special %}
+  <div class="erp-current-page">
+
+    <span
+      class="erp-app-icon erp-current-page-icon"
+      id="erp-current-page-icon"
+      aria-hidden="true"
+    >
+      <i class="fa fa-square-o"></i>
+    </span>
+
+    <span
+      class="erp-app-copy erp-current-page-copy"
+    >
+      <strong id="erp-current-page-name"></strong>
+    </span>
+
+  </div>
+
+</div>
+<div
+  class="erp-header-menu"
+  id="erp-header-menu"
+  hidden
+  role="menu"
+  aria-label="Page menu"
+>
+
+  <a
+    href="{{ url_for('pages.welcome') }}"
+    class="erp-header-menu-item"
+    role="menuitem"
+  >
+    <span class="erp-header-menu-icon">
+      <i class="fa fa-home" aria-hidden="true"></i>
+    </span>
+
+    <span>Desktop</span>
+  </a>
+
+
+  <div class="erp-header-menu-divider"></div>
+
+
+  <button
+    type="button"
+    class="erp-header-menu-item"
+    id="erp-header-reload"
+    role="menuitem"
+  >
+    <span class="erp-header-menu-icon">
+      <i class="fa fa-refresh" aria-hidden="true"></i>
+    </span>
+
+    <span>Reload</span>
+  </button>
+
+
+  <button
+    type="button"
+    class="erp-header-menu-item"
+    id="erp-header-theme-toggle"
+    role="menuitem"
+  >
+    <span class="erp-header-menu-icon">
+      <i
+        class="fa fa-moon-o"
+        id="erp-header-theme-icon"
+        aria-hidden="true"
+      ></i>
+    </span>
+
+    <span>Toggle Theme</span>
+  </button>
+
+
+  <div class="erp-header-menu-divider"></div>
+
+
+  <a
+    href="{{ url_for('auth.logout') }}"
+    class="erp-header-menu-item erp-header-menu-logout"
+    role="menuitem"
+    onclick="return openLogoutModal(event);"
+  >
+    <span class="erp-header-menu-icon">
+      <i class="fa fa-sign-out" aria-hidden="true"></i>
+    </span>
+
+    <span>Logout</span>
+  </a>
+
+</div>
+
+<div class="sidebar-links">
+
+  <div class="erp-sidebar-utilities">
+
+    <button
+      type="button"
+      class="erp-sidebar-tool"
+      id="erp-sidebar-search-btn"
+      title="Search modules"
+    >
+      <span class="sidebar-icon">
+        <i class="fa fa-search" aria-hidden="true"></i>
+      </span>
+
+      <span class="sidebar-text">Search</span>
+      <span class="erp-shortcut">Ctrl+K</span>
+    </button>
+
+    <button
+      type="button"
+      class="erp-sidebar-tool"
+      id="erp-sidebar-notification-btn"
+      title="Overdue Job Cards"
+    >
+      <span class="sidebar-icon">
+        <i class="fa fa-bell-o" aria-hidden="true"></i>
+      </span>
+
+      <span class="sidebar-text">Notification</span>
+
+      <span
+        class="erp-notification-count"
+        id="erp-notification-count"
+        hidden
+      >0</span>
+    </button>
+
+  </div>
+
+  <div class="erp-sidebar-divider"></div>
+
+  <a
+    href="{{ url_for('pages.welcome') }}"
+    class="sidebar-link {{ 'active' if request.path == '/welcome' else '' }}"
+    title="Home"
+  >
+    <span class="sidebar-icon">
+      <i class="fa fa-home" aria-hidden="true"></i>
+    </span>
+
+    <span class="sidebar-text">Home</span>
+  </a>
+
+        {% if session.get("role") == "admin" or is_gaurang_special %}
         <a
-          href="{{ url_for('pages.admin_dashboard') }}"
-          class="sidebar-link {{ 'active' if active_page == 'admin_dashboard' else '' }}"
-        >
-          <span class="sidebar-text">Dashboard</span>
-        </a>
-        {% endif %} {% if session.get("role") == "supervisor" or is_gaurang_special %}
+        is_gaurang_special %}
         <a
-          href="{{ url_for('pages.supervisor_dashboard') }}"
-          class="sidebar-link {{ 'active' if active_page == 'supervisor_dashboard' else '' }}"
-        >
-          <span class="sidebar-text">Dashboard</span>
-        </a>
-        {% endif %} {% if session.get("role") == "operator" and not is_gaurang_special %}
-        <a
-          href="{{ url_for('pages.operator_dashboard') }}"
-          class="sidebar-link {{ 'active' if active_page == 'operator_dashboard' else '' }}"
-        >
-          <span class="sidebar-text">Dashboard</span>
-        </a>
-        {% endif %} {% if session.get("role") in ["admin", "operator"] or is_gaurang_special %}
+        %}
         <a
           href="{{ url_for('pages.index') }}"
           class="sidebar-link {{ 'active' if active_page == 'page1' else '' }}"
         >
-          <span class="sidebar-text">PPC</span>
+          <span class="sidebar-icon">
+  <i class="fa fa-clipboard" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">PPC</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "operator"] or is_gaurang_special %}
+        {% endif %}
+
+        {% if session.get("role") == "admin" or is_gaurang_special %}
+        <a
+          href="{{ url_for('pages.cutting_plan') }}"
+          class="sidebar-link {{ 'active' if active_page == 'cutting_plan' else '' }}"
+        >
+          <span class="sidebar-icon">
+  <i class="fa fa-scissors" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">Cutting Plan</span>
+        </a>
+        {% endif %}
+
+        <!-- RAW_MATERIAL_SHORTAGE_SIDEBAR_V1 -->
+        {% if session.get("role") == "admin" or is_gaurang_special %}
+        <a
+          href="{{ url_for('raw_material_shortage.index') }}"
+          class="sidebar-link {{ 'active' if active_page == 'raw_material_shortage' else '' }}"
+        >
+          <span class="sidebar-icon">
+            <i class="fa fa-cubes" aria-hidden="true"></i>
+          </span>
+          <span class="sidebar-text">Raw Material Shortage</span>
+        </a>
+        {% endif %}
+
+        {% if session.get("role") in ["admin"] or is_gaurang_special
+        %}
         <a
           href="{{ url_for('pages.page2') }}"
           class="sidebar-link {{ 'active' if active_page == 'page2' else '' }}"
         >
-          <span class="sidebar-text">Process Master</span>
+          <span class="sidebar-icon">
+  <i class="fa fa-cogs" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">Process Master</span>
         </a>
         {% endif %} {% if session.get("role") in ["admin", "supervisor",
         "operator"] or is_gaurang_special %}
@@ -186,45 +376,216 @@ Demo 2 ============================================================ #}
           href="{{ url_for('pages.page3') }}"
           class="sidebar-link {{ 'active' if active_page == 'page3' else '' }}"
         >
-          <span class="sidebar-text">Traceability</span>
+          <span class="sidebar-icon">
+  <i class="fa fa-search" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">Traceability</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "supervisor"] or is_gaurang_special %}
+
+        {% if oee_sidebar_access %}
+        <a
+          id="sidebar-oee-link"
+          href="{{ url_for('pages.oee_page') }}"
+          class="sidebar-link {{ 'active' if active_page == 'oee_page' else '' }}"
+        >
+          <span class="sidebar-icon">
+  <i class="fa fa-tachometer" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">OEE</span>
+        </a>
+
+                {% if session.get("role") in ["admin", "supervisor"] %}
+        
+          <a
+          id="sidebar-oee-dashboard-link"
+          href="{{ url_for('oee_dashboard.oee_dashboard_page') }}"
+          class="sidebar-link {{ 'active' if active_page == 'oee_dashboard' else '' }}"
+        >
+          <span class="sidebar-icon">
+            <i class="fa fa-line-chart" aria-hidden="true"></i>
+          </span>
+          <span class="sidebar-text">OEE Dashboard</span>
+        </a>
+        {% endif %}
+
+                {% if session.get("role") in ["admin", "supervisor", "operator"] %}
+        
+          
+          <a id="sidebar-oee-summary-link"
+          href="{{ url_for('oee_machine_summary.oee_machine_summary_page') }}"
+          class="sidebar-link {{ 'active' if active_page == 'oee_machine_summary' else '' }}"
+        >
+          <span class="sidebar-icon">
+            <i class="fa fa-bar-chart" aria-hidden="true"></i>
+          </span>
+          <span class="sidebar-text">OEE Summary</span>
+        </a>
+        {% endif %}
+
+        {% endif %}
+        {% endif %}
+
+        <!-- OEE_TOOL_UID_REGISTER_SIDEBAR_V124 -->
+        {% if session.get("role") in ["admin", "supervisor"] %}
+        <a
+          href="/oee-tool-uid-register"
+          class="sidebar-link {{ 'active' if request.path == '/oee-tool-uid-register' else '' }}"
+        >
+          <span class="sidebar-icon">
+            <i class="fa fa-tag" aria-hidden="true"></i>
+          </span>
+          <span class="sidebar-text">Tool UID Register</span>
+        </a>
+        {% endif %}
+
+        {% if session.get("role") in ["admin", "supervisor"] or
+        is_gaurang_special %}
         <a
           href="{{ url_for('pages.page4') }}"
           class="sidebar-link {{ 'active' if active_page == 'page4' else '' }}"
         >
-          <span class="sidebar-text">Analytics</span>
+          <span class="sidebar-icon">
+  <i class="fa fa-bar-chart" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">Analytics</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "supervisor"] or is_gaurang_special %}
+        {% endif %} {% if session.get("role") in ["admin", "supervisor"] or
+        is_gaurang_special %}
         <a
           href="{{ url_for('pages.page5') }}"
           class="sidebar-link {{ 'active' if active_page == 'page5' else '' }}"
         >
-          <span class="sidebar-text">Data View</span>
+          <span class="sidebar-icon">
+  <i class="fa fa-table" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">Data View</span>
         </a>
-        {% endif %} {% if session.get("role") == "admin" and not is_gaurang_special %}
+        {% endif %}
+        {% if session.get("role") == "admin" or
+        session.get("username")|lower == "hema" %}
+        <a
+          href="{{ url_for('pages.dispatch_tracker') }}"
+          class="sidebar-link {{ 'active' if active_page == 'dispatch_tracker' else '' }}"
+        >
+          <span class="sidebar-icon">
+  <i class="fa fa-truck" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">Dispatch Tracker</span>
+        </a>
+        {% endif %} {% if session.get("role") == "admin" and not
+        is_gaurang_special %}
         <a
           href="{{ url_for('pages.user_management') }}"
           class="sidebar-link {{ 'active' if active_page == 'user_management' else '' }}"
         >
-          <span class="sidebar-text">User Management</span>
+          <span class="sidebar-icon">
+  <i class="fa fa-users" aria-hidden="true"></i>
+</span>
+<span class="sidebar-text">User Management</span>
         </a>
         {% endif %}
       </div>
 
-      {% if session.get("role") in ["admin", "supervisor"] or is_gaurang_special %}
-      <div class="sidebar-date-filter">
-        <div class="sidebar-date-filter-label">Filter by Date</div>
-        <div class="sidebar-date-filter-row">
-          <input type="date" id="global-date-filter" class="sidebar-date-input"
-                 onchange="onDateFilterChange()" title="Show records created on this date" />
-          <button type="button" class="sidebar-date-clear"
-                  onclick="clearDateFilter()" title="Clear filter — show all dates">×</button>
-        </div>
-      </div>
+      {% if (
+        (session.get("role") in ["admin", "supervisor"] or is_gaurang_special)
+        and
+        (request.path.startswith('/page5') or request.path.startswith('/page4'))
+      ) or (
+        oee_sidebar_access
+        and request.path.startswith('/oee')
+      ) %}
+      <div
+  class="sidebar-date-filter"
+  id="sidebar-date-filter"
+>
+
+  <!-- Collapsed sidebar button -->
+  <button
+    type="button"
+    class="erp-date-filter-toggle"
+    id="erp-date-filter-toggle"
+    aria-label="Filter by date"
+    aria-expanded="false"
+    aria-controls="erp-date-filter-popover"
+    title="Filter by date"
+  >
+    <span class="sidebar-icon">
+      <i
+        class="fa fa-calendar-o"
+        aria-hidden="true"
+      ></i>
+    </span>
+
+    <span
+      class="erp-date-active-dot"
+      id="erp-date-active-dot"
+      hidden
+    ></span>
+  </button>
+
+
+  <!--
+    Expanded sidebar:
+      behaves like the existing date filter.
+
+    Collapsed sidebar:
+      this becomes the flyout.
+  -->
+  <div
+    class="erp-date-filter-popover"
+    id="erp-date-filter-popover"
+  >
+
+    <div class="sidebar-date-filter-label">
+      Filter by Date
+    </div>
+
+    <div class="sidebar-date-filter-row">
+
+      <input
+        type="date"
+        id="global-date-filter"
+        class="sidebar-date-input"
+        onchange="onDateFilterChange()"
+        title="Show records created on this date"
+      />
+
+      <button
+        type="button"
+        class="sidebar-date-clear"
+        onclick="clearDateFilter()"
+        title="Clear filter - show all dates"
+        aria-label="Clear date filter"
+      >
+        &times;
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
       {% endif %}
 
-      <div class="sidebar-user">
+      
+<button
+  type="button"
+  class="erp-sidebar-collapse"
+  id="erp-sidebar-collapse"
+  title="Collapse sidebar"
+>
+  <span class="sidebar-icon">
+    <i
+      id="erp-sidebar-collapse-icon"
+      class="fa fa-angle-left"
+      aria-hidden="true"
+    ></i>
+  </span>
+
+  <span class="sidebar-text">Collapse</span>
+</button>
+
+<div class="sidebar-user">
         {% if session.get("username") %}
         <div class="sidebar-user-info">
           <div class="sidebar-user-name">
@@ -232,15 +593,14 @@ Demo 2 ============================================================ #}
           </div>
           <div class="sidebar-user-role">{{ session.get("role") }}</div>
         </div>
-
         <a
           href="{{ url_for('auth.logout') }}"
           class="sidebar-logout"
-          onclick="return openLogoutModal(event)"
+          onclick="return openLogoutModal(event);"
         >
           <span class="sidebar-icon"
-            ><i class="fa fa-sign-out" aria-hidden="true"></i>
-          </span>
+            ><i class="fa fa-sign-out" aria-hidden="true"></i
+          ></span>
           <span class="sidebar-text">Logout</span>
         </a>
         {% else %}
@@ -327,6 +687,8 @@ Demo 2 ============================================================ #}
 
     <div class="toast" id="toast"></div>
     <script src="{{ url_for('static', filename='js/base.js') }}?v={{ version }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar_erp.js') }}?v={{ version }}"></script>
+    <script src="{{ url_for('static', filename='js/hidden_backup.js') }}?v={{ version }}"></script>
     <script>
       (function () {
         var FILTER_KEY = "jms_filter_date";
@@ -340,6 +702,8 @@ Demo 2 ============================================================ #}
           if (typeof loadData === "function") loadData();
           if (typeof loadProcessReport === "function") loadProcessReport();
           if (typeof loadPlanningSheet === "function") loadPlanningSheet();
+          if (typeof loadAll === "function") loadAll();
+          if (typeof loadOeeResults === "function") loadOeeResults();
         }
 
         window.onDateFilterChange = function () {
@@ -362,5 +726,81 @@ Demo 2 ============================================================ #}
       })();
     </script>
     {% block extra_scripts %}{% endblock %}
-  </body>
+
+
+<!-- ======================================================
+     ERP COMMAND PALETTE
+======================================================= -->
+<div
+  id="erp-command-overlay"
+  class="erp-command-overlay"
+  hidden
+  aria-hidden="true"
+>
+  <div
+    class="erp-command-palette"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Search modules"
+  >
+
+    <div class="erp-command-input-row">
+
+      <span class="erp-command-search-icon">
+        <i class="fa fa-search" aria-hidden="true"></i>
+      </span>
+
+      <input
+        type="text"
+        id="erp-command-input"
+        class="erp-command-input"
+        placeholder="Search or type a command"
+        autocomplete="off"
+        spellcheck="false"
+      />
+
+    </div>
+
+
+    <div
+      id="erp-command-list"
+      class="erp-command-list"
+      role="listbox"
+    ></div>
+
+
+    <div class="erp-command-footer">
+
+      <span>
+        <kbd>&uarr;</kbd>
+        <kbd>&darr;</kbd>
+        <small>to navigate</small>
+      </span>
+
+      <span>
+        <kbd>&crarr;</kbd>
+        <small>to select</small>
+      </span>
+
+      <span>
+        <kbd>esc</kbd>
+        <small>to close</small>
+      </span>
+
+    </div>
+
+  </div>
+</div>
+
+</body>
 </html>
+
+
+
+
+
+
+
+
+
+

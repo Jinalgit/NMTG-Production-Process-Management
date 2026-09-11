@@ -1,0 +1,6022 @@
+{
+  "generated_at": "2026-08-13T12:10:05.561151",
+  "root": "D:\\Het\\demo2",
+  "score": 0,
+  "metrics": {
+    "templates": 15,
+    "controls": 96,
+    "placeholders": 39,
+    "unlabeled_controls": 75,
+    "buttons": 113,
+    "tables": 13,
+    "inline_styles": 292,
+    "missing_alt": 0,
+    "css_files": 13,
+    "important": 580,
+    "media_queries": 48,
+    "js_files": 16,
+    "fetch_calls": 100,
+    "innerHTML": 214
+  },
+  "severity_counts": {
+    "MEDIUM": 141,
+    "LOW": 21,
+    "HIGH": 2
+  },
+  "routes": [
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_summary",
+      "route": "/api/analytics/summary",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_wip_flow",
+      "route": "/api/analytics/wip_flow",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_daily_activity",
+      "route": "/api/analytics/daily_activity",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_process_delays",
+      "route": "/api/analytics/process_delays",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_overdue_jobs",
+      "route": "/api/analytics/overdue_jobs",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_supervisor_stages",
+      "route": "/api/analytics/supervisor_stages",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_otd",
+      "route": "/api/analytics/otd",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "wip_distribution",
+      "route": "/api/analytics/wip_distribution",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_quality_by_item",
+      "route": "/api/analytics/quality_by_item",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_supervisor_performance",
+      "route": "/api/analytics/supervisor_performance",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_daily_checks",
+      "route": "/api/analytics/daily_checks",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\analytics.py",
+      "function": "analytics_daily_breakdown",
+      "route": "/api/analytics/daily_breakdown",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\audit_trail.py",
+      "function": "get_audit_trail",
+      "route": "/api/audit_trail",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\audit_trail.py",
+      "function": "get_audit_trail_by_jc",
+      "route": "/api/audit_trail/<path:job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\auth.py",
+      "function": "login",
+      "route": "/login",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "templates": [
+        "login.html"
+      ]
+    },
+    {
+      "python_file": "routes\\auth.py",
+      "function": "logout",
+      "route": "/logout",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\bom.py",
+      "function": "get_bom_summary",
+      "route": "/api/bom/summary",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\bom.py",
+      "function": "get_children",
+      "route": "/api/bom/children/<parent_code>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\bom.py",
+      "function": "get_item_details",
+      "route": "/api/bom/item_details/<child_code>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "health",
+      "route": "/api/cutting-plan/health",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "create_manual",
+      "route": "/api/cutting-plan/manual",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "auto_test",
+      "route": "/api/cutting-plan/auto-test",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "list_plans",
+      "route": "/api/cutting-plan/plans",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "edit_cutting_plan",
+      "route": "/api/cutting-plan/<int:plan_id>",
+      "methods": [
+        "PATCH",
+        "PUT"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "release_plan",
+      "route": "/api/cutting-plan/<int:plan_id>/release",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "cancel_cutting_plan",
+      "route": "/api/cutting-plan/<int:plan_id>/cancel",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "add_batch",
+      "route": "/api/cutting-plan/<int:plan_id>/batches",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\cutting_plan.py",
+      "function": "undo_cutting_batch",
+      "route": "/api/cutting-plan/<int:plan_id>/batches/<int:batch_id>/undo",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "data_job_card_filter_options",
+      "route": "/api/data/job_cards/filter_options",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "data_job_cards",
+      "route": "/api/data/job_cards",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "update_item_priority",
+      "route": "/api/job_card_item/priority",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "soft_delete_job_card_item",
+      "route": "/api/job_card_item/soft_delete",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "data_quality_checks",
+      "route": "/api/data/quality_checks",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "get_audit_trail",
+      "route": "/api/audit_trail",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "get_audit_trail_by_jc",
+      "route": "/api/audit_trail/<path:job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "data_process_report",
+      "route": "/api/data/process_report",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "data_planning_sheet",
+      "route": "/api/data/planning_sheet",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "operator_lead_time_notifications",
+      "route": "/api/operator/lead-time-notifications",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "supervisor_dashboard_summary",
+      "route": "/api/supervisor/dashboard-summary",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "admin_dashboard_summary",
+      "route": "/api/admin/dashboard-summary",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "stat_detail",
+      "route": "/api/dashboard/stat-detail",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "update_job_card_fields",
+      "route": "/api/job_card/update_fields",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "get_wip_summary",
+      "route": "/api/wip_summary",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "get_wip_summary_detail",
+      "route": "/api/wip_summary/detail",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "get_delivery_change_notifications",
+      "route": "/api/notifications/delivery_changes",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "dispatch_tracker",
+      "route": "/api/dispatch/tracker",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "dispatch_update_wo_dd",
+      "route": "/api/dispatch/update_wo_dd",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "dispatch_update_so_dd",
+      "route": "/api/dispatch/update_so_dd",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "assembly_readiness",
+      "route": "/api/data/assembly_readiness",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\data_view.py",
+      "function": "dispatch_tracker_export_excel",
+      "route": "/api/dispatch-tracker/export-excel",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "review_compare_process_route",
+      "route": "/api/job_card/review/compare",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "update_upload_review_processes",
+      "route": "/api/job_card/review/update/<int:review_id>",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "create_review_item_in_process_master",
+      "route": "/api/job_card/review/create_process_master/<int:review_id>",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "update_process_master_from_review",
+      "route": "/api/job_card/review/update_process_master/<int:review_id>",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "recheck_upload_review",
+      "route": "/api/job_card/review/recheck/<int:review_id>",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_upload_review_batch",
+      "route": "/api/job_card/review/batch/<review_token>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "review_item_process_route",
+      "route": "/api/job_card/review/item/<item_code>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_items",
+      "route": "/api/items",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "customer_search",
+      "route": "/api/customer-search",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_process_names",
+      "route": "/api/process_names",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_supervisors",
+      "route": "/api/supervisors",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "save_job_card",
+      "route": "/api/job_card",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "bulk_create_job_cards",
+      "route": "/api/job_card/bulk_create",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_job_cards",
+      "route": "/api/job_cards",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_process_default_days",
+      "route": "/api/process_default_days",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "upload_preview_job_cards",
+      "route": "/api/job_card/upload_preview",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "upload_confirm_job_cards",
+      "route": "/api/job_card/upload_confirm",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "get_so_mapping_status",
+      "route": "/api/so_mapping/status",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "advance_plan_customer_search",
+      "route": "/api/advance-plan/customer-search",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "advance_plan_get_allocations",
+      "route": "/api/advance-plan/allocations/<int:item_id>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "advance_plan_create_allocation",
+      "route": "/api/advance-plan/allocations",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "advance_plan_update_allocation",
+      "route": "/api/advance-plan/allocations/<int:allocation_id>",
+      "methods": [
+        "PUT"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\job_cards.py",
+      "function": "advance_plan_cancel_allocation",
+      "route": "/api/advance-plan/allocations/<int:allocation_id>/cancel",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\oee.py",
+      "function": "oee_master_data",
+      "route": "/api/oee/master-data",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\oee.py",
+      "function": "oee_job_context",
+      "route": "/api/oee/context/<path:job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\oee.py",
+      "function": "oee_results",
+      "route": "/api/oee/results",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "index",
+      "route": "/",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "page1.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "page2",
+      "route": "/page2",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "page2.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "page3",
+      "route": "/page3",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "page3.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "oee_page",
+      "route": "/oee",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "oee.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "page4",
+      "route": "/page4",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "page4.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "page5",
+      "route": "/page5",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "page5.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "smart_upload",
+      "route": "/smart-upload",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "smart_upload.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "user_management",
+      "route": "/user-management",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "user_management.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "dispatch_tracker",
+      "route": "/dispatch-tracker",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "dispatch_tracker.html"
+      ]
+    },
+    {
+      "python_file": "routes\\pages.py",
+      "function": "jc_review",
+      "route": "/jc_review",
+      "methods": [
+        "GET"
+      ],
+      "templates": [
+        "jc_review.html"
+      ]
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_roots",
+      "route": "/api/bom/roots",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_children",
+      "route": "/api/bom/tree/children/<item_code>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "search_items",
+      "route": "/api/bom/search",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_item",
+      "route": "/api/bom/item/<item_code>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "add_item",
+      "route": "/api/bom/item",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "update_item",
+      "route": "/api/bom/item/<item_code>",
+      "methods": [
+        "PUT"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_item_changes",
+      "route": "/api/bom/item/<item_code>/changes",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "delete_item",
+      "route": "/api/bom/item/<item_code>",
+      "methods": [
+        "DELETE"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_processes",
+      "route": "/api/bom/processes",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "add_bom_link",
+      "route": "/api/bom/link",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "update_bom_link",
+      "route": "/api/bom/link/<int:link_id>",
+      "methods": [
+        "PUT"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "delete_bom_link",
+      "route": "/api/bom/link/<int:link_id>",
+      "methods": [
+        "DELETE"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "upload_preview",
+      "route": "/api/bom/upload_preview",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "upload_confirm",
+      "route": "/api/bom/upload_confirm",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_stats",
+      "route": "/api/bom/stats",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_bom_tree",
+      "route": "/api/bom/bom_tree",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_bom_tree_nested",
+      "route": "/api/bom/bom_tree_nested",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\process_master.py",
+      "function": "get_bom_process_flow",
+      "route": "/api/bom/process_flow/<bom_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "fetch_for_quality_check",
+      "route": "/api/quality_check/fetch/<path:job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "continue_anyway_child_c_gate",
+      "route": "/api/quality_check/child_c_gate/continue_anyway",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "update_wip",
+      "route": "/api/wip/update",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "operator_recent_completions",
+      "route": "/api/operator/recent_completions",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "operator_undo_completion",
+      "route": "/api/operator/undo_completion",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "save_quality_check",
+      "route": "/api/quality_check",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "get_quality_history",
+      "route": "/api/quality_check/history/<path:job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "set_subcontract",
+      "route": "/api/wip/subcontract",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "complete_subcontract",
+      "route": "/api/wip/subcontract_complete",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "rollback_wip_stage",
+      "route": "/api/wip/rollback",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "get_revoke_list",
+      "route": "/api/revoke/list/<path:job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "advance_rework_stage",
+      "route": "/api/revoke/advance-rework",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "merge_revoke",
+      "route": "/api/revoke/merge",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "remove_process",
+      "route": "/api/wip/remove_process",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "overdue_c_parent_status_api",
+      "route": "/api/dashboard/overdue-c-parent-status",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "check_c_child_gate_api",
+      "route": "/api/wip/check-c-child-gate/<job_card_no>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\quality_check.py",
+      "function": "operator_job_cards",
+      "route": "/api/operator/job_cards",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\smart_upload.py",
+      "function": "detect_format",
+      "route": "/api/smart_upload/detect",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\smart_upload.py",
+      "function": "save_mapping",
+      "route": "/api/smart_upload/save_mapping",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\smart_upload.py",
+      "function": "parse_with_mapping",
+      "route": "/api/smart_upload/parse",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "create_user",
+      "route": "/api/users/create",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "list_users",
+      "route": "/api/users",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "user_management_users",
+      "route": "/api/user-management/users",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "permission_master",
+      "route": "/api/user-management/permission-master",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "get_user_permissions",
+      "route": "/api/user-management/permissions/<int:user_id>",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "save_user_permissions",
+      "route": "/api/user-management/save-permissions",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "toggle_user_active",
+      "route": "/api/users/<int:user_id>/toggle-active",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "update_user_role",
+      "route": "/api/users/<int:user_id>/update-role",
+      "methods": [
+        "POST"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "get_permissions_meta",
+      "route": "/api/permissions/meta",
+      "methods": [
+        "GET"
+      ],
+      "templates": []
+    },
+    {
+      "python_file": "routes\\users.py",
+      "function": "user_permissions",
+      "route": "/api/users/<int:user_id>/permissions",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "templates": []
+    }
+  ],
+  "pages": [
+    {
+      "template": "templates\\admin_dashboard.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 14,
+      "classes": 143,
+      "controls": 0,
+      "placeholders": 0,
+      "unlabeled_controls": 0,
+      "buttons": 2,
+      "icon_only_buttons": 1,
+      "tables": 1,
+      "modals_mentions": 4,
+      "cards": 39,
+      "nav_elements": 0,
+      "inline_styles": 16,
+      "search": false,
+      "filter": false,
+      "export": false,
+      "refresh": true,
+      "modal": true,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\base.html",
+      "extends": [],
+      "includes": [],
+      "ids": 9,
+      "classes": 75,
+      "controls": 1,
+      "placeholders": 0,
+      "unlabeled_controls": 0,
+      "buttons": 4,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 29,
+      "cards": 0,
+      "nav_elements": 0,
+      "inline_styles": 0,
+      "search": false,
+      "filter": true,
+      "export": false,
+      "refresh": true,
+      "modal": true,
+      "table": false,
+      "tabs": false,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\bom_summary.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 14,
+      "classes": 73,
+      "controls": 1,
+      "placeholders": 1,
+      "unlabeled_controls": 1,
+      "buttons": 9,
+      "icon_only_buttons": 0,
+      "tables": 1,
+      "modals_mentions": 0,
+      "cards": 0,
+      "nav_elements": 0,
+      "inline_styles": 0,
+      "search": true,
+      "filter": true,
+      "export": true,
+      "refresh": false,
+      "modal": false,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": true
+    },
+    {
+      "template": "templates\\dispatch_tracker.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 35,
+      "classes": 95,
+      "controls": 6,
+      "placeholders": 5,
+      "unlabeled_controls": 3,
+      "buttons": 9,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 36,
+      "cards": 0,
+      "nav_elements": 0,
+      "inline_styles": 3,
+      "search": true,
+      "filter": true,
+      "export": false,
+      "refresh": true,
+      "modal": true,
+      "table": false,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\jc_review.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 44,
+      "classes": 104,
+      "controls": 1,
+      "placeholders": 1,
+      "unlabeled_controls": 1,
+      "buttons": 8,
+      "icon_only_buttons": 0,
+      "tables": 3,
+      "modals_mentions": 11,
+      "cards": 2,
+      "nav_elements": 0,
+      "inline_styles": 10,
+      "search": true,
+      "filter": true,
+      "export": false,
+      "refresh": true,
+      "modal": true,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": true,
+      "pagination": false
+    },
+    {
+      "template": "templates\\login.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 3,
+      "classes": 6,
+      "controls": 2,
+      "placeholders": 0,
+      "unlabeled_controls": 0,
+      "buttons": 1,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 0,
+      "cards": 1,
+      "nav_elements": 0,
+      "inline_styles": 2,
+      "search": false,
+      "filter": false,
+      "export": false,
+      "refresh": false,
+      "modal": false,
+      "table": false,
+      "tabs": false,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\oee.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 18,
+      "classes": 52,
+      "controls": 6,
+      "placeholders": 1,
+      "unlabeled_controls": 1,
+      "buttons": 3,
+      "icon_only_buttons": 0,
+      "tables": 1,
+      "modals_mentions": 0,
+      "cards": 7,
+      "nav_elements": 0,
+      "inline_styles": 0,
+      "search": true,
+      "filter": true,
+      "export": false,
+      "refresh": false,
+      "modal": false,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\operator_dashboard.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 5,
+      "classes": 67,
+      "controls": 0,
+      "placeholders": 0,
+      "unlabeled_controls": 0,
+      "buttons": 1,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 0,
+      "cards": 21,
+      "nav_elements": 0,
+      "inline_styles": 2,
+      "search": false,
+      "filter": false,
+      "export": false,
+      "refresh": true,
+      "modal": false,
+      "table": false,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\page1.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 54,
+      "classes": 123,
+      "controls": 21,
+      "placeholders": 11,
+      "unlabeled_controls": 21,
+      "buttons": 13,
+      "icon_only_buttons": 1,
+      "tables": 3,
+      "modals_mentions": 23,
+      "cards": 7,
+      "nav_elements": 0,
+      "inline_styles": 40,
+      "search": true,
+      "filter": true,
+      "export": false,
+      "refresh": true,
+      "modal": true,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\page2.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 45,
+      "classes": 104,
+      "controls": 22,
+      "placeholders": 7,
+      "unlabeled_controls": 13,
+      "buttons": 17,
+      "icon_only_buttons": 0,
+      "tables": 1,
+      "modals_mentions": 37,
+      "cards": 0,
+      "nav_elements": 0,
+      "inline_styles": 26,
+      "search": true,
+      "filter": true,
+      "export": false,
+      "refresh": false,
+      "modal": true,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\page3.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 45,
+      "classes": 86,
+      "controls": 8,
+      "placeholders": 5,
+      "unlabeled_controls": 8,
+      "buttons": 12,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 60,
+      "cards": 1,
+      "nav_elements": 0,
+      "inline_styles": 65,
+      "search": true,
+      "filter": false,
+      "export": false,
+      "refresh": false,
+      "modal": true,
+      "table": false,
+      "tabs": false,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\page4.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 30,
+      "classes": 121,
+      "controls": 0,
+      "placeholders": 0,
+      "unlabeled_controls": 0,
+      "buttons": 0,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 0,
+      "cards": 16,
+      "nav_elements": 0,
+      "inline_styles": 26,
+      "search": false,
+      "filter": false,
+      "export": false,
+      "refresh": false,
+      "modal": false,
+      "table": false,
+      "tabs": false,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\page5.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 69,
+      "classes": 99,
+      "controls": 24,
+      "placeholders": 5,
+      "unlabeled_controls": 24,
+      "buttons": 18,
+      "icon_only_buttons": 1,
+      "tables": 2,
+      "modals_mentions": 66,
+      "cards": 1,
+      "nav_elements": 0,
+      "inline_styles": 97,
+      "search": true,
+      "filter": true,
+      "export": true,
+      "refresh": false,
+      "modal": true,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": true
+    },
+    {
+      "template": "templates\\supervisor_dashboard.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 10,
+      "classes": 110,
+      "controls": 0,
+      "placeholders": 0,
+      "unlabeled_controls": 0,
+      "buttons": 1,
+      "icon_only_buttons": 0,
+      "tables": 0,
+      "modals_mentions": 0,
+      "cards": 25,
+      "nav_elements": 0,
+      "inline_styles": 5,
+      "search": false,
+      "filter": false,
+      "export": false,
+      "refresh": true,
+      "modal": false,
+      "table": false,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    },
+    {
+      "template": "templates\\user_management.html",
+      "extends": [
+        "base.html"
+      ],
+      "includes": [],
+      "ids": 26,
+      "classes": 83,
+      "controls": 4,
+      "placeholders": 3,
+      "unlabeled_controls": 3,
+      "buttons": 15,
+      "icon_only_buttons": 3,
+      "tables": 1,
+      "modals_mentions": 27,
+      "cards": 0,
+      "nav_elements": 0,
+      "inline_styles": 0,
+      "search": false,
+      "filter": false,
+      "export": false,
+      "refresh": false,
+      "modal": true,
+      "table": true,
+      "tabs": true,
+      "breadcrumb": false,
+      "pagination": false
+    }
+  ],
+  "css": {
+    "unique_colors": 261,
+    "colors": [
+      [
+        "#ffffff",
+        173
+      ],
+      [
+        "#dc2626",
+        42
+      ],
+      [
+        "#16a34a",
+        36
+      ],
+      [
+        "#1e3a5f",
+        35
+      ],
+      [
+        "#eff6ff",
+        33
+      ],
+      [
+        "#d7dde6",
+        32
+      ],
+      [
+        "#1a56db",
+        32
+      ],
+      [
+        "#64748b",
+        29
+      ],
+      [
+        "#fef2f2",
+        29
+      ],
+      [
+        "#fca5a5",
+        27
+      ],
+      [
+        "#92400e",
+        26
+      ],
+      [
+        "#2563eb",
+        21
+      ],
+      [
+        "#fffbeb",
+        21
+      ],
+      [
+        "#bfdbfe",
+        20
+      ],
+      [
+        "#f8fafc",
+        20
+      ],
+      [
+        "#bbf7d0",
+        19
+      ],
+      [
+        "#fff",
+        19
+      ],
+      [
+        "rgba(0, 0, 0, 0.07)",
+        18
+      ],
+      [
+        "#f59e0b",
+        17
+      ],
+      [
+        "#f0fdf4",
+        16
+      ],
+      [
+        "#fde68a",
+        15
+      ],
+      [
+        "#0f172a",
+        14
+      ],
+      [
+        "#86efac",
+        14
+      ],
+      [
+        "#0f2a4d",
+        14
+      ],
+      [
+        "#cbd5e1",
+        14
+      ],
+      [
+        "#f8f9fb",
+        13
+      ],
+      [
+        "#e5e7eb",
+        12
+      ],
+      [
+        "#dcfce7",
+        12
+      ],
+      [
+        "#f3f4f6",
+        12
+      ],
+      [
+        "#0891b2",
+        11
+      ],
+      [
+        "#111827",
+        11
+      ],
+      [
+        "#6b7280",
+        11
+      ],
+      [
+        "#dbeafe",
+        10
+      ],
+      [
+        "#e2e8f0",
+        10
+      ],
+      [
+        "#1e5aa8",
+        10
+      ],
+      [
+        "#334155",
+        9
+      ],
+      [
+        "#475569",
+        9
+      ],
+      [
+        "#94a3b8",
+        9
+      ],
+      [
+        "#fff7ed",
+        8
+      ],
+      [
+        "#d0d7e2",
+        8
+      ],
+      [
+        "#15803d",
+        8
+      ],
+      [
+        "#fee2e2",
+        8
+      ],
+      [
+        "#166534",
+        8
+      ],
+      [
+        "#374151",
+        7
+      ],
+      [
+        "#1648c0",
+        7
+      ],
+      [
+        "#1d4ed8",
+        7
+      ],
+      [
+        "#f8fbff",
+        7
+      ],
+      [
+        "#6366f1",
+        6
+      ],
+      [
+        "#ecfeff",
+        6
+      ],
+      [
+        "#d97706",
+        6
+      ],
+      [
+        "rgba(0, 0, 0, 0.08)",
+        6
+      ],
+      [
+        "#b91c1c",
+        6
+      ],
+      [
+        "rgba(0, 0, 0, 0.1)",
+        5
+      ],
+      [
+        "#fecdd3",
+        5
+      ],
+      [
+        "#e8f0fe",
+        5
+      ],
+      [
+        "#eaf2ff",
+        5
+      ],
+      [
+        "rgba(255, 255, 255, 0.5)",
+        4
+      ],
+      [
+        "#fbbf24",
+        4
+      ],
+      [
+        "rgba(255, 255, 255, 0.7)",
+        4
+      ],
+      [
+        "#ecfdf5",
+        4
+      ],
+      [
+        "rgba(0, 0, 0, 0.18)",
+        4
+      ],
+      [
+        "#d1d5db",
+        4
+      ],
+      [
+        "#b45309",
+        4
+      ],
+      [
+        "#f1f5f9",
+        4
+      ],
+      [
+        "rgba(255, 255, 255, 0.1)",
+        4
+      ],
+      [
+        "#f0f2f5",
+        4
+      ],
+      [
+        "rgba(30, 58, 95, 0.18)",
+        3
+      ],
+      [
+        "rgba(245, 158, 11, 0.2)",
+        3
+      ],
+      [
+        "rgba(255, 255, 255, 0.65)",
+        3
+      ],
+      [
+        "#b3c0d1",
+        3
+      ],
+      [
+        "#9333ea",
+        3
+      ],
+      [
+        "#eef2ff",
+        3
+      ],
+      [
+        "#faf5ff",
+        3
+      ],
+      [
+        "#a5f3fc",
+        3
+      ],
+      [
+        "#fcd34d",
+        3
+      ],
+      [
+        "rgba(0, 0, 0, 0.45)",
+        3
+      ],
+      [
+        "#09336e",
+        3
+      ],
+      [
+        "#fff1f2",
+        3
+      ],
+      [
+        "#24486f",
+        3
+      ],
+      [
+        "rgba(255, 255, 255, 0.18)",
+        3
+      ],
+      [
+        "#f0f4fa",
+        3
+      ],
+      [
+        "#ef4444",
+        3
+      ],
+      [
+        "#254a78",
+        3
+      ],
+      [
+        "#075bb5",
+        3
+      ],
+      [
+        "#ecfdf3",
+        3
+      ],
+      [
+        "#fb923c",
+        2
+      ],
+      [
+        "rgba(251, 146, 60, 0.18)",
+        2
+      ],
+      [
+        "rgba(0, 0, 0, 0.06)",
+        2
+      ],
+      [
+        "rgba(0, 0, 0, 0.12)",
+        2
+      ],
+      [
+        "#0b5fa5",
+        2
+      ],
+      [
+        "#eef4ff",
+        2
+      ],
+      [
+        "rgba(26, 86, 219, 0.12)",
+        2
+      ],
+      [
+        "rgba(15, 23, 42, 0.05)",
+        2
+      ],
+      [
+        "#eef4fb",
+        2
+      ],
+      [
+        "#c8d7eb",
+        2
+      ],
+      [
+        "#99f6e4",
+        2
+      ],
+      [
+        "#c4b5fd",
+        2
+      ],
+      [
+        "rgba(255, 255, 255, 0.2)",
+        2
+      ],
+      [
+        "rgba(26, 86, 219, 0.2)",
+        2
+      ],
+      [
+        "#991b1b",
+        2
+      ],
+      [
+        "#102a4c",
+        2
+      ],
+      [
+        "#e5eaf0",
+        2
+      ],
+      [
+        "#fed7aa",
+        2
+      ],
+      [
+        "#fecaca",
+        2
+      ],
+      [
+        "#dbe3ee",
+        2
+      ],
+      [
+        "#dcecff",
+        2
+      ],
+      [
+        "rgba(22, 163, 74, 0.2)",
+        2
+      ],
+      [
+        "#fef9c3",
+        2
+      ],
+      [
+        "rgba(26, 86, 219, 0.25)",
+        2
+      ],
+      [
+        "rgba(245, 158, 11, 0.3)",
+        2
+      ],
+      [
+        "rgba(245, 158, 11, 0.1)",
+        2
+      ],
+      [
+        "rgba(15, 42, 77, 0.10)",
+        2
+      ],
+      [
+        "rgba(15, 23, 42, 0.22)",
+        2
+      ],
+      [
+        "#174abe",
+        2
+      ],
+      [
+        "rgba(255, 255, 255, 0.14)",
+        2
+      ],
+      [
+        "#d5dce6",
+        2
+      ],
+      [
+        "#c3ccd8",
+        2
+      ],
+      [
+        "#eef0f3",
+        2
+      ],
+      [
+        "#3b82f6",
+        2
+      ],
+      [
+        "#f0f4f8",
+        1
+      ],
+      [
+        "#000000",
+        1
+      ],
+      [
+        "rgb(168, 199, 239)",
+        1
+      ],
+      [
+        "#053267",
+        1
+      ],
+      [
+        "#b9c4d3",
+        1
+      ],
+      [
+        "rgba(30, 58, 95, 0.12)",
+        1
+      ],
+      [
+        "#047857",
+        1
+      ],
+      [
+        "rgba(4, 120, 87, 0.18)",
+        1
+      ],
+      [
+        "rgba(146, 64, 14, 0.16)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.22)",
+        1
+      ],
+      [
+        "rgba(9, 51, 110, 0.35)",
+        1
+      ],
+      [
+        "rgba(9, 51, 110, 0.18)",
+        1
+      ],
+      [
+        "#a1bfe7",
+        1
+      ],
+      [
+        "#c6cee0",
+        1
+      ],
+      [
+        "#05378e",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.45)",
+        1
+      ],
+      [
+        "#f7fcff",
+        1
+      ],
+      [
+        "#f1f8ff",
+        1
+      ],
+      [
+        "#e5f4ff",
+        1
+      ],
+      [
+        "#d7e8f5",
+        1
+      ],
+      [
+        "rgba(15, 42, 77, 0.06)",
+        1
+      ],
+      [
+        "#f5f7fb",
+        1
+      ],
+      [
+        "#d9e1ec",
+        1
+      ],
+      [
+        "#b9c6d8",
+        1
+      ],
+      [
+        "#172033",
+        1
+      ],
+      [
+        "#effdf4",
+        1
+      ],
+      [
+        "#0f766e",
+        1
+      ],
+      [
+        "#6d28d9",
+        1
+      ],
+      [
+        "#f5f3ff",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.08)",
+        1
+      ],
+      [
+        "rgba(26, 86, 219, 0.35)",
+        1
+      ],
+      [
+        "rgba(26, 86, 219, 0.18)",
+        1
+      ],
+      [
+        "#cbd7ea",
+        1
+      ],
+      [
+        "#e5eef9",
+        1
+      ],
+      [
+        "#7f1d1d",
+        1
+      ],
+      [
+        "#ede9fe",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.38)",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.18)",
+        1
+      ],
+      [
+        "#102b4c",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.12)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.72)",
+        1
+      ],
+      [
+        "#5b21b6",
+        1
+      ],
+      [
+        "#ddd6fe",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.48)",
+        1
+      ],
+      [
+        "#9ca3af",
+        1
+      ],
+      [
+        "rgba(0, 0, 0, 0.4)",
+        1
+      ],
+      [
+        "rgba(0, 0, 0, 0.15)",
+        1
+      ],
+      [
+        "rgba(0, 0, 0, 0.5)",
+        1
+      ],
+      [
+        "#edf1f5",
+        1
+      ],
+      [
+        "rgba(47, 99, 151, 0.12)",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.72)",
+        1
+      ],
+      [
+        "rgba(0, 0, 0, 0.28)",
+        1
+      ],
+      [
+        "#0f4c81",
+        1
+      ],
+      [
+        "#e8f0f7",
+        1
+      ],
+      [
+        "#1c2430",
+        1
+      ],
+      [
+        "#0f6b3d",
+        1
+      ],
+      [
+        "#e6f3ec",
+        1
+      ],
+      [
+        "#bfdccb",
+        1
+      ],
+      [
+        "#8a4b0f",
+        1
+      ],
+      [
+        "#f8efe2",
+        1
+      ],
+      [
+        "#e6d3b4",
+        1
+      ],
+      [
+        "#eef1f5",
+        1
+      ],
+      [
+        "#3d4854",
+        1
+      ],
+      [
+        "#c3ccd6",
+        1
+      ],
+      [
+        "#fff3c4",
+        1
+      ],
+      [
+        "rgba(28,36,48,.06)",
+        1
+      ],
+      [
+        "rgba(28,36,48,.1)",
+        1
+      ],
+      [
+        "rgba(0,0,0,.3)",
+        1
+      ],
+      [
+        "rgba(0,0,0,.12)",
+        1
+      ],
+      [
+        "rgba(0,0,0,.4)",
+        1
+      ],
+      [
+        "#fff8e6",
+        1
+      ],
+      [
+        "#eef2f7",
+        1
+      ],
+      [
+        "#fbfdff",
+        1
+      ],
+      [
+        "#fffaf2",
+        1
+      ],
+      [
+        "#f8fffb",
+        1
+      ],
+      [
+        "#c7d8ff",
+        1
+      ],
+      [
+        "rgba(15, 76, 129, 0.08)",
+        1
+      ],
+      [
+        "#8fb5ff",
+        1
+      ],
+      [
+        "#e8fff1",
+        1
+      ],
+      [
+        "#edf2f7",
+        1
+      ],
+      [
+        "#eafff3",
+        1
+      ],
+      [
+        "#fff8ed",
+        1
+      ],
+      [
+        "#dffbea",
+        1
+      ],
+      [
+        "rgba(30, 90, 168, 0.10)",
+        1
+      ],
+      [
+        "#0f2f57",
+        1
+      ],
+      [
+        "#7c2d12",
+        1
+      ],
+      [
+        "#065f46",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.42)",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.28)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.15)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.25)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.88)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.74)",
+        1
+      ],
+      [
+        "rgba(107, 114, 128, 0.2)",
+        1
+      ],
+      [
+        "rgba(0, 0, 0, 0.14)",
+        1
+      ],
+      [
+        "#cffafe",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.85)",
+        1
+      ],
+      [
+        "#854d0e",
+        1
+      ],
+      [
+        "#f87171",
+        1
+      ],
+      [
+        "rgba(248, 113, 113, 0.16)",
+        1
+      ],
+      [
+        "#fff7f7",
+        1
+      ],
+      [
+        "rgba(26, 86, 219, 0.10)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.75)",
+        1
+      ],
+      [
+        "rgba(17, 24, 39, 0.18)",
+        1
+      ],
+      [
+        "#fdba74",
+        1
+      ],
+      [
+        "#c2410c",
+        1
+      ],
+      [
+        "#4ade80",
+        1
+      ],
+      [
+        "#f0fdfa",
+        1
+      ],
+      [
+        "#0d9488",
+        1
+      ],
+      [
+        "#7c3aed",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.16)",
+        1
+      ],
+      [
+        "rgba(147, 197, 253, 0.35)",
+        1
+      ],
+      [
+        "rgba(26, 86, 219, 0.1)",
+        1
+      ],
+      [
+        "#e15543",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.28)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.45)",
+        1
+      ],
+      [
+        "rgba(255, 255, 255, 0.92)",
+        1
+      ],
+      [
+        "#facc15",
+        1
+      ],
+      [
+        "rgba(26, 86, 219, 0.13)",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.24)",
+        1
+      ],
+      [
+        "#f7f8fa",
+        1
+      ],
+      [
+        "#f3f6fb",
+        1
+      ],
+      [
+        "#d8e0eb",
+        1
+      ],
+      [
+        "#c7d2e2",
+        1
+      ],
+      [
+        "#1d5bd8",
+        1
+      ],
+      [
+        "#153f8f",
+        1
+      ],
+      [
+        "#183b63",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.12)",
+        1
+      ],
+      [
+        "#0b1f3a",
+        1
+      ],
+      [
+        "#1f66ee",
+        1
+      ],
+      [
+        "#174fc7",
+        1
+      ],
+      [
+        "rgba(29, 91, 216, 0.22)",
+        1
+      ],
+      [
+        "#1b5fdc",
+        1
+      ],
+      [
+        "#1448b5",
+        1
+      ],
+      [
+        "rgba(29, 91, 216, 0.28)",
+        1
+      ],
+      [
+        "#fff5f5",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.07)",
+        1
+      ],
+      [
+        "#edf5ff",
+        1
+      ],
+      [
+        "#b7c4d8",
+        1
+      ],
+      [
+        "#34d399",
+        1
+      ],
+      [
+        "rgba(15, 23, 42, 0.55)",
+        1
+      ],
+      [
+        "rgba(29, 91, 216, 0.13)",
+        1
+      ]
+    ],
+    "font_sizes": [
+      [
+        "13px",
+        96
+      ],
+      [
+        "12px",
+        83
+      ],
+      [
+        "11px",
+        82
+      ],
+      [
+        "14px",
+        63
+      ],
+      [
+        "10px",
+        29
+      ],
+      [
+        "18px",
+        17
+      ],
+      [
+        "16px",
+        14
+      ],
+      [
+        "15px",
+        14
+      ],
+      [
+        "12px !important",
+        11
+      ],
+      [
+        "24px",
+        10
+      ],
+      [
+        "28px",
+        8
+      ],
+      [
+        "13px !important",
+        8
+      ],
+      [
+        "20px",
+        7
+      ],
+      [
+        "40px",
+        6
+      ],
+      [
+        "26px",
+        5
+      ],
+      [
+        "15px !important",
+        5
+      ],
+      [
+        "13.5px",
+        5
+      ],
+      [
+        "34px",
+        4
+      ],
+      [
+        "22px",
+        4
+      ],
+      [
+        "17px",
+        4
+      ],
+      [
+        "36px",
+        3
+      ],
+      [
+        "11.5px",
+        3
+      ],
+      [
+        "12.5px",
+        3
+      ],
+      [
+        "19px",
+        2
+      ],
+      [
+        "21px",
+        2
+      ],
+      [
+        "14px !important",
+        2
+      ],
+      [
+        "11px !important",
+        2
+      ],
+      [
+        "24px !important",
+        2
+      ],
+      [
+        "9px",
+        2
+      ],
+      [
+        "30px",
+        1
+      ],
+      [
+        "15.5px",
+        1
+      ],
+      [
+        "25px",
+        1
+      ],
+      [
+        "10px !important",
+        1
+      ],
+      [
+        "18px !important",
+        1
+      ],
+      [
+        "48px",
+        1
+      ],
+      [
+        "21px !important",
+        1
+      ],
+      [
+        "10.5px",
+        1
+      ]
+    ],
+    "font_families": [
+      [
+        "'IBM Plex Sans', sans-serif",
+        43
+      ],
+      [
+        "\"IBM Plex Sans\", sans-serif",
+        15
+      ],
+      [
+        "var(--mono)",
+        10
+      ],
+      [
+        "inherit",
+        7
+      ],
+      [
+        "var(--review-mono)",
+        5
+      ],
+      [
+        "var(--pm-mono)",
+        5
+      ],
+      [
+        "var(--pm-mono) !important",
+        3
+      ],
+      [
+        "\"IBM Plex Sans\", Arial, sans-serif",
+        1
+      ]
+    ],
+    "border_radii": [
+      [
+        "4px",
+        61
+      ],
+      [
+        "8px",
+        37
+      ],
+      [
+        "6px",
+        28
+      ],
+      [
+        "20px",
+        27
+      ],
+      [
+        "999px",
+        19
+      ],
+      [
+        "var(--review-radius)",
+        16
+      ],
+      [
+        "var(--radius-sm)",
+        13
+      ],
+      [
+        "50%",
+        12
+      ],
+      [
+        "10px",
+        11
+      ],
+      [
+        "var(--radius)",
+        10
+      ],
+      [
+        "999px !important",
+        9
+      ],
+      [
+        "5px",
+        5
+      ],
+      [
+        "9px",
+        5
+      ],
+      [
+        "10px !important",
+        5
+      ],
+      [
+        "3px",
+        4
+      ],
+      [
+        "12px",
+        4
+      ],
+      [
+        "2px",
+        3
+      ],
+      [
+        "12px !important",
+        3
+      ],
+      [
+        "var(--radius-lg)",
+        2
+      ],
+      [
+        "var(--radius-md)",
+        2
+      ],
+      [
+        "0",
+        1
+      ],
+      [
+        "8px 8px 0 0",
+        1
+      ],
+      [
+        "0 0 8px 8px",
+        1
+      ],
+      [
+        "14px",
+        1
+      ],
+      [
+        "14px !important",
+        1
+      ],
+      [
+        "20px\"]),\nth:nth-child(n+5)",
+        1
+      ],
+      [
+        "7px",
+        1
+      ],
+      [
+        "16px",
+        1
+      ]
+    ],
+    "css_variables": [
+      [
+        "--bg",
+        6
+      ],
+      [
+        "--surface",
+        6
+      ],
+      [
+        "--surface2",
+        6
+      ],
+      [
+        "--border",
+        6
+      ],
+      [
+        "--accent",
+        6
+      ],
+      [
+        "--text",
+        6
+      ],
+      [
+        "--muted",
+        6
+      ],
+      [
+        "--danger",
+        6
+      ],
+      [
+        "--success",
+        6
+      ],
+      [
+        "--header-bg",
+        6
+      ],
+      [
+        "--header-text",
+        5
+      ],
+      [
+        "--accent2",
+        2
+      ],
+      [
+        "--accent-soft",
+        2
+      ],
+      [
+        "--radius-sm",
+        2
+      ],
+      [
+        "--sidebar-width",
+        1
+      ],
+      [
+        "--review-bg",
+        1
+      ],
+      [
+        "--review-surface",
+        1
+      ],
+      [
+        "--review-surface-2",
+        1
+      ],
+      [
+        "--review-border",
+        1
+      ],
+      [
+        "--review-border-strong",
+        1
+      ],
+      [
+        "--review-text",
+        1
+      ],
+      [
+        "--review-muted",
+        1
+      ],
+      [
+        "--review-blue",
+        1
+      ],
+      [
+        "--review-blue-soft",
+        1
+      ],
+      [
+        "--review-green",
+        1
+      ],
+      [
+        "--review-green-soft",
+        1
+      ],
+      [
+        "--review-teal",
+        1
+      ],
+      [
+        "--review-teal-soft",
+        1
+      ],
+      [
+        "--review-red",
+        1
+      ],
+      [
+        "--review-red-soft",
+        1
+      ],
+      [
+        "--review-orange",
+        1
+      ],
+      [
+        "--review-orange-soft",
+        1
+      ],
+      [
+        "--review-purple",
+        1
+      ],
+      [
+        "--review-purple-soft",
+        1
+      ],
+      [
+        "--review-gray-soft",
+        1
+      ],
+      [
+        "--review-shadow",
+        1
+      ],
+      [
+        "--review-radius",
+        1
+      ],
+      [
+        "--review-radius-lg",
+        1
+      ],
+      [
+        "--review-mono",
+        1
+      ],
+      [
+        "--danger-soft",
+        1
+      ],
+      [
+        "--make",
+        1
+      ],
+      [
+        "--make-bg",
+        1
+      ],
+      [
+        "--make-border",
+        1
+      ],
+      [
+        "--buy",
+        1
+      ],
+      [
+        "--buy-bg",
+        1
+      ],
+      [
+        "--buy-border",
+        1
+      ],
+      [
+        "--proc-bg",
+        1
+      ],
+      [
+        "--proc-text",
+        1
+      ],
+      [
+        "--proc-border",
+        1
+      ],
+      [
+        "--guide",
+        1
+      ],
+      [
+        "--hit",
+        1
+      ],
+      [
+        "--radius",
+        1
+      ],
+      [
+        "--shadow-sm",
+        1
+      ],
+      [
+        "--shadow-md",
+        1
+      ],
+      [
+        "--mono",
+        1
+      ],
+      [
+        "--sans",
+        1
+      ],
+      [
+        "--surface3",
+        1
+      ],
+      [
+        "--border2",
+        1
+      ],
+      [
+        "--accent-dark",
+        1
+      ],
+      [
+        "--warning",
+        1
+      ],
+      [
+        "--shadow",
+        1
+      ],
+      [
+        "--radius-lg",
+        1
+      ],
+      [
+        "--radius-md",
+        1
+      ]
+    ]
+  },
+  "javascript": [
+    {
+      "file": "static\\js\\admin_dashboard.js",
+      "lines": 363,
+      "fetch_calls": 3,
+      "innerHTML": 10,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 0,
+      "loading_refs": 8
+    },
+    {
+      "file": "static\\js\\base.js",
+      "lines": 191,
+      "fetch_calls": 0,
+      "innerHTML": 0,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 1,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 4,
+      "loading_refs": 0
+    },
+    {
+      "file": "static\\js\\dispatch_tracker.js",
+      "lines": 1612,
+      "fetch_calls": 6,
+      "innerHTML": 18,
+      "createElement": 6,
+      "alert": 0,
+      "confirm": 1,
+      "prompt": 0,
+      "reload": 1,
+      "mutation_observer": 1,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 24,
+      "loading_refs": 10
+    },
+    {
+      "file": "static\\js\\dispatch_tracker_before_qty_validation_20260812_161514.js",
+      "lines": 1270,
+      "fetch_calls": 6,
+      "innerHTML": 17,
+      "createElement": 5,
+      "alert": 0,
+      "confirm": 1,
+      "prompt": 0,
+      "reload": 1,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 22,
+      "loading_refs": 10
+    },
+    {
+      "file": "static\\js\\hidden_backup.js",
+      "lines": 239,
+      "fetch_calls": 1,
+      "innerHTML": 1,
+      "createElement": 3,
+      "alert": 3,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 1,
+      "toast_refs": 0,
+      "loading_refs": 0
+    },
+    {
+      "file": "static\\js\\jc_review.js",
+      "lines": 1670,
+      "fetch_calls": 8,
+      "innerHTML": 14,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 1,
+      "prompt": 0,
+      "reload": 2,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 4,
+      "placeholder_refs": 1,
+      "toast_refs": 45,
+      "loading_refs": 6
+    },
+    {
+      "file": "static\\js\\oee.js",
+      "lines": 639,
+      "fetch_calls": 1,
+      "innerHTML": 5,
+      "createElement": 3,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 1,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 0,
+      "loading_refs": 17
+    },
+    {
+      "file": "static\\js\\operator_dashboard.js",
+      "lines": 148,
+      "fetch_calls": 1,
+      "innerHTML": 4,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 0,
+      "loading_refs": 4
+    },
+    {
+      "file": "static\\js\\page1.js",
+      "lines": 680,
+      "fetch_calls": 6,
+      "innerHTML": 10,
+      "createElement": 4,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 5,
+      "toast_refs": 20,
+      "loading_refs": 0
+    },
+    {
+      "file": "static\\js\\page2.js",
+      "lines": 1338,
+      "fetch_calls": 11,
+      "innerHTML": 22,
+      "createElement": 2,
+      "alert": 5,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 2,
+      "toast_refs": 19,
+      "loading_refs": 24
+    },
+    {
+      "file": "static\\js\\page3.js",
+      "lines": 7653,
+      "fetch_calls": 20,
+      "innerHTML": 47,
+      "createElement": 27,
+      "alert": 4,
+      "confirm": 1,
+      "prompt": 0,
+      "reload": 3,
+      "mutation_observer": 1,
+      "local_storage": 0,
+      "session_storage": 5,
+      "placeholder_refs": 32,
+      "toast_refs": 58,
+      "loading_refs": 11
+    },
+    {
+      "file": "static\\js\\page4.js",
+      "lines": 794,
+      "fetch_calls": 8,
+      "innerHTML": 3,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 1,
+      "mutation_observer": 0,
+      "local_storage": 3,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 0,
+      "loading_refs": 0
+    },
+    {
+      "file": "static\\js\\page5.js",
+      "lines": 3265,
+      "fetch_calls": 16,
+      "innerHTML": 37,
+      "createElement": 10,
+      "alert": 0,
+      "confirm": 3,
+      "prompt": 0,
+      "reload": 1,
+      "mutation_observer": 0,
+      "local_storage": 8,
+      "session_storage": 0,
+      "placeholder_refs": 2,
+      "toast_refs": 48,
+      "loading_refs": 15
+    },
+    {
+      "file": "static\\js\\supervisor_dashboard.js",
+      "lines": 316,
+      "fetch_calls": 2,
+      "innerHTML": 8,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 0,
+      "loading_refs": 8
+    },
+    {
+      "file": "static\\js\\upload.js",
+      "lines": 506,
+      "fetch_calls": 4,
+      "innerHTML": 9,
+      "createElement": 1,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 1,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 1,
+      "placeholder_refs": 0,
+      "toast_refs": 8,
+      "loading_refs": 46
+    },
+    {
+      "file": "static\\js\\user_management.js",
+      "lines": 389,
+      "fetch_calls": 7,
+      "innerHTML": 9,
+      "createElement": 0,
+      "alert": 0,
+      "confirm": 0,
+      "prompt": 0,
+      "reload": 0,
+      "mutation_observer": 0,
+      "local_storage": 0,
+      "session_storage": 0,
+      "placeholder_refs": 0,
+      "toast_refs": 19,
+      "loading_refs": 2
+    }
+  ],
+  "controls": [
+    {
+      "file": "templates\\base.html",
+      "line": 233,
+      "tag": "input",
+      "type": "date",
+      "id": "global-date-filter",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "Show records created on this date"
+    },
+    {
+      "file": "templates\\bom_summary.html",
+      "line": 372,
+      "tag": "input",
+      "type": "text",
+      "id": "bom-search",
+      "name": "",
+      "label": "",
+      "placeholder": "Search parent code, child code or item description",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1670,
+      "tag": "input",
+      "type": "text",
+      "id": "dt-search",
+      "name": "",
+      "label": "",
+      "placeholder": "Search customer, SO, WO or job card…",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1695,
+      "tag": "input",
+      "type": "date",
+      "id": "dt-dd-new-date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1698,
+      "tag": "textarea",
+      "type": "",
+      "id": "dt-dd-reason",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter reason…",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1860,
+      "tag": "input",
+      "type": "text",
+      "id": "dt-ap-so",
+      "name": "",
+      "label": "SO Number *",
+      "placeholder": "Enter SO No.",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1881,
+      "tag": "input",
+      "type": "text",
+      "id": "dt-ap-customer",
+      "name": "",
+      "label": "Customer *",
+      "placeholder": "Search customer code or name...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1905,
+      "tag": "input",
+      "type": "number",
+      "id": "dt-ap-qty",
+      "name": "",
+      "label": "Allocation Qty *",
+      "placeholder": "Qty",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\jc_review.html",
+      "line": 65,
+      "tag": "input",
+      "type": "text",
+      "id": "search-input",
+      "name": "",
+      "label": "",
+      "placeholder": "Search job card, BOM, parent, child, item...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\login.html",
+      "line": 98,
+      "tag": "input",
+      "type": "text",
+      "id": "username",
+      "name": "username",
+      "label": "Username *",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\login.html",
+      "line": 103,
+      "tag": "input",
+      "type": "password",
+      "id": "password",
+      "name": "password",
+      "label": "Password *",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\oee.html",
+      "line": 883,
+      "tag": "input",
+      "type": "text",
+      "id": "oee-search",
+      "name": "",
+      "label": "",
+      "placeholder": "Search JC / Item / Machine...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\oee.html",
+      "line": 925,
+      "tag": "input",
+      "type": "date",
+      "id": "oee-from-date",
+      "name": "",
+      "label": "From Date",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\oee.html",
+      "line": 930,
+      "tag": "input",
+      "type": "date",
+      "id": "oee-to-date",
+      "name": "",
+      "label": "To Date",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\oee.html",
+      "line": 935,
+      "tag": "select",
+      "type": "",
+      "id": "oee-machine-filter",
+      "name": "",
+      "label": "Machine",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\oee.html",
+      "line": 942,
+      "tag": "select",
+      "type": "",
+      "id": "oee-process-filter",
+      "name": "",
+      "label": "Process",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\oee.html",
+      "line": 952,
+      "tag": "select",
+      "type": "",
+      "id": "oee-operator-filter",
+      "name": "",
+      "label": "Operator",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 235,
+      "tag": "input",
+      "type": "text",
+      "id": "so_no",
+      "name": "",
+      "label": "",
+      "placeholder": "42219",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 247,
+      "tag": "input",
+      "type": "text",
+      "id": "work_order_no",
+      "name": "",
+      "label": "",
+      "placeholder": "1001",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 261,
+      "tag": "input",
+      "type": "text",
+      "id": "customer_name",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter customer name",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 281,
+      "tag": "input",
+      "type": "date",
+      "id": "delivery_date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 287,
+      "tag": "input",
+      "type": "date",
+      "id": "so_date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 291,
+      "tag": "input",
+      "type": "date",
+      "id": "job_card_date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 297,
+      "tag": "input",
+      "type": "date",
+      "id": "work_order_date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 301,
+      "tag": "input",
+      "type": "text",
+      "id": "remarks",
+      "name": "",
+      "label": "",
+      "placeholder": "Optional remarks",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 315,
+      "tag": "input",
+      "type": "text",
+      "id": "parent_code",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter parent code",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 327,
+      "tag": "input",
+      "type": "text",
+      "id": "child-search",
+      "name": "",
+      "label": "",
+      "placeholder": "Filter child codes...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 347,
+      "tag": "input",
+      "type": "checkbox",
+      "id": "select-all-cb",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 374,
+      "tag": "input",
+      "type": "text",
+      "id": "child_code_manual",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter child code",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 393,
+      "tag": "input",
+      "type": "text",
+      "id": "job_card_no",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. 108553",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 401,
+      "tag": "input",
+      "type": "text",
+      "id": "item_name",
+      "name": "",
+      "label": "",
+      "placeholder": "Type to search item...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 417,
+      "tag": "input",
+      "type": "number",
+      "id": "item_qty",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter qty",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 421,
+      "tag": "input",
+      "type": "text",
+      "id": "advance_stock",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter advance stock",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 466,
+      "tag": "input",
+      "type": "checkbox",
+      "id": "is_priority",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 474,
+      "tag": "input",
+      "type": "text",
+      "id": "af_material",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 478,
+      "tag": "input",
+      "type": "text",
+      "id": "af_size",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 482,
+      "tag": "input",
+      "type": "text",
+      "id": "af_part_name",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page1.html",
+      "line": 598,
+      "tag": "input",
+      "type": "file",
+      "id": "upload-file-input",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1394,
+      "tag": "input",
+      "type": "text",
+      "id": "pm-search",
+      "name": "",
+      "label": "",
+      "placeholder": "Search BOM No, item code, description...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1430,
+      "tag": "select",
+      "type": "",
+      "id": "pm-filter-bom-level",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "BOM Level"
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1436,
+      "tag": "select",
+      "type": "",
+      "id": "pm-filter-make-buy",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "Make / Buy"
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1441,
+      "tag": "select",
+      "type": "",
+      "id": "pm-filter-process-status",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "Process Status"
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1447,
+      "tag": "select",
+      "type": "",
+      "id": "pm-filter-raw-material",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "Raw Material"
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1454,
+      "tag": "select",
+      "type": "",
+      "id": "pm-filter-item-type",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "Item Type"
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1460,
+      "tag": "select",
+      "type": "",
+      "id": "pm-filter-process-name",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": "Process Name"
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1529,
+      "tag": "input",
+      "type": "text",
+      "id": "add-item-code",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. NAINR0001234",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1533,
+      "tag": "input",
+      "type": "text",
+      "id": "add-item-desc",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. Inner Race of NHB 40",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1541,
+      "tag": "select",
+      "type": "",
+      "id": "add-item-type",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1548,
+      "tag": "input",
+      "type": "text",
+      "id": "add-item-size",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. 42x125x35",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1552,
+      "tag": "input",
+      "type": "text",
+      "id": "add-item-material",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. EN9",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1556,
+      "tag": "input",
+      "type": "text",
+      "id": "add-item-part",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. Inner Race",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1593,
+      "tag": "input",
+      "type": "text",
+      "id": "edit-item-code",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1597,
+      "tag": "input",
+      "type": "text",
+      "id": "edit-item-desc",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1601,
+      "tag": "select",
+      "type": "",
+      "id": "edit-item-type",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1609,
+      "tag": "select",
+      "type": "",
+      "id": "edit-item-make",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1617,
+      "tag": "input",
+      "type": "text",
+      "id": "edit-item-material",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1621,
+      "tag": "input",
+      "type": "text",
+      "id": "edit-item-size",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1625,
+      "tag": "input",
+      "type": "text",
+      "id": "edit-item-part",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1647,
+      "tag": "textarea",
+      "type": "",
+      "id": "edit-change-remark",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter why this item or process routing is being changed",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page2.html",
+      "line": 1745,
+      "tag": "input",
+      "type": "file",
+      "id": "upload-file-input",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 21,
+      "tag": "input",
+      "type": "text",
+      "id": "jc-input",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. 108553 or 108554/108701",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 105,
+      "tag": "input",
+      "type": "number",
+      "id": "modal-planned-qty",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 115,
+      "tag": "input",
+      "type": "number",
+      "id": "modal-actual-qty",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 225,
+      "tag": "textarea",
+      "type": "",
+      "id": "modal-stage-remark",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter remark for this stage change...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 269,
+      "tag": "input",
+      "type": "checkbox",
+      "id": "subcontract-checkbox",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 292,
+      "tag": "input",
+      "type": "text",
+      "id": "modal-vendor-name",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter vendor / subcontractor name",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 333,
+      "tag": "input",
+      "type": "number",
+      "id": "modal-lead-days",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. 5",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page3.html",
+      "line": 546,
+      "tag": "textarea",
+      "type": "",
+      "id": "child-c-gate-override-reason",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter reason for allowing this Job Card to continue...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 104,
+      "tag": "input",
+      "type": "text",
+      "id": "global-search",
+      "name": "",
+      "label": "",
+      "placeholder": "Search job cards...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 177,
+      "tag": "input",
+      "type": "date",
+      "id": "ws-from-date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 200,
+      "tag": "input",
+      "type": "date",
+      "id": "ws-to-date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 305,
+      "tag": "textarea",
+      "type": "",
+      "id": "dd-reason-input",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter reason for changing delivery date...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 356,
+      "tag": "input",
+      "type": "number",
+      "id": "modal-planned-qty",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 360,
+      "tag": "input",
+      "type": "number",
+      "id": "modal-actual-qty",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 398,
+      "tag": "textarea",
+      "type": "",
+      "id": "modal-stage-remark",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter remark for this stage change...",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 402,
+      "tag": "input",
+      "type": "checkbox",
+      "id": "subcontract-checkbox",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 410,
+      "tag": "input",
+      "type": "text",
+      "id": "modal-vendor-name",
+      "name": "",
+      "label": "",
+      "placeholder": "Enter vendor / subcontractor name",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 417,
+      "tag": "input",
+      "type": "number",
+      "id": "modal-lead-days",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. 5",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 464,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-job-card-no",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 468,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-so-no",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 472,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-customer-name",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 476,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-parent-code",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 480,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-child-code",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 484,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-work-order-no",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 488,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-item-name",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 492,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-material",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 497,
+      "tag": "input",
+      "type": "number",
+      "id": "ejc-so-qty",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 501,
+      "tag": "input",
+      "type": "number",
+      "id": "ejc-actual-qty",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 506,
+      "tag": "input",
+      "type": "date",
+      "id": "ejc-delivery-date",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 510,
+      "tag": "textarea",
+      "type": "",
+      "id": "ejc-remarks",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 514,
+      "tag": "input",
+      "type": "checkbox",
+      "id": "ejc-is-subcontract",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\page5.html",
+      "line": 520,
+      "tag": "input",
+      "type": "text",
+      "id": "ejc-vendor-name",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\user_management.html",
+      "line": 52,
+      "tag": "input",
+      "type": "text",
+      "id": "u-username",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. jdoe",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\user_management.html",
+      "line": 61,
+      "tag": "input",
+      "type": "password",
+      "id": "u-password",
+      "name": "",
+      "label": "",
+      "placeholder": "Minimum 6 characters",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\user_management.html",
+      "line": 70,
+      "tag": "input",
+      "type": "text",
+      "id": "u-full-name",
+      "name": "",
+      "label": "",
+      "placeholder": "e.g. John Doe",
+      "aria_label": "",
+      "title": ""
+    },
+    {
+      "file": "templates\\user_management.html",
+      "line": 74,
+      "tag": "select",
+      "type": "",
+      "id": "u-role",
+      "name": "",
+      "label": "",
+      "placeholder": "",
+      "aria_label": "",
+      "title": ""
+    }
+  ],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "category": "Buttons & Accessibility",
+      "file": "templates\\admin_dashboard.html",
+      "line": 189,
+      "issue": "Button has no visible or accessible name.",
+      "recommendation": "Add visible text, aria-label or title so the action is understandable."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\admin_dashboard.html",
+      "line": 1,
+      "issue": "16 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\bom_summary.html",
+      "line": 372,
+      "issue": "input control #bom-search has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\bom_summary.html",
+      "line": 372,
+      "issue": "Placeholder-only field: 'Search parent code, child code or item description'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1670,
+      "issue": "input control #dt-search has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1670,
+      "issue": "Placeholder-only field: 'Search customer, SO, WO or job card…'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1695,
+      "issue": "input control #dt-dd-new-date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1698,
+      "issue": "textarea control #dt-dd-reason has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\dispatch_tracker.html",
+      "line": 1698,
+      "issue": "Placeholder-only field: 'Enter reason…'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\jc_review.html",
+      "line": 65,
+      "issue": "input control #search-input has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\jc_review.html",
+      "line": 65,
+      "issue": "Placeholder-only field: 'Search job card, BOM, parent, child, item...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\jc_review.html",
+      "line": 1,
+      "issue": "10 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\oee.html",
+      "line": 883,
+      "issue": "input control #oee-search has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\oee.html",
+      "line": 883,
+      "issue": "Placeholder-only field: 'Search JC / Item / Machine...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 235,
+      "issue": "input control #so_no has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 235,
+      "issue": "Placeholder-only field: '42219'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 247,
+      "issue": "input control #work_order_no has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 247,
+      "issue": "Placeholder-only field: '1001'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 261,
+      "issue": "input control #customer_name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 261,
+      "issue": "Placeholder-only field: 'Enter customer name'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 281,
+      "issue": "input control #delivery_date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 287,
+      "issue": "input control #so_date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 291,
+      "issue": "input control #job_card_date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 297,
+      "issue": "input control #work_order_date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 301,
+      "issue": "input control #remarks has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 301,
+      "issue": "Placeholder-only field: 'Optional remarks'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 315,
+      "issue": "input control #parent_code has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 315,
+      "issue": "Placeholder-only field: 'Enter parent code'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 327,
+      "issue": "input control #child-search has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 327,
+      "issue": "Placeholder-only field: 'Filter child codes...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 347,
+      "issue": "input control #select-all-cb has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 374,
+      "issue": "input control #child_code_manual has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 374,
+      "issue": "Placeholder-only field: 'Enter child code'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 393,
+      "issue": "input control #job_card_no has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 393,
+      "issue": "Placeholder-only field: 'e.g. 108553'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 401,
+      "issue": "input control #item_name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 401,
+      "issue": "Placeholder-only field: 'Type to search item...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 417,
+      "issue": "input control #item_qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 417,
+      "issue": "Placeholder-only field: 'Enter qty'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 421,
+      "issue": "input control #advance_stock has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page1.html",
+      "line": 421,
+      "issue": "Placeholder-only field: 'Enter advance stock'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 466,
+      "issue": "input control #is_priority has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 474,
+      "issue": "input control #af_material has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 478,
+      "issue": "input control #af_size has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 482,
+      "issue": "input control #af_part_name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 598,
+      "issue": "input control #upload-file-input has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Buttons & Accessibility",
+      "file": "templates\\page1.html",
+      "line": 590,
+      "issue": "Button has no visible or accessible name.",
+      "recommendation": "Add visible text, aria-label or title so the action is understandable."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\page1.html",
+      "line": 1,
+      "issue": "40 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1394,
+      "issue": "input control #pm-search has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1394,
+      "issue": "Placeholder-only field: 'Search BOM No, item code, description...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1529,
+      "issue": "input control #add-item-code has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1529,
+      "issue": "Placeholder-only field: 'e.g. NAINR0001234'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1533,
+      "issue": "input control #add-item-desc has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1533,
+      "issue": "Placeholder-only field: 'e.g. Inner Race of NHB 40'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1548,
+      "issue": "input control #add-item-size has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1548,
+      "issue": "Placeholder-only field: 'e.g. 42x125x35'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1552,
+      "issue": "input control #add-item-material has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1552,
+      "issue": "Placeholder-only field: 'e.g. EN9'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1556,
+      "issue": "input control #add-item-part has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1556,
+      "issue": "Placeholder-only field: 'e.g. Inner Race'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1593,
+      "issue": "input control #edit-item-code has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1597,
+      "issue": "input control #edit-item-desc has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1617,
+      "issue": "input control #edit-item-material has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1621,
+      "issue": "input control #edit-item-size has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1625,
+      "issue": "input control #edit-item-part has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1647,
+      "issue": "textarea control #edit-change-remark has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page2.html",
+      "line": 1647,
+      "issue": "Placeholder-only field: 'Enter why this item or process routing is being changed'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page2.html",
+      "line": 1745,
+      "issue": "input control #upload-file-input has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\page2.html",
+      "line": 1,
+      "issue": "26 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 21,
+      "issue": "input control #jc-input has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page3.html",
+      "line": 21,
+      "issue": "Placeholder-only field: 'e.g. 108553 or 108554/108701'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 105,
+      "issue": "input control #modal-planned-qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 115,
+      "issue": "input control #modal-actual-qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 225,
+      "issue": "textarea control #modal-stage-remark has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page3.html",
+      "line": 225,
+      "issue": "Placeholder-only field: 'Enter remark for this stage change...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 269,
+      "issue": "input control #subcontract-checkbox has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 292,
+      "issue": "input control #modal-vendor-name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page3.html",
+      "line": 292,
+      "issue": "Placeholder-only field: 'Enter vendor / subcontractor name'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 333,
+      "issue": "input control #modal-lead-days has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page3.html",
+      "line": 333,
+      "issue": "Placeholder-only field: 'e.g. 5'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page3.html",
+      "line": 546,
+      "issue": "textarea control #child-c-gate-override-reason has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page3.html",
+      "line": 546,
+      "issue": "Placeholder-only field: 'Enter reason for allowing this Job Card to continue...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\page3.html",
+      "line": 1,
+      "issue": "65 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\page4.html",
+      "line": 1,
+      "issue": "26 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 104,
+      "issue": "input control #global-search has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page5.html",
+      "line": 104,
+      "issue": "Placeholder-only field: 'Search job cards...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 177,
+      "issue": "input control #ws-from-date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 200,
+      "issue": "input control #ws-to-date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 305,
+      "issue": "textarea control #dd-reason-input has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page5.html",
+      "line": 305,
+      "issue": "Placeholder-only field: 'Enter reason for changing delivery date...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 356,
+      "issue": "input control #modal-planned-qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 360,
+      "issue": "input control #modal-actual-qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 398,
+      "issue": "textarea control #modal-stage-remark has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page5.html",
+      "line": 398,
+      "issue": "Placeholder-only field: 'Enter remark for this stage change...'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 402,
+      "issue": "input control #subcontract-checkbox has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 410,
+      "issue": "input control #modal-vendor-name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page5.html",
+      "line": 410,
+      "issue": "Placeholder-only field: 'Enter vendor / subcontractor name'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 417,
+      "issue": "input control #modal-lead-days has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\page5.html",
+      "line": 417,
+      "issue": "Placeholder-only field: 'e.g. 5'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 464,
+      "issue": "input control #ejc-job-card-no has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 468,
+      "issue": "input control #ejc-so-no has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 472,
+      "issue": "input control #ejc-customer-name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 476,
+      "issue": "input control #ejc-parent-code has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 480,
+      "issue": "input control #ejc-child-code has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 484,
+      "issue": "input control #ejc-work-order-no has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 488,
+      "issue": "input control #ejc-item-name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 492,
+      "issue": "input control #ejc-material has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 497,
+      "issue": "input control #ejc-so-qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 501,
+      "issue": "input control #ejc-actual-qty has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 506,
+      "issue": "input control #ejc-delivery-date has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 510,
+      "issue": "textarea control #ejc-remarks has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 514,
+      "issue": "input control #ejc-is-subcontract has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 520,
+      "issue": "input control #ejc-vendor-name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Buttons & Accessibility",
+      "file": "templates\\page5.html",
+      "line": 110,
+      "issue": "Button has no visible or accessible name.",
+      "recommendation": "Add visible text, aria-label or title so the action is understandable."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\page5.html",
+      "line": 1,
+      "issue": "97 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Design Consistency",
+      "file": "templates\\supervisor_dashboard.html",
+      "line": 1,
+      "issue": "5 inline style attributes found.",
+      "recommendation": "Move repeated visual rules into shared CSS classes/design tokens to simplify the redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\user_management.html",
+      "line": 52,
+      "issue": "input control #u-username has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\user_management.html",
+      "line": 52,
+      "issue": "Placeholder-only field: 'e.g. jdoe'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\user_management.html",
+      "line": 61,
+      "issue": "input control #u-password has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\user_management.html",
+      "line": 61,
+      "issue": "Placeholder-only field: 'Minimum 6 characters'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Forms & Accessibility",
+      "file": "templates\\user_management.html",
+      "line": 70,
+      "issue": "input control #u-full-name has no explicit label, aria-label or title.",
+      "recommendation": "Add a persistent field label. Placeholder text should be supporting guidance, not the only field identity."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Placeholder UX",
+      "file": "templates\\user_management.html",
+      "line": 70,
+      "issue": "Placeholder-only field: 'e.g. John Doe'.",
+      "recommendation": "Use a visible label above/alongside the field and keep placeholder only as an example or hint."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Buttons & Accessibility",
+      "file": "templates\\user_management.html",
+      "line": 43,
+      "issue": "Button has no visible or accessible name.",
+      "recommendation": "Add visible text, aria-label or title so the action is understandable."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Buttons & Accessibility",
+      "file": "templates\\user_management.html",
+      "line": 102,
+      "issue": "Button has no visible or accessible name.",
+      "recommendation": "Add visible text, aria-label or title so the action is understandable."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Buttons & Accessibility",
+      "file": "templates\\user_management.html",
+      "line": 190,
+      "issue": "Button has no visible or accessible name.",
+      "recommendation": "Add visible text, aria-label or title so the action is understandable."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\admin_dashboard.css",
+      "line": 1,
+      "issue": "37 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\admin_dashboard.css",
+      "line": 1,
+      "issue": "4 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\base.css",
+      "line": 1,
+      "issue": "53 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\base.css",
+      "line": 1,
+      "issue": "10 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\jc_review.css",
+      "line": 1,
+      "issue": "66 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\jc_review.css",
+      "line": 1,
+      "issue": "12 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\operator_dashboard.css",
+      "line": 1,
+      "issue": "31 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\operator_dashboard.css",
+      "line": 1,
+      "issue": "4 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\page1.css",
+      "line": 1,
+      "issue": "38 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\page1.css",
+      "line": 1,
+      "issue": "12 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "LOW",
+      "category": "Layering",
+      "file": "static\\css\\page1.css",
+      "line": 1,
+      "issue": "Very high z-index detected (99999).",
+      "recommendation": "Create a standard z-index scale for dropdowns, sticky bars, dialogs and toasts."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "CSS Maintainability",
+      "file": "static\\css\\page2.css",
+      "line": 1,
+      "issue": "386 !important declarations found.",
+      "recommendation": "Reduce specificity conflicts before redesigning; establish reusable component classes and tokens."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\page2.css",
+      "line": 1,
+      "issue": "85 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\page2.css",
+      "line": 1,
+      "issue": "16 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "LOW",
+      "category": "Layering",
+      "file": "static\\css\\page2.css",
+      "line": 1,
+      "issue": "Very high z-index detected (99999).",
+      "recommendation": "Create a standard z-index scale for dropdowns, sticky bars, dialogs and toasts."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "CSS Maintainability",
+      "file": "static\\css\\page3.css",
+      "line": 1,
+      "issue": "14 !important declarations found.",
+      "recommendation": "Reduce specificity conflicts before redesigning; establish reusable component classes and tokens."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\page3.css",
+      "line": 1,
+      "issue": "65 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\page3.css",
+      "line": 1,
+      "issue": "18 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\page4.css",
+      "line": 1,
+      "issue": "20 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\page4.css",
+      "line": 1,
+      "issue": "5 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "CSS Maintainability",
+      "file": "static\\css\\page5.css",
+      "line": 1,
+      "issue": "85 !important declarations found.",
+      "recommendation": "Reduce specificity conflicts before redesigning; establish reusable component classes and tokens."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\page5.css",
+      "line": 1,
+      "issue": "63 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\page5.css",
+      "line": 1,
+      "issue": "20 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "CSS Maintainability",
+      "file": "static\\css\\responsive.css",
+      "line": 1,
+      "issue": "78 !important declarations found.",
+      "recommendation": "Reduce specificity conflicts before redesigning; establish reusable component classes and tokens."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\responsive.css",
+      "line": 1,
+      "issue": "4 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\supervisor_dashboard.css",
+      "line": 1,
+      "issue": "37 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\supervisor_dashboard.css",
+      "line": 1,
+      "issue": "4 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Visual Consistency",
+      "file": "static\\css\\user_management.css",
+      "line": 1,
+      "issue": "54 distinct color values found.",
+      "recommendation": "Consolidate colors into semantic design tokens such as primary, surface, border, text, success, warning and danger."
+    },
+    {
+      "severity": "LOW",
+      "category": "Responsive UX",
+      "file": "static\\css\\user_management.css",
+      "line": 1,
+      "issue": "5 hard-coded widths of 100px+ detected.",
+      "recommendation": "Review fixed widths during redesign; prefer grid/flex/minmax where the screen must adapt."
+    },
+    {
+      "severity": "LOW",
+      "category": "Interaction UX",
+      "file": "static\\js\\hidden_backup.js",
+      "line": 1,
+      "issue": "3 alert, 0 confirm and 0 prompt calls detected.",
+      "recommendation": "Replace browser-native dialogs with one consistent MES confirmation/dialog component."
+    },
+    {
+      "severity": "LOW",
+      "category": "Interaction UX",
+      "file": "static\\js\\page2.js",
+      "line": 1,
+      "issue": "5 alert, 0 confirm and 0 prompt calls detected.",
+      "recommendation": "Replace browser-native dialogs with one consistent MES confirmation/dialog component."
+    },
+    {
+      "severity": "LOW",
+      "category": "Interaction UX",
+      "file": "static\\js\\page3.js",
+      "line": 1,
+      "issue": "4 alert, 1 confirm and 0 prompt calls detected.",
+      "recommendation": "Replace browser-native dialogs with one consistent MES confirmation/dialog component."
+    },
+    {
+      "severity": "LOW",
+      "category": "Frontend Maintainability",
+      "file": "static\\js\\page3.js",
+      "line": 1,
+      "issue": "47 innerHTML assignments detected.",
+      "recommendation": "During redesign, consolidate repeated HTML construction into reusable render/component helpers."
+    },
+    {
+      "severity": "LOW",
+      "category": "Interaction UX",
+      "file": "static\\js\\page5.js",
+      "line": 1,
+      "issue": "0 alert, 3 confirm and 0 prompt calls detected.",
+      "recommendation": "Replace browser-native dialogs with one consistent MES confirmation/dialog component."
+    },
+    {
+      "severity": "LOW",
+      "category": "Frontend Maintainability",
+      "file": "static\\js\\page5.js",
+      "line": 1,
+      "issue": "37 innerHTML assignments detected.",
+      "recommendation": "During redesign, consolidate repeated HTML construction into reusable render/component helpers."
+    },
+    {
+      "severity": "HIGH",
+      "category": "Design System",
+      "file": "GLOBAL",
+      "line": 0,
+      "issue": "261 distinct CSS color values are used across the UI.",
+      "recommendation": "Create one global MES color-token system before page-by-page redesign."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "Typography",
+      "file": "GLOBAL",
+      "line": 0,
+      "issue": "37 distinct font-size declarations found.",
+      "recommendation": "Reduce to a controlled typography scale for page title, section title, body, table, caption and KPI values."
+    },
+    {
+      "severity": "LOW",
+      "category": "Design System",
+      "file": "GLOBAL",
+      "line": 0,
+      "issue": "28 different border-radius values found.",
+      "recommendation": "Standardize radius tokens for controls, cards, dialogs and badges."
+    },
+    {
+      "severity": "HIGH",
+      "category": "Forms",
+      "file": "GLOBAL",
+      "line": 0,
+      "issue": "75 form controls may rely on placeholder/context instead of a persistent label.",
+      "recommendation": "Adopt a common field component: label + control + optional hint/error. Do not use placeholders as field names."
+    }
+  ]
+}

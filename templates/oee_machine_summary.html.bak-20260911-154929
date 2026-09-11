@@ -1,0 +1,895 @@
+{% extends "base.html" %}
+
+{% block title %}OEE Summary{% endblock %}
+
+{% block content %}
+<style>
+  /* ---------- OEE Summary page — self-contained styles ---------- */
+  .oees-wrap {
+    padding: 18px 22px;
+    font-family: Arial, sans-serif;
+    color: #2b2b2b;
+  }
+  .oees-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+  }
+  .oees-sub {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 16px 0;
+  }
+
+  /* Filter bar */
+  .oees-filters {
+    background: #fff;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    align-items: flex-end;
+    margin-bottom: 14px;
+  }
+  .oees-fld {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .oees-fld label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .oees-fld input,
+  .oees-fld select {
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid #ccd2d8;
+    border-radius: 4px;
+    font-size: 13px;
+    min-width: 130px;
+    background: #fff;
+  }
+  .oees-btn {
+    height: 30px;
+    padding: 0 14px;
+    border: 1px solid #2b6cb0;
+    background: #2b6cb0;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .oees-btn.secondary {
+    background: #fff;
+    color: #2b6cb0;
+  }
+  .oees-btn:hover {
+    filter: brightness(0.95);
+  }
+  .oees-preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .oees-preset {
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid #ccd2d8;
+    background: #fff;
+    color: #333;
+    font-size: 12px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .oees-preset.active {
+    background: #2b6cb0;
+    color: #fff;
+    border-color: #2b6cb0;
+  }
+
+  /* KPI strip */
+  .oees-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .oees-kpi {
+    background: #fff;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .oees-kpi .lbl {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .oees-kpi .val {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2b2b2b;
+  }
+  .oees-kpi .sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* Tabs */
+  .oees-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid #dfe3e8;
+    margin-bottom: 10px;
+  }
+  .oees-tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: transparent;
+    cursor: pointer;
+    color: #555;
+  }
+  .oees-tab.active {
+    background: #fff;
+    border-color: #dfe3e8;
+    color: #2b2b2b;
+    font-weight: 600;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: -1px;
+  }
+
+  /* Table */
+  .oees-table-wrap {
+    background: #fff;
+    border: 1px solid #dfe3e8;
+    border-radius: 0 6px 6px 6px;
+    overflow-x: auto;
+  }
+  table.oees-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.oees-table th,
+  table.oees-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eef0f2;
+    text-align: right;
+    white-space: nowrap;
+  }
+  table.oees-table th {
+    background: #f6f8fa;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    position: sticky;
+    top: 0;
+  }
+  table.oees-table th:first-child,
+  table.oees-table td:first-child,
+  table.oees-table th:nth-child(2),
+  table.oees-table td:nth-child(2) {
+    text-align: left;
+  }
+  table.oees-table tbody tr.data-row {
+    cursor: pointer;
+  }
+  table.oees-table tbody tr.data-row:hover {
+    background: #f0f5fb;
+  }
+  table.oees-table tbody tr.data-row.expanded {
+    background: #eaf1fb;
+  }
+  table.oees-table td .oee-val {
+    font-weight: 600;
+  }
+  .oees-empty {
+    padding: 30px;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+  }
+  .oees-loading {
+    padding: 30px;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+  }
+  .oees-export-btn {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 11px;
+    border: 1px solid #2b6cb0;
+    background: #fff;
+    color: #2b6cb0;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .oees-export-btn:hover {
+    background: #2b6cb0;
+    color: #fff;
+  }
+
+  /* Drill-down inline panel */
+  tr.oees-drill-row td {
+    background: #fafcff;
+    padding: 12px 16px;
+    text-align: left !important;
+  }
+  .oees-drill-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2b6cb0;
+    margin: 0 0 8px 0;
+  }
+  .oees-drill-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+  }
+  table.oees-drill-sessions,
+  table.oees-drill-losses {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.oees-drill-sessions th,
+  table.oees-drill-sessions td,
+  table.oees-drill-losses th,
+  table.oees-drill-losses td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #eef0f2;
+    text-align: right;
+  }
+  table.oees-drill-sessions th:first-child,
+  table.oees-drill-sessions td:first-child,
+  table.oees-drill-losses th:first-child,
+  table.oees-drill-losses td:first-child,
+  table.oees-drill-losses th:nth-child(2),
+  table.oees-drill-losses td:nth-child(2) {
+    text-align: left;
+  }
+  table.oees-drill-sessions th,
+  table.oees-drill-losses th {
+    background: #eef1f5;
+    font-weight: 600;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    color: #555;
+    letter-spacing: 0.4px;
+  }
+  .cat-pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #ffe3e3;
+    color: #a00;
+  }
+  .cat-pill.pr { background: #dbeafe; color: #1c4980; }
+
+  @media (max-width: 900px) {
+    .oees-kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .oees-drill-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="oees-wrap">
+  <div class="oees-title">OEE Summary</div>
+  <div class="oees-sub" id="oees-period-sub">Loading...</div>
+
+  <!-- Preset chips -->
+  <div class="oees-preset-row" id="oees-presets">
+    <button class="oees-preset" data-preset="today">Today</button>
+    <button class="oees-preset" data-preset="yesterday">Yesterday</button>
+    <button class="oees-preset" data-preset="this_week">This Week</button>
+    <button class="oees-preset" data-preset="last_week">Last Week</button>
+    <button class="oees-preset active" data-preset="this_month">This Month</button>
+    <button class="oees-preset" data-preset="last_month">Last Month</button>
+    <button class="oees-preset" data-preset="custom">Custom</button>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="oees-filters">
+    <div class="oees-fld">
+      <label>From Date</label>
+      <input type="date" id="oees-from" />
+    </div>
+    <div class="oees-fld">
+      <label>To Date</label>
+      <input type="date" id="oees-to" />
+    </div>
+    <div class="oees-fld">
+      <label>Zone</label>
+      <select id="oees-zone"><option value="">All</option></select>
+    </div>
+    <div class="oees-fld">
+      <label>Machine</label>
+      <select id="oees-machine"><option value="">All</option></select>
+    </div>
+    <div class="oees-fld">
+      <label>Operator</label>
+      <select id="oees-operator"><option value="">All</option></select>
+    </div>
+    <button class="oees-btn" id="oees-apply">Apply</button>
+    <button class="oees-btn secondary" id="oees-reset">Reset</button>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="oees-kpi-strip" id="oees-kpi">
+    <div class="oees-kpi"><div class="lbl">Active Machines</div><div class="val" id="k-machines">–</div><div class="sub" id="k-machines-sub"></div></div>
+    <div class="oees-kpi"><div class="lbl">Sessions</div><div class="val" id="k-sessions">–</div><div class="sub" id="k-sessions-sub"></div></div>
+    <div class="oees-kpi"><div class="lbl">OK Qty</div><div class="val" id="k-ok">–</div><div class="sub" id="k-ok-sub"></div></div>
+    <div class="oees-kpi"><div class="lbl">Overall OEE</div><div class="val" id="k-oee">–</div><div class="sub" id="k-oee-sub"></div></div>
+    <div class="oees-kpi"><div class="lbl">Loss Hours</div><div class="val" id="k-loss">–</div><div class="sub" id="k-loss-sub"></div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="oees-tabs">
+    <button class="oees-tab active" data-tab="machine">Machine-wise</button>
+    <button class="oees-tab" data-tab="operator">Operator-wise</button>
+  </div>
+
+  <!-- Machine table -->
+  <div class="oees-table-wrap" id="oees-machine-wrap">
+    <table class="oees-table" id="oees-machine-table">
+      <thead>
+        <tr>
+          <th>M/C No.</th>
+          <th>Machine</th>
+          <th>Sessions</th>
+          <th>OK</th>
+          <th>Rej</th>
+          <th>Hold</th>
+          <th>Planned Min</th>
+          <th>Util Min</th>
+          <th>Run Min</th>
+          <th>AR Loss</th>
+          <th>PR Loss</th>
+          <th>Activity Min</th>
+          <th>Activity Loss</th>
+          <th>Plan vs Actual</th>
+          <th>AR %</th>
+          <th>PR %</th>
+          <th>QR %</th>
+          <th>OEE %</th>
+          {% if can_export %}<th>Export</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody id="oees-machine-body">
+        <tr><td colspan="19" class="oees-loading">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Operator table (hidden until tab clicked) -->
+  <div class="oees-table-wrap" id="oees-operator-wrap" style="display:none;">
+    <table class="oees-table" id="oees-operator-table">
+      <thead>
+        <tr>
+          <th>Emp No.</th>
+          <th>Operator</th>
+          <th>Sessions</th>
+          <th>OK</th>
+          <th>Rej</th>
+          <th>Hold</th>
+          <th>Planned Min</th>
+          <th>Util Min</th>
+          <th>Run Min</th>
+          <th>AR Loss</th>
+          <th>PR Loss</th>
+          <th>Activity Min</th>
+          <th>Activity Loss</th>
+          <th>Plan vs Actual</th>
+          <th>AR %</th>
+          <th>PR %</th>
+          <th>QR %</th>
+          <th>OEE %</th>
+        </tr>
+      </thead>
+      <tbody id="oees-operator-body">
+        <tr><td colspan="18" class="oees-loading">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Keep the template expression inside a JavaScript string so editors can
+  // parse this block before the server renders the template.
+  const CAN_EXPORT = "{{ 'true' if can_export else 'false' }}" === "true";
+  const MACH_COL_COUNT = CAN_EXPORT ? 19 : 18;
+  const OP_COL_COUNT   = 18;
+  const API_BASE = "/api/oee-machine-summary";
+
+  let currentTab = "machine";
+
+  const $  = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  function fmt(v, digits) {
+    if (v === null || v === undefined || v === "") return "–";
+    const n = Number(v);
+    if (isNaN(n)) return "–";
+    if (digits === undefined) return n.toLocaleString();
+    return n.toLocaleString(undefined, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  }
+  function fmtPct(v) {
+    if (v === null || v === undefined) return "–";
+    return Number(v).toFixed(1) + "%";
+  }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function isoDate(d) {
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function firstOfMonth(d) {
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  }
+
+  function qString() {
+    const p = new URLSearchParams();
+    const fd = $("#oees-from").value;
+    const td = $("#oees-to").value;
+    if (fd) p.set("from_date", fd);
+    if (td) p.set("to_date", td);
+
+    const z  = $("#oees-zone").value;
+    const m  = $("#oees-machine").value;
+    const op = $("#oees-operator").value;
+    if (z)  p.set("zone", z);
+    if (m)  p.set("machine_id", m);
+    if (op) p.set("operator_master_id", op);
+
+    return p.toString();
+  }
+
+  function applyPreset(name) {
+    const t = new Date();
+    let fd, td;
+
+    if (name === "today")      { fd = new Date(t); td = new Date(t); }
+    else if (name === "yesterday") {
+      const y = new Date(t); y.setDate(y.getDate() - 1);
+      fd = y; td = y;
+    }
+    else if (name === "this_week") {
+      const day = (t.getDay() + 6) % 7;
+      fd = new Date(t); fd.setDate(fd.getDate() - day);
+      td = new Date(t);
+    }
+    else if (name === "last_week") {
+      const day = (t.getDay() + 6) % 7;
+      const thisStart = new Date(t); thisStart.setDate(thisStart.getDate() - day);
+      td = new Date(thisStart); td.setDate(td.getDate() - 1);
+      fd = new Date(td); fd.setDate(fd.getDate() - 6);
+    }
+    else if (name === "this_month") {
+      fd = firstOfMonth(t); td = new Date(t);
+    }
+    else if (name === "last_month") {
+      const firstThis = firstOfMonth(t);
+      td = new Date(firstThis); td.setDate(td.getDate() - 1);
+      fd = firstOfMonth(td);
+    }
+    else { return; }
+
+    $("#oees-from").value = isoDate(fd);
+    $("#oees-to").value   = isoDate(td);
+  }
+
+  async function loadFilters() {
+    try {
+      const r = await fetch(API_BASE + "/filters");
+      const d = await r.json();
+      if (d.error) return;
+
+      const zsel = $("#oees-zone");
+      (d.zones || []).forEach((z) => {
+        const opt = document.createElement("option");
+        opt.value = z; opt.textContent = z;
+        zsel.appendChild(opt);
+      });
+
+      const msel = $("#oees-machine");
+      (d.machines || []).forEach((m) => {
+        const opt = document.createElement("option");
+        opt.value = m.id;
+        opt.textContent = m.machine_no + " — " + m.machine_name;
+        msel.appendChild(opt);
+      });
+
+      const osel = $("#oees-operator");
+      (d.operators || []).forEach((o) => {
+        const opt = document.createElement("option");
+        opt.value = o.id;
+        opt.textContent = o.employee_no + " — " + o.operator_name;
+        osel.appendChild(opt);
+      });
+    } catch (e) {
+      console.error("filter load failed", e);
+    }
+  }
+
+  async function loadKPI() {
+    const qs = qString();
+    try {
+      const r = await fetch(API_BASE + "/kpi?" + qs);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+
+      $("#k-machines").textContent = d.active_machines + " / " + d.total_machines;
+      $("#k-machines-sub").textContent = "with sessions / total";
+      $("#k-sessions").textContent = fmt(d.total_sessions);
+      $("#k-sessions-sub").textContent = "closed sessions";
+      $("#k-ok").textContent = fmt(d.ok_qty);
+      $("#k-ok-sub").textContent = "of " + fmt(d.total_qty) + " total";
+      $("#k-oee").textContent = fmtPct(d.oee_pct);
+      $("#k-oee-sub").textContent = "AR " + fmtPct(d.ar_pct) + " · PR " + fmtPct(d.pr_pct) + " · QR " + fmtPct(d.qr_pct);
+      $("#k-loss").textContent = fmt(d.loss_hours, 2) + " h";
+      $("#k-loss-sub").textContent = "Run " + fmt(d.run_hours, 1) + " / Plan " + fmt(d.planned_hours, 1) + " h";
+
+      $("#oees-period-sub").textContent =
+        "Showing " + d.period.from_date + " to " + d.period.to_date;
+    } catch (e) {
+      console.error("kpi load failed", e);
+    }
+  }
+
+  async function loadMachine() {
+    const qs = qString();
+    const body = $("#oees-machine-body");
+    body.innerHTML =
+      '<tr><td colspan="' + MACH_COL_COUNT + '" class="oees-loading">Loading...</td></tr>';
+
+    try {
+      const r = await fetch(API_BASE + "/machine-wise?" + qs);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+
+      if (!d.machines || !d.machines.length) {
+        body.innerHTML =
+          '<tr><td colspan="' + MACH_COL_COUNT + '" class="oees-empty">No data for this period.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = "";
+      d.machines.forEach((m) => {
+        const tr = document.createElement("tr");
+        tr.className = "data-row";
+        tr.dataset.kind = "machine";
+        tr.dataset.id = m.machine_id;
+
+        tr.innerHTML =
+          "<td>" + (m.machine_no || "") + "</td>" +
+          "<td>" + (m.machine_name || "") + "</td>" +
+          "<td>" + fmt(m.session_count) + "</td>" +
+          "<td>" + fmt(m.ok_qty) + "</td>" +
+          "<td>" + fmt(m.rejected_qty) + "</td>" +
+          "<td>" + fmt(m.hold_qty) + "</td>" +
+          "<td>" + fmt(m.planned_minutes, 1) + "</td>" +
+          "<td>" + fmt(m.utilization_minutes, 1) + "</td>" +
+          "<td>" + fmt(m.run_minutes, 1) + "</td>" +
+          "<td>" + fmt(m.ar_loss_minutes, 1) + "</td>" +
+          "<td>" + fmt(m.pr_loss_minutes, 1) + "</td>" +
+          "<td>" + fmt(m.activity_min, 1) + "</td>" +
+          "<td>" + fmt(m.activity_loss_min, 1) + "</td>" +
+          "<td>" + (m.plan_vs_actual === null ? "–" : fmtPct(m.plan_vs_actual * 100)) + "</td>" +
+          "<td>" + fmtPct(m.ar_pct) + "</td>" +
+          "<td>" + fmtPct(m.pr_pct) + "</td>" +
+          "<td>" + fmtPct(m.qr_pct) + "</td>" +
+          "<td><span class='oee-val'>" + fmtPct(m.oee_pct) + "</span></td>" +
+          (CAN_EXPORT
+            ? "<td><button class='oees-export-btn' data-machine='" + m.machine_id + "' onclick='event.stopPropagation();'>Excel</button></td>"
+            : "");
+        body.appendChild(tr);
+      });
+      attachRowHandlers(body);
+    } catch (e) {
+      body.innerHTML =
+        '<tr><td colspan="' + MACH_COL_COUNT + '" class="oees-empty">Error: ' + e.message + '</td></tr>';
+    }
+  }
+
+  async function loadOperator() {
+    const qs = qString();
+    const body = $("#oees-operator-body");
+    body.innerHTML =
+      '<tr><td colspan="' + OP_COL_COUNT + '" class="oees-loading">Loading...</td></tr>';
+
+    try {
+      const r = await fetch(API_BASE + "/operator-wise?" + qs);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+
+      if (!d.operators || !d.operators.length) {
+        body.innerHTML =
+          '<tr><td colspan="' + OP_COL_COUNT + '" class="oees-empty">No data for this period.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = "";
+      d.operators.forEach((o) => {
+        const tr = document.createElement("tr");
+        tr.className = "data-row";
+        tr.dataset.kind = "operator";
+        tr.dataset.id = o.operator_master_id;
+
+        tr.innerHTML =
+          "<td>" + (o.employee_no || "") + "</td>" +
+          "<td>" + (o.operator_name || "") + "</td>" +
+          "<td>" + fmt(o.session_count) + "</td>" +
+          "<td>" + fmt(o.ok_qty) + "</td>" +
+          "<td>" + fmt(o.rejected_qty) + "</td>" +
+          "<td>" + fmt(o.hold_qty) + "</td>" +
+          "<td>" + fmt(o.planned_minutes, 1) + "</td>" +
+          "<td>" + fmt(o.utilization_minutes, 1) + "</td>" +
+          "<td>" + fmt(o.run_minutes, 1) + "</td>" +
+          "<td>" + fmt(o.ar_loss_minutes, 1) + "</td>" +
+          "<td>" + fmt(o.pr_loss_minutes, 1) + "</td>" +
+          "<td>" + fmt(o.activity_min, 1) + "</td>" +
+          "<td>" + fmt(o.activity_loss_min, 1) + "</td>" +
+          "<td>" + (o.plan_vs_actual === null ? "–" : fmtPct(o.plan_vs_actual * 100)) + "</td>" +
+          "<td>" + fmtPct(o.ar_pct) + "</td>" +
+          "<td>" + fmtPct(o.pr_pct) + "</td>" +
+          "<td>" + fmtPct(o.qr_pct) + "</td>" +
+          "<td><span class='oee-val'>" + fmtPct(o.oee_pct) + "</span></td>";
+        body.appendChild(tr);
+      });
+      attachRowHandlers(body);
+    } catch (e) {
+      body.innerHTML =
+        '<tr><td colspan="' + OP_COL_COUNT + '" class="oees-empty">Error: ' + e.message + '</td></tr>';
+    }
+  }
+
+  function attachRowHandlers(tbody) {
+    tbody.querySelectorAll("tr.data-row").forEach((row) => {
+      row.addEventListener("click", () => toggleDrill(row));
+    });
+    tbody.querySelectorAll("button.oees-export-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const mid = btn.dataset.machine;
+        const p   = new URLSearchParams(qString());
+        p.set("machine_id", mid);
+        window.location.href = API_BASE + "/export-excel?" + p.toString();
+      });
+    });
+  }
+
+  async function toggleDrill(row) {
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains("oees-drill-row")) {
+      next.remove();
+      row.classList.remove("expanded");
+      return;
+    }
+    row.parentElement.querySelectorAll("tr.oees-drill-row").forEach((r) => r.remove());
+    row.parentElement.querySelectorAll("tr.data-row.expanded").forEach((r) => r.classList.remove("expanded"));
+    row.classList.add("expanded");
+
+    const drill = document.createElement("tr");
+    drill.className = "oees-drill-row";
+    const colCount = (currentTab === "machine") ? MACH_COL_COUNT : OP_COL_COUNT;
+    drill.innerHTML =
+      "<td colspan='" + colCount + "'>Loading drill-down...</td>";
+    row.after(drill);
+
+    const p = new URLSearchParams(qString());
+    p.set("kind", row.dataset.kind);
+    p.set("id",   row.dataset.id);
+
+    try {
+      const r = await fetch(API_BASE + "/drill-down?" + p.toString());
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+
+      drill.innerHTML =
+        "<td colspan='" + colCount + "'>" + renderDrill(d) + "</td>";
+    } catch (e) {
+      drill.innerHTML =
+        "<td colspan='" + colCount + "' style='color:#a00;'>Error: " + e.message + "</td>";
+    }
+  }
+
+  function renderDrill(d) {
+    let html = "";
+    html += "<div class='oees-drill-grid'>";
+
+    html += "<div>";
+    html += "<div class='oees-drill-title'>Sessions (" + (d.sessions || []).length + ")</div>";
+    if (!d.sessions || !d.sessions.length) {
+      html += "<div style='color:#888;font-size:12px;'>No sessions.</div>";
+    } else {
+      html += "<div style='max-height:280px;overflow:auto;'><table class='oees-drill-sessions'><thead><tr>" +
+        "<th>Date</th><th>Shift</th>" +
+        (d.kind === "operator" ? "<th>Machine</th>" : "<th>Opened By</th>") +
+        "<th>OK</th><th>Planned</th><th>Util</th><th>Run</th><th>AR %</th><th>PR %</th><th>QR %</th><th>OEE %</th>" +
+        "</tr></thead><tbody>";
+      d.sessions.forEach((s) => {
+        html += "<tr>" +
+          "<td>" + (s.session_date || "") + "</td>" +
+          "<td>" + (s.shift_name || "") + "</td>" +
+          "<td>" + (d.kind === "operator"
+                    ? ((s.machine_no || "") + " — " + (s.machine_name || ""))
+                    : (s.opened_by_name || "")) + "</td>" +
+          "<td>" + fmt(s.ok_qty) + "</td>" +
+          "<td>" + fmt(s.planned_minutes, 1) + "</td>" +
+          "<td>" + fmt(s.utilization_minutes, 1) + "</td>" +
+          "<td>" + fmt(s.run_minutes, 1) + "</td>" +
+          "<td>" + fmtPct(s.ar_pct) + "</td>" +
+          "<td>" + fmtPct(s.pr_pct) + "</td>" +
+          "<td>" + fmtPct(s.qr_pct) + "</td>" +
+          "<td><b>" + fmtPct(s.oee_pct) + "</b></td>" +
+          "</tr>";
+      });
+      html += "</tbody></table></div>";
+    }
+    html += "</div>";
+
+    html += "<div>";
+    html += "<div class='oees-drill-title'>Top Losses (" + (d.top_losses || []).length + ")</div>";
+    if (!d.top_losses || !d.top_losses.length) {
+      html += "<div style='color:#888;font-size:12px;'>No losses recorded.</div>";
+    } else {
+      html += "<div style='max-height:280px;overflow:auto;'><table class='oees-drill-losses'><thead><tr>" +
+        "<th>Code</th><th>Reason</th><th>Type</th><th>Minutes</th></tr></thead><tbody>";
+      d.top_losses.forEach((l) => {
+        const cat = (l.loss_category || "AR").toUpperCase();
+        html += "<tr>" +
+          "<td>" + (l.loss_code || "") + "</td>" +
+          "<td>" + (l.loss_name || "") + "</td>" +
+          "<td><span class='cat-pill" + (cat === "PR" ? " pr" : "") + "'>" + cat + "</span></td>" +
+          "<td>" + fmt(l.total_min, 1) + "</td>" +
+          "</tr>";
+      });
+      html += "</tbody></table></div>";
+    }
+    html += "</div>";
+
+    html += "</div>";
+
+    // ------- Activities section (new) -------
+    const acts = d.activities || [];
+    html += "<div style='margin-top:14px;'>";
+    html += "<div class='oees-drill-title'>Activities (" + acts.length + ")</div>";
+    if (!acts.length) {
+      html += "<div style='color:#888;font-size:12px;'>No Tool Room or Development activities.</div>";
+    } else {
+      html += "<div style='max-height:280px;overflow:auto;'><table class='oees-drill-sessions'><thead><tr>" +
+        "<th>Date</th><th>Shift</th><th>Type</th><th>Activity</th>" +
+        (d.kind === "operator" ? "<th>Machine</th>" : "<th>Operator</th>") +
+        "<th>Start</th><th>End</th><th>Planned</th><th>Util</th><th>AR Loss</th><th>PR Loss</th><th>Remarks</th>" +
+        "</tr></thead><tbody>";
+      acts.forEach((a) => {
+        html += "<tr>" +
+          "<td>" + (a.entry_date || "") + "</td>" +
+          "<td>" + (a.shift_name || "") + "</td>" +
+          "<td><span class='cat-pill" + (a.activity_type === "DEVELOPMENT" ? " pr" : "") + "'>" +
+            (a.activity_type === "TOOL_ROOM" ? "TOOL ROOM" : a.activity_type) + "</span></td>" +
+          "<td>" + (a.activity_name || "") + "</td>" +
+          "<td>" + (d.kind === "operator"
+                    ? ((a.machine_no || "") + " " + (a.machine_name || ""))
+                    : (a.operator_name || "")) + "</td>" +
+          "<td>" + (a.start_time || "") + "</td>" +
+          "<td>" + (a.end_time || "") + "</td>" +
+          "<td>" + fmt(a.planned_minutes, 1) + "</td>" +
+          "<td>" + fmt(a.utilization_minutes, 1) + "</td>" +
+          "<td>" + fmt(a.ar_loss_minutes, 1) + "</td>" +
+          "<td>" + fmt(a.pr_loss_minutes, 1) + "</td>" +
+          "<td>" + (a.remarks || "") + "</td>" +
+          "</tr>";
+      });
+      html += "</tbody></table></div>";
+    }
+    html += "</div>";
+
+    // ------- Tool Entries section (new) -------
+    const tools = d.tools || [];
+    html += "<div style='margin-top:14px;'>";
+    html += "<div class='oees-drill-title'>Tool Entries (" + tools.length + ")</div>";
+    if (!tools.length) {
+      html += "<div style='color:#888;font-size:12px;'>No tool entries recorded.</div>";
+    } else {
+      html += "<div style='max-height:280px;overflow:auto;'><table class='oees-drill-sessions'><thead><tr>" +
+        "<th>Date</th><th>Shift</th><th>JC</th>" +
+        (d.kind === "operator" ? "<th>Machine</th>" : "<th>Operator</th>") +
+        "<th>Pos</th><th>Tool UID</th><th>Action</th><th>Corner</th><th>Reason</th><th>Usage/Part</th>" +
+        "</tr></thead><tbody>";
+      tools.forEach((t) => {
+        html += "<tr>" +
+          "<td>" + (t.entry_date || "") + "</td>" +
+          "<td>" + (t.shift_name || "") + "</td>" +
+          "<td>" + (t.job_card_no || "") + "</td>" +
+          "<td>" + (d.kind === "operator"
+                    ? ((t.machine_no || "") + " " + (t.machine_name || ""))
+                    : (t.operator_name || "")) + "</td>" +
+          "<td>" + (t.tool_position || "") + "</td>" +
+          "<td>" + (t.tool_uid || "") + "</td>" +
+          "<td>" + (t.tool_action_name || t.tool_action_code || "") + "</td>" +
+          "<td>" + (t.corner_name || t.corner_code || "") + "</td>" +
+          "<td>" + (t.change_reason_name || t.change_reason_code || "") + "</td>" +
+          "<td>" + (t.usage_per_part || "") + "</td>" +
+          "</tr>";
+      });
+      html += "</tbody></table></div>";
+    }
+    html += "</div>";
+
+    return html;
+  }
+
+  function switchTab(name) {
+    currentTab = name;
+    $$(".oees-tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+    $("#oees-machine-wrap").style.display  = (name === "machine")  ? "" : "none";
+    $("#oees-operator-wrap").style.display = (name === "operator") ? "" : "none";
+    if (name === "machine")  loadMachine();
+    if (name === "operator") loadOperator();
+  }
+
+  function refresh() {
+    loadKPI();
+    if (currentTab === "machine")  loadMachine();
+    if (currentTab === "operator") loadOperator();
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    applyPreset("this_month");
+    await loadFilters();
+
+    $$(".oees-preset").forEach((b) => {
+      b.addEventListener("click", () => {
+        $$(".oees-preset").forEach((x) => x.classList.remove("active"));
+        b.classList.add("active");
+        applyPreset(b.dataset.preset);
+        refresh();
+      });
+    });
+
+    $("#oees-apply").addEventListener("click", () => {
+      $$(".oees-preset").forEach((x) => x.classList.remove("active"));
+      $$(".oees-preset[data-preset='custom']").forEach((x) => x.classList.add("active"));
+      refresh();
+    });
+    $("#oees-reset").addEventListener("click", () => {
+      $("#oees-zone").value = "";
+      $("#oees-machine").value = "";
+      $("#oees-operator").value = "";
+      $$(".oees-preset").forEach((x) => x.classList.remove("active"));
+      $$(".oees-preset[data-preset='this_month']").forEach((x) => x.classList.add("active"));
+      applyPreset("this_month");
+      refresh();
+    });
+
+    $$(".oees-tab").forEach((t) => {
+      t.addEventListener("click", () => switchTab(t.dataset.tab));
+    });
+
+    refresh();
+  });
+})();
+</script>
+{% endblock %}

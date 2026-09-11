@@ -1,0 +1,2446 @@
+/* ============================================================
+   PPC FINAL APPROVED LAYOUT V5
+   HTML + CSS + VANILLA JS
+
+   Design direction:
+   - ERPNext document structure
+   - Comfortable NMTG spacing
+   - Two-column PPC forms
+   - Flat sections
+   - Attach below Priority
+============================================================ */
+
+
+/* ============================================================
+   PAGE BASE
+============================================================ */
+
+.main {
+    width: 100% !important;
+    max-width: none !important;
+
+    margin: 0 !important;
+
+    padding:
+        0 0 60px !important;
+
+    background:
+        #ffffff !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+}
+
+
+.ppc-legacy-top-hidden,
+.ppc-old-footer-hidden,
+.ppc-document-tabs,
+.ppc-attachment-section {
+    display:
+        none !important;
+}
+
+
+/* ============================================================
+   FLAT DOCUMENT HEADER
+============================================================ */
+
+.ppc-doc-toolbar {
+    width: 100%;
+
+    min-height:
+        54px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    box-sizing:
+        border-box;
+
+    padding:
+        10px 20px;
+
+    border:
+        0;
+
+    border-bottom:
+        1px solid #e6e8eb;
+
+    border-radius:
+        0 !important;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        none !important;
+}
+
+
+.ppc-doc-breadcrumb {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+    color:
+        #666d74;
+
+    font-size:
+        14px;
+
+    line-height:
+        1;
+
+    white-space:
+        nowrap;
+}
+
+
+.ppc-doc-breadcrumb strong {
+    color:
+        #20252a;
+
+    font-weight:
+        600;
+
+    font-size:
+        large;
+}
+
+
+.ppc-slash {
+    color:
+        #a8adb2;
+}
+
+
+.ppc-home-link {
+    width:
+        27px;
+
+    height:
+        27px;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    border-radius:
+        6px;
+
+    color:
+        #6e767d;
+
+    text-decoration:
+        none;
+}
+
+
+.ppc-home-link:hover {
+    background:
+        #f1f3f5;
+
+    color:
+        #252a2e;
+}
+
+
+.ppc-home-link svg {
+    width:
+        17px;
+
+    height:
+        17px;
+}
+
+
+.ppc-doc-actions {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    margin-left:
+        auto;
+}
+
+
+/* ============================================================
+   EXISTING SAVE BUTTON
+============================================================ */
+
+.ppc-doc-actions
+#main-save-btn {
+    min-width:
+        66px !important;
+
+    min-height:
+        32px !important;
+
+    padding:
+        6px 14px !important;
+
+    border:
+        1px solid #171717 !important;
+
+    border-radius:
+        7px !important;
+
+    background:
+        #171717 !important;
+
+    color:
+        #ffffff !important;
+
+    box-shadow:
+        none !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        13px !important;
+
+    font-weight:
+        600 !important;
+
+    line-height:
+        1 !important;
+}
+
+
+.ppc-doc-actions
+#main-save-btn:hover {
+    background:
+        #000000 !important;
+}
+
+
+.ppc-doc-actions
+#main-save-btn i {
+    display:
+        none !important;
+}
+
+
+/* ============================================================
+   COMMON DOCUMENT SECTIONS
+============================================================ */
+
+.main >
+.ppc-document-section {
+    margin:
+        0 !important;
+
+    padding:
+        34px
+        clamp(
+            34px,
+            6vw,
+            78px
+        )
+        38px !important;
+
+    border:
+        0 !important;
+
+    border-bottom:
+        1px solid #e9ebed !important;
+
+    border-radius:
+        0 !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+.ppc-document-section
+.card-title {
+    max-width:
+        1120px;
+
+    margin:
+        0 auto 27px !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+
+    color:
+        #20252a !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        16px !important;
+
+    line-height:
+        1.3 !important;
+
+    font-weight:
+        600 !important;
+
+    letter-spacing:
+        0 !important;
+
+    text-transform:
+        none !important;
+}
+
+
+/* ============================================================
+   LABELS
+============================================================ */
+
+.ppc-document-section
+.form-group {
+    min-width:
+        0;
+}
+
+
+.ppc-document-section
+.form-group
+> label {
+    display:
+        block;
+
+    margin:
+        0 0 8px !important;
+
+    color:
+        #454c52 !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        13px !important;
+
+    line-height:
+        1.25;
+
+    font-weight:
+        500 !important;
+}
+
+
+/* ============================================================
+   COMFORTABLE ERP-LIKE INPUTS
+============================================================ */
+
+.ppc-document-section
+.form-group
+input:not([type="checkbox"]),
+
+.ppc-document-section
+.child-input,
+
+.ppc-document-section
+input[type="date"] {
+    min-height:
+        42px !important;
+
+    box-sizing:
+        border-box;
+
+    padding:
+        9px 11px !important;
+
+    border:
+        1px solid transparent !important;
+
+    border-radius:
+        7px !important;
+
+    background:
+        #f2f3f4 !important;
+
+    color:
+        #2d3338 !important;
+
+    box-shadow:
+        none !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        13px !important;
+
+    line-height:
+        1.35 !important;
+}
+
+
+.ppc-document-section
+.form-group
+input:not([type="checkbox"]):focus,
+
+.ppc-document-section
+.child-input:focus,
+
+.ppc-document-section
+input[type="date"]:focus {
+    border-color:
+        #9bbdd9 !important;
+
+    background:
+        #ffffff !important;
+
+    outline:
+        none !important;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(
+            2,
+            136,
+            247,
+            .08
+        ) !important;
+}
+
+
+.ppc-document-section
+.form-group
+input::placeholder {
+    color:
+        #a0a7af !important;
+}
+
+
+/* ============================================================
+   PREFIX INPUTS
+============================================================ */
+
+.ppc-document-section
+.prefix-input-wrap {
+    min-height:
+        1px !important;
+
+    display:
+        flex;
+
+    align-items:
+        stretch;
+
+    box-sizing:
+        border-box;
+
+    overflow:
+        hidden;
+
+    border:
+        1px solid transparent !important;
+
+    border-radius:
+        7px !important;
+
+    background:
+        #f2f3f4 !important;
+}
+
+
+.ppc-document-section
+.prefix-input-wrap:focus-within {
+    border-color:
+        #9bbdd9 !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(
+            2,
+            136,
+            247,
+            .08
+        ) !important;
+}
+
+
+.ppc-document-section
+.prefix {
+    min-width:
+        38px;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    padding:
+        0 8px !important;
+
+    border-right:
+        1px solid #dedfe1 !important;
+
+    background:
+        transparent !important;
+
+    color:
+        #50575e !important;
+
+    font-size:
+        16px !important;
+
+    font-weight:
+        600 !important;
+}
+
+
+.ppc-document-section
+.prefix-input-wrap
+input {
+    min-width:
+        0;
+
+    flex:
+        1;
+
+    min-height:
+        40px !important;
+
+    padding:
+        9px 11px !important;
+
+    border:
+        0 !important;
+
+    background:
+        transparent !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+/* ============================================================
+   ORDER INFORMATION — FINAL TWO-COLUMN LAYOUT
+============================================================ */
+
+.ppc-final-order-grid {
+    width:
+        100%;
+
+    max-width:
+        1120px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap:
+        22px 34px;
+
+    margin:
+        0 auto;
+}
+
+
+.ppc-final-order-grid
+.ppc-order-field {
+    width:
+        100%;
+
+    min-width:
+        0;
+
+    margin:
+        0 !important;
+}
+
+
+.ppc-final-order-grid
+.ppc-order-full {
+    grid-column:
+        1 / -1;
+}
+
+
+/*
+   Old order shells become irrelevant after the
+   functional fields are moved into the final grid.
+*/
+.ppc-document-section
+.order-info-layout:empty,
+
+.ppc-document-section
+.order-info-column:empty {
+    display:
+        none !important;
+}
+
+
+/* ============================================================
+   REMARKS
+============================================================ */
+
+.ppc-order-full
+input,
+.ppc-order-full
+textarea {
+    width:
+        48% !important;
+}
+
+
+/* ============================================================
+   BOM / SEMI-FINISHED GOODS
+============================================================ */
+
+.ppc-bom-inner {
+    width:
+        100%;
+
+    max-width:
+        1120px;
+
+    margin:
+        0 auto;
+}
+
+
+.ppc-bom-inner
+.form-group {
+    margin-bottom:
+        20px !important;
+}
+
+
+.ppc-bom-inner
+> p,
+.ppc-bom-inner
+.help-text,
+.ppc-bom-inner
+.helper-text {
+    margin:
+        0 0 22px !important;
+
+    color:
+        #5f676e !important;
+
+    font-size:
+        13px !important;
+
+    line-height:
+        1.5;
+}
+
+
+/* Child table */
+
+.ppc-bom-inner
+.child-table-section {
+    margin-top:
+        26px !important;
+}
+
+
+.ppc-bom-inner
+table {
+    width:
+        100%;
+}
+
+
+.ppc-bom-inner
+thead
+tr {
+    background:
+        #f4f5f6 !important;
+}
+
+
+.ppc-bom-inner
+th {
+    padding:
+        11px 12px !important;
+
+    color:
+        #4d555c !important;
+
+    font-size:
+        12px !important;
+
+    font-weight:
+        600 !important;
+}
+
+
+.ppc-bom-inner
+td {
+    padding:
+        11px 12px !important;
+
+    font-size:
+        12px;
+}
+
+
+/* ============================================================
+   JOB CARD & ITEM INFORMATION
+============================================================ */
+
+.ppc-document-section
+.ppc-final-item-grid,
+
+.ppc-document-section
+.item-row {
+    width:
+        100%;
+
+    max-width:
+        1120px;
+
+    display:
+        grid !important;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr) !important;
+
+    gap:
+        22px 34px !important;
+
+    margin:
+        0 auto !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+
+    border-radius:
+        0 !important;
+
+    background:
+        transparent !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+/* ============================================================
+   PRIORITY + ATTACHMENT BLOCK
+============================================================ */
+
+.ppc-priority-zone {
+    width:
+        100%;
+
+    max-width:
+        1120px;
+
+    margin:
+        27px auto 0;
+
+    padding:
+        24px 0 0;
+
+    border-top:
+        1px solid #eceeef;
+}
+
+
+.ppc-zone-label {
+    margin-bottom:
+        8px;
+
+    color:
+        #454c52;
+
+    font-size:
+        13px;
+
+    font-weight:
+        500;
+}
+
+
+.ppc-priority-zone
+.priority-row {
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+}
+
+
+.ppc-priority-attachment {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        flex-start;
+
+    gap:
+        8px;
+
+    margin-top:
+        22px;
+}
+
+
+.ppc-priority-attachment
+label {
+    color:
+        #454c52;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+
+    font-size:
+        13px;
+
+    font-weight:
+        500;
+}
+
+
+.ppc-attach-button {
+    min-height:
+        31px;
+
+    padding:
+        6px 11px;
+
+    border:
+        0;
+
+    border-radius:
+        7px;
+
+    background:
+        #f0f1f2;
+
+    color:
+        #33393e;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+
+    font-size:
+        13px;
+
+    line-height:
+        1;
+
+    font-weight:
+        500;
+
+    cursor:
+        pointer;
+
+    transition:
+        background .12s ease;
+}
+
+
+.ppc-attach-button:hover {
+    background:
+        #e4e6e8;
+}
+
+
+/* ============================================================
+   AUTOFILL / MATERIAL / PROCESS AREA
+============================================================ */
+
+.ppc-final-autofill {
+    width:
+        100%;
+
+    max-width:
+        1120px;
+
+    margin:
+        30px auto 0 !important;
+
+    padding:
+        28px 0 0 !important;
+
+    border-top:
+        1px solid #eceeef !important;
+}
+
+
+.ppc-final-process-area {
+    width:
+        100%;
+
+    max-width:
+        1120px;
+
+    margin-left:
+        auto;
+
+    margin-right:
+        auto;
+}
+
+
+/* ============================================================
+   UPLOAD MODAL — ERPNext MY DEVICE DESIGN
+============================================================ */
+
+#upload-modal {
+    align-items:
+        center !important;
+
+    justify-content:
+        center !important;
+}
+
+
+#upload-modal
+.ppc-upload-dialog {
+    width:
+        min(
+            590px,
+            calc(100vw - 34px)
+        ) !important;
+
+    max-width:
+        590px !important;
+
+    max-height:
+        88vh;
+
+    overflow:
+        hidden;
+
+    padding:
+        0 !important;
+
+    border:
+        1px solid #d7dadd;
+
+    border-radius:
+        12px !important;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 24px 65px
+        rgba(
+            0,
+            0,
+            0,
+            .24
+        );
+}
+
+
+/*
+   Existing modal heading
+*/
+#upload-modal-title {
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        17px !important;
+
+    font-weight:
+        500 !important;
+}
+
+
+/*
+   Hide old Upload Excel / old chooser visual UI,
+   but not the underlying input or preview workflow.
+*/
+.ppc-original-upload-hidden {
+    display:
+        none !important;
+}
+
+
+#upload-file-input {
+    display:
+        none !important;
+}
+
+
+.ppc-upload-custom-shell {
+    width:
+        100%;
+}
+
+
+.ppc-upload-dropzone {
+    min-height:
+        260px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    box-sizing:
+        border-box;
+
+    margin:
+        15px;
+
+    padding:
+        34px 28px;
+
+    border:
+        1px dashed #d1d5d9;
+
+    border-radius:
+        8px;
+
+    background:
+        #ffffff;
+
+    text-align:
+        center;
+
+    transition:
+        border-color .12s ease,
+        background .12s ease;
+}
+
+
+.ppc-upload-dropzone.is-dragging {
+    border-color:
+        #7fa7ca;
+
+    background:
+        #f6fbff;
+}
+
+
+.ppc-upload-instruction {
+    margin-bottom:
+        16px;
+
+    color:
+        #4e555b;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+
+    font-size:
+        14px;
+
+    font-weight:
+        400;
+}
+
+
+.ppc-my-device {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    gap:
+        7px;
+
+    padding:
+        6px 14px 9px;
+
+    border:
+        0;
+
+    border-radius:
+        9px;
+
+    background:
+        transparent;
+
+    color:
+        #555c63;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+
+    font-size:
+        13px;
+
+    font-weight:
+        400;
+
+    cursor:
+        pointer;
+}
+
+
+.ppc-my-device:hover {
+    background:
+        #f4f5f6;
+}
+
+
+.ppc-computer-icon {
+    width:
+        42px;
+
+    height:
+        42px;
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    border-radius:
+        50%;
+
+    background:
+        #f1f2f3;
+
+    color:
+        #555c63;
+}
+
+
+.ppc-computer-icon
+svg {
+    width:
+        22px;
+
+    height:
+        22px;
+}
+
+
+.ppc-upload-selected-file {
+    min-height:
+        18px;
+
+    margin-top:
+        14px;
+
+    color:
+        #555c63;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+
+    font-size:
+        12px;
+
+    font-weight:
+        500;
+}
+
+
+.ppc-upload-mapping-hidden {
+    display:
+        none !important;
+}
+
+
+/* Modal footer */
+
+.ppc-upload-modal-footer {
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    padding:
+        12px 15px;
+
+    border-top:
+        1px solid #e5e7e9;
+
+    background:
+        #ffffff;
+}
+
+
+.ppc-upload-black-button {
+    min-height:
+        32px;
+
+    padding:
+        6px 13px;
+
+    border:
+        1px solid #191919;
+
+    border-radius:
+        7px;
+
+    background:
+        #191919;
+
+    color:
+        #ffffff;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+
+    font-size:
+        13px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+}
+
+
+.ppc-upload-black-button:hover {
+    background:
+        #000000;
+}
+
+
+/* ============================================================
+   EXISTING STEP-2 PREVIEW
+============================================================ */
+
+#upload-step-2 {
+    max-height:
+        calc(
+            88vh - 55px
+        );
+
+    overflow-y:
+        auto;
+
+    padding:
+        16px !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif;
+}
+
+
+#upload-step-2
+table {
+    font-size:
+        12px;
+}
+
+
+/* ============================================================
+   DARK MODE
+============================================================ */
+
+html.jms-dark-theme
+.main,
+
+html.jms-dark-theme
+.ppc-doc-toolbar,
+
+html.jms-dark-theme
+.main >
+.ppc-document-section {
+    background:
+        #171e25 !important;
+}
+
+
+html.jms-dark-theme
+.ppc-doc-toolbar {
+    border-color:
+        #303a43;
+}
+
+
+html.jms-dark-theme
+.ppc-doc-breadcrumb
+strong,
+
+html.jms-dark-theme
+.ppc-document-section
+.card-title,
+
+html.jms-dark-theme
+.ppc-zone-label,
+
+html.jms-dark-theme
+.ppc-priority-attachment
+label {
+    color:
+        #eef2f5 !important;
+}
+
+
+html.jms-dark-theme
+.ppc-document-section
+.form-group
+input:not([type="checkbox"]),
+
+html.jms-dark-theme
+.ppc-document-section
+.prefix-input-wrap {
+    background:
+        #222a32 !important;
+
+    color:
+        #eef2f5 !important;
+}
+
+
+html.jms-dark-theme
+.ppc-attach-button {
+    background:
+        #252e36;
+
+    color:
+        #edf1f4;
+}
+
+
+html.jms-dark-theme
+#upload-modal
+.ppc-upload-dialog,
+
+html.jms-dark-theme
+.ppc-upload-dropzone,
+
+html.jms-dark-theme
+.ppc-upload-modal-footer {
+    background:
+        #171e25;
+}
+
+
+html.jms-dark-theme
+.ppc-upload-dropzone {
+    border-color:
+        #414b54;
+}
+
+
+html.jms-dark-theme
+.ppc-upload-instruction,
+
+html.jms-dark-theme
+.ppc-my-device {
+    color:
+        #d5dbe0;
+}
+
+
+html.jms-dark-theme
+.ppc-computer-icon,
+
+html.jms-dark-theme
+.ppc-my-device:hover {
+    background:
+        #252e36;
+}
+
+
+/* ============================================================
+   TABLET
+============================================================ */
+
+@media (
+    max-width:
+    980px
+) {
+
+    .main >
+    .ppc-document-section {
+        padding:
+            30px
+            34px
+            34px !important;
+    }
+
+
+    .ppc-final-order-grid,
+
+    .ppc-document-section
+    .ppc-final-item-grid,
+
+    .ppc-document-section
+    .item-row {
+        gap:
+            20px 26px !important;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (
+    max-width:
+    700px
+) {
+
+    .ppc-doc-toolbar {
+        padding:
+            9px 12px;
+    }
+
+
+    .main >
+    .ppc-document-section {
+        padding:
+            25px
+            14px
+            29px !important;
+    }
+
+
+    .ppc-document-section
+    .card-title {
+        margin-bottom:
+            22px !important;
+    }
+
+
+    .ppc-final-order-grid,
+
+    .ppc-document-section
+    .ppc-final-item-grid,
+
+    .ppc-document-section
+    .item-row {
+        grid-template-columns:
+            1fr !important;
+
+        gap:
+            18px !important;
+    }
+
+
+    .ppc-final-order-grid
+    .ppc-order-full {
+        grid-column:
+            auto;
+    }
+
+
+    .ppc-upload-dropzone {
+        min-height:
+            220px;
+
+        margin:
+            12px;
+
+        padding:
+            25px 18px;
+    }
+}
+
+/* ============================================================
+   PPC HEADER + MODAL FINAL V6
+============================================================ */
+
+
+/* ============================================================
+   1. ONE SINGLE DOCUMENT HEADER BAR
+============================================================ */
+
+.main > .ppc-doc-toolbar {
+
+    width:
+        100% !important;
+
+    min-height:
+        58px !important;
+
+    box-sizing:
+        border-box !important;
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        space-between !important;
+
+    gap:
+        20px !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        0 24px !important;
+
+    border:
+        0 !important;
+
+    border-bottom:
+        1px solid #e5e7e9 !important;
+
+    border-radius:
+        0 !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+/*
+   Breadcrumb must NOT look like a separate card.
+*/
+.ppc-doc-toolbar
+.ppc-doc-breadcrumb {
+
+    width:
+        auto !important;
+
+    min-width:
+        0 !important;
+
+    min-height:
+        0 !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+
+    border-radius:
+        0 !important;
+
+    background:
+        transparent !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+.ppc-doc-toolbar
+.ppc-doc-actions {
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        flex-end !important;
+
+    margin:
+        0 0 0 auto !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+
+    background:
+        transparent !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+/*
+   Save belongs to the SAME header row.
+*/
+.ppc-doc-toolbar
+#main-save-btn {
+
+    min-width:
+        70px !important;
+
+    height:
+        34px !important;
+
+    min-height:
+        34px !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        6px 15px !important;
+
+    border-radius:
+        8px !important;
+}
+
+
+/* ============================================================
+   2. COMPACT ERPNext-STYLE UPLOAD MODAL
+============================================================ */
+
+#upload-modal
+.ppc-final-upload-dialog,
+
+#upload-modal
+.ppc-upload-dialog {
+
+    width:
+        min(
+            570px,
+            calc(100vw - 32px)
+        ) !important;
+
+    max-width:
+        570px !important;
+
+    min-height:
+        0 !important;
+
+    max-height:
+        88vh !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    overflow:
+        hidden !important;
+
+    border:
+        1px solid #d9dcdf !important;
+
+    border-radius:
+        11px !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 22px 55px
+        rgba(
+            0,
+            0,
+            0,
+            .22
+        ) !important;
+}
+
+
+/* ============================================================
+   MODAL HEADER
+============================================================ */
+
+#upload-modal
+.modal-header,
+
+#upload-modal
+.ppc-upload-head {
+
+    min-height:
+        50px !important;
+
+    box-sizing:
+        border-box !important;
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        space-between !important;
+
+    padding:
+        0 15px !important;
+
+    border-bottom:
+        1px solid #e5e7e9 !important;
+
+    background:
+        #ffffff !important;
+}
+
+
+#upload-modal-title {
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    color:
+        #252a2e !important;
+
+    font-family:
+        "IBM Plex Sans",
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        16px !important;
+
+    line-height:
+        1.2 !important;
+
+    font-weight:
+        500 !important;
+}
+
+
+/* Thin ERPNext-like × */
+#upload-modal
+.ppc-final-upload-close {
+
+    width:
+        30px !important;
+
+    height:
+        30px !important;
+
+    display:
+        grid !important;
+
+    place-items:
+        center !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+
+    border-radius:
+        6px !important;
+
+    background:
+        transparent !important;
+
+    color:
+        #596168 !important;
+
+    font-family:
+        Arial,
+        sans-serif !important;
+
+    font-size:
+        23px !important;
+
+    line-height:
+        1 !important;
+
+    font-weight:
+        300 !important;
+
+    cursor:
+        pointer !important;
+}
+
+
+#upload-modal
+.ppc-final-upload-close:hover {
+
+    background:
+        #f2f3f4 !important;
+}
+
+
+/* ============================================================
+   UPLOAD STEP
+============================================================ */
+
+#upload-modal
+#upload-step-1 {
+
+    margin:
+        0 !important;
+
+    padding:
+        14px 14px 0 !important;
+
+    background:
+        #ffffff !important;
+}
+
+
+/* ============================================================
+   DROP ZONE — SMALLER / CLEANER
+============================================================ */
+
+#upload-modal
+.ppc-upload-dropzone {
+
+    min-height:
+        220px !important;
+
+    margin:
+        0 !important;
+
+    padding:
+        27px 24px !important;
+
+    border:
+        1px dashed #d3d7da !important;
+
+    border-radius:
+        8px !important;
+
+    background:
+        #ffffff !important;
+}
+
+
+#upload-modal
+.ppc-upload-instruction {
+
+    margin:
+        0 0 15px !important;
+
+    color:
+        #545b61 !important;
+
+    font-size:
+        14px !important;
+
+    line-height:
+        1.4 !important;
+
+    font-weight:
+        400 !important;
+}
+
+
+/* ============================================================
+   MY DEVICE
+============================================================ */
+
+#upload-modal
+.ppc-my-device {
+
+    gap:
+        6px !important;
+
+    padding:
+        5px 12px 7px !important;
+}
+
+
+#upload-modal
+.ppc-computer-icon {
+
+    width:
+        40px !important;
+
+    height:
+        40px !important;
+
+    background:
+        #f1f2f3 !important;
+}
+
+
+#upload-modal
+.ppc-computer-icon svg {
+
+    width:
+        21px !important;
+
+    height:
+        21px !important;
+}
+
+
+/* ============================================================
+   SELECTED FILE
+============================================================ */
+
+#upload-modal
+.ppc-upload-selected-file {
+
+    margin-top:
+        11px !important;
+
+    font-size:
+        12px !important;
+}
+
+
+/* ============================================================
+   MODAL FOOTER
+============================================================ */
+
+#upload-modal
+.ppc-upload-modal-footer {
+
+    min-height:
+        52px !important;
+
+    box-sizing:
+        border-box !important;
+
+    display:
+        flex !important;
+
+    align-items:
+        center !important;
+
+    justify-content:
+        flex-end !important;
+
+    margin:
+        14px -14px 0 !important;
+
+    padding:
+        9px 14px !important;
+
+    border-top:
+        1px solid #e5e7e9 !important;
+
+    background:
+        #ffffff !important;
+}
+
+
+#upload-modal
+.ppc-upload-black-button {
+
+    min-width:
+        74px !important;
+
+    min-height:
+        34px !important;
+
+    padding:
+        6px 13px !important;
+
+    border-radius:
+        8px !important;
+
+    font-size:
+        13px !important;
+}
+
+
+/* ============================================================
+   DARK MODE
+============================================================ */
+
+html.jms-dark-theme
+.main > .ppc-doc-toolbar {
+
+    border-color:
+        #303a43 !important;
+
+    background:
+        #171e25 !important;
+}
+
+
+html.jms-dark-theme
+#upload-modal
+.ppc-final-upload-dialog,
+
+html.jms-dark-theme
+#upload-modal
+.ppc-upload-dialog,
+
+html.jms-dark-theme
+#upload-modal
+.modal-header,
+
+html.jms-dark-theme
+#upload-modal
+.ppc-upload-head,
+
+html.jms-dark-theme
+#upload-modal
+#upload-step-1,
+
+html.jms-dark-theme
+#upload-modal
+.ppc-upload-dropzone,
+
+html.jms-dark-theme
+#upload-modal
+.ppc-upload-modal-footer {
+
+    background:
+        #171e25 !important;
+}
+
+
+html.jms-dark-theme
+#upload-modal
+.ppc-upload-dropzone {
+
+    border-color:
+        #414b54 !important;
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 700px) {
+
+    .main > .ppc-doc-toolbar {
+
+        min-height:
+            54px !important;
+
+        padding:
+            0 12px !important;
+    }
+
+
+    #upload-modal
+    .ppc-upload-dropzone {
+
+        min-height:
+            195px !important;
+
+        padding:
+            22px 16px !important;
+    }
+
+}
+
+/* PPC THIN INPUTS V7 START */
+
+/*
+   MASTER CONTROL:
+   Change ONLY this value if you want taller/thinner textboxes.
+*/
+.main {
+    --ppc-input-height: 28px;
+}
+
+
+/* Normal text / date inputs */
+.ppc-document-section
+.form-group
+input:not([type="checkbox"]),
+
+.ppc-document-section
+.child-input,
+
+.ppc-document-section
+input[type="date"] {
+
+    height:
+        var(--ppc-input-height) !important;
+
+    min-height:
+        var(--ppc-input-height) !important;
+
+    padding:
+        6px 10px !important;
+}
+
+
+/* SO / WO prefix input */
+.ppc-document-section
+.prefix-input-wrap {
+
+    height:
+        var(--ppc-input-height) !important;
+
+    min-height:
+        var(--ppc-input-height) !important;
+}
+
+
+.ppc-document-section
+.prefix {
+
+    min-height:
+        calc(
+            var(--ppc-input-height) - 2px
+        ) !important;
+}
+
+
+.ppc-document-section
+.prefix-input-wrap
+input {
+
+    height:
+        calc(
+            var(--ppc-input-height) - 2px
+        ) !important;
+
+    min-height:
+        calc(
+            var(--ppc-input-height) - 2px
+        ) !important;
+
+    padding:
+        6px 10px !important;
+}
+
+/* PPC THIN INPUTS V7 END */
+
+/* ============================================================
+   PPC BOM TWO COLUMN V8
+============================================================ */
+
+.ppc-bom-inner.ppc-bom-two-column-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    column-gap:
+        34px;
+
+    row-gap:
+        20px;
+
+    align-items:
+        start;
+}
+
+
+/*
+   All normal BOM content remains full width.
+*/
+.ppc-bom-inner.ppc-bom-two-column-grid
+> * {
+
+    grid-column:
+        1 / -1;
+}
+
+
+/*
+   Only these two controls share the first row.
+*/
+.ppc-bom-inner.ppc-bom-two-column-grid
+> .ppc-bom-parent-column {
+
+    grid-column:
+        1;
+
+    grid-row:
+        auto;
+}
+
+
+.ppc-bom-inner.ppc-bom-two-column-grid
+> .ppc-bom-child-column {
+
+    grid-column:
+        2;
+
+    grid-row:
+        auto;
+}
+
+
+/*
+   Remove old bottom spacing because the grid owns spacing.
+*/
+.ppc-bom-inner.ppc-bom-two-column-grid
+> .ppc-bom-parent-column,
+
+.ppc-bom-inner.ppc-bom-two-column-grid
+> .ppc-bom-child-column {
+
+    width:
+        100%;
+
+    min-width:
+        0;
+
+    margin-bottom:
+        0 !important;
+}
+
+
+/*
+   Both inputs fill their equal columns.
+*/
+.ppc-bom-parent-column
+input,
+
+.ppc-bom-child-column
+input {
+
+    width:
+        100% !important;
+
+    box-sizing:
+        border-box;
+}
+
+
+/* Mobile: stack normally */
+@media (max-width: 700px) {
+
+    .ppc-bom-inner.ppc-bom-two-column-grid {
+
+        grid-template-columns:
+            1fr;
+
+        gap:
+            18px;
+    }
+
+
+    .ppc-bom-inner.ppc-bom-two-column-grid
+    > .ppc-bom-parent-column,
+
+    .ppc-bom-inner.ppc-bom-two-column-grid
+    > .ppc-bom-child-column {
+
+        grid-column:
+            1;
+    }
+}
+
+/* ============================================================
+   PPC BOM ROW FIX V9
+============================================================ */
+
+
+/*
+   Neutralize V8 layout completely.
+*/
+.ppc-bom-inner.ppc-bom-two-column-grid {
+
+    display:
+        block !important;
+}
+
+
+/* ============================================================
+   FINAL BOM TWO-COLUMN ROW
+============================================================ */
+
+.ppc-bom-code-row-v9 {
+
+    width:
+        100%;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap:
+        34px;
+
+    align-items:
+        start;
+
+    margin:
+        0;
+}
+
+
+/* LEFT: Finished Goods */
+.ppc-bom-code-row-v9
+.ppc-bom-left-v9 {
+
+    width:
+        100% !important;
+
+    min-width:
+        0;
+
+    margin:
+        0 !important;
+}
+
+
+/* RIGHT: Semi-finished Goods */
+.ppc-bom-code-row-v9
+.ppc-bom-right-v9 {
+
+    width:
+        100% !important;
+
+    min-width:
+        0;
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+}
+
+
+/*
+   Prevent older layout rules from forcing either
+   field back to full width or another grid column.
+*/
+.ppc-bom-code-row-v9
+.ppc-bom-left-v9,
+
+.ppc-bom-code-row-v9
+.ppc-bom-right-v9 {
+
+    grid-column:
+        auto !important;
+
+    grid-row:
+        auto !important;
+}
+
+
+/* ============================================================
+   MATCH JOB CARD FIELD GEOMETRY
+============================================================ */
+
+.ppc-bom-code-row-v9
+.form-group {
+
+    width:
+        100% !important;
+
+    margin:
+        0 !important;
+}
+
+
+.ppc-bom-code-row-v9
+input {
+
+    width:
+        100% !important;
+
+    max-width:
+        none !important;
+
+    box-sizing:
+        border-box;
+}
+
+
+/*
+   Semi-finished section may have its own old spacing.
+*/
+.ppc-bom-code-row-v9
+#manual-child-section {
+
+    margin:
+        0 !important;
+
+    padding:
+        0 !important;
+
+    border:
+        0 !important;
+
+    background:
+        transparent !important;
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 700px) {
+
+    .ppc-bom-code-row-v9 {
+
+        grid-template-columns:
+            1fr;
+
+        gap:
+            18px;
+    }
+}

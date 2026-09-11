@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set active_page = "page5" %}
+
+{% block title %}
+Data View | NMTG
+{% endblock %}
+
+{% block extra_head %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='vue/data-view/data-view.css') }}?v={{ version }}"
+/>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="main data-vue-host">
+  <div id="data-view-vue"></div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+
+<script>
+  window.NMTG_DATA_VIEW = {
+    dispatchAccess:
+      {{ 'true' if dispatch_access else 'false' }},
+
+    role:
+      {{ (session.get("role") or "") | tojson }}
+  };
+</script>
+
+<script
+  type="module"
+  src="{{ url_for('static', filename='vue/data-view/data-view.js') }}?v={{ version }}"
+></script>
+
+{% endblock %}

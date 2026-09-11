@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request, session
 _IST = timedelta(hours=5, minutes=30)
 def _to_ist(dt): return dt + _IST if dt else dt
 from werkzeug.security import generate_password_hash
+
 from db import get_connection
 from permission_utils import (
     PAGE3_TRACEABILITY,
@@ -98,7 +99,7 @@ def list_users():
         cursor = conn.cursor(dictionary=True)
 
         cursor.execute("""
-            SELECT id, username, full_name, role, is_active, created_at
+            SELECT id, username, full_name, role, is_active, created_at, last_login
             FROM users
             ORDER BY created_at DESC
         """)
@@ -107,6 +108,8 @@ def list_users():
         for u in users:
             if u.get("created_at"):
                 u["created_at"] = _to_ist(u["created_at"]).strftime("%Y-%m-%d %H:%M")
+            if u.get("last_login"):
+                u["last_login"] = _to_ist(u["last_login"]).strftime("%Y-%m-%d %H:%M")
 
         cursor.close()
         conn.close()
@@ -355,4 +358,147 @@ def update_user_role(user_id):
         return jsonify({"success": True, "message": f"Role updated to '{role}' for '{user['username']}'"})
 
     except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ── All available processes (from DB) ─────────────────────────────────────────
+ALL_PAGES = [
+    {"page_name": "page3_traceability",  "label": "Traceability"},
+    {"page_name": "page5_ppc",           "label": "Data View PPC"},
+    {"page_name": "page4",               "label": "Analytics"},
+    {"page_name": "page5",               "label": "Data View"},
+    {"page_name": "dispatch_tracker",    "label": "Dispatch Tracker"},
+    {"page_name": "bom_summary",         "label": "BOM Summary"},
+]
+
+ALL_FIELDS = [
+    {"page_name": "page5_ppc",          "field_name": "actual_qty",         "label": "Actual Qty"},
+    {"page_name": "page5_ppc",          "field_name": "remarks",            "label": "Remarks"},
+    {"page_name": "page5_ppc",          "field_name": "vendor_name",        "label": "Vendor Name"},
+    {"page_name": "page5_ppc",          "field_name": "subcontractor_name", "label": "Subcontractor"},
+    {"page_name": "page5_ppc",          "field_name": "so_no",              "label": "SO No"},
+    {"page_name": "page5_ppc",          "field_name": "customer_name",      "label": "Customer Name"},
+    {"page_name": "page5_ppc",          "field_name": "job_card_no",        "label": "Job Card No"},
+    {"page_name": "page5_ppc",          "field_name": "item_name",          "label": "Item Name"},
+    {"page_name": "page5_ppc",          "field_name": "material",           "label": "Material"},
+    {"page_name": "page5_ppc",          "field_name": "so_qty",             "label": "SO Qty"},
+    {"page_name": "page5_ppc",          "field_name": "is_priority",        "label": "Is Priority"},
+    {"page_name": "page3_traceability", "field_name": "actual_qty",         "label": "Actual Qty"},
+    {"page_name": "page3_traceability", "field_name": "remarks",            "label": "Remarks"},
+    {"page_name": "page3_traceability", "field_name": "vendor_name",        "label": "Vendor Name"},
+]
+
+
+# ── GET /api/permissions/meta — all available processes, pages, fields ─────────
+@users_bp.route("/api/permissions/meta", methods=["GET"])
+def get_permissions_meta():
+    if not has_user_management_access():
+        return jsonify({"success": False, "error": "Admin access required"}), 403
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT DISTINCT process_name FROM processes ORDER BY process_name")
+        all_processes = [r["process_name"] for r in cursor.fetchall()]
+
+        # Add Dispatch as special process
+        if "Dispatch" not in all_processes:
+            all_processes.append("Dispatch")
+
+        cursor.close()
+        conn.close()
+        return jsonify({
+            "success": True,
+            "processes": all_processes,
+            "pages": ALL_PAGES,
+            "fields": ALL_FIELDS,
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@users_bp.route("/api/users/<int:user_id>/permissions", methods=["GET", "POST"])
+def user_permissions(user_id):
+    if not has_user_management_access():
+        return jsonify({"success": False, "error": "Admin access required"}), 403
+
+    if request.method == "GET":
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            cursor.execute("""
+                SELECT process_name FROM supervisor_process_access
+                WHERE user_id = %s
+            """, (user_id,))
+            process_access = [r["process_name"] for r in cursor.fetchall()]
+
+            cursor.execute("""
+                SELECT page_name FROM user_page_permissions
+                WHERE user_id = %s AND can_access = 1
+            """, (user_id,))
+            page_access = [r["page_name"] for r in cursor.fetchall()]
+
+            cursor.execute("""
+                SELECT page_name, field_name FROM user_field_permissions
+                WHERE user_id = %s AND can_edit = 1
+            """, (user_id,))
+            field_access = [{"page_name": r["page_name"], "field_name": r["field_name"]}
+                            for r in cursor.fetchall()]
+
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "success": True,
+                "process_access": process_access,
+                "page_access": page_access,
+                "field_access": field_access,
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    # POST
+    if session.get("user_id") == user_id:
+        return jsonify({"success": False, "error": "Cannot edit your own permissions"}), 400
+
+    data = request.json or {}
+    process_access = data.get("process_access", [])
+    page_access    = data.get("page_access", [])
+    field_access   = data.get("field_access", [])
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("DELETE FROM supervisor_process_access WHERE user_id = %s", (user_id,))
+        for proc in process_access:
+            if proc:
+                cursor.execute("""
+                    INSERT IGNORE INTO supervisor_process_access (user_id, process_name)
+                    VALUES (%s, %s)
+                """, (user_id, proc))
+
+        cursor.execute("DELETE FROM user_page_permissions WHERE user_id = %s", (user_id,))
+        for page in page_access:
+            if page:
+                cursor.execute("""
+                    INSERT IGNORE INTO user_page_permissions (user_id, page_name, can_access)
+                    VALUES (%s, %s, 1)
+                """, (user_id, page))
+
+        cursor.execute("DELETE FROM user_field_permissions WHERE user_id = %s", (user_id,))
+        for f in field_access:
+            page_name  = f.get("page_name", "")
+            field_name = f.get("field_name", "")
+            if page_name and field_name:
+                cursor.execute("""
+                    INSERT IGNORE INTO user_field_permissions
+                        (user_id, page_name, field_name, can_view, can_edit)
+                    VALUES (%s, %s, %s, 1, 1)
+                """, (user_id, page_name, field_name))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True, "message": "Permissions saved successfully."})
+    except Exception as e:
+        if conn:
+            conn.rollback()
         return jsonify({"success": False, "error": str(e)}), 500

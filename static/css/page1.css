@@ -240,7 +240,7 @@ body {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 200;
+  z-index: 1000;
   display: none;
   max-height: 220px;
   margin-top: 2px;
@@ -711,8 +711,8 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  width: 100%;
-  max-width: 1100px;
+  width: 95vw;
+  max-width: 1500px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
   margin: auto;
 }
@@ -747,49 +747,20 @@ body {
   color: #ffffff;
 }
 
-.bulk-common-fields {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  padding: 18px 24px;
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border);
-}
-
-.bulk-common-fields .form-group label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--header-bg);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.bulk-common-fields input {
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 13px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  outline: none;
-  width: 100%;
-}
-
-.bulk-common-fields input:focus {
-  border-color: var(--accent);
-}
-
 .bulk-table-wrap {
   padding: 16px 24px;
   overflow-x: auto;
   max-height: 450px;
   overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .bulk-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 1800px;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
+  table-layout: fixed;
 }
 
 .bulk-table thead th {
@@ -804,6 +775,104 @@ body {
   position: sticky;
   top: 0;
   z-index: 5;
+}
+
+.bulk-table td {
+  padding: 4px;
+  border-bottom: 1px solid #edf1f5;
+  vertical-align: top;
+}
+
+.bulk-table .req {
+  color: #ef4444;
+}
+
+.bulk-col-index {
+  width: 44px;
+}
+
+.bulk-col-jc,
+.bulk-col-so,
+.bulk-col-code,
+.bulk-col-stock,
+.bulk-col-wip {
+  width: 120px;
+}
+
+.bulk-col-date {
+  width: 132px;
+}
+
+.bulk-col-item {
+  width: 260px;
+}
+
+.bulk-col-size {
+  width: 160px;
+}
+
+.bulk-col-material,
+.bulk-col-part {
+  width: 140px;
+}
+
+.bulk-col-qty,
+.bulk-col-days {
+  width: 95px;
+}
+
+.bulk-col-small {
+  width: 90px;
+}
+
+.bulk-col-action {
+  width: 50px;
+}
+
+.bulk-row-index {
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+  padding-top: 11px;
+}
+
+.bulk-input {
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.25;
+  outline: none;
+  background: #ffffff;
+}
+
+.bulk-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(47, 99, 151, 0.12);
+}
+
+.bulk-item-cell {
+  position: relative;
+}
+
+.bulk-action-cell {
+  text-align: center;
+}
+
+.bulk-remove-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 7px 8px;
+}
+
+.bulk-remove-btn:hover {
+  color: #991b1b;
 }
 
 .bulk-table tbody tr:nth-child(even) {
@@ -964,15 +1033,10 @@ body {
   }
 
   .bulk-modal-header,
-  .bulk-common-fields,
   .bulk-table-wrap,
   .bulk-footer {
     padding-left: 16px;
     padding-right: 16px;
-  }
-
-  .bulk-common-fields {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -988,4 +1052,88 @@ body {
   .page-header h1 {
     font-size: 24px;
   }
+}
+.upload-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(3px);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-loading-overlay.show {
+  display: flex;
+}
+
+.upload-loading-card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 30px 28px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.upload-spinner {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  border: 5px solid #dbeafe;
+  border-top-color: var(--success);
+  border-radius: 50%;
+  animation: uploadSpin 0.9s linear infinite;
+}
+
+@keyframes uploadSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-loading-card h3 {
+  margin: 0 0 8px;
+  color: #102a4c;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.upload-loading-card p {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.upload-loading-percent {
+  color: var(--success);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  margin: 0 0 16px;
+}
+
+.upload-loading-card small {
+  display: block;
+  margin-top: 14px;
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.upload-loading-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.upload-loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--danger), var(--danger) 50%, var(--success) 100%);
+  border-radius: 999px;
+  transition: width 0.35s ease;
 }

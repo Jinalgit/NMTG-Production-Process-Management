@@ -1293,8 +1293,8 @@ body {
 }
 
 .modal-note {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 15px;
+  /* color: var(--muted); */
   margin-top: 10px;
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -2338,3 +2338,207 @@ body {
   padding: 6px;
 }
 */
+
+
+
+/* =========================================================
+   OEE_ZONE_NATIVE_JMS_VIEW_V2
+   Uses existing Page-3 visual language.
+   ========================================================= */
+
+.oee-zone-native-card-v2 {
+    margin-top: 0;
+}
+
+
+.oee-zone-native-top-v2 {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+
+.oee-zone-native-top-v2 .search-title {
+    margin: 0;
+}
+
+
+.oee-zone-native-count-v2 {
+    color: var(--muted);
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+
+.oee-zone-native-grid-v2 {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(190px, 1fr)
+        );
+
+    gap: 12px;
+}
+
+
+.oee-zone-machine-v2 {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    width: 100%;
+    min-height: 72px;
+
+    padding: 13px 14px;
+
+    border: 1px solid #d0d7e2;
+    border-radius: 6px;
+
+    background: #ffffff;
+
+    color: #0f2a4d;
+
+    font-family: inherit;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease,
+        background .15s ease;
+}
+
+
+.oee-zone-machine-v2:hover {
+    border-color: #2f6397;
+
+    background: #f8fbff;
+
+    box-shadow:
+        0 2px 6px
+        rgba(15, 42, 77, .08);
+}
+
+
+.oee-zone-machine-v2:focus {
+    outline: none;
+
+    border-color: #2f6397;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(47, 99, 151, .13);
+}
+
+
+.oee-zone-machine-info-v2 {
+    min-width: 0;
+}
+
+
+.oee-zone-machine-no-v2 {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #0f2a4d;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.oee-zone-machine-name-v2 {
+    display: block;
+
+    overflow: hidden;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    font-weight: 500;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.oee-zone-machine-type-v2 {
+    flex: none;
+
+    padding: 4px 7px;
+
+    border-radius: 5px;
+
+    background: #eef4fa;
+
+    color: #2f6397;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.oee-zone-native-note-v2 {
+    margin-top: 14px;
+
+    padding: 10px 12px;
+
+    border: 1px solid #dbe3ec;
+    border-radius: 6px;
+
+    background: #f8fafc;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+@media (max-width: 700px) {
+
+    .oee-zone-native-grid-v2 {
+        grid-template-columns: 1fr;
+    }
+
+
+    .oee-zone-native-top-v2 {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
+
+/* =========================================================
+   OEE_ZONE_FA_ICON_CLEANUP_V3
+   ========================================================= */
+
+.oee-zone-native-count-v2 {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+}
+
+
+.oee-zone-native-count-icon-v3 {
+    color: var(--accent, #2f6397);
+
+    font-size: 12px;
+}
+

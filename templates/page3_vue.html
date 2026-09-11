@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set active_page = "page3" %}
+
+{% block title %}
+Traceability | NMTG
+{% endblock %}
+
+{% block extra_head %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='vue/traceability/traceability.css') }}?v={{ version }}"
+/>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div id="traceability-vue"></div>
+
+<script>
+window.NMTG_TRACEABILITY = {
+    role: {{ (session.get("role") or "") | tojson }},
+    username: {{ (session.get("username") or "") | tojson }}
+};
+</script>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+
+<script
+  type="module"
+  src="{{ url_for('static', filename='vue/traceability/traceability.js') }}?v={{ version }}"
+></script>
+
+{% endblock %}

@@ -1,0 +1,1462 @@
+{% extends "base.html" %}
+
+{% block title %}
+Tool UID Register | NMTG
+{% endblock %}
+
+
+{% block extra_head %}
+
+<style>
+
+/* =========================================================
+   OEE_TOOL_UID_REGISTER_PAGE_V115
+   ========================================================= */
+
+.tooluid-page-v115 {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 18px;
+}
+
+
+.tooluid-header-v115 {
+    margin-bottom: 16px;
+    padding: 16px 18px;
+
+    border-left: 4px solid #0b5fa5;
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f7fcff,
+            #e5f4ff
+        );
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+.tooluid-header-v115 h1 {
+    margin: 0 0 4px;
+
+    font-size: 22px;
+    font-weight: 800;
+
+    color: #17365d;
+}
+
+
+.tooluid-header-v115 p {
+    margin: 0;
+
+    font-size: 12px;
+
+    color: #64748b;
+}
+
+
+.tooluid-card-v115 {
+    padding: 18px;
+
+    border: 1px solid #d8e3ef;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+
+.tooluid-card-head-v115 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+
+.tooluid-card-head-v115 strong {
+    font-size: 15px;
+
+    color: #17365d;
+}
+
+
+.tooluid-role-v115 {
+    padding: 5px 10px;
+
+    border: 1px solid #ceddec;
+    border-radius: 999px;
+
+    background: #f5faff;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    color: #31577c;
+}
+
+
+.tooluid-grid-v115 {
+    display: grid;
+
+    grid-template-columns:
+        minmax(190px, 0.85fr)
+        minmax(320px, 1.7fr)
+        minmax(120px, 0.55fr)
+        minmax(160px, 0.7fr);
+
+    gap: 12px;
+}
+
+
+.tooluid-field-v115 {
+    min-width: 0;
+}
+
+
+.tooluid-field-v115 label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+
+    color: #53657a;
+}
+
+
+.tooluid-field-v115 input {
+    width: 100%;
+    min-height: 38px;
+
+    box-sizing: border-box;
+
+    padding: 8px 10px;
+
+    border: 1px solid #cbd9e7;
+    border-radius: 6px;
+
+    background: #ffffff;
+
+    font-family: inherit;
+    font-size: 13px;
+
+    color: #172b3f;
+}
+
+
+.tooluid-field-v115 input:focus {
+    outline: none;
+
+    border-color: #0b5fa5;
+
+    box-shadow:
+        0 0 0 2px rgba(11, 95, 165, 0.10);
+}
+
+
+.tooluid-field-v115 input[readonly] {
+    background: #f5f8fb;
+
+    color: #294968;
+}
+
+
+.tooluid-code-wrap-v115 {
+    display: grid;
+
+    grid-template-columns:
+        1fr auto;
+
+    gap: 6px;
+}
+
+
+.tooluid-button-v115 {
+    min-height: 38px;
+
+    padding: 8px 14px;
+
+    border: 0;
+    border-radius: 6px;
+
+    background: #0b5fa5;
+
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.tooluid-button-v115:hover {
+    background: #094f8a;
+}
+
+
+.tooluid-button-v115:disabled {
+    opacity: 0.50;
+
+    cursor: not-allowed;
+}
+
+
+.tooluid-remark-v115 {
+    grid-column: 1 / -1;
+}
+
+
+.tooluid-actions-v115 {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 16px;
+
+    padding-top: 14px;
+
+    border-top: 1px solid #e4ebf2;
+}
+
+
+.tooluid-generated-v115 {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 38px;
+
+    padding: 0 12px;
+
+    border: 1px solid #bfd5e8;
+    border-radius: 6px;
+
+    background: #f5faff;
+}
+
+
+.tooluid-generated-v115 span {
+    font-size: 10px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    color: #53657a;
+}
+
+
+.tooluid-generated-v115 strong {
+    font-size: 15px;
+    font-weight: 800;
+
+    color: #09336e;
+}
+
+
+.tooluid-message-v115 {
+    margin-top: 10px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #21723b;
+}
+
+
+.tooluid-message-v115.error {
+    color: #b42318;
+}
+
+
+@media(max-width:900px) {
+
+    .tooluid-grid-v115 {
+        grid-template-columns:
+            1fr
+            1fr;
+    }
+}
+
+
+@media(max-width:600px) {
+
+    .tooluid-grid-v115 {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .tooluid-remark-v115 {
+        grid-column: auto;
+    }
+
+
+    .tooluid-actions-v115 {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+
+/* OEE_TOOL_MASTER_LIST_PANEL_V126 */
+.tooluid-search-v126 {
+    width: 100%;
+    max-width: 380px;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid #cbd9e7;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 13px;
+    color: #172b3f;
+    box-sizing: border-box;
+}
+.tooluid-search-v126:focus {
+    outline: none;
+    border-color: #0b5fa5;
+    box-shadow: 0 0 0 2px rgba(11,95,165,0.10);
+}
+.tooluid-list-head-row-v126 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.tooluid-list-count-v126 {
+    font-size: 11px;
+    color: #53657a;
+    font-weight: 700;
+}
+.tooluid-list-wrap-v126 {
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1px solid #d8e3ef;
+    border-radius: 6px;
+    background: #ffffff;
+}
+.tooluid-list-table-v126 {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.tooluid-list-table-v126 thead {
+    position: sticky;
+    top: 0;
+    background: #f2f7fc;
+    z-index: 1;
+}
+.tooluid-list-table-v126 th,
+.tooluid-list-table-v126 td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ecf1f6;
+    color: #17365d;
+}
+.tooluid-list-table-v126 th {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #53657a;
+}
+.tooluid-list-table-v126 tbody tr:hover {
+    background: #f8fbfe;
+    cursor: pointer;
+}
+.tooluid-list-empty-v126 {
+    padding: 14px;
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+}
+.tooluid-add-active-v127 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    color: #17365d;
+    margin: 0;
+}
+.tooluid-add-active-v127 input {
+    width: 16px;
+    height: 16px;
+}
+
+/* OEE_TOOL_MASTER_MODAL_V128 */
+.tooluid-modal-overlay-v128 {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 30, 60, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+.tooluid-modal-overlay-v128[hidden] {
+    display: none !important;
+}
+.tooluid-modal-box-v128 {
+    background: #ffffff;
+    border-radius: 10px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    padding: 20px;
+}
+.tooluid-modal-head-v128 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e4ebf2;
+}
+.tooluid-modal-head-v128 strong {
+    font-size: 16px;
+    color: #17365d;
+}
+.tooluid-modal-close-v128 {
+    background: transparent;
+    border: 0;
+    font-size: 22px;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0 4px;
+}
+.tooluid-modal-close-v128:hover {
+    color: #b42318;
+}
+.tooluid-modal-actions-v128 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #e4ebf2;
+}
+.tooluid-button-ghost-v128 {
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid #cbd9e7;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #17365d;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.tooluid-button-ghost-v128:hover {
+    background: #f5faff;
+}
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div
+    class="tooluid-page-v115"
+>
+
+    <div
+        class="tooluid-header-v115"
+    >
+
+        <h1>
+            Tool UID Register
+        </h1>
+
+        <p>
+            Register a new physical tool and generate
+            its unique Tool UID.
+        </p>
+
+    </div>
+
+
+    <section
+        class="tooluid-card-v115"
+    >
+
+        <div
+            class="tooluid-card-head-v115"
+        >
+
+            <strong>
+                New Physical Tool
+            </strong>
+
+            <span
+                class="tooluid-role-v115"
+            >
+                {{ (session.get('role') or '') | upper }}
+            </span>
+
+        </div>
+
+
+        <div
+            class="tooluid-grid-v115"
+        >
+
+            <div
+                class="tooluid-field-v115"
+            >
+
+                <label
+                    for="tooluid-code-v115"
+                >
+                    Tool Item Code
+                </label>
+
+
+                <div
+                    class="tooluid-code-wrap-v115"
+                >
+
+                    <input
+                        id="tooluid-code-v115"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Example: DR-0001"
+                    >
+
+
+                    <button
+                        id="tooluid-lookup-v115"
+                        class="tooluid-button-v115"
+                        type="button"
+                    >
+                        Lookup
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="tooluid-field-v115"
+            >
+
+                <label>
+                    Tool Name
+                </label>
+
+                <input
+                    id="tooluid-name-v115"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                >
+
+            </div>
+
+
+            <div
+                class="tooluid-field-v115"
+            >
+
+                <label>
+                    UID Prefix
+                </label>
+
+                <input
+                    id="tooluid-prefix-v115"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                >
+
+            </div>
+
+
+            <div
+                class="tooluid-field-v115"
+            >
+
+                <label
+                    for="tooluid-date-v115"
+                >
+                    Created Date
+                </label>
+
+                <input
+                    id="tooluid-date-v115"
+                    type="date"
+                >
+
+            </div>
+
+
+            <div
+                class="tooluid-field-v115 tooluid-remark-v115"
+            >
+
+                <label
+                    for="tooluid-remark-v115"
+                >
+                    Remark
+                </label>
+
+                <input
+                    id="tooluid-remark-v115"
+                    type="text"
+                    maxlength="500"
+                    placeholder="Optional"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="tooluid-actions-v115"
+        >
+
+            <button
+                id="tooluid-generate-v115"
+                class="tooluid-button-v115"
+                type="button"
+                disabled
+            >
+                Generate Tool UID
+            </button>
+
+
+            <div
+                id="tooluid-generated-v115"
+                class="tooluid-generated-v115"
+                hidden
+            >
+
+                <span>
+                    Generated UID
+                </span>
+
+                <strong
+                    id="tooluid-generated-value-v115"
+                ></strong>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="tooluid-message-v115"
+            class="tooluid-message-v115"
+            hidden
+        ></div>
+
+    </section>
+
+
+    <!-- OEE_TOOL_MASTER_LIST_PANEL_V128 -->
+    <section class="tooluid-card-v115" style="margin-top: 14px;">
+        <div class="tooluid-card-head-v115">
+            <strong>Tool Master</strong>
+            <span id="tooluid-list-count-v126" class="tooluid-list-count-v126">Loading...</span>
+        </div>
+        <div class="tooluid-list-head-row-v126">
+            <input id="tooluid-list-search-v126" class="tooluid-search-v126" type="text" autocomplete="off" placeholder="Search by Code or Name">
+            <button id="tooluid-add-open-v128" class="tooluid-button-v115" type="button">+ Add New Tool</button>
+        </div>
+        <div class="tooluid-list-wrap-v126">
+            <table class="tooluid-list-table-v126">
+                <thead><tr><th style="width: 30%;">Code</th><th>Name</th></tr></thead>
+                <tbody id="tooluid-list-body-v126"><tr><td colspan="2" class="tooluid-list-empty-v126">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+
+    <!-- OEE_TOOL_MASTER_ADD_MODAL_V128 -->
+    <div id="tooluid-add-modal-v128" class="tooluid-modal-overlay-v128" hidden>
+        <div class="tooluid-modal-box-v128">
+            <div class="tooluid-modal-head-v128">
+                <strong>Add New Tool Item to Master</strong>
+                <button id="tooluid-add-close-v128" class="tooluid-modal-close-v128" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="tooluid-grid-v115">
+                <div class="tooluid-field-v115">
+                    <label for="tooluid-add-code-v127">Tool Item Code</label>
+                    <input id="tooluid-add-code-v127" type="text" autocomplete="off" maxlength="50" placeholder="Example: DR-9999">
+                </div>
+                <div class="tooluid-field-v115">
+                    <label for="tooluid-add-name-v127">Tool Item Name</label>
+                    <input id="tooluid-add-name-v127" type="text" autocomplete="off" maxlength="255" placeholder="Example: DRILL 15.5 mm HSS [ADDISON]">
+                </div>
+                <div class="tooluid-field-v115">
+                    <label for="tooluid-add-prefix-v127">UID Prefix</label>
+                    <input id="tooluid-add-prefix-v127" type="text" autocomplete="off" maxlength="50" placeholder="Example: DR">
+                </div>
+                <div class="tooluid-field-v115" style="display:flex;align-items:flex-end;">
+                    <label class="tooluid-add-active-v127">
+                        <input id="tooluid-add-active-v127" type="checkbox" checked>
+                        Active
+                    </label>
+                </div>
+            </div>
+            <div id="tooluid-add-message-v127" class="tooluid-message-v115" hidden></div>
+            <div class="tooluid-modal-actions-v128">
+                <button id="tooluid-add-cancel-v128" class="tooluid-button-ghost-v128" type="button">Cancel</button>
+                <button id="tooluid-add-submit-v127" class="tooluid-button-v115" type="button">Add to Master</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+(function () {
+
+    const codeInput =
+        document.getElementById(
+            "tooluid-code-v115"
+        );
+
+    const lookupButton =
+        document.getElementById(
+            "tooluid-lookup-v115"
+        );
+
+    const nameInput =
+        document.getElementById(
+            "tooluid-name-v115"
+        );
+
+    const prefixInput =
+        document.getElementById(
+            "tooluid-prefix-v115"
+        );
+
+    const dateInput =
+        document.getElementById(
+            "tooluid-date-v115"
+        );
+
+    const remarkInput =
+        document.getElementById(
+            "tooluid-remark-v115"
+        );
+
+    const generateButton =
+        document.getElementById(
+            "tooluid-generate-v115"
+        );
+
+    const generatedBox =
+        document.getElementById(
+            "tooluid-generated-v115"
+        );
+
+    const generatedValue =
+        document.getElementById(
+            "tooluid-generated-value-v115"
+        );
+
+    const messageBox =
+        document.getElementById(
+            "tooluid-message-v115"
+        );
+
+
+    let resolvedCode = "";
+
+
+    function localDateV115() {
+
+        const now =
+            new Date();
+
+        const local =
+            new Date(
+                now.getTime()
+                -
+                (
+                    now.getTimezoneOffset()
+                    * 60000
+                )
+            );
+
+        return local
+            .toISOString()
+            .slice(
+                0,
+                10
+            );
+    }
+
+
+    if (
+        dateInput
+        &&
+        !dateInput.value
+    ) {
+
+        dateInput.value =
+            localDateV115();
+    }
+
+
+    function messageV115(
+        text,
+        error
+    ) {
+
+        if (!messageBox) {
+            return;
+        }
+
+
+        messageBox.hidden =
+            !text;
+
+        messageBox.textContent =
+            text || "";
+
+        messageBox.classList.toggle(
+            "error",
+            Boolean(error)
+        );
+    }
+
+
+    function clearLookupV115() {
+
+        resolvedCode = "";
+
+
+        if (nameInput) {
+            nameInput.value = "";
+        }
+
+
+        if (prefixInput) {
+            prefixInput.value = "";
+        }
+
+
+        if (generateButton) {
+            generateButton.disabled = true;
+        }
+    }
+
+
+    function clearGeneratedV115() {
+
+        if (generatedBox) {
+            generatedBox.hidden = true;
+        }
+
+
+        if (generatedValue) {
+            generatedValue.textContent = "";
+        }
+    }
+
+
+    async function lookupV115() {
+
+        const code =
+            String(
+                codeInput?.value
+                || ""
+            ).trim();
+
+
+        clearLookupV115();
+        clearGeneratedV115();
+
+        messageV115(
+            "",
+            false
+        );
+
+
+        if (!code) {
+
+            messageV115(
+                "Enter Tool Item Code.",
+                true
+            );
+
+            codeInput?.focus();
+
+            return;
+        }
+
+
+        if (lookupButton) {
+            lookupButton.disabled = true;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/oee-machine/tool-master/lookup"
+                    + "?code="
+                    + encodeURIComponent(
+                        code
+                    )
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                !response.ok
+                ||
+                !data.success
+            ) {
+
+                throw new Error(
+                    data.error
+                    ||
+                    "Tool Item lookup failed."
+                );
+            }
+
+
+            const tool =
+                data.tool
+                || {};
+
+
+            resolvedCode =
+                String(
+                    tool.tool_item_code
+                    || ""
+                ).trim();
+
+
+            codeInput.value =
+                resolvedCode;
+
+            nameInput.value =
+                tool.tool_item_name
+                || "";
+
+            prefixInput.value =
+                tool.uid_prefix
+                || "";
+
+
+            generateButton.disabled =
+                !(
+                    resolvedCode
+                    &&
+                    prefixInput.value
+                );
+
+
+            messageV115(
+                "Tool Item found.",
+                false
+            );
+
+
+        } catch (error) {
+
+            clearLookupV115();
+
+            messageV115(
+                error.message
+                ||
+                "Tool Item lookup failed.",
+                true
+            );
+
+
+        } finally {
+
+            lookupButton.disabled =
+                false;
+        }
+    }
+
+
+    async function generateV115() {
+
+        const currentCode =
+            String(
+                codeInput?.value
+                || ""
+            ).trim();
+
+
+        if (
+            !resolvedCode
+            ||
+            currentCode.toUpperCase()
+            !==
+            resolvedCode.toUpperCase()
+        ) {
+
+            clearLookupV115();
+
+            messageV115(
+                "Lookup the Tool Item again.",
+                true
+            );
+
+            return;
+        }
+
+
+        const createdDate =
+            String(
+                dateInput?.value
+                || ""
+            ).trim();
+
+
+        if (!createdDate) {
+
+            messageV115(
+                "Created Date is required.",
+                true
+            );
+
+            return;
+        }
+
+
+        const proceed =
+            window.confirm(
+                "Generate a new physical Tool UID for "
+                + resolvedCode
+                + "?"
+            );
+
+
+        if (!proceed) {
+            return;
+        }
+
+
+        generateButton.disabled =
+            true;
+
+
+        messageV115(
+            "Generating Tool UID...",
+            false
+        );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/oee-machine/tool-uid/generate",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                tool_item_code:
+                                    resolvedCode,
+
+                                created_regrind_date:
+                                    createdDate,
+
+                                remark:
+                                    String(
+                                        remarkInput?.value
+                                        || ""
+                                    ).trim()
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                !response.ok
+                ||
+                !data.success
+            ) {
+
+                throw new Error(
+                    data.error
+                    ||
+                    "Tool UID generation failed."
+                );
+            }
+
+
+            const uid =
+                data.tool_uid
+                || {};
+
+
+            generatedValue.textContent =
+                uid.tool_uid
+                || "";
+
+            generatedBox.hidden =
+                false;
+
+
+            messageV115(
+                "Tool UID generated successfully. "
+                + "Lookup again before generating another UID.",
+                false
+            );
+
+
+            /*
+             * Safety:
+             * Prevent accidental double generation.
+             */
+            resolvedCode = "";
+
+            generateButton.disabled =
+                true;
+
+
+        } catch (error) {
+
+            generateButton.disabled =
+                false;
+
+
+            messageV115(
+                error.message
+                ||
+                "Tool UID generation failed.",
+                true
+            );
+        }
+    }
+
+
+    codeInput?.addEventListener(
+        "input",
+        function () {
+
+            if (
+                resolvedCode
+                &&
+                String(
+                    codeInput.value
+                    || ""
+                ).trim().toUpperCase()
+                !==
+                resolvedCode.toUpperCase()
+            ) {
+
+                clearLookupV115();
+                clearGeneratedV115();
+
+                messageV115(
+                    "",
+                    false
+                );
+            }
+        }
+    );
+
+
+    codeInput?.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key
+                === "Enter"
+            ) {
+
+                event.preventDefault();
+
+                lookupV115();
+            }
+        }
+    );
+
+
+    lookupButton?.addEventListener(
+        "click",
+        lookupV115
+    );
+
+
+    generateButton?.addEventListener(
+        "click",
+        generateV115
+    );
+
+})();
+
+</script>
+
+<!-- OEE_TOOL_MASTER_LIST_ADD_SCRIPT_V126_V127 -->
+<script>
+(function () {
+    let toolMasterCache = [];
+
+    const listBody      = document.getElementById("tooluid-list-body-v126");
+    const listCount     = document.getElementById("tooluid-list-count-v126");
+    const searchInput   = document.getElementById("tooluid-list-search-v126");
+    const addCode       = document.getElementById("tooluid-add-code-v127");
+    const addName       = document.getElementById("tooluid-add-name-v127");
+    const addPrefix     = document.getElementById("tooluid-add-prefix-v127");
+    const addActive     = document.getElementById("tooluid-add-active-v127");
+    const addSubmit     = document.getElementById("tooluid-add-submit-v127");
+    const addMessage    = document.getElementById("tooluid-add-message-v127");
+    const lookupInput   = document.getElementById("tooluid-code-v115");
+    const lookupButton  = document.getElementById("tooluid-lookup-v115");
+
+    function esc(s) {
+        return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function render(rows) {
+        if (!listBody) return;
+        if (!rows.length) {
+            listBody.innerHTML =
+                "<tr><td colspan='2' class='tooluid-list-empty-v126'>"
+                + "No tools match this search."
+                + "</td></tr>";
+            if (listCount) listCount.textContent = "0 of " + toolMasterCache.length;
+            return;
+        }
+        const html = rows.map(function (t) {
+            return "<tr data-code='" + esc(t.tool_item_code) + "'>"
+                + "<td>" + esc(t.tool_item_code) + "</td>"
+                + "<td>" + esc(t.tool_item_name) + "</td>"
+                + "</tr>";
+        }).join("");
+        listBody.innerHTML = html;
+        if (listCount) listCount.textContent = rows.length + " of " + toolMasterCache.length;
+    }
+
+    function applyFilter() {
+        const q = String(searchInput?.value || "").trim().toLowerCase();
+        if (!q) { render(toolMasterCache); return; }
+        const filtered = toolMasterCache.filter(function (t) {
+            const c = String(t.tool_item_code || "").toLowerCase();
+            const n = String(t.tool_item_name || "").toLowerCase();
+            return c.indexOf(q) !== -1 || n.indexOf(q) !== -1;
+        });
+        render(filtered);
+    }
+
+    async function loadList() {
+        if (listBody) {
+            listBody.innerHTML =
+                "<tr><td colspan='2' class='tooluid-list-empty-v126'>Loading...</td></tr>";
+        }
+        if (listCount) listCount.textContent = "Loading...";
+        try {
+            const r = await fetch("/api/oee-machine/tool-master/list", {cache: "no-store"});
+            const d = await r.json();
+            if (!r.ok || !d.success) throw new Error(d.error || "Failed to load Tool Master.");
+            toolMasterCache = Array.isArray(d.tools) ? d.tools : [];
+            applyFilter();
+        } catch (e) {
+            if (listBody) {
+                listBody.innerHTML =
+                    "<tr><td colspan='2' class='tooluid-list-empty-v126'>"
+                    + esc(e.message || "Failed to load Tool Master.")
+                    + "</td></tr>";
+            }
+            if (listCount) listCount.textContent = "";
+        }
+    }
+
+    function addMsg(text, err) {
+        if (!addMessage) return;
+        addMessage.hidden = !text;
+        addMessage.textContent = text || "";
+        addMessage.classList.toggle("error", Boolean(err));
+    }
+
+    async function submitAdd() {
+        const code   = String(addCode?.value   || "").trim();
+        const name   = String(addName?.value   || "").trim();
+        const prefix = String(addPrefix?.value || "").trim();
+        const active = addActive?.checked ? 1 : 0;
+
+        if (!code)   { addMsg("Tool Item Code is required.",   true); addCode?.focus();   return; }
+        if (!name)   { addMsg("Tool Item Name is required.",   true); addName?.focus();   return; }
+        if (!prefix) { addMsg("UID Prefix is required.",       true); addPrefix?.focus(); return; }
+
+        addSubmit.disabled = true;
+        addMsg("Adding...", false);
+
+        try {
+            const r = await fetch("/api/oee-machine/tool-master/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    tool_item_code: code,
+                    tool_item_name: name,
+                    uid_prefix:     prefix,
+                    is_active:      active,
+                })
+            });
+            const d = await r.json();
+            if (!r.ok || !d.success) throw new Error(d.error || "Add failed.");
+
+            addMsg("Tool Item added.", false);
+
+            addCode.value   = "";
+            addName.value   = "";
+            addPrefix.value = "";
+            addActive.checked = true;
+
+            await loadList();
+
+            if (lookupInput) {
+                lookupInput.value = d.tool_item_code || code;
+                lookupInput.focus();
+            }
+        } catch (e) {
+            addMsg(e.message || "Add failed.", true);
+        } finally {
+            addSubmit.disabled = false;
+        }
+    }
+
+    searchInput?.addEventListener("input", applyFilter);
+
+    listBody?.addEventListener("click", function (e) {
+        const tr = e.target.closest("tr[data-code]");
+        if (!tr) return;
+        const code = tr.getAttribute("data-code");
+        if (code && lookupInput) {
+            lookupInput.value = code;
+            lookupInput.focus();
+            if (typeof lookupButton?.click === "function") lookupButton.click();
+        }
+    });
+
+    addSubmit?.addEventListener("click", submitAdd);
+    [addCode, addName, addPrefix].forEach(function (el) {
+        el?.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter") { ev.preventDefault(); submitAdd(); }
+        });
+    });
+
+    loadList();
+})();
+</script>
+
+
+<!-- OEE_TOOL_MASTER_MODAL_SCRIPT_V128 -->
+<script>
+(function () {
+    const modal      = document.getElementById("tooluid-add-modal-v128");
+    const addOpen    = document.getElementById("tooluid-add-open-v128");
+    const addClose   = document.getElementById("tooluid-add-close-v128");
+    const addCancel  = document.getElementById("tooluid-add-cancel-v128");
+    const addCode    = document.getElementById("tooluid-add-code-v127");
+    const addName    = document.getElementById("tooluid-add-name-v127");
+    const addPrefix  = document.getElementById("tooluid-add-prefix-v127");
+    const addActive  = document.getElementById("tooluid-add-active-v127");
+    const addMessage = document.getElementById("tooluid-add-message-v127");
+
+    function openModal() {
+        if (addMessage) {
+            addMessage.hidden = true;
+            addMessage.textContent = "";
+            addMessage.classList.remove("error");
+        }
+        if (addCode)   addCode.value   = "";
+        if (addName)   addName.value   = "";
+        if (addPrefix) addPrefix.value = "";
+        if (addActive) addActive.checked = true;
+        if (modal) modal.hidden = false;
+        addCode?.focus();
+    }
+
+    function closeModal() {
+        if (modal) modal.hidden = true;
+    }
+
+    addOpen?.addEventListener("click", openModal);
+    addClose?.addEventListener("click", closeModal);
+    addCancel?.addEventListener("click", closeModal);
+
+    modal?.addEventListener("click", function (e) {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && modal && !modal.hidden) closeModal();
+    });
+
+    // Auto-close the modal after a successful add.
+    if (addMessage) {
+        const observer = new MutationObserver(function () {
+            if (
+                !addMessage.hidden
+                && !addMessage.classList.contains("error")
+                && String(addMessage.textContent || "").trim() === "Tool Item added."
+            ) {
+                setTimeout(closeModal, 400);
+            }
+        });
+        observer.observe(addMessage, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+            attributes: true,
+        });
+    }
+})();
+</script>
+
+{% endblock %}

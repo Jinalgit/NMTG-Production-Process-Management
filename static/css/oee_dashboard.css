@@ -1,0 +1,73 @@
+/* ?? OEE Dashboard ? Analytics Visual System ??????????????? */
+
+
+.oee-secondary-kpi-grid {
+  margin-bottom: 20px;
+}
+
+
+.oee-table-wrap {
+  width: 100%;
+  max-height: 330px;
+  overflow: auto;
+}
+
+
+#oee-shift-summary td:not(:first-child),
+#oee-shift-summary th:not(:first-child) {
+  text-align: right;
+}
+
+
+#oee-shift-summary td:first-child {
+  font-weight: 600;
+  color: var(--text);
+}
+
+
+.oee-negative {
+  color: #dc2626 !important;
+}
+
+
+.oee-positive {
+  color: #16a34a !important;
+}
+
+
+.oee-period-single-day {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+
+@media (max-width: 900px) {
+
+  .oee-table-wrap {
+    max-height: none;
+  }
+
+}
+
+
+
+/* OEE_REMAINING_CHARTS_V1 */
+
+.oee-loss-chart-wrap {
+  position: relative;
+  height: 760px;
+}
+
+.oee-machine-chart-row {
+  align-items: stretch;
+}
+
+.oee-machine-chart-row .chart-card {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .oee-loss-chart-wrap {
+    height: 900px;
+  }
+}

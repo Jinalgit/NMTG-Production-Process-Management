@@ -8,9 +8,9 @@
 <div class="main">
   <div class="page-header">
     <h1>Traceability</h1>
-    <p>
+    <!-- <p>
       Enter Job Card number to load all details and record quality inspection
-    </p>
+    </p> -->
   </div>
 
   <div class="search-card">
@@ -30,7 +30,7 @@
       </button>
     </div>
   </div>
-
+  <div id="operator-view"></div>
   <div class="placeholder" id="placeholder">
     <div class="icon">
       <i
@@ -48,31 +48,33 @@
     <div id="items-container"></div>
     <div class="submit-bar">
       <div class="supervisor-bottom">
-        <label class="sup-label"
-          ><i class="fa fa-user" aria-hidden="true"></i> Supervisor&nbsp;<span
+        <label class="sup-label">
+          <i class="fa fa-user" aria-hidden="true"></i> Supervisor&nbsp;<span
             style="color: #ef4444"
             >*</span
-          ></label
-        >
-        <select
-          id="bottom-supervisor"
-          class="sup-select-bottom native-supervisor-select"
-          tabindex="-1"
-          aria-hidden="true"
-          required
-        >
-          <option value="">-- Select Supervisor --</option>
-        </select>
-        <div class="supervisor-picker" id="supervisor-picker">
-          <button
-            class="supervisor-picker-btn"
-            id="supervisor-picker-btn"
-            type="button"
-            onclick="toggleSupervisorPicker()"
           >
-            -- Select Supervisor --
-          </button>
-          <div class="supervisor-picker-list" id="supervisor-picker-list"></div>
+        </label>
+
+        <input
+          type="hidden"
+          id="bottom-supervisor"
+          value="{{ session.get('full_name') or session.get('username') or '' }}"
+        />
+
+        <div
+          class="logged-user-display"
+          style="
+            min-width: 220px;
+            padding: 10px 14px;
+            border: 1px solid #d0d7e2;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #0f2a4d;
+            font-size: 14px;
+            font-weight: 700;
+          "
+        >
+          {{ session.get('full_name') or session.get('username') or '' }}
         </div>
       </div>
       <div
@@ -182,8 +184,60 @@
         </div>
       </div>
 
-      <div class="modal-note" id="modal-note">
-        Supervisor must be selected at the bottom before confirming.
+      <div id="rm-reason-section" style="display:none;margin-bottom:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
+        <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">
+          <i class="fa fa-cube" aria-hidden="true"></i> Raw Material Status
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" id="rm-btn-testing" onclick="selectRmReason('testing')" style="flex:1;padding:12px;border:2px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
+            <i class="fa fa-flask"></i> Testing
+          </button>
+          <button type="button" id="rm-btn-shortage" onclick="selectRmReason('shortage')" style="flex:1;padding:12px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
+            <i class="fa fa-exclamation-triangle"></i> Shortage
+          </button>
+        </div>
+        <input type="hidden" id="rm-hold-reason-value" value="" />
+      </div>
+      <div class="modal-note" id="modal-note"></div>
+      <div
+        id="stage-remark-row"
+        style="
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid var(--border);
+        "
+      >
+        <label
+          style="
+            font-size: 11px;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 5px;
+          "
+        >
+          Stage Change Remark
+          <span style="color: var(--muted); font-weight: 500">(Optional)</span>
+        </label>
+
+        <textarea
+          id="modal-stage-remark"
+          placeholder="Enter remark for this stage change..."
+          style="
+            width: 100%;
+            min-height: 70px;
+            resize: vertical;
+            padding: 9px 12px;
+            border: 1px solid #d0d7e2;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+            outline: none;
+            background: #ffffff;
+          "
+        ></textarea>
       </div>
 
       <!-- ── Reject / Rework section (UI disabled — backend unchanged) ──────
@@ -401,7 +455,197 @@
         style="background: #dc2626"
         onclick="proceedStageChange()"
       >
-        Yes, Advance Stage
+        Yes, Roll Back The Stage
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Child -C Gate Continue Anyway Modal -->
+<div id="child-c-gate-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 480px">
+    <div class="modal-title" style="color: #b45309">
+      <i class="fa fa-exclamation-triangle"></i>
+      Child Job Card Not Completed
+    </div>
+
+    <div class="modal-body">
+      <p
+        style="
+          font-size: 14px;
+          color: var(--text);
+          margin-bottom: 14px;
+          line-height: 1.6;
+        "
+      >
+        This Job Card is blocked because one or more required child
+        <strong>-C</strong> Job Cards are missing or incomplete.
+      </p>
+
+      <div
+        style="
+          background: #fff7ed;
+          border: 1px solid #fdba74;
+          border-radius: 8px;
+          padding: 12px 14px;
+          margin-bottom: 14px;
+        "
+      >
+        <div
+          style="
+            font-size: 11px;
+            font-weight: 700;
+            color: #9a3412;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+          "
+        >
+          Current Job Card
+        </div>
+
+        <div
+          id="child-c-gate-job-card"
+          style="font-size: 14px; font-weight: 700; color: #7c2d12"
+        ></div>
+
+        <div
+          id="child-c-gate-item-name"
+          style="
+            font-size: 13px;
+            color: #9a3412;
+            margin-top: 5px;
+          "
+        ></div>
+      </div>
+
+      <div
+        id="child-c-gate-block-reason"
+        style="
+          background: #fef2f2;
+          border: 1px solid #fca5a5;
+          border-radius: 8px;
+          padding: 12px 14px;
+          font-size: 13px;
+          color: #b91c1c;
+          line-height: 1.5;
+          margin-bottom: 14px;
+        "
+      ></div>
+
+      <label
+        style="
+          display: block;
+          font-size: 12px;
+          font-weight: 700;
+          color: #374151;
+          margin-bottom: 5px;
+        "
+      >
+        Override Remark
+      </label>
+
+      <textarea
+        id="child-c-gate-override-reason"
+        placeholder="Enter reason for allowing this Job Card to continue..."
+        style="
+          width: 100%;
+          min-height: 75px;
+          resize: vertical;
+          padding: 9px 12px;
+          border: 1px solid #d0d7e2;
+          border-radius: 6px;
+          font-size: 13px;
+          font-family: 'IBM Plex Sans', sans-serif;
+        "
+      >Approved to continue without completion of the required child -C Job Card.</textarea>
+
+      <div
+        style="
+          margin-top: 12px;
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          border-radius: 6px;
+          padding: 10px 12px;
+          font-size: 12px;
+          color: #92400e;
+        "
+      >
+        <i class="fa fa-info-circle"></i>
+        This approval applies only to this Job Card item and will be
+        recorded with the current user and date/time.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button
+        type="button"
+        class="btn-modal-cancel"
+        onclick="closeChildCGateModal()"
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="btn-modal-confirm"
+        id="child-c-gate-continue-btn"
+        style="background: #d97706"
+        onclick="confirmChildCGateOverride()"
+      >
+        Continue Anyway
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Process Confirmation Modal -->
+<div id="remove-process-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 400px">
+    <div class="modal-title" style="color: #dc2626">
+      <i class="fa fa-trash"></i> Remove Process
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 14px; color: var(--text); margin-bottom: 16px">
+        Are you sure you want to remove this process from the timeline?
+      </p>
+      <div
+        style="
+          background: #fef2f2;
+          border: 1px solid #fca5a5;
+          border-radius: 6px;
+          padding: 10px 14px;
+          margin-bottom: 12px;
+        "
+      >
+        <span
+          id="remove-process-name"
+          style="font-size: 14px; font-weight: 700; color: #dc2626"
+        ></span>
+      </div>
+      <div
+        style="
+          background: #fff7ed;
+          border: 1px solid #fed7aa;
+          border-radius: 6px;
+          padding: 10px 14px;
+          font-size: 12px;
+          color: #92400e;
+        "
+      >
+        <i class="fa fa-exclamation-triangle"></i> This action
+        <strong>cannot be undone</strong>.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeRemoveProcessModal()">
+        Cancel
+      </button>
+      <button
+        class="btn-modal-confirm"
+        id="remove-process-confirm-btn"
+        style="background: #dc2626"
+        onclick="confirmRemoveProcess()"
+      >
+        <i class="fa fa-trash"></i> Remove
       </button>
     </div>
   </div>

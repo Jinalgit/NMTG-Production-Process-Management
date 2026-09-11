@@ -1,0 +1,1923 @@
+﻿/* NMTG JMS - ERPNext style sidebar */
+
+:root {
+    --erp-sidebar-width: 250px;
+    --erp-sidebar-collapsed-width: 64px;
+}
+
+.main-sidebar {
+    width: var(--erp-sidebar-width) !important;
+    background: #f8f8f8 !important;
+    border-right: 1px solid #e3e5e8 !important;
+    box-shadow: none !important;
+    transition: width 0.18s ease;
+}
+
+.erp-sidebar-top {
+    min-height: 64px !important;
+    padding: 11px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px;
+    background: #f8f8f8 !important;
+    border-bottom: 0 !important;
+}
+
+.erp-app-brand {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #33383d;
+    text-decoration: none;
+}
+
+.erp-app-icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: #0288f7;
+    color: #fff;
+    font-size: 14px;
+}
+
+.erp-app-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.erp-app-copy strong {
+    color: #30353a;
+    font-size: 14px;
+    line-height: 1.3;
+    font-weight: 500;
+}
+
+.erp-app-copy small {
+    color: #6f767d;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 400;
+}
+
+.erp-app-chevron {
+    flex: 0 0 auto;
+    color: #565d64;
+    font-size: 13px;
+}
+
+.sidebar-links {
+    padding: 5px 9px !important;
+}
+
+.sidebar-link,
+.erp-sidebar-tool,
+.erp-sidebar-collapse,
+.sidebar-logout {
+    width: 100%;
+    min-height: 36px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 1px 0 !important;
+    padding: 7px 9px !important;
+    border: 0 !important;
+    border-radius: 7px !important;
+    background: transparent;
+    color: #444a50 !important;
+    font-family: "IBM Plex Sans", sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sidebar-link:hover,
+.erp-sidebar-tool:hover,
+.erp-sidebar-collapse:hover,
+.sidebar-logout:hover {
+    background: #ededed !important;
+}
+
+.sidebar-link.active {
+    background: #ffffff !important;
+    color: #22272c !important;
+    border: 0 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10) !important;
+    font-weight: 500 !important;
+}
+
+.sidebar-icon {
+    width: 20px;
+    flex: 0 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #686f76;
+    font-size: 14px;
+}
+
+.erp-sidebar-utilities {
+    margin-bottom: 6px;
+}
+
+.erp-shortcut {
+    margin-left: auto;
+    color: #9b9fa4;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.erp-notification-count {
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #ffe8e8;
+    color: #c92a2a;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.erp-sidebar-divider {
+    height: 1px;
+    margin: 7px 7px 8px;
+    background: #e4e6e8;
+}
+
+.erp-sidebar-collapse {
+    width: calc(100% - 18px);
+    flex: 0 0 auto;
+    margin: 5px 9px 3px !important;
+}
+
+.sidebar-user {
+    border-top: 1px solid #e4e6e8 !important;
+    padding: 8px 9px 10px !important;
+}
+
+.sidebar-user-info {
+    padding: 7px 9px !important;
+    background: transparent !important;
+    border-radius: 7px !important;
+}
+
+.sidebar-user-name {
+    color: #373d43 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.sidebar-user-role {
+    color: #858b91 !important;
+    font-size: 11px !important;
+    font-weight: 400 !important;
+}
+
+@media (min-width: 769px) {
+
+    body.sidebar-collapsed {
+        padding-left: var(--erp-sidebar-collapsed-width) !important;
+    }
+
+    body.sidebar-collapsed .main-sidebar {
+        width: var(--erp-sidebar-collapsed-width) !important;
+    }
+
+    body.sidebar-collapsed .erp-app-copy,
+    body.sidebar-collapsed .erp-app-chevron,
+    body.sidebar-collapsed .sidebar-text,
+    body.sidebar-collapsed .erp-shortcut,
+    body.sidebar-collapsed .erp-notification-count,
+    body.sidebar-collapsed .sidebar-user-info {
+        display: none !important;
+    }
+
+    body.sidebar-collapsed .erp-sidebar-top {
+        justify-content: center;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    body.sidebar-collapsed .erp-app-brand {
+        flex: 0 0 auto;
+    }
+
+    body.sidebar-collapsed .sidebar-links {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    body.sidebar-collapsed .sidebar-link,
+    body.sidebar-collapsed .erp-sidebar-tool,
+    body.sidebar-collapsed .erp-sidebar-collapse,
+    body.sidebar-collapsed .sidebar-logout {
+        width: 46px !important;
+        justify-content: center;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.sidebar-collapsed .erp-sidebar-collapse {
+        margin-left: 9px !important;
+        margin-right: 9px !important;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .erp-sidebar-collapse {
+        display: none !important;
+    }
+}
+
+/* =========================================================
+   ERP SIDEBAR VISUAL TUNING V2
+========================================================= */
+
+
+/* Header */
+
+.erp-app-chevron {
+    display: none !important;
+}
+
+.erp-app-copy strong {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+
+.erp-app-copy small {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+
+/* Navigation text */
+
+.sidebar-link,
+.erp-sidebar-tool,
+.erp-sidebar-collapse,
+.sidebar-logout {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+
+/* Icons */
+
+.sidebar-icon {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #59616a !important;
+}
+
+.sidebar-icon i {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+}
+
+
+/* Support actual SVG icons also */
+
+.sidebar-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke-width: 2.2 !important;
+}
+
+
+/* Active page */
+
+.sidebar-link.active {
+    font-weight: 600 !important;
+}
+
+
+/* Search shortcut stays secondary */
+
+.erp-shortcut {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+}
+
+
+/* User information */
+
+.sidebar-user-name {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
+.sidebar-user-role {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+
+/* =========================================================
+   ERP SIDEBAR UX FIX V4
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   ICONS - REVERT TO ORIGINAL LIGHTER APPEARANCE
+   Text sizing / weight intentionally unchanged.
+--------------------------------------------------------- */
+
+.sidebar-icon {
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    color: #626970 !important;
+}
+
+.sidebar-icon i {
+    font-size: 14px !important;
+    font-weight: normal !important;
+    color: inherit !important;
+}
+
+.sidebar-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+    stroke-width: 1.5 !important;
+}
+
+
+/* ---------------------------------------------------------
+   HEADER - NO DROPDOWN CONTROL
+--------------------------------------------------------- */
+
+.erp-app-chevron,
+.erp-app-menu-btn {
+    display: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   SIDEBAR SCROLLING
+   Scrolling still works, visual bars are hidden.
+--------------------------------------------------------- */
+
+.main-sidebar {
+    overflow: hidden !important;
+}
+
+.sidebar-links {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sidebar-links::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+
+/* ---------------------------------------------------------
+   PRE-PAINT COLLAPSED STATE
+   Prevent expanded -> collapsed flash on reload.
+--------------------------------------------------------- */
+
+@media (min-width: 769px) {
+
+    html.sidebar-collapsed-preload body.has-sidebar {
+        padding-left: var(--erp-sidebar-collapsed-width) !important;
+    }
+
+    html.sidebar-collapsed-preload .main-sidebar {
+        width: var(--erp-sidebar-collapsed-width) !important;
+    }
+
+    html.sidebar-collapsed-preload .erp-app-copy,
+    html.sidebar-collapsed-preload .erp-app-chevron,
+    html.sidebar-collapsed-preload .erp-app-menu-btn,
+    html.sidebar-collapsed-preload .sidebar-text,
+    html.sidebar-collapsed-preload .erp-shortcut,
+    html.sidebar-collapsed-preload .erp-notification-count,
+    html.sidebar-collapsed-preload .sidebar-user-info {
+        display: none !important;
+    }
+
+    html.sidebar-collapsed-preload .erp-sidebar-top {
+        justify-content: center !important;
+
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    html.sidebar-collapsed-preload .erp-app-brand {
+        flex: 0 0 auto !important;
+    }
+
+    html.sidebar-collapsed-preload .sidebar-links {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    html.sidebar-collapsed-preload .sidebar-link,
+    html.sidebar-collapsed-preload .erp-sidebar-tool,
+    html.sidebar-collapsed-preload .erp-sidebar-collapse,
+    html.sidebar-collapsed-preload .sidebar-logout {
+        width: 46px !important;
+
+        justify-content: center !important;
+
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html.sidebar-collapsed-preload .erp-sidebar-collapse {
+        margin-left: 9px !important;
+        margin-right: 9px !important;
+    }
+}
+
+
+/* =========================================================
+   COLLAPSED DATE FILTER FLYOUT V1
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   NORMAL / EXPANDED SIDEBAR
+
+   Existing user experience remains unchanged.
+--------------------------------------------------------- */
+
+.sidebar-date-filter {
+    position: relative;
+    flex: 0 0 auto;
+
+    box-sizing: border-box;
+}
+
+
+/* Calendar button is only for collapsed mode */
+
+.erp-date-filter-toggle {
+    display: none;
+
+    position: relative;
+
+    border: 0;
+    background: transparent;
+
+    font-family: "IBM Plex Sans", sans-serif;
+
+    cursor: pointer;
+}
+
+
+/* Existing filter remains normal when expanded */
+
+.erp-date-filter-popover {
+    display: block;
+}
+
+
+/* ---------------------------------------------------------
+   ACTIVE FILTER INDICATOR
+--------------------------------------------------------- */
+
+.erp-date-active-dot {
+    position: absolute;
+
+    top: 7px;
+    right: 7px;
+
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #0288f7;
+
+    box-shadow: 0 0 0 2px #f8f8f8;
+}
+
+
+.erp-date-active-dot[hidden] {
+    display: none !important;
+}
+
+
+/* ---------------------------------------------------------
+   COLLAPSED SIDEBAR
+--------------------------------------------------------- */
+
+@media (min-width: 769px) {
+
+    /*
+     * Allow the date flyout to extend outside the
+     * 64px collapsed sidebar.
+     *
+     * sidebar-links still controls its own scrolling.
+     */
+    .main-sidebar {
+        overflow: visible !important;
+    }
+
+
+    body.sidebar-collapsed .sidebar-date-filter {
+        width: 64px;
+
+        margin: 3px 0 !important;
+
+        padding: 5px 9px !important;
+
+        border-top: 1px solid #e4e6e8;
+    }
+
+
+    /*
+     * Only the compact calendar button is visible
+     * when the sidebar is collapsed.
+     */
+    body.sidebar-collapsed .erp-date-filter-toggle {
+        width: 46px;
+        height: 38px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        margin: 0;
+
+        padding: 0;
+
+        border-radius: 7px;
+
+        color: #444a50;
+    }
+
+
+    body.sidebar-collapsed .erp-date-filter-toggle:hover {
+        background: #ededed;
+    }
+
+
+    body.sidebar-collapsed .erp-date-filter-toggle .sidebar-icon {
+        width: 20px !important;
+        flex: 0 0 20px;
+
+        font-size: 14px !important;
+        font-weight: 400 !important;
+    }
+
+
+    /*
+     * Hide the normal filter until the calendar icon
+     * is clicked.
+     */
+    body.sidebar-collapsed .erp-date-filter-popover {
+        display: none;
+
+        position: absolute;
+
+        left: 58px;
+        top: 50%;
+
+        width: 260px;
+
+        transform: translateY(-50%);
+
+        box-sizing: border-box;
+
+        padding: 14px;
+
+        background: #ffffff;
+
+        border: 1px solid #dfe3e7;
+        border-radius: 8px;
+
+        box-shadow:
+            0 8px 24px rgba(0, 0, 0, 0.14);
+
+        z-index: 3000;
+    }
+
+
+    /*
+     * Clicking calendar opens the filter flyout.
+     */
+    body.sidebar-collapsed
+    .sidebar-date-filter.date-flyout-open
+    .erp-date-filter-popover {
+        display: block;
+    }
+
+
+    body.sidebar-collapsed
+    .erp-date-filter-popover
+    .sidebar-date-filter-label {
+        display: block !important;
+
+        margin: 0 0 9px !important;
+
+        color: #515960;
+
+        font-size: 12px !important;
+        font-weight: 600 !important;
+
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+
+
+    body.sidebar-collapsed
+    .erp-date-filter-popover
+    .sidebar-date-filter-row {
+        display: flex !important;
+
+        align-items: center;
+
+        gap: 7px;
+    }
+
+
+    body.sidebar-collapsed
+    .erp-date-filter-popover
+    .sidebar-date-input {
+        height: 36px;
+
+        flex: 1;
+
+        padding: 6px 8px;
+
+        background: #ffffff;
+
+        border: 1px solid #d6dade;
+        border-radius: 5px;
+
+        color: #283038;
+
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 13px;
+
+        outline: none;
+    }
+
+
+    body.sidebar-collapsed
+    .erp-date-filter-popover
+    .sidebar-date-input:focus {
+        border-color: #8d99a5;
+
+        outline: 2px solid rgba(2, 136, 247, 0.10);
+    }
+
+
+    body.sidebar-collapsed
+    .erp-date-filter-popover
+    .sidebar-date-clear {
+        width: 36px;
+        height: 36px;
+
+        flex: 0 0 36px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        padding: 0;
+
+        background: #ffffff;
+
+        border: 1px solid #d6dade;
+        border-radius: 5px;
+
+        color: #6d747b;
+
+        font-size: 17px;
+        font-weight: 500;
+
+        cursor: pointer;
+    }
+
+
+    body.sidebar-collapsed
+    .erp-date-filter-popover
+    .sidebar-date-clear:hover {
+        background: #fff2f2;
+
+        border-color: #e2b7b7;
+
+        color: #c92a2a;
+    }
+
+}
+
+
+/* =========================================================
+   ERP COMMAND PALETTE V1
+========================================================= */
+
+.erp-command-overlay[hidden] {
+    display: none !important;
+}
+
+
+.erp-command-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+
+    padding-top: 8vh;
+
+    background: rgba(0, 0, 0, 0.42);
+
+    z-index: 10000;
+}
+
+
+.erp-command-palette {
+    width: min(560px, calc(100vw - 32px));
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #dfe2e5;
+    border-radius: 12px;
+
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.22);
+
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+
+/* ---------------------------------------------------------
+   Search input
+--------------------------------------------------------- */
+
+.erp-command-input-row {
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 14px;
+
+    border-bottom: 1px solid #e7e9eb;
+
+    background: #ffffff;
+}
+
+
+.erp-command-search-icon {
+    width: 22px;
+
+    flex: 0 0 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 6px;
+
+    color: #858b91;
+
+    font-size: 14px;
+}
+
+
+.erp-command-input {
+    width: 100%;
+
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+
+    background: transparent !important;
+
+    color: #30363c !important;
+
+    font-family: "IBM Plex Sans", sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+
+.erp-command-input::placeholder {
+    color: #959ba1;
+    font-weight: 400;
+}
+
+
+/* ---------------------------------------------------------
+   Results
+--------------------------------------------------------- */
+
+.erp-command-list {
+    max-height: 290px;
+    min-height: 205px;
+
+    overflow-y: auto;
+
+    padding: 8px 8px;
+
+    background: #ffffff;
+
+    scrollbar-width: thin;
+    scrollbar-color: #a9adb1 transparent;
+}
+
+
+.erp-command-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+
+.erp-command-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.erp-command-list::-webkit-scrollbar-thumb {
+    background: #a9adb1;
+    border-radius: 6px;
+}
+
+
+.erp-command-item {
+    width: 100%;
+    min-height: 38px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 8px 10px;
+
+    border: 0;
+    border-radius: 6px;
+
+    background: transparent;
+
+    color: #353a40;
+
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 13px;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+
+.erp-command-item:hover,
+.erp-command-item.is-selected {
+    background: #f0f1f2;
+}
+
+
+.erp-command-item-name {
+    color: #343a40;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.erp-command-item-type {
+    margin-left: 5px;
+
+    color: #858b91;
+
+    font-size: 13px;
+    font-weight: 400;
+}
+
+
+.erp-command-empty {
+    min-height: 190px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #8a9096;
+
+    font-size: 13px;
+    font-weight: 400;
+}
+
+
+/* ---------------------------------------------------------
+   Footer keyboard hints
+--------------------------------------------------------- */
+
+.erp-command-footer {
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 7px 12px;
+
+    border-top: 1px solid #e7e9eb;
+
+    background: #ffffff;
+}
+
+
+.erp-command-footer > span {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 4px;
+}
+
+
+.erp-command-footer kbd {
+    min-width: 20px;
+    height: 20px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 5px;
+
+    background: #f1f2f3;
+
+    border: 0;
+    border-radius: 4px;
+
+    color: #747b82;
+
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+
+    box-shadow: none;
+}
+
+
+.erp-command-footer small {
+    margin-left: 2px;
+
+    color: #969ca2;
+
+    font-size: 10px;
+    font-weight: 400;
+}
+
+
+@media (max-width: 620px) {
+
+    .erp-command-overlay {
+        padding-top: 18px;
+    }
+
+    .erp-command-palette {
+        width: calc(100vw - 24px);
+    }
+
+    .erp-command-list {
+        max-height: 55vh;
+    }
+
+}
+
+
+/* =========================================================
+   ERP DYNAMIC PAGE HEADER V1
+========================================================= */
+
+.erp-current-page {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+
+.erp-current-page-icon {
+    width: 34px !important;
+    height: 34px !important;
+
+    flex: 0 0 34px !important;
+
+    border-radius: 8px;
+
+    background: #0288f7;
+
+    color: #ffffff !important;
+}
+
+
+.erp-current-page-icon i {
+    color: #ffffff !important;
+
+    font-size: 14px !important;
+    font-weight: normal !important;
+}
+
+
+.erp-current-page-copy {
+    min-width: 0;
+
+    display: block;
+}
+
+
+.erp-current-page-copy strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #30353a;
+
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+
+    line-height: 1.3;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* Collapsed sidebar = icon only */
+
+@media (min-width: 769px) {
+
+    body.sidebar-collapsed
+    .erp-current-page {
+        justify-content: center;
+    }
+
+
+    body.sidebar-collapsed
+    .erp-current-page-copy {
+        display: none !important;
+    }
+
+
+    html.sidebar-collapsed-preload
+    .erp-current-page {
+        justify-content: center;
+    }
+
+
+    html.sidebar-collapsed-preload
+    .erp-current-page-copy {
+        display: none !important;
+    }
+
+}
+
+
+/* =========================================================
+   ERP HEADER MENU AND DARK THEME V1
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   CLICKABLE CURRENT-PAGE HEADER
+--------------------------------------------------------- */
+
+.erp-current-page {
+    cursor: pointer;
+
+    padding: 5px 6px;
+
+    border-radius: 8px;
+
+    transition: background 0.12s ease;
+}
+
+.erp-current-page:hover {
+    background: #eeeeee;
+}
+
+
+/* ---------------------------------------------------------
+   HEADER DROPDOWN
+--------------------------------------------------------- */
+
+.erp-header-menu[hidden] {
+    display: none !important;
+}
+
+.erp-header-menu {
+    position: absolute;
+
+    top: 58px;
+    left: 8px;
+
+    width: 232px;
+
+    box-sizing: border-box;
+
+    padding: 6px;
+
+    background: #ffffff;
+
+    border: 1px solid #dfe2e5;
+    border-radius: 9px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.16);
+
+    z-index: 6000;
+
+    font-family: "IBM Plex Sans", sans-serif;
+}
+
+
+.erp-header-menu-item {
+    width: 100%;
+    min-height: 38px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 10px;
+
+    border: 0;
+    border-radius: 6px;
+
+    background: transparent;
+
+    color: #42484f;
+
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+
+    text-align: left;
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+
+.erp-header-menu-item:hover {
+    background: #f0f1f2;
+}
+
+
+.erp-header-menu-icon {
+    width: 20px;
+
+    flex: 0 0 20px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #697078;
+
+    font-size: 14px;
+    font-weight: 400;
+}
+
+
+.erp-header-menu-divider {
+    height: 1px;
+
+    margin: 5px 6px;
+
+    background: #e6e8ea;
+}
+
+
+.erp-header-menu-logout {
+    color: #444a50;
+}
+
+
+/* Collapsed sidebar - dropdown opens to the right */
+
+@media (min-width: 769px) {
+
+    body.sidebar-collapsed .erp-header-menu {
+        top: 8px;
+        left: 57px;
+    }
+
+}
+
+
+/* =========================================================
+   DARK THEME
+========================================================= */
+
+html.jms-dark-theme {
+    color-scheme: dark;
+
+    --bg: #11161c;
+    --surface: #1a2027;
+    --surface2: #202731;
+    --border: #35404b;
+    --text: #e7ecf1;
+    --muted: #a7b0b9;
+}
+
+
+/* Overall page */
+
+html.jms-dark-theme body {
+    background: #11161c !important;
+    color: #e7ecf1 !important;
+}
+
+
+/* Sidebar */
+
+html.jms-dark-theme body .main-sidebar {
+    background: #171d23 !important;
+
+    border-color: #303943 !important;
+}
+
+
+html.jms-dark-theme body .erp-sidebar-top {
+    background: #171d23 !important;
+}
+
+
+html.jms-dark-theme body .erp-current-page:hover,
+html.jms-dark-theme body .sidebar-link:hover,
+html.jms-dark-theme body .erp-sidebar-tool:hover,
+html.jms-dark-theme body .erp-sidebar-collapse:hover {
+    background: #232b33 !important;
+}
+
+
+html.jms-dark-theme body .sidebar-link,
+html.jms-dark-theme body .erp-sidebar-tool,
+html.jms-dark-theme body .erp-sidebar-collapse {
+    color: #d6dce2 !important;
+}
+
+
+html.jms-dark-theme body .sidebar-link.active {
+    background: #252d36 !important;
+
+    color: #ffffff !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .sidebar-icon {
+    color: #aeb6bf !important;
+}
+
+
+html.jms-dark-theme body .erp-current-page-copy strong {
+    color: #f0f3f6 !important;
+}
+
+
+html.jms-dark-theme body .erp-sidebar-divider,
+html.jms-dark-theme body .sidebar-user {
+    border-color: #303943 !important;
+}
+
+
+/* Dropdown */
+
+html.jms-dark-theme body .erp-header-menu {
+    background: #20262d !important;
+
+    border-color: #39434d !important;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.40) !important;
+}
+
+
+html.jms-dark-theme body .erp-header-menu-item {
+    color: #e5e9ed !important;
+}
+
+
+html.jms-dark-theme body .erp-header-menu-item:hover {
+    background: #2b333c !important;
+}
+
+
+html.jms-dark-theme body .erp-header-menu-icon {
+    color: #b7bec6 !important;
+}
+
+
+html.jms-dark-theme body .erp-header-menu-divider {
+    background: #39424c !important;
+}
+
+
+/* Main cards / common surfaces */
+
+html.jms-dark-theme body .main > .card,
+html.jms-dark-theme body .card,
+html.jms-dark-theme body .auth-modal-box {
+    background: #1a2027 !important;
+
+    border-color: #343e48 !important;
+
+    color: #e7ecf1 !important;
+}
+
+
+html.jms-dark-theme body .page-header,
+html.jms-dark-theme body .oee-page-title {
+    background: #1a2027 !important;
+
+    border-color: #35404b !important;
+
+    color: #edf1f5 !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .page-header h1,
+html.jms-dark-theme body .page-header h2,
+html.jms-dark-theme body .oee-page-title h1,
+html.jms-dark-theme body .card-title {
+    color: #edf1f5 !important;
+}
+
+
+/* Forms */
+
+html.jms-dark-theme body input:not([type="checkbox"]):not([type="radio"]),
+html.jms-dark-theme body select,
+html.jms-dark-theme body textarea {
+    background: #161c22 !important;
+
+    border-color: #3a444e !important;
+
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body input::placeholder,
+html.jms-dark-theme body textarea::placeholder {
+    color: #7f8993 !important;
+}
+
+
+html.jms-dark-theme body label {
+    color: #d4dae0 !important;
+}
+
+
+/* PPC prefix controls */
+
+html.jms-dark-theme body .prefix-input-wrap,
+html.jms-dark-theme body .ppc-order-grid .prefix-input-wrap {
+    background: #161c22 !important;
+
+    border-color: #3a444e !important;
+}
+
+
+html.jms-dark-theme body .prefix-input-wrap .prefix,
+html.jms-dark-theme body .ppc-order-grid .prefix-input-wrap .prefix {
+    background: #232a31 !important;
+
+    border-color: #3a444e !important;
+
+    color: #d6dce2 !important;
+}
+
+
+/* Tables / containers */
+
+html.jms-dark-theme body .table-container,
+html.jms-dark-theme body .child-table-wrap {
+    background: #1a2027 !important;
+
+    border-color: #35404b !important;
+}
+
+
+html.jms-dark-theme body table td {
+    border-color: #38424c !important;
+}
+
+
+html.jms-dark-theme body table th {
+    border-color: #43505c !important;
+}
+
+
+/* Command palette */
+
+html.jms-dark-theme body .erp-command-palette,
+html.jms-dark-theme body .erp-command-input-row,
+html.jms-dark-theme body .erp-command-list,
+html.jms-dark-theme body .erp-command-footer {
+    background: #1e252c !important;
+
+    border-color: #39434d !important;
+}
+
+
+html.jms-dark-theme body .erp-command-input {
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item {
+    color: #e0e5ea !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item-name {
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item:hover,
+html.jms-dark-theme body .erp-command-item.is-selected {
+    background: #2b333c !important;
+}
+
+
+/* Collapsed date flyout */
+
+html.jms-dark-theme body .erp-date-filter-popover {
+    background: #20262d !important;
+
+    border-color: #39434d !important;
+}
+
+
+/* Modal overlay content */
+
+html.jms-dark-theme body .auth-modal-title,
+html.jms-dark-theme body .auth-modal-text {
+    color: #e5e9ed !important;
+}
+
+
+/* =========================================================
+   COMPLETE DARK THEME FIX V2
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   PAGE BACKGROUND / MAIN CONTENT
+--------------------------------------------------------- */
+
+html.jms-dark-theme body,
+html.jms-dark-theme body .main {
+    background: #11161c !important;
+    color: #e5e9ed !important;
+}
+
+
+/* ---------------------------------------------------------
+   STANDARD TEXT
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .main h1,
+html.jms-dark-theme body .main h2,
+html.jms-dark-theme body .main h3,
+html.jms-dark-theme body .main h4,
+html.jms-dark-theme body .main h5,
+html.jms-dark-theme body .main h6,
+html.jms-dark-theme body .main .card-title,
+html.jms-dark-theme body .main .section-title {
+    color: #f0f3f6 !important;
+}
+
+
+html.jms-dark-theme body .main p,
+html.jms-dark-theme body .main label,
+html.jms-dark-theme body .main small,
+html.jms-dark-theme body .main .form-group label,
+html.jms-dark-theme body .main .ppc-order-grid .form-group label,
+html.jms-dark-theme body .main .ppc-bom-card .form-group label {
+    color: #d3d9df !important;
+}
+
+
+/* Secondary / muted text */
+
+html.jms-dark-theme body .ppc-breadcrumb,
+html.jms-dark-theme body .ppc-page-title-row p,
+html.jms-dark-theme body .ppc-bom-intro,
+html.jms-dark-theme body .help-text,
+html.jms-dark-theme body .muted,
+html.jms-dark-theme body .text-muted {
+    color: #9da6af !important;
+}
+
+
+/* ---------------------------------------------------------
+   CARDS / PANELS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .card,
+html.jms-dark-theme body .main > .card,
+html.jms-dark-theme body .ppc-order-card,
+html.jms-dark-theme body .ppc-bom-card,
+html.jms-dark-theme body .ppc-child-section {
+    background: #1a2027 !important;
+    border-color: #343e48 !important;
+    color: #e5e9ed !important;
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .main > .card .card-title {
+    border-bottom-color: #343e48 !important;
+}
+
+
+/* ---------------------------------------------------------
+   FORM INPUTS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body input:not([type="checkbox"]):not([type="radio"]),
+html.jms-dark-theme body select,
+html.jms-dark-theme body textarea {
+    background: #151b21 !important;
+    border-color: #3b4650 !important;
+    color: #edf1f5 !important;
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body input:hover,
+html.jms-dark-theme body select:hover,
+html.jms-dark-theme body textarea:hover {
+    border-color: #525e69 !important;
+}
+
+
+html.jms-dark-theme body input:focus,
+html.jms-dark-theme body select:focus,
+html.jms-dark-theme body textarea:focus {
+    border-color: #71808e !important;
+    outline-color: rgba(2, 136, 247, 0.22) !important;
+}
+
+
+html.jms-dark-theme body input::placeholder,
+html.jms-dark-theme body textarea::placeholder {
+    color: #747e88 !important;
+}
+
+
+/* Date calendar icon */
+
+html.jms-dark-theme body input[type="date"] {
+    color-scheme: dark;
+}
+
+
+/* ---------------------------------------------------------
+   PPC PREFIX INPUTS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .prefix-input-wrap,
+html.jms-dark-theme body .ppc-order-grid .prefix-input-wrap {
+    background: #151b21 !important;
+    border-color: #3b4650 !important;
+}
+
+
+html.jms-dark-theme body .prefix-input-wrap .prefix,
+html.jms-dark-theme body .ppc-order-grid .prefix-input-wrap .prefix {
+    background: #242b32 !important;
+    border-color: #3b4650 !important;
+    color: #d8dee4 !important;
+}
+
+
+html.jms-dark-theme body .prefix-input-wrap input,
+html.jms-dark-theme body .ppc-order-grid .prefix-input-wrap input {
+    background: #151b21 !important;
+    color: #edf1f5 !important;
+}
+
+
+/* ---------------------------------------------------------
+   AUTOCOMPLETE / DROPDOWNS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .customer-ac-list,
+html.jms-dark-theme body .ac-list,
+html.jms-dark-theme body .autocomplete-list,
+html.jms-dark-theme body .dropdown-menu {
+    background: #20272e !important;
+    border-color: #3b4650 !important;
+    color: #e5e9ed !important;
+}
+
+
+html.jms-dark-theme body .customer-ac-list div,
+html.jms-dark-theme body .ac-list div,
+html.jms-dark-theme body .autocomplete-list div {
+    color: #e5e9ed !important;
+}
+
+
+html.jms-dark-theme body .customer-ac-list div:hover,
+html.jms-dark-theme body .ac-list div:hover,
+html.jms-dark-theme body .autocomplete-list div:hover {
+    background: #2b343d !important;
+}
+
+
+/* ---------------------------------------------------------
+   TABLES
+--------------------------------------------------------- */
+
+html.jms-dark-theme body table {
+    color: #e5e9ed !important;
+}
+
+
+html.jms-dark-theme body table thead,
+html.jms-dark-theme body table thead tr,
+html.jms-dark-theme body table th {
+    background: #222b34 !important;
+    color: #edf1f5 !important;
+    border-color: #3b4650 !important;
+}
+
+
+html.jms-dark-theme body table tbody,
+html.jms-dark-theme body table tbody tr {
+    border-color: #343e48 !important;
+}
+
+
+html.jms-dark-theme body table td {
+    color: #e2e7ec;
+    border-color: #343e48 !important;
+}
+
+
+/*
+ * Do not destroy intentional semantic row backgrounds
+ * such as urgent red rows.
+ */
+html.jms-dark-theme body table tbody tr:not([style]):not(.urgent-row):not(.danger-row) {
+    background: #1a2027;
+}
+
+
+html.jms-dark-theme body table tbody tr:not([style]):not(.urgent-row):not(.danger-row):hover {
+    background: #222a32;
+}
+
+
+/* PPC child table */
+
+html.jms-dark-theme body .ppc-bom-card .child-table thead tr,
+html.jms-dark-theme body .ppc-bom-card .child-table th {
+    background: #222b34 !important;
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body .ppc-bom-card .child-table td {
+    color: #dce2e8 !important;
+}
+
+
+html.jms-dark-theme body .ppc-bom-card .child-code-cell {
+    color: #64b5f6 !important;
+}
+
+
+html.jms-dark-theme body .ppc-bom-card .child-desc-cell {
+    color: #c5ccd3 !important;
+}
+
+
+/* ---------------------------------------------------------
+   TABS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .tab-btn,
+html.jms-dark-theme body .tab-button,
+html.jms-dark-theme body .tabs button {
+    color: #b8c0c8 !important;
+}
+
+
+html.jms-dark-theme body .tab-btn.active,
+html.jms-dark-theme body .tab-button.active,
+html.jms-dark-theme body .tabs button.active {
+    color: #65b5ff !important;
+}
+
+
+/* ---------------------------------------------------------
+   SECONDARY BUTTONS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .btn-secondary,
+html.jms-dark-theme body .ppc-secondary-btn,
+html.jms-dark-theme body button.secondary {
+    background: #222a32 !important;
+    border-color: #414c56 !important;
+    color: #dce2e8 !important;
+}
+
+
+html.jms-dark-theme body .btn-secondary:hover,
+html.jms-dark-theme body .ppc-secondary-btn:hover,
+html.jms-dark-theme body button.secondary:hover {
+    background: #2b343d !important;
+}
+
+
+/*
+ * Primary blue buttons intentionally remain blue.
+ */
+
+
+/* ---------------------------------------------------------
+   TOOLBARS / SEARCH BOXES
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .toolbar,
+html.jms-dark-theme body .table-toolbar,
+html.jms-dark-theme body .filter-bar,
+html.jms-dark-theme body .search-bar {
+    color: #dce2e8 !important;
+}
+
+
+/* ---------------------------------------------------------
+   MODALS
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .modal-content,
+html.jms-dark-theme body .modal-box,
+html.jms-dark-theme body .auth-modal-box,
+html.jms-dark-theme body .preview-modal-content {
+    background: #1e252c !important;
+    border-color: #3b4650 !important;
+    color: #e5e9ed !important;
+}
+
+
+html.jms-dark-theme body .modal-content h1,
+html.jms-dark-theme body .modal-content h2,
+html.jms-dark-theme body .modal-content h3,
+html.jms-dark-theme body .modal-box h1,
+html.jms-dark-theme body .modal-box h2,
+html.jms-dark-theme body .modal-box h3,
+html.jms-dark-theme body .preview-modal-content h3 {
+    color: #f0f3f6 !important;
+}
+
+
+html.jms-dark-theme body .modal-content p,
+html.jms-dark-theme body .modal-box p,
+html.jms-dark-theme body .preview-modal-content p {
+    color: #c8cfd6 !important;
+}
+
+
+/* ---------------------------------------------------------
+   DATA VIEW COMMON SURFACES
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .table-container {
+    background: #1a2027 !important;
+    border-color: #343e48 !important;
+}
+
+
+html.jms-dark-theme body #table-view,
+html.jms-dark-theme body #pr-view,
+html.jms-dark-theme body #ps-view {
+    color: #e5e9ed !important;
+}
+
+
+/* ---------------------------------------------------------
+   DATE FILTER FLYOUT
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .erp-date-filter-popover {
+    background: #20272e !important;
+    border-color: #3b4650 !important;
+}
+
+
+html.jms-dark-theme body
+.erp-date-filter-popover
+.sidebar-date-filter-label {
+    color: #dce2e8 !important;
+}
+
+
+/* ---------------------------------------------------------
+   COMMAND PALETTE
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .erp-command-palette,
+html.jms-dark-theme body .erp-command-input-row,
+html.jms-dark-theme body .erp-command-list,
+html.jms-dark-theme body .erp-command-footer {
+    background: #1e252c !important;
+    border-color: #39434d !important;
+}
+
+
+html.jms-dark-theme body .erp-command-input {
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body .erp-command-input::placeholder {
+    color: #818b95 !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item-name {
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item-type {
+    color: #9da6af !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item:hover,
+html.jms-dark-theme body .erp-command-item.is-selected {
+    background: #2b343d !important;
+}
+
+
+/* ---------------------------------------------------------
+   HEADER DROPDOWN
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .erp-header-menu {
+    background: #20272e !important;
+    border-color: #3b4650 !important;
+}
+
+
+html.jms-dark-theme body .erp-header-menu-item {
+    color: #e5e9ed !important;
+}
+
+
+html.jms-dark-theme body .erp-header-menu-item:hover {
+    background: #2b343d !important;
+}
+
+
+/* ---------------------------------------------------------
+   SIDEBAR USER TEXT
+--------------------------------------------------------- */
+
+html.jms-dark-theme body .sidebar-user-name {
+    color: #edf1f5 !important;
+}
+
+
+html.jms-dark-theme body .sidebar-user-role {
+    color: #9da6af !important;
+}
+

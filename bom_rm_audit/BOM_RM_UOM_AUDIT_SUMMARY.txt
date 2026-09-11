@@ -1,0 +1,30 @@
+==========================================================================================
+BOM RAW MATERIAL + UOM AUDIT - LOCAL
+==========================================================================================
+Excel file: C:\Users\IT system\Downloads\BOM_L2_L3_Updated (2).xlsx
+Sheet: FIRST SHEET ONLY
+
+Excel rows read: 35727
+Direct A -> I relationships extracted: 20809
+Unique expected raw-material mappings: 9267
+Audit rows: 9298
+Exact MATCH rows: 8138
+Issue rows: 1160
+
+ISSUE COUNTS
+------------------------------------------------------------------------------------------
+NORMAL_ALTERNATE_FLAG_MISMATCH           493
+UOM_MISMATCH                             393
+RAW_MATERIAL_ITEM_MISSING                138
+QUANTITY_MISMATCH                        99
+PARENT_ITEM_MISSING                      39
+EXTRA_DB_RAW_MATERIAL_LINK               31
+MAKE_BUY_MISMATCH                        8
+MISSING_DB_RAW_MATERIAL_LINK             3
+
+IMPORTANT:
+This was READ ONLY.
+NO database records were inserted, updated or deleted.
+
+Full report: D:\Het\demo2\bom_rm_audit\BOM_RM_UOM_AUDIT_ALL.csv
+Issues only: D:\Het\demo2\bom_rm_audit\BOM_RM_UOM_ISSUES_ONLY.csv

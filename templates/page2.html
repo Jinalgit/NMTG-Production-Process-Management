@@ -1,415 +1,1828 @@
 {% extends "base.html" %} {% set active_page = "page2" %} {% block title
 %}Process Master | NMTG{% endblock %} {% block extra_head %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/page2.css') }}?v={{ version }}"
-/>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/page2.css') }}?v={{ version }}" />
+  <!-- PM_ERP_LIST_DRAFT_V1 -->
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/page2_erp_v1.css') }}?v={{ version }}"
+  />
+  <script
+    defer
+    src="{{ url_for('static', filename='js/page2_erp_v1.js') }}?v={{ version }}"
+  ></script>
 <style>
-  .pm-col-size {
-    width: 120px;
+  /* ── Variables ───────────────────────────────────────────────────────────── */
+  :root {
+    --pm-bg: #f0f2f5;
+    --pm-surface: #ffffff;
+    --pm-border: #e2e6ea;
+    --pm-ink: #1a2332;
+    --pm-ink-soft: #4a5568;
+    --pm-ink-muted: #8a98a8;
+    --pm-accent: #1e5aa8;
+    --pm-accent-soft: #ebf2ff;
+    --pm-green: #1a7a4a;
+    --pm-green-soft: #e6f5ed;
+    --pm-amber: #b45a00;
+    --pm-amber-soft: #fff3e0;
+    --pm-red: #c0392b;
+    --pm-red-soft: #fdecea;
+    --pm-mono: "IBM Plex Mono", monospace;
+    --pm-radius: 8px;
   }
-  .size-cell {
+
+  /* ── Layout ──────────────────────────────────────────────────────────────── */
+  .pm-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--pm-bg);
+  }
+  .pm-header {
+    background: var(--header-bg);
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .pm-header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .pm-stats {
     font-size: 12px;
-    color: var(--muted);
-    font-weight: 500;
-    max-width: 120px;
+    opacity: 0.7;
+    margin-left: 8px;
+  }
+  .pm-header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .pm-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Left Panel ──────────────────────────────────────────────────────────── */
+  .pm-left {
+    width: 520px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--pm-border);
+    background: var(--pm-surface);
+  }
+  .pm-toolbar {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--pm-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pm-search-wrap {
+    position: relative;
+  }
+  .pm-search {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    font-size: 13px;
+    font-family: "IBM Plex Sans", sans-serif;
+    color: var(--pm-ink);
+    background: var(--pm-bg);
+    outline: none;
+    box-sizing: border-box;
+  }
+  .pm-search:focus {
+    border-color: var(--pm-accent);
+    background: #fff;
+  }
+  .pm-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--pm-ink-muted);
+    font-size: 13px;
+  }
+  .pm-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pm-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .pm-filter-advanced {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .pm-filter-select,
+  .pm-filter-input {
+    width: 100%;
+    height: 34px;
+    padding: 6px 9px;
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    background: var(--pm-bg);
+    color: var(--pm-ink);
+    font-size: 12px;
+    font-family: "IBM Plex Sans", sans-serif;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .pm-filter-select:focus,
+  .pm-filter-input:focus {
+    border-color: var(--pm-accent);
+    background: #fff;
+  }
+  .pm-filter-clear {
+    height: 34px;
+    padding: 0 12px;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  @media (max-width: 980px) {
+    .pm-filter-grid,
+    .pm-filter-advanced {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pm-filter-clear {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 640px) {
+    .pm-filter-grid,
+    .pm-filter-advanced {
+      grid-template-columns: 1fr;
+    }
+  }
+  .pm-filter-btn {
+    padding: 4px 12px;
+    border: 1px solid var(--pm-border);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--pm-bg);
+    color: var(--pm-ink-soft);
+    font-family: "IBM Plex Sans", sans-serif;
+    transition: all 0.15s;
+  }
+  .pm-filter-btn:hover {
+    border-color: var(--pm-accent);
+    color: var(--pm-accent);
+  }
+  .pm-filter-btn.active-make {
+    background: var(--pm-green-soft);
+    color: var(--pm-green);
+    border-color: var(--pm-green);
+  }
+  .pm-filter-btn.active-buy {
+    background: var(--pm-amber-soft);
+    color: var(--pm-amber);
+    border-color: var(--pm-amber);
+  }
+  .pm-filter-btn.active-proc {
+    background: var(--pm-accent-soft);
+    color: var(--pm-accent);
+    border-color: var(--pm-accent);
+  }
+  .pm-filter-btn.active-noproc {
+    background: var(--pm-red-soft);
+    color: var(--pm-red);
+    border-color: var(--pm-red);
+  }
+
+  /* ── Tree ────────────────────────────────────────────────────────────────── */
+  .pm-tree-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .pm-tree-wrap::-webkit-scrollbar {
+    width: 5px;
+  }
+  .pm-tree-wrap::-webkit-scrollbar-thumb {
+    background: var(--pm-border);
+    border-radius: 3px;
+  }
+
+  /* BOM row */
+  .bom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--pm-border);
+    transition: background 0.1s;
+    user-select: none;
+  }
+  .bom-row:hover {
+    background: var(--pm-bg);
+  }
+  .bom-row.expanded {
+    background: var(--pm-accent-soft);
+  }
+  .bom-caret {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pm-ink-muted);
+    font-size: 10px;
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+  .bom-row.expanded .bom-caret {
+    transform: rotate(90deg);
+  }
+  .bom-no {
+    font-family: var(--pm-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pm-accent);
+    min-width: 80px;
+  }
+  .bom-parent-code {
+    font-family: var(--pm-mono);
+    font-size: 11px;
+    color: var(--pm-ink-soft);
+  }
+  .bom-parent-desc {
+    font-size: 12px;
+    color: var(--pm-ink);
+    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .bom-child-count {
+    font-size: 11px;
+    color: var(--pm-ink-muted);
+    white-space: nowrap;
+  }
+
+  /* Children block */
+  .bom-children {
+    display: none;
+    background: #fafbfc;
+    border-bottom: 1px solid var(--pm-border);
+  }
+  .bom-children.open {
+    display: block;
+  }
+  .child-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px 7px 38px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid #f0f2f5;
+  }
+  .child-row:last-child {
+    border-bottom: none;
+  }
+  .child-row:hover {
+    background: #f0f4f8;
+  }
+  .child-row.selected {
+    background: var(--pm-accent-soft);
+  }
+  .child-code {
+    font-family: var(--pm-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--pm-accent);
+    min-width: 110px;
+  }
+  .child-desc {
+    font-size: 12px;
+    color: var(--pm-ink);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .child-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-A {
+    background: var(--pm-green-soft);
+    color: var(--pm-green);
+  }
+  .badge-I {
+    background: var(--pm-amber-soft);
+    color: var(--pm-amber);
+  }
+  .child-qty {
+    font-family: var(--pm-mono);
+    font-size: 11px;
+    color: var(--pm-ink-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .child-cutting {
+    font-size: 10px;
+    color: var(--pm-red);
+    background: var(--pm-red-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Load more */
+  .pm-load-more {
+    padding: 12px;
+    text-align: center;
+  }
+  .pm-load-btn {
+    padding: 7px 20px;
+    background: var(--pm-bg);
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--pm-ink-soft);
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+  .pm-load-btn:hover {
+    border-color: var(--pm-accent);
+    color: var(--pm-accent);
+  }
+
+  /* Loading / empty */
+  .pm-loading {
+    padding: 40px;
+    text-align: center;
+    color: var(--pm-ink-muted);
+    font-size: 13px;
+  }
+  .pm-empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--pm-ink-muted);
+    font-size: 13px;
+  }
+
+  /* ── Right Panel ─────────────────────────────────────────────────────────── */
+  .pm-right {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--pm-bg);
+  }
+  .pm-right-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--pm-ink-muted);
+    font-size: 14px;
+  }
+  .pm-detail {
+    padding: 20px;
+  }
+  .pm-detail-header {
+    background: var(--pm-surface);
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .pm-detail-code {
+    font-family: var(--pm-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--pm-accent);
+    margin-bottom: 4px;
+  }
+  .pm-detail-desc {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--pm-ink);
+    margin-bottom: 12px;
+  }
+  .pm-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .pm-detail-field label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--pm-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .pm-detail-field span {
+    font-size: 13px;
+    color: var(--pm-ink);
+  }
+  .pm-section {
+    background: var(--pm-surface);
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .pm-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pm-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .pm-process-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pm-proc-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--pm-accent-soft);
+    color: var(--pm-accent);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .pm-proc-num {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+  .pm-detail-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────────────────────── */
+  .pm-btn {
+    padding: 7px 14px;
+    border-radius: var(--pm-radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "IBM Plex Sans", sans-serif;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+  }
+  .pm-btn:hover {
+    opacity: 0.85;
+  }
+  .pm-btn-primary {
+    background: var(--pm-accent);
+    color: #fff;
+  }
+  .pm-btn-secondary {
+    background: var(--pm-bg);
+    border: 1px solid var(--pm-border);
+    color: var(--pm-ink-soft);
+  }
+  .pm-btn-danger {
+    background: var(--pm-red-soft);
+    color: var(--pm-red);
+    border: 1px solid var(--pm-red);
+  }
+  .pm-btn-success {
+    background: var(--pm-green-soft);
+    color: var(--pm-green);
+    border: 1px solid var(--pm-green);
+  }
+
+  /* ── Modals ──────────────────────────────────────────────────────────────── */
+  .pm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9998;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .pm-modal-overlay.open {
+    display: flex;
+  }
+  .pm-modal {
+    background: #fff;
+    border-radius: 10px;
+    width: 90vw;
+    max-width: 520px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+  }
+  .pm-modal-header {
+    background: var(--header-bg);
+    color: #fff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pm-modal-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .pm-modal-body {
+    padding: 18px;
+  }
+  .pm-modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--pm-border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    background: #f8fafc;
+  }
+  .pm-form-group {
+    margin-bottom: 14px;
+  }
+  .pm-form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--pm-ink-soft);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .pm-form-group input,
+  .pm-form-group select,
+  .pm-form-group textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    font-size: 13px;
+    font-family: "IBM Plex Sans", sans-serif;
+    color: var(--pm-ink);
+    outline: none;
+    box-sizing: border-box;
+  }
+  .pm-form-group input:focus,
+  .pm-form-group select:focus,
+  .pm-form-group textarea:focus {
+    border-color: var(--pm-accent);
+  }
+  .pm-modal-wide {
+    max-width: 720px;
+  }
+  .pm-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 12px;
+  }
+  .pm-process-editor {
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    background: #f8fafc;
+    padding: 10px;
+  }
+  .pm-process-edit-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .pm-process-edit-row:last-child {
+    margin-bottom: 0;
+  }
+  .pm-process-step {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--pm-accent-soft);
+    color: var(--pm-accent);
+    font-family: var(--pm-mono);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pm-process-edit-input {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid var(--pm-border);
+    border-radius: var(--pm-radius);
+    font-size: 13px;
+    font-family: "IBM Plex Sans", sans-serif;
+    box-sizing: border-box;
+  }
+  .pm-process-row-actions {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .pm-icon-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--pm-border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--pm-ink-soft);
+    cursor: pointer;
+  }
+  .pm-icon-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .pm-icon-danger {
+    color: var(--pm-red);
+    border-color: var(--pm-red-soft);
+  }
+  .pm-process-empty {
+    color: var(--pm-ink-muted);
+    font-size: 12px;
+    padding: 8px 0;
+  }
+  .pm-remark-textarea {
+    min-height: 74px;
+    resize: vertical;
+  }
+  @media (max-width: 760px) {
+    .pm-form-grid {
+      grid-template-columns: 1fr;
+    }
+    .pm-process-edit-row {
+      grid-template-columns: 28px minmax(0, 1fr);
+    }
+    .pm-process-row-actions {
+      grid-column: 2;
+    }
+  }
+
+  /* ── Nested BOM Tree UI Polish ───────────────────────────────────────────── */
+
+  .pm-left {
+    width: 650px;
+  }
+
+  .bom-row {
+    min-height: 42px;
+    padding: 9px 16px;
+    background: #fff;
+  }
+
+  .bom-row.expanded {
+    background: #eaf2ff;
+    border-left: 4px solid var(--pm-accent);
+    padding-left: 12px;
+  }
+
+  .bom-row .bom-no {
+    min-width: 86px;
+    color: #075bb5;
+    font-size: 12px;
+  }
+
+  .bom-row .bom-parent-code {
+    min-width: 120px;
+    color: #475569;
+    font-size: 11px;
+  }
+
+  .bom-row .bom-parent-desc {
+    font-size: 12px;
+    font-weight: 600;
+    color: #102a4c;
+  }
+
+  .bom-child-count {
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* Expanded BOM block */
+  .bom-children {
+    background: #ffffff;
+    border-left: 4px solid #dbeafe;
+    border-bottom: 1px solid #dbeafe;
+  }
+
+  /* Parent header inside expanded tree */
+  .bom-children > div:first-child {
+    background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  /* Group titles */
+  .bom-children div[style*="I / BUY ITEMS"],
+  .bom-children div[style*="A / MAKE ITEMS"] {
+    margin-top: 4px;
+  }
+
+  /* Common child row */
+  .child-row {
+    min-height: 34px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #edf2f7;
+  }
+
+  .child-row:hover {
+    background: #f8fafc;
+  }
+
+  .child-row.selected {
+    background: #eaf2ff;
+    box-shadow: inset 4px 0 0 var(--pm-accent);
+  }
+
+  /* Nested buy row */
+  .nested-buy-row {
+    background: #fffaf2;
+  }
+
+  .nested-buy-row .child-code {
+    color: #92400e;
+  }
+
+  .nested-buy-row .child-desc {
+    color: #3b2f1b;
+  }
+
+  /* Nested make block */
+  .nested-make-block {
+    margin: 6px 10px 10px 34px;
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-left: 4px solid var(--pm-green);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .nested-make-row {
+    background: #f8fffb;
+    padding-left: 12px !important;
+    border-bottom: 1px solid #dcfce7;
+  }
+
+  .nested-make-row .bom-no {
+    min-width: 82px;
+    color: #075bb5;
+  }
+
+  .nested-make-row .child-code {
+    min-width: 120px;
+    color: #166534;
+  }
+
+  .nested-make-row .child-desc {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  /* Process section inside make item */
+  .nested-make-block .pm-process-list {
+    padding: 2px 0;
+  }
+
+  .nested-make-block .pm-proc-pill {
+    background: #eef4ff;
+    border: 1px solid #c7d8ff;
+    color: #075bb5;
+    font-size: 11px;
+    padding: 4px 9px;
+  }
+
+  .nested-make-block .pm-proc-num {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 999px;
+    padding: 1px 5px;
+    opacity: 1;
+    font-weight: 800;
+  }
+
+  /* Raw material rows */
+  .nested-raw-row {
+    background: #fff;
+    margin: 4px 0 0 14px;
+    border: 1px solid #fee2e2;
+    border-left: 3px solid var(--pm-red);
+    border-radius: 6px;
+    padding: 7px 10px !important;
+  }
+
+  .nested-raw-row .child-code {
+    color: #991b1b;
+  }
+
+  .nested-raw-row .child-desc {
+    color: #334155;
+  }
+
+  .child-cutting {
+    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #b91c1c;
+    font-weight: 700;
+  }
+
+  /* Badges */
+  .child-badge.badge-A,
+  .badge-A {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  .child-badge.badge-I,
+  .badge-I {
+    background: #fff7ed;
+    color: #b45309;
+    border: 1px solid #fed7aa;
+  }
+
+  /* Quantity */
+  .child-qty {
+    color: #475569;
+    font-weight: 700;
+  }
+
+  /* Improve left tree readability */
+  .pm-tree-wrap {
+    background: #f8fafc;
+  }
+
+  .pm-tree-wrap > div {
+    background: #fff;
+  }
+
+  @media (max-width: 1100px) {
+    .pm-left {
+      width: 58vw;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .pm-left {
+      width: 100%;
+    }
+
+    .pm-body {
+      flex-direction: column;
+    }
+
+    .pm-right {
+      min-height: 420px;
+    }
+
+    .nested-make-block {
+      margin-left: 12px;
+    }
+  }
+
+  /* ── Better Process Master Layout UX ─────────────────────────────────────── */
+
+.pm-left {
+  width: 100%;
+  max-width: none;
+}
+
+.pm-right {
+  display: none;
+  width: 38%;
+  min-width: 420px;
+  border-left: 1px solid var(--pm-border);
+  background: #f8fafc;
+}
+
+.pm-body.detail-open .pm-left {
+  width: 62%;
+}
+
+.pm-body.detail-open .pm-right {
+  display: block;
+}
+
+.pm-body.detail-open {
+  display: flex;
+}
+
+.pm-tree-wrap {
+  padding-right: 8px;
+}
+
+.bom-row .bom-parent-desc {
+  max-width: none;
+}
+
+@media (max-width: 1100px) {
+  .pm-body.detail-open {
+    flex-direction: column;
+  }
+
+  .pm-body.detail-open .pm-left,
+  .pm-body.detail-open .pm-right {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .pm-right {
+    min-height: 420px;
+  }
+}
+
+
+  
+  /* PM_COMPACT_FILTER_UI_START */
+
+  /* --------------------------------------------------------
+     Process Master Page Header
+     -------------------------------------------------------- */
+
+  .pm-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    /* Position only.
+       Background/border/shadow comes from base.css .page-header */
+    margin: 20px 20px 24px;
+  }
+
+  .pm-page-header-text {
+    min-width: 0;
+  }
+
+  .pm-page-header h1 {
+    margin: 0;
+
+    color: #0f172a;
+
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .pm-page-header p {
+    margin: 5px 0 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+
+
+  /* --------------------------------------------------------
+     Process Master Page Header
+     -------------------------------------------------------- */
+.pm-page-header-text {
+    min-width: 0;
+  }
+/* --------------------------------------------------------
+     Search Toolbar
+     -------------------------------------------------------- */
+
+  .pm-page .pm-toolbar {
+    position: relative;
+
+    box-sizing: border-box;
+    width: calc(100% - 40px);
+
+    margin: 0 20px 18px;
+    padding: 10px;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+
+    overflow: visible;
+
+    background: #ffffff;
+
+    border: 1px solid #dce3ea;
+    border-radius: 10px;
+
+    box-shadow:
+      0 2px 8px rgba(15, 42, 77, 0.05);
+  }
+
+  .pm-page .pm-search-wrap {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .pm-page .pm-search {
+    box-sizing: border-box;
+    width: 100%;
+    height: 44px;
+
+    padding-left: 42px;
+
+    background: #f8fafc;
+
+    border: 1px solid #d9e1e8;
+    border-radius: 8px;
+  }
+
+  .pm-page .pm-search:focus {
+    background: #ffffff;
+    border-color: #0b5fa5;
+
+    box-shadow:
+      0 0 0 3px rgba(11, 95, 165, 0.08);
+
+    outline: none;
+  }
+
+
+  /* --------------------------------------------------------
+     Filter Button
+     -------------------------------------------------------- */
+
+  .pm-filter-toggle {
+    height: 44px;
+    min-width: 116px;
+
+    padding: 0 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    color: #17365d;
+    background: #ffffff;
+
+    border: 1px solid #b9c9d8;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .pm-filter-toggle:hover {
+    color: #0b5fa5;
+    background: #f1f7fc;
+    border-color: #8baac5;
+  }
+
+  .pm-filter-toggle[aria-expanded="true"] {
+    color: #ffffff;
+    background: #09336e;
+    border-color: #09336e;
+
+    box-shadow:
+      0 2px 7px rgba(9, 51, 110, 0.20);
+  }
+
+  .pm-filter-chevron {
+    margin-left: 2px;
+
+    font-size: 10px;
+
+    transition: transform 0.20s ease;
+  }
+
+  .pm-filter-toggle[aria-expanded="true"]
+  .pm-filter-chevron {
+    transform: rotate(180deg);
+  }
+
+
+  /* --------------------------------------------------------
+     Filter Dropdown Panel
+     -------------------------------------------------------- */
+
+  .pm-page .pm-toolbar .pm-filter-panel {
+    position: absolute;
+
+    top: calc(100% + 8px);
+    right: 0;
+
+    z-index: 50;
+
+    box-sizing: border-box;
+    width: min(980px, 92vw);
+
+    margin: 0;
+    padding: 16px;
+
+    display: none;
+
+    background: #ffffff;
+
+    border: 1px solid #d5e0ea;
+    border-radius: 10px;
+
+    box-shadow:
+      0 12px 30px rgba(15, 42, 77, 0.14);
+  }
+
+  .pm-page .pm-toolbar.pm-filters-open
+  .pm-filter-panel {
+    display: grid;
+
+    grid-template-columns:
+      repeat(3, minmax(180px, 1fr));
+
+    gap: 10px;
+  }
+
+  .pm-filter-panel .pm-filter-select,
+  .pm-filter-panel input {
+    box-sizing: border-box;
+
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+
+    background: #f8fafc;
+
+    border: 1px solid #d9e1e8;
+    border-radius: 7px;
+  }
+
+  .pm-filter-panel .pm-filter-select:focus,
+  .pm-filter-panel input:focus {
+    background: #ffffff;
+    border-color: #0b5fa5;
+    outline: none;
+
+    box-shadow:
+      0 0 0 2px rgba(11, 95, 165, 0.07);
+  }
+
+
+  /* --------------------------------------------------------
+     Responsive
+     -------------------------------------------------------- */
+
+  @media (max-width: 900px) {
+
+    .pm-page .pm-toolbar.pm-filters-open
+    .pm-filter-panel {
+      grid-template-columns:
+        repeat(2, minmax(150px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    .pm-page-header {
+      margin: 14px 12px 16px;
+      padding: 16px;
+    }
+
+.pm-page .pm-toolbar {
+      width: calc(100% - 24px);
+
+      margin-left: 12px;
+      margin-right: 12px;
+    }
+
+    .pm-page .pm-toolbar .pm-filter-panel {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 520px) {
+
+    .pm-page .pm-toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .pm-filter-toggle {
+      width: 100%;
+    }
+
+    .pm-page .pm-toolbar.pm-filters-open
+    .pm-filter-panel {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* PM_COMPACT_FILTER_UI_END */
+
+
+  /* PM_FILTER_CLEAR_TOP_START */
+
+  /* Search | Filters | Clear */
+  .pm-page .pm-toolbar {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto
+      auto;
+  }
+
+  /* Clear button beside Filters */
+  .pm-filter-clear-top {
+    height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 0 15px;
+
+    color: #475569;
+    background: #f8fafc;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .pm-filter-clear-top:hover {
+    color: #b42318;
+    background: #fff5f5;
+    border-color: #f0b8b8;
+  }
+
+
+  /* IMPORTANT:
+     Hide every filter field when panel is closed */
+  .pm-page .pm-toolbar .pm-filter-panel {
+    display: none !important;
+  }
+
+  /* Show filter fields only after Filters is clicked */
+  .pm-page .pm-toolbar.pm-filters-open .pm-filter-panel {
+    display: grid !important;
+  }
+
+
+  @media (max-width: 520px) {
+    .pm-page .pm-toolbar {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pm-search-wrap {
+      grid-column: 1 / -1;
+    }
+
+    .pm-filter-toggle,
+    .pm-filter-clear-top {
+      width: 100%;
+    }
+  }
+
+  /* PM_FILTER_CLEAR_TOP_END */
+
+
+  /* PM_STANDARD_PAGE_LAYOUT_START */
+
+  /*
+     Make Process Master use the same outer page spacing
+     as Traceability / Data View / other JMS pages.
+  */
+
+  .pm-page {
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 100vh;
+
+    padding: 36px 32px;
+
+    background: var(--pm-bg);
+  }
+
+
+  /* Header should use normal page position */
+  .pm-page .pm-page-header {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin: 0 0 24px;
+  }
+
+
+  /* Search toolbar aligns exactly with header */
+  .pm-page .pm-toolbar {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin: 0 0 18px;
+  }
+
+
+  /* Remaining Process Master area fills available space */
+  .pm-page .pm-body {
+    min-height: 0;
+  }
+
+
+  /* Mobile spacing same pattern as other pages */
+  @media (max-width: 768px) {
+
+    .pm-page {
+      padding: 24px 14px;
+    }
+
+    .pm-page .pm-page-header {
+      width: 100%;
+      margin: 0 0 20px;
+    }
+
+    .pm-page .pm-toolbar {
+      width: 100%;
+      margin: 0 0 16px;
+    }
+  }
+
+  /* PM_STANDARD_PAGE_LAYOUT_END */
+
 </style>
 {% endblock %} {% block content %}
-<div class="main">
-  <div class="page-header">
-    <div>
+<div class="pm-page">
+  <!-- Page Header -->
+  <div class="page-header pm-page-header">
+    <div class="pm-page-header-text">
       <h1>Process Master</h1>
-      <p>View and manage all items, materials and processes</p>
-    </div>
-    <button class="btn-primary" onclick="openAddModal()">+ Add New Item</button>
-    <button class="btn-bulk" onclick="openBulkModal()">
-      <i class="fa fa-table" aria-hidden="true"></i>&nbsp;Bulk Entry
-    </button>
-    <button class="btn-upload" onclick="openUploadModal('pm')">
-      <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;Upload Excel
-    </button>
-  </div>
-
-  <div class="stats">
-    <!-- <div class="stat-card"><div class="stat-num" id="stat-total">-</div><div class="stat-label">Total Items</div></div>
-    <div class="stat-card"><div class="stat-num" id="stat-avg">-</div><div class="stat-label">Avg. Operations</div></div>
-    <div class="stat-card"><div class="stat-num" id="stat-materials">-</div><div class="stat-label">Unique Materials</div></div> -->
-  </div>
-
-  <div class="search-bar">
-    <input
-      type="text"
-      id="search-input"
-      placeholder="Search by item name, material, size, part or process..."
-      oninput="filterTable()"
-    />
-  </div>
-  <div id="mobile-cards" class="mobile-cards"></div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="pm-col-index">No.</th>
-          <th class="pm-col-item">Item Name</th>
-          <th class="pm-col-material">Material</th>
-          <th class="pm-col-size">Size</th>
-          <th class="pm-col-part">Part Name</th>
-          <th class="pm-col-processes">Processes</th>
-          <th class="pm-col-ops">Ops</th>
-          <th class="pm-col-actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="table-body">
-        <tr class="empty-row">
-          <td colspan="8">Loading Data...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="pm-pagination" id="pm-pagination"></div>
-</div>
-
-<!-- PROCESS MASTER VIEW DETAILS MODAL -->
-<div class="modal-overlay" id="view-detail-modal">
-  <div class="modal process-detail-modal">
-    <div class="modal-header">
-      <h2>Item Details</h2>
-      <button class="modal-close" onclick="closeProcessDetailModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div id="process-detail-content" class="process-detail-content"></div>
-  </div>
-</div>
-
-<!-- PROCESS MASTER DESKTOP VIEW MODAL -->
-<div class="modal-overlay" id="item-view-modal">
-  <div class="modal modal-wide">
-    <div class="modal-header">
-      <h2>Item Details</h2>
-      <button class="modal-close" onclick="closeViewModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div id="item-view-content"></div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeViewModal()">Close</button>
-      <button
-        class="btn-primary"
-        onclick="
-          closeViewModal();
-          openEditModal(currentViewId);
-        "
-      >
-        Edit This Item
-      </button>
+      <!-- <p>Manage BOM items, manufacturing processes and routing</p> -->
     </div>
   </div>
-</div>
 
-<!-- DELETE ITEM MODAL -->
-<div class="modal-overlay" id="delete-modal">
-  <div class="modal delete-item-modal">
-    <div class="modal-header">
-      <h2>Delete Item</h2>
-      <button class="modal-close" onclick="closeDeleteModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div class="delete-modal-body">
-      <div class="delete-warning-icon">
-        <i class="fa fa-trash" aria-hidden="true"></i>
-      </div>
-      <div>
-        <p class="delete-title">Are you sure you want to delete this item?</p>
-        <p class="delete-item-name" id="delete-item-name">-</p>
-        <p class="delete-note">This action cannot be undone.</p>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-      <button
-        class="btn-danger-confirm"
-        id="delete-confirm-btn"
-        onclick="confirmDeleteItem()"
-      >
-        Delete Item
-      </button>
-    </div>
-  </div>
-</div>
+  <div class="pm-body">
+    <!-- Left: BOM Tree -->
+    <div class="pm-left">
+      <div class="pm-toolbar">
+        <div class="pm-search-wrap">
+          <i class="fa fa-search pm-search-icon"></i>
+          <input
+            type="text"
+            class="pm-search"
+            id="pm-search"
+            placeholder="Search BOM No, item code, description..."
+            oninput="onPmSearch()"
+          />
+        </div>
 
-<!-- ── ADD MODAL ─────────────────────────────────────────────────────────── -->
-<div class="modal-overlay" id="add-modal">
-  <div class="modal modal-wide">
-    <div class="modal-header">
-      <h2>Add New Item</h2>
-      <button class="modal-close" onclick="closeAddModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
-      </button>
-    </div>
-
-    <div class="form-grid-2">
-      <div class="form-group" style="grid-column: 1/-1">
-        <label
-          >Item / Model Name &nbsp;<span style="color: #ef4444">*</span></label
+        <button
+          type="button"
+          class="pm-filter-toggle"
+          id="pm-filter-toggle"
+          onclick="togglePmFilters()"
+          aria-expanded="false"
+          aria-controls="pm-filter-panel"
         >
-        <input type="text" id="m-name" placeholder="e.g. Gear Hub 80x120x60" />
-      </div>
-      <div class="form-group">
-        <label>Material</label>
-        <input type="text" id="m-material" placeholder="e.g. EN8 Steel" />
-      </div>
-      <div class="form-group">
-        <label>Size</label>
-        <input type="text" id="m-size" placeholder="e.g. 42x66x35" />
-      </div>
-      <div class="form-group">
-        <label>Part Name</label>
-        <input type="text" id="m-part-name" placeholder="e.g. Shaft" />
-      </div>
-    </div>
+          <i class="fa fa-filter" aria-hidden="true"></i>
+          <span>Filters</span>
+          <i
+            class="fa fa-chevron-down pm-filter-chevron"
+            aria-hidden="true"
+          ></i>
+        </button>
 
-    <div class="section-label">Select Processes in Order</div>
-    <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px">
-      Click processes in the order they should be performed. Selected processes
-      appear on the right.
-    </p>
+        <button
+          type="button"
+          class="pm-filter-clear-top"
+          onclick="clearPmFilters()"
+          title="Clear all filters"
+        >
+          <i class="fa fa-times" aria-hidden="true"></i>
+          <span>Clear</span>
+        </button>
 
-    <div class="process-selector-layout">
-      <!-- Left: Dropdown -->
-      <div class="process-checkbox-col">
-        <div class="col-label">Available Processes</div>
-        <div id="add-process-checkboxes" class="process-dropdown-list">
-          <!-- Rendered by JS from database process list -->
+        <div class="pm-filter-grid pm-filter-panel" id="pm-filter-panel">
+          <select class="pm-filter-select" id="pm-filter-bom-level" title="BOM Level">
+            <option value="top">Top Level BOM only</option>
+            <option value="all">All BOM levels</option>
+            <option value="child">Child BOM only</option>
+            <option value="raw">Raw Material level only</option>
+          </select>
+          <select class="pm-filter-select" id="pm-filter-make-buy" title="Make / Buy">
+            <option value="">All Make/Buy</option>
+            <option value="A">A - Make</option>
+            <option value="I">I - Buy</option>
+          </select>
+          <select class="pm-filter-select" id="pm-filter-process-status" title="Process Status">
+            <option value="">All process status</option>
+            <option value="has_process">Has Process</option>
+            <option value="no_process">No Process</option>
+            <option value="incomplete_process">Incomplete Process</option>
+          </select>
+          <select class="pm-filter-select" id="pm-filter-raw-material" title="Raw Material">
+            <option value="">All raw material</option>
+            <option value="has_raw_material">Has Raw Material</option>
+            <option value="no_raw_material">No Raw Material</option>
+            <option value="multiple_raw_material">Multiple Raw Material Options</option>
+            <option value="cutting_missing">Cutting Size Missing</option>
+          </select>
+          <select class="pm-filter-select" id="pm-filter-item-type" title="Item Type">
+            <option value="">All item types</option>
+            <option value="ASSEMBLY">ASSEMBLY</option>
+            <option value="PART">PART</option>
+            <option value="RAW_MATERIAL">RAW_MATERIAL</option>
+          </select>
+          <select class="pm-filter-select" id="pm-filter-process-name" title="Process Name">
+            <option value="">All processes</option>
+          </select>
+        </div>
+        <div class="pm-filter-advanced">
+          
+          
+          
         </div>
       </div>
 
-      <!-- Right: Selected order -->
-      <div class="process-selected-col">
-        <div class="col-label">Selected Order</div>
-        <div id="add-selected-list" class="selected-process-list">
-          <div class="empty-selected" id="empty-selected-msg">
-            No processes selected yet.<br />Click processes on the left to add
-            them.
+      <div class="pm-tree-wrap" id="pm-tree">
+        <div class="pm-loading" id="pm-loading">
+          <i class="fa fa-spinner fa-spin"></i> Loading BOM data...
+        </div>
+        <div class="pm-empty" id="pm-empty" style="display: none">
+          No results found.
+        </div>
+      </div>
+
+      <div class="pm-load-more" id="pm-load-more" style="display: none">
+        <button class="pm-load-btn" onclick="loadMoreBom()">
+          <i class="fa fa-chevron-down"></i> Load more
+          <span id="pm-remaining"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Detail Panel -->
+    <div class="pm-right" id="pm-right">
+      <div class="pm-right-empty">
+        <div style="text-align: center">
+          <div style="font-size: 40px; margin-bottom: 12px">🔩</div>
+          <div
+            style="font-weight: 600; color: var(--pm-ink); margin-bottom: 4px"
+          >
+            Select an item
+          </div>
+          <div style="font-size: 12px">
+            Click any item in the BOM tree to view details
           </div>
         </div>
       </div>
     </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveItem()">Save Item</button>
-    </div>
   </div>
 </div>
 
-<!-- ── EDIT MODAL ────────────────────────────────────────────────────────── -->
-<div class="modal-overlay" id="edit-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Edit Item</h2>
-      <button class="modal-close" onclick="closeEditModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
-      </button>
-    </div>
-    <input type="hidden" id="e-id" />
-    <div class="form-grid-2">
-      <div class="form-group" style="grid-column: 1/-1">
-        <label
-          >Item / Model Name &nbsp;<span style="color: #ef4444">*</span></label
-        >
-        <input type="text" id="e-name" />
-      </div>
-      <div class="form-group">
-        <label>Material</label>
-        <input type="text" id="e-material" />
-      </div>
-      <div class="form-group">
-        <label>Size</label>
-        <input type="text" id="e-size" placeholder="e.g. 42x66x35" />
-      </div>
-      <div class="form-group">
-        <label>Part Name</label>
-        <input type="text" id="e-part-name" />
-      </div>
-    </div>
-
-    <div class="section-label">Processes — drag to reorder, ✕ to remove</div>
-    <div id="edit-process-list" class="proc-card-list"></div>
-
-    <!-- Add process button -->
-    <div class="add-proc-row">
-      <select
-        id="add-proc-select"
-        class="add-proc-select"
-        onchange="addProcessToEdit()"
-      >
-        <option value="">+ Add a process...</option>
-      </select>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-      <button class="btn-primary" onclick="updateItem()">Update Item</button>
-    </div>
-  </div>
-</div>
-
-<!-- UPLOAD MODAL -->
-<div class="modal-overlay" id="upload-modal">
-  <div class="modal" style="max-width: 900px; width: 95vw">
-    <div class="modal-header">
-      <h2 id="upload-modal-title">Upload Excel</h2>
-      <button class="modal-close" onclick="closeUploadModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div id="upload-step-1">
-      <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px">
-        Select your Excel file. System will preview the data before saving.
-      </p>
-      <input
-        type="file"
-        id="upload-file-input"
-        accept=".xlsx,.xls"
-        style="display: none"
-        onchange="handleFileSelect(event)"
-      />
+<!-- Add Item Modal -->
+<div class="pm-modal-overlay" id="add-item-modal">
+  <div class="pm-modal">
+    <div class="pm-modal-header">
+      <h3>Add New Item</h3>
       <button
-        class="btn-primary"
-        onclick="document.getElementById('upload-file-input').click()"
+        onclick="closeAddItemModal()"
+        style="
+          background: rgba(255, 255, 255, 0.15);
+          border: none;
+          color: #fff;
+          border-radius: 4px;
+          padding: 4px 10px;
+          cursor: pointer;
+        "
       >
-        Select Excel File
+        ✕
       </button>
-      <span
-        id="upload-filename"
-        style="margin-left: 12px; font-size: 13px; color: var(--muted)"
-      ></span>
     </div>
-    <div id="upload-step-2" style="display: none">
-      <div
-        id="upload-summary"
-        style="margin-bottom: 12px; font-size: 13px; font-weight: 600"
-      ></div>
-      <div
-        style="
-          max-height: 400px;
-          overflow-y: auto;
-          border: 1px solid var(--border);
-          border-radius: 6px;
-        "
-      >
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px">
-          <thead
-            id="upload-preview-head"
-            style="
-              position: sticky;
-              top: 0;
-              background: var(--header-bg);
-              color: #fff;
-            "
-          ></thead>
-          <tbody id="upload-preview-body"></tbody>
-        </table>
+    <div class="pm-modal-body">
+      <div class="pm-form-group">
+        <label>Item Code *</label>
+        <input type="text" id="add-item-code" placeholder="e.g. NAINR0001234" />
       </div>
-      <div
-        style="
-          margin-top: 14px;
-          display: flex;
-          gap: 10px;
-          justify-content: flex-end;
-        "
-      >
-        <button class="btn-cancel" onclick="resetUpload()">
-          Upload Different File
-        </button>
-        <button
-          class="btn-primary"
-          id="confirm-upload-btn"
-          onclick="confirmUpload()"
-        >
-          Confirm Import
-        </button>
+      <div class="pm-form-group">
+        <label>Description *</label>
+        <input
+          type="text"
+          id="add-item-desc"
+          placeholder="e.g. Inner Race of NHB 40"
+        />
       </div>
+      <div class="pm-form-group">
+        <label>Item Type</label>
+        <select id="add-item-type">
+          <option value="ASSEMBLY">Assembly (Make)</option>
+          <option value="PART">Part (Buy/Make)</option>
+        </select>
+      </div>
+      <div class="pm-form-group">
+        <label>Size</label>
+        <input type="text" id="add-item-size" placeholder="e.g. 42x125x35" />
+      </div>
+      <div class="pm-form-group">
+        <label>Material</label>
+        <input type="text" id="add-item-material" placeholder="e.g. EN9" />
+      </div>
+      <div class="pm-form-group">
+        <label>Part Name</label>
+        <input type="text" id="add-item-part" placeholder="e.g. Inner Race" />
+      </div>
+    </div>
+    <div class="pm-modal-footer">
+      <button class="pm-btn pm-btn-secondary" onclick="closeAddItemModal()">
+        Cancel
+      </button>
+      <button class="pm-btn pm-btn-primary" onclick="saveNewItem()">
+        Save Item
+      </button>
     </div>
   </div>
 </div>
-<!-- ── BULK ENTRY MODAL ───────────────────────────────────────────────────── -->
-<div id="pm-bulk-modal" class="pm-bulk-overlay">
-  <div class="pm-bulk-box">
-    <div class="pm-bulk-header">
-      <h2><i class="fa fa-table"></i>&nbsp; Bulk Item Entry</h2>
-      <button class="pm-bulk-close" onclick="closeBulkModal()">
-        <i class="fa fa-close" aria-hidden="true"></i>
+
+<!-- Edit Item / Process Modal -->
+<div class="pm-modal-overlay" id="edit-item-modal">
+  <div class="pm-modal pm-modal-wide">
+    <div class="pm-modal-header">
+      <h3>Edit Item / Process</h3>
+      <button
+        onclick="closeEditItemModal()"
+        style="
+          background: rgba(255, 255, 255, 0.15);
+          border: none;
+          color: #fff;
+          border-radius: 4px;
+          padding: 4px 10px;
+          cursor: pointer;
+        "
+      >
+        &times;
       </button>
     </div>
-
-    <div class="pm-bulk-table-wrap">
-      <table class="pm-bulk-table">
-        <thead>
-          <tr>
-            <th style="width: 36px">#</th>
-            <th style="min-width: 200px">
-              Item Name &nbsp;<span style="color: #ef4444">*</span>
-            </th>
-            <th style="min-width: 140px">Material</th>
-            <th style="min-width: 130px">P1</th>
-            <th style="min-width: 130px">P2</th>
-            <th style="min-width: 130px">P3</th>
-            <th style="min-width: 130px">P4</th>
-            <th style="min-width: 130px">P5</th>
-            <th style="min-width: 130px">P6</th>
-            <th style="min-width: 130px">P7</th>
-            <th style="min-width: 130px">P8</th>
-            <th style="min-width: 130px">P9</th>
-            <th style="min-width: 130px">P10</th>
-            <th style="min-width: 130px">P11</th>
-            <th style="min-width: 130px">P12</th>
-            <th style="min-width: 130px">P13</th>
-            <th style="min-width: 130px">P14</th>
-            <th style="min-width: 130px">P15</th>
-            <th style="min-width: 130px">P16</th>
-            <th style="min-width: 130px">P17</th>
-            <th style="min-width: 130px">P18</th>
-            <th style="min-width: 130px">P19</th>
-            <th style="min-width: 130px">P20</th>
-            <th style="min-width: 130px">P21</th>
-            <th style="min-width: 130px">P22</th>
-            <th style="min-width: 130px">P23</th>
-            <th style="min-width: 130px">P24</th>
-            <th style="min-width: 130px">P25</th>
-            <th style="width: 40px"></th>
-          </tr>
-        </thead>
-        <tbody id="pm-bulk-tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="pm-bulk-footer">
-      <div class="pm-bulk-footer-left">
-        <button class="btn-upload" onclick="addBulkRow()">
-          <i class="fa fa-plus"></i> Add Row
-        </button>
-        <button class="btn-cancel" onclick="clearBulkAll()">
-          <i class="fa fa-refresh"></i> Clear All
-        </button>
+    <div class="pm-modal-body" style="max-height: 70vh; overflow-y: auto">
+      <div class="pm-form-grid">
+        <div class="pm-form-group">
+          <label>Item Code</label>
+          <input type="text" id="edit-item-code" readonly />
+        </div>
+        <div class="pm-form-group">
+          <label>Description *</label>
+          <input type="text" id="edit-item-desc" />
+        </div>
+        <div class="pm-form-group">
+          <label>Item Type</label>
+          <select id="edit-item-type">
+            <option value="ASSEMBLY">Assembly</option>
+            <option value="PART">Part</option>
+            <option value="RAW_MATERIAL">Raw Material</option>
+          </select>
+        </div>
+        <div class="pm-form-group">
+          <label>Make/Buy</label>
+          <select id="edit-item-make">
+            <option value="">Not set</option>
+            <option value="A">A - Make</option>
+            <option value="I">I - Buy</option>
+          </select>
+        </div>
+        <div class="pm-form-group">
+          <label>Material</label>
+          <input type="text" id="edit-item-material" />
+        </div>
+        <div class="pm-form-group">
+          <label>Size</label>
+          <input type="text" id="edit-item-size" />
+        </div>
+        <div class="pm-form-group">
+          <label>Part Name</label>
+          <input type="text" id="edit-item-part" />
+        </div>
       </div>
-      <button class="btn-primary" id="pm-bulk-save-btn" onclick="saveBulkAll()">
-        <i class="fa fa-save"></i> Save All
+
+      <div class="pm-form-group">
+        <label>Process Routing</label>
+        <div class="pm-process-editor">
+          <div id="edit-process-rows"></div>
+          <button
+            type="button"
+            class="pm-btn pm-btn-secondary"
+            style="margin-top: 10px"
+            onclick="addEditProcess()"
+          >
+            <i class="fa fa-plus"></i> Add Process
+          </button>
+        </div>
+        <datalist id="pm-process-options"></datalist>
+      </div>
+
+      <div class="pm-form-group">
+        <label>Remark / Reason for Change *</label>
+        <textarea
+          id="edit-change-remark"
+          class="pm-remark-textarea"
+          placeholder="Enter why this item or process routing is being changed"
+        ></textarea>
+      </div>
+    </div>
+    <div class="pm-modal-footer">
+      <button class="pm-btn pm-btn-secondary" onclick="closeEditItemModal()">
+        Cancel
       </button>
+      <button
+        class="pm-btn pm-btn-primary"
+        onclick="updateItem(document.getElementById('edit-item-code').value)"
+      >
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="pm-modal-overlay" id="delete-item-modal">
+  <div class="pm-modal" style="max-width: 400px">
+    <div class="pm-modal-header" style="background: #c0392b">
+      <h3>Delete Item</h3>
+      <button
+        onclick="closeDeleteModal()"
+        style="
+          background: rgba(255, 255, 255, 0.15);
+          border: none;
+          color: #fff;
+          border-radius: 4px;
+          padding: 4px 10px;
+          cursor: pointer;
+        "
+      >
+        ✕
+      </button>
+    </div>
+    <div class="pm-modal-body">
+      <p style="font-size: 13px; color: var(--pm-ink); margin-bottom: 12px">
+        Are you sure you want to delete this item? This cannot be undone.
+      </p>
+      <div
+        style="
+          background: var(--pm-red-soft);
+          border: 1px solid var(--pm-red);
+          border-radius: 6px;
+          padding: 10px 14px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--pm-red);
+        "
+        id="delete-item-name"
+      ></div>
+    </div>
+    <div class="pm-modal-footer">
+      <button class="pm-btn pm-btn-secondary" onclick="closeDeleteModal()">
+        Cancel
+      </button>
+      <button class="pm-btn pm-btn-danger" onclick="confirmDeleteItem()">
+        <i class="fa fa-trash"></i> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="pm-modal-overlay" id="upload-modal">
+  <div class="pm-modal" style="max-width: 860px; width: 95vw">
+    <div class="pm-modal-header">
+      <h3 id="upload-modal-title">Upload Process Master</h3>
+      <button
+        onclick="closeUploadModal()"
+        style="
+          background: rgba(255, 255, 255, 0.15);
+          border: none;
+          color: #fff;
+          border-radius: 4px;
+          padding: 4px 10px;
+          cursor: pointer;
+        "
+      >
+        ✕
+      </button>
+    </div>
+    <div class="pm-modal-body">
+      <div id="upload-step-1">
+        <p
+          style="
+            font-size: 13px;
+            color: var(--pm-ink-soft);
+            margin-bottom: 16px;
+          "
+        >
+          Select your Excel file.
+        </p>
+        <input
+          type="file"
+          id="upload-file-input"
+          accept=".xlsx,.xls,.csv"
+          multiple
+          style="display: none"
+          onchange="handleFileSelect(event)"
+        />
+        <button
+          class="pm-btn pm-btn-primary"
+          onclick="document.getElementById('upload-file-input').click()"
+        >
+          Select File
+        </button>
+        <span
+          id="upload-filename"
+          style="margin-left: 12px; font-size: 13px; color: var(--pm-ink-muted)"
+        ></span>
+      </div>
+      <div id="upload-step-2" style="display: none">
+        <div
+          id="upload-summary"
+          style="margin-bottom: 12px; font-size: 13px; font-weight: 600"
+        ></div>
+        <div
+          style="
+            max-height: 360px;
+            overflow-y: auto;
+            border: 1px solid var(--pm-border);
+            border-radius: 6px;
+          "
+        >
+          <table
+            style="width: 100%; border-collapse: collapse; font-size: 12px"
+          >
+            <thead
+              id="upload-preview-head"
+              style="
+                position: sticky;
+                top: 0;
+                background: var(--header-bg);
+                color: #fff;
+              "
+            ></thead>
+            <tbody id="upload-preview-body"></tbody>
+          </table>
+        </div>
+        <div
+          style="
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+          "
+        >
+          <button class="pm-btn pm-btn-secondary" onclick="resetUpload()">
+            Upload Different File
+          </button>
+          <button
+            class="pm-btn pm-btn-primary"
+            id="confirm-upload-btn"
+            onclick="confirmUpload()"
+          >
+            Confirm Import
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 {% endblock %} {% block extra_scripts %}
-<script>
-  window.PROCESS_MASTER_PROCESS_LIST = {{ process_names | default([]) | tojson }};
-</script>
 <script src="{{ url_for('static', filename='js/page2.js') }}?v={{ version }}"></script>
 <script src="{{ url_for('static', filename='js/upload.js') }}?v={{ version }}"></script>
 {% endblock %}

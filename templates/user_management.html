@@ -9,10 +9,10 @@ title %}User Management | NMTG{% endblock %} {% block extra_head %}
   <div class="page-header">
     <div>
       <h1>User Management</h1>
-      <p>Create new users and manage system access</p>
+      <!-- <p>Create new users and manage system access</p> -->
     </div>
     <button class="btn-primary" onclick="openAddUserModal()">
-      + Add New User
+      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;Add New User
     </button>
   </div>
 
@@ -20,17 +20,15 @@ title %}User Management | NMTG{% endblock %} {% block extra_head %}
     <table>
       <thead>
         <tr>
-          <th>Username</th>
-          <th>Full Name</th>
+          <th>User</th>
           <th>Role</th>
           <th>Status</th>
-          <th>Created</th>
-          <th>Actions</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="users-table-body">
         <tr class="empty-row">
-          <td colspan="6">Loading Data...</td>
+          <td colspan="5">Loading Data...</td>
         </tr>
       </tbody>
     </table>
@@ -47,37 +45,39 @@ title %}User Management | NMTG{% endblock %} {% block extra_head %}
       </button>
     </div>
 
-    <div class="form-grid-2">
-      <div class="form-group" style="grid-column: 1/-1">
-        <label>Username &nbsp;<span style="color: #ef4444">*</span></label>
-        <input
-          type="text"
-          id="u-username"
-          placeholder="e.g. jdoe"
-          autocomplete="off"
-        />
-      </div>
-      <div class="form-group" style="grid-column: 1/-1">
-        <label>Password &nbsp;<span style="color: #ef4444">*</span></label>
-        <input
-          type="password"
-          id="u-password"
-          placeholder="Minimum 6 characters"
-          autocomplete="new-password"
-        />
-      </div>
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="u-full-name" placeholder="e.g. John Doe" />
-      </div>
-      <div class="form-group">
-        <label>Role &nbsp;<span style="color: #ef4444">*</span></label>
-        <select id="u-role">
-          <option value="">-- Select Role --</option>
-          <option value="admin">Admin</option>
-          <option value="supervisor">Supervisor</option>
-          <option value="operator">Operator</option>
-        </select>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group span-2">
+          <label>Username <span class="req">*</span></label>
+          <input
+            type="text"
+            id="u-username"
+            placeholder="e.g. jdoe"
+            autocomplete="off"
+          />
+        </div>
+        <div class="form-group span-2">
+          <label>Password <span class="req">*</span></label>
+          <input
+            type="password"
+            id="u-password"
+            placeholder="Minimum 6 characters"
+            autocomplete="new-password"
+          />
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="u-full-name" placeholder="e.g. John Doe" />
+        </div>
+        <div class="form-group">
+          <label>Role <span class="req">*</span></label>
+          <select id="u-role">
+            <option value="">-- Select Role --</option>
+            <option value="admin">Admin</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="operator">Operator</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -96,7 +96,7 @@ title %}User Management | NMTG{% endblock %} {% block extra_head %}
 
 <!-- ── USER DETAIL MODAL ──────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="user-detail-modal">
-  <div class="modal" style="max-width: 760px">
+  <div class="modal modal-wide">
     <div class="modal-header">
       <h2>User Details</h2>
       <button class="modal-close" onclick="closeUserDetail()">
@@ -104,140 +104,72 @@ title %}User Management | NMTG{% endblock %} {% block extra_head %}
       </button>
     </div>
 
-    <div class="detail-rows">
-      <div class="detail-row">
-        <span class="detail-label">Username</span>
-        <span class="detail-value" id="ud-username"></span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Full Name</span>
-        <span class="detail-value" id="ud-full-name"></span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Role</span>
-        <span class="detail-value" id="ud-role"></span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Status</span>
-        <span class="detail-value" id="ud-status"></span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Created</span>
-        <span class="detail-value" id="ud-created"></span>
-      </div>
-    </div>
-
-    <!-- Edit Role section — hidden until "Edit Role" is clicked -->
-    <div
-      id="permissions-section"
-      style="
-        display: none;
-        margin-top: 18px;
-        padding-top: 14px;
-        border-top: 1px solid var(--border);
-      "
-    >
-      <div
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 12px;
-        "
-      >
-        <span class="detail-label">Rights Allocation</span>
-        <button
-          class="btn-primary"
-          id="permissions-save-btn"
-          onclick="savePermissions()"
-        >
-          Save Rights
-        </button>
-      </div>
-      <div
-        style="
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 14px;
-          align-items: start;
-        "
-      >
-        <div>
-          <div class="detail-label" style="margin-bottom: 8px">
-            Process Access
-          </div>
-          <div
-            id="permission-process-list"
-            style="
-              max-height: 220px;
-              overflow: auto;
-              border: 1px solid var(--border);
-              border-radius: 6px;
-              padding: 10px;
-            "
-          ></div>
+    <div class="modal-body">
+      <div class="user-hero">
+        <div class="user-hero-avatar" id="ud-avatar">--</div>
+        <div class="user-hero-info">
+          <span class="user-hero-name" id="ud-full-name"></span>
+          <span class="user-hero-username" id="ud-username"></span>
         </div>
-        <div>
-          <div class="detail-label" style="margin-bottom: 8px">
-            System Page Access
-          </div>
-
-          <div id="permission-page-list" class="page-access-grid"></div>
-          <div class="detail-label" style="margin-bottom: 8px">
-            Field Edit Rights
-          </div>
-          <div
-            id="permission-field-list"
-            style="
-              max-height: 220px;
-              overflow: auto;
-              border: 1px solid var(--border);
-              border-radius: 6px;
-              padding: 10px;
-            "
-          ></div>
+        <div class="user-hero-badges">
+          <span id="ud-role"></span>
+          <span id="ud-status"></span>
         </div>
       </div>
-    </div>
-
-    <div
-      id="edit-role-section"
-      style="
-        display: none;
-        margin-top: 18px;
-        padding-top: 14px;
-        border-top: 1px solid var(--border);
-      "
-    >
-      <span class="detail-label" style="display: block; margin-bottom: 10px"
-        >Select New Role</span
-      >
-      <div class="role-pill-row">
-        <button
-          class="role-pill admin"
-          id="role-pill-admin"
-          onclick="selectRolePill('admin')"
-        >
-          Admin
-        </button>
-        <button
-          class="role-pill supervisor"
-          id="role-pill-supervisor"
-          onclick="selectRolePill('supervisor')"
-        >
-          Supervisor
-        </button>
-        <button
-          class="role-pill operator"
-          id="role-pill-operator"
-          onclick="selectRolePill('operator')"
-        >
-          Operator
-        </button>
+      <!-- Edit Role section — hidden until "Edit Role" is clicked -->
+      <div id="permissions-section" class="section-block">
+        <div class="section-block-header">
+          <span class="detail-label">Rights Allocation</span>
+          <button
+            class="btn-primary"
+            id="permissions-save-btn"
+            onclick="savePermissions()"
+          >
+            Save Rights
+          </button>
+        </div>
+        <div class="permissions-grid">
+          <div class="permission-panel">
+            <div class="detail-label">Process Access</div>
+            <div id="permission-process-list" class="perm-list"></div>
+          </div>
+          <div class="permission-panel">
+            <div class="detail-label">System Page Access</div>
+            <div id="permission-page-list" class="perm-list"></div>
+            <div class="detail-label">Field Edit Rights</div>
+            <div id="permission-field-list" class="perm-list"></div>
+          </div>
+        </div>
       </div>
-      <div style="display: flex; justify-content: flex-end; margin-top: 14px">
-        <button class="btn-cancel" onclick="hideEditRole()">Cancel</button>
+
+      <div id="edit-role-section" class="section-block">
+        <span class="detail-label block-label">Select New Role</span>
+        <div class="role-pill-row">
+          <button
+            class="role-pill admin"
+            id="role-pill-admin"
+            onclick="selectRolePill('admin')"
+          >
+            Admin
+          </button>
+          <button
+            class="role-pill supervisor"
+            id="role-pill-supervisor"
+            onclick="selectRolePill('supervisor')"
+          >
+            Supervisor
+          </button>
+          <button
+            class="role-pill operator"
+            id="role-pill-operator"
+            onclick="selectRolePill('operator')"
+          >
+            Operator
+          </button>
+        </div>
+        <div class="section-block-footer">
+          <button class="btn-cancel" onclick="hideEditRole()">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -252,22 +184,16 @@ title %}User Management | NMTG{% endblock %} {% block extra_head %}
 
 <!-- ── ROLE CHANGE CONFIRM MODAL ──────────────────────────────────────────── -->
 <div class="modal-overlay" id="role-confirm-modal">
-  <div class="modal" style="max-width: 420px">
+  <div class="modal modal-narrow">
     <div class="modal-header">
       <h2>Confirm Role Change</h2>
       <button class="modal-close" onclick="cancelRoleChange()">
         <i class="fa fa-close" aria-hidden="true"></i>
       </button>
     </div>
-    <p
-      id="role-confirm-msg"
-      style="
-        font-size: 14px;
-        color: var(--text);
-        line-height: 1.7;
-        padding: 4px 0 20px;
-      "
-    ></p>
+    <div class="modal-body">
+      <p id="role-confirm-msg" class="confirm-msg"></p>
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="cancelRoleChange()">Cancel</button>
       <button

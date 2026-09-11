@@ -1,0 +1,730 @@
+﻿
+/* =========================================================
+   NMTG JMS - FINAL GLOBAL THEME LAYER V1
+
+   IMPORTANT:
+   This stylesheet is loaded AFTER {% block extra_head %}.
+   Therefore it is the final visual authority for dark mode.
+========================================================= */
+
+
+/* =========================================================
+   DARK TOKENS
+========================================================= */
+
+html.jms-dark-theme {
+
+    color-scheme: dark;
+
+    --theme-bg: #10161c;
+    --theme-surface: #171e25;
+    --theme-surface-2: #1d252d;
+    --theme-surface-3: #242d36;
+
+    --theme-text: #edf1f5;
+    --theme-text-2: #c9d0d7;
+    --theme-muted: #919ba5;
+
+    --theme-border: #36414b;
+    --theme-border-strong: #4a5763;
+
+    --theme-hover: #242d35;
+    --theme-hover-2: #2c3741;
+
+    --theme-input: #141b21;
+
+    --theme-blue: #0288f7;
+
+
+    /* Existing common JMS variables */
+
+    --bg: var(--theme-bg);
+    --surface: var(--theme-surface);
+    --surface2: var(--theme-surface-2);
+    --card-bg: var(--theme-surface);
+
+    --border: var(--theme-border);
+    --text: var(--theme-text);
+    --muted: var(--theme-muted);
+
+
+    /* Process Master variables */
+
+    --pm-bg: var(--theme-bg);
+    --pm-surface: var(--theme-surface);
+    --pm-border: var(--theme-border);
+
+    --pm-ink: var(--theme-text);
+    --pm-ink-soft: var(--theme-text-2);
+    --pm-ink-muted: var(--theme-muted);
+
+    --pm-accent-soft: #172c40;
+    --pm-green-soft: #173126;
+    --pm-amber-soft: #392d17;
+    --pm-red-soft: #3a2023;
+
+
+    /* Dispatch Tracker variables */
+
+    --dt-bg: var(--theme-bg);
+    --dt-surface: var(--theme-surface);
+    --dt-surface2: var(--theme-surface-2);
+
+    --dt-ink: var(--theme-text);
+    --dt-ink-soft: var(--theme-text-2);
+}
+
+
+/* =========================================================
+   DOCUMENT
+========================================================= */
+
+html.jms-dark-theme body {
+    background: var(--theme-bg) !important;
+    color: var(--theme-text) !important;
+}
+
+
+html.jms-dark-theme body .main {
+    background: var(--theme-bg) !important;
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   HEADINGS / ORDINARY TEXT
+========================================================= */
+
+html.jms-dark-theme body h1,
+html.jms-dark-theme body h2,
+html.jms-dark-theme body h3,
+html.jms-dark-theme body h4,
+html.jms-dark-theme body h5,
+html.jms-dark-theme body h6 {
+    color: var(--theme-text) !important;
+}
+
+
+html.jms-dark-theme body label {
+    color: var(--theme-text-2) !important;
+}
+
+
+html.jms-dark-theme body .text-muted,
+html.jms-dark-theme body .muted {
+    color: var(--theme-muted) !important;
+}
+
+
+/* =========================================================
+   STANDARD SURFACES
+========================================================= */
+
+html.jms-dark-theme body .card,
+html.jms-dark-theme body .page-header,
+html.jms-dark-theme body .panel,
+html.jms-dark-theme body .section-card,
+html.jms-dark-theme body .table-container,
+html.jms-dark-theme body .modal-content,
+html.jms-dark-theme body .modal-box {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+
+    box-shadow: none !important;
+}
+
+
+/* Do not allow light hover flash */
+
+html.jms-dark-theme body .card:hover,
+html.jms-dark-theme body .panel:hover,
+html.jms-dark-theme body .section-card:hover {
+
+    background: var(--theme-surface) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+html.jms-dark-theme body
+input:not([type="checkbox"]):not([type="radio"]),
+
+html.jms-dark-theme body select,
+html.jms-dark-theme body textarea {
+
+    background: var(--theme-input) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body
+input:not([type="checkbox"]):not([type="radio"]):hover,
+
+html.jms-dark-theme body select:hover,
+html.jms-dark-theme body textarea:hover {
+
+    background: var(--theme-input) !important;
+
+    border-color: var(--theme-border-strong) !important;
+}
+
+
+html.jms-dark-theme body
+input:not([type="checkbox"]):not([type="radio"]):focus,
+
+html.jms-dark-theme body select:focus,
+html.jms-dark-theme body textarea:focus {
+
+    background: var(--theme-input) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: #647583 !important;
+
+    outline-color: rgba(2, 136, 247, .22) !important;
+}
+
+
+html.jms-dark-theme body input::placeholder,
+html.jms-dark-theme body textarea::placeholder {
+
+    color: #77838e !important;
+}
+
+
+html.jms-dark-theme body input[type="date"] {
+    color-scheme: dark;
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+html.jms-dark-theme body table {
+
+    color: var(--theme-text-2) !important;
+}
+
+
+html.jms-dark-theme body table thead,
+html.jms-dark-theme body table thead tr,
+html.jms-dark-theme body table th {
+
+    background: #202a33 !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body table td {
+
+    color: var(--theme-text-2);
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/*
+   Standard rows only.
+   Semantic red / green / warning rows are not forcibly recolored.
+*/
+
+html.jms-dark-theme body
+table tbody tr:not(.urgent-row):not(.danger-row):not(.error-row):not(.success-row) {
+
+    background-color: var(--theme-surface) ;
+}
+
+
+html.jms-dark-theme body
+table tbody tr:not(.urgent-row):not(.danger-row):not(.error-row):not(.success-row):hover {
+
+    background-color: var(--theme-hover) !important;
+}
+
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+html.jms-dark-theme body .modal,
+html.jms-dark-theme body .modal-wide,
+html.jms-dark-theme body .cp-modal-box,
+html.jms-dark-theme body .auth-modal-box {
+
+    background: var(--theme-surface-2) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* =========================================================
+   DROPDOWNS / AUTOCOMPLETE
+========================================================= */
+
+html.jms-dark-theme body .dropdown-menu,
+html.jms-dark-theme body .ac-list,
+html.jms-dark-theme body .customer-ac-list,
+html.jms-dark-theme body [role="listbox"] {
+
+    background: var(--theme-surface-2) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .dropdown-menu > *:hover,
+html.jms-dark-theme body .ac-list > *:hover,
+html.jms-dark-theme body .customer-ac-list > *:hover {
+
+    background: var(--theme-hover) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   SECONDARY BUTTONS
+========================================================= */
+
+html.jms-dark-theme body .btn-secondary,
+html.jms-dark-theme body .secondary,
+html.jms-dark-theme body button.secondary {
+
+    background: var(--theme-surface-3) !important;
+
+    color: var(--theme-text-2) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .btn-secondary:hover,
+html.jms-dark-theme body .secondary:hover,
+html.jms-dark-theme body button.secondary:hover {
+
+    background: var(--theme-hover-2) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+html.jms-dark-theme body .main-sidebar,
+html.jms-dark-theme body .erp-sidebar-top,
+html.jms-dark-theme body .sidebar-links {
+
+    background: #151c22 !important;
+}
+
+
+html.jms-dark-theme body .sidebar-link:hover,
+html.jms-dark-theme body .erp-sidebar-tool:hover,
+html.jms-dark-theme body .erp-sidebar-collapse:hover {
+
+    background: var(--theme-hover) !important;
+}
+
+
+html.jms-dark-theme body .sidebar-link.active {
+
+    background: var(--theme-surface-3) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   PPC
+========================================================= */
+
+html.jms-dark-theme body .ppc-order-card,
+html.jms-dark-theme body .ppc-bom-card,
+html.jms-dark-theme body .ppc-child-section {
+
+    background: var(--theme-surface) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .ppc-order-grid .prefix-input-wrap {
+
+    background: var(--theme-input) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body
+.ppc-order-grid
+.prefix-input-wrap
+.prefix {
+
+    background: var(--theme-surface-3) !important;
+
+    color: var(--theme-text-2) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* =========================================================
+   CUTTING PLAN - COMPLETE DARK MODE MAPPING
+========================================================= */
+
+html.jms-dark-theme body .cutting-plan-page {
+
+    background: var(--theme-bg) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+/* Header */
+
+html.jms-dark-theme body .cutting-header {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text) !important;
+
+    border: 1px solid var(--theme-border) !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .cutting-header h1 {
+
+    color: var(--theme-text) !important;
+}
+
+
+html.jms-dark-theme body .cutting-header p {
+
+    color: var(--theme-muted) !important;
+}
+
+
+/* Summary cards */
+
+html.jms-dark-theme body .cp-summary-card {
+
+    background: var(--theme-surface) !important;
+
+    border: 1px solid var(--theme-border) !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .cp-summary-title {
+
+    color: var(--theme-muted) !important;
+}
+
+
+html.jms-dark-theme body .cp-summary-value {
+
+    color: var(--theme-text) !important;
+}
+
+
+/* Table / planning cards */
+
+html.jms-dark-theme body .cutting-table-card,
+
+html.jms-dark-theme body .cutting-plan-page [class*="planning-card"],
+
+html.jms-dark-theme body .cutting-plan-page [class*="planning-section"],
+
+html.jms-dark-theme body .cutting-plan-page [class*="requirements-card"],
+
+html.jms-dark-theme body .cutting-plan-page [class*="requirements-section"] {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+
+    box-shadow: none !important;
+}
+
+
+html.jms-dark-theme body .cutting-table-card h2 {
+
+    color: var(--theme-text) !important;
+}
+
+
+/* Cutting table */
+
+html.jms-dark-theme body .cutting-table {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text-2) !important;
+}
+
+
+html.jms-dark-theme body .cutting-table th {
+
+    background: #202a33 !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .cutting-table td {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text-2) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .cutting-table tr:hover td {
+
+    background: var(--theme-hover) !important;
+}
+
+
+/* Current newer automatic-planning area */
+
+html.jms-dark-theme body .cutting-plan-page
+[class*="automatic"] {
+
+    background-color: var(--theme-surface) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .cutting-plan-page
+[class*="pending"] {
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .cutting-plan-page
+[class*="toolbar"] {
+
+    background: var(--theme-surface) !important;
+
+    color: var(--theme-text-2) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* Plain Cutting Plan controls */
+
+html.jms-dark-theme body .cutting-plan-page
+button:not(.cp-primary):not([class*="primary"]) {
+
+    background: var(--theme-surface-3) !important;
+
+    color: var(--theme-text-2) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .cutting-plan-page
+button:not(.cp-primary):not([class*="primary"]):hover:not(:disabled) {
+
+    background: var(--theme-hover-2) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+html.jms-dark-theme body .cutting-plan-page button:disabled {
+
+    background: #1b2229 !important;
+
+    color: #68737d !important;
+
+    border-color: #303942 !important;
+
+    opacity: 1 !important;
+}
+
+
+/* Keep primary actions blue */
+
+html.jms-dark-theme body .cutting-plan-page .cp-primary {
+
+    background: #0f5c96 !important;
+
+    color: #ffffff !important;
+}
+
+
+html.jms-dark-theme body .cutting-plan-page .cp-primary:hover {
+
+    background: #146cae !important;
+}
+
+
+/* Cutting inputs */
+
+html.jms-dark-theme body .cutting-plan-page input,
+
+html.jms-dark-theme body .cutting-plan-page select,
+
+html.jms-dark-theme body .cutting-plan-page textarea {
+
+    background: var(--theme-input) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* Cutting modal */
+
+html.jms-dark-theme body .cp-modal-box,
+
+html.jms-dark-theme body
+#manual-plan-modal.cp-modal-overlay
+.cp-modal-box {
+
+    background: var(--theme-surface-2) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+html.jms-dark-theme body .cp-modal-header {
+
+    color: var(--theme-text) !important;
+}
+
+
+html.jms-dark-theme body .cp-form-group label {
+
+    color: var(--theme-text-2) !important;
+}
+
+
+html.jms-dark-theme body .cp-form-input {
+
+    background: var(--theme-input) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+/* =========================================================
+   PROCESS MASTER
+========================================================= */
+
+html.jms-dark-theme body .pm-page {
+
+    background: var(--theme-bg) !important;
+
+    color: var(--theme-text) !important;
+}
+
+
+/* =========================================================
+   DISPATCH TRACKER
+========================================================= */
+
+html.jms-dark-theme body [class^="dt-"],
+html.jms-dark-theme body [class*=" dt-"] {
+
+    border-color: var(--theme-border);
+}
+
+
+/* =========================================================
+   COMMAND PALETTE / HEADER MENU / DATE POPOVER
+========================================================= */
+
+html.jms-dark-theme body .erp-command-palette,
+html.jms-dark-theme body .erp-command-input-row,
+html.jms-dark-theme body .erp-command-list,
+html.jms-dark-theme body .erp-command-footer,
+html.jms-dark-theme body .erp-header-menu,
+html.jms-dark-theme body .erp-date-filter-popover {
+
+    background: var(--theme-surface-2) !important;
+
+    color: var(--theme-text) !important;
+
+    border-color: var(--theme-border) !important;
+}
+
+
+html.jms-dark-theme body .erp-command-item:hover,
+html.jms-dark-theme body .erp-command-item.is-selected,
+html.jms-dark-theme body .erp-header-menu-item:hover {
+
+    background: var(--theme-hover) !important;
+}
+
+
+/* =========================================================
+   DARK HOVER SAFETY
+========================================================= */
+
+/*
+   Common light hover leakage protection.
+   Does NOT touch semantic primary/status colours.
+*/
+
+html.jms-dark-theme body
+button:not(.cp-primary):not(.btn-primary):not(.auth-modal-btn-danger):hover {
+
+    border-color: var(--theme-border-strong);
+}
+
+
+html.jms-dark-theme body
+tr:hover {
+
+    box-shadow: none !important;
+}
+
+
+/* =========================================================
+   END FINAL GLOBAL THEME
+========================================================= */
+

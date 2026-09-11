@@ -3,16 +3,71 @@ View | NMTG{% endblock %} {% block extra_head %}
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
 <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/page5.css') }}?v={{ version }}"
 />
+
+<style>
+  .logged-user-note {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    color: #0f2a4d;
+  }
+
+  .logged-user-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  }
+
+  .logged-user-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logged-user-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .logged-user-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #123a63;
+  }
+
+  #shared-bottom-supervisor {
+    display: none !important;
+  }
+</style>
 {% endblock %} {% block content %}
+
 <div class="main">
   <div class="page-header">
     <div>
       <h1>Data View</h1>
-      <p>Browse, filter, sort and export all records</p>
+      <!-- <p>Browse, filter, sort and export all records</p> -->
     </div>
   </div>
 
@@ -21,18 +76,15 @@ View | NMTG{% endblock %} {% block extra_head %}
     <button class="tab-btn active" id="tab-jc" onclick="switchTab('jc')">
       PPC
     </button>
-    <button class="tab-btn" id="tab-qc" onclick="switchTab('qc')">
-      Traceability
+    {% if session.get('role') == 'admin' %}
+    <button class="tab-btn" id="tab-ws" onclick="switchTab('ws')">
+      WIP Summary
     </button>
-    <button class="tab-btn" id="tab-pr" onclick="switchTab('pr')">
-      Process Report
-    </button>
-    <button class="tab-btn" id="tab-ps" onclick="switchTab('ps')">
-      Planning Sheet
-    </button>
+    {% endif %}
+
   </div>
 
-  <!-- Collapsible filter panel (shared across all tabs) -->
+  <!-- Collapsible filter panel -->
   <div class="filter-panel" id="filter-panel" style="display: none">
     <div id="filter-panel-content"></div>
     <div class="filter-panel-footer">
@@ -44,12 +96,11 @@ View | NMTG{% endblock %} {% block extra_head %}
 
   <!-- Standard table view -->
   <div id="table-view">
-    <!-- Search row -->
     <div class="search-row">
       <div class="search-box-wrap">
-        <span class="search-icon"
-          ><i class="fa fa-search" aria-hidden="true"></i
-        ></span>
+        <span class="search-icon">
+          <i class="fa fa-search" aria-hidden="true"></i>
+        </span>
         <input
           type="text"
           id="global-search"
@@ -65,21 +116,16 @@ View | NMTG{% endblock %} {% block extra_head %}
           <i class="fa fa-times" aria-hidden="true"></i>
         </button>
       </div>
-      <button
-        class="btn-filter-toggle"
-        id="btn-filter-toggle"
-        onclick="toggleFilters()"
-      >
-        <i class="fa fa-sliders" aria-hidden="true"></i>
-        <span>Filters</span>
-        <span
-          class="filter-count-badge"
-          id="filter-count-badge"
-          style="display: none"
-          >0</span
-        >
-      </button>
+
       <div class="export-btns">
+        <button
+          type="button"
+          class="btn-export btn-columns"
+          id="btn-columns"
+          onclick="openColumnChooser(event)"
+        >
+          <i class="fa fa-columns" aria-hidden="true"></i> Columns
+        </button>
         <button class="btn-export" onclick="exportExcel()">
           <i class="fa fa-download" aria-hidden="true"></i> Excel
         </button>
@@ -90,7 +136,7 @@ View | NMTG{% endblock %} {% block extra_head %}
     </div>
 
     <div class="table-container">
-      <table>
+      <table id="data-table" class="resizable-table">
         <thead id="table-head"></thead>
         <tbody id="table-body">
           <tr>
@@ -109,699 +155,157 @@ View | NMTG{% endblock %} {% block extra_head %}
     <div class="row-count" id="row-count"></div>
   </div>
 
-  <!-- Process Report view -->
-  <div id="pr-view" style="display: none">
-    <div class="search-row">
-      <div class="search-box-wrap">
-        <span class="search-icon"
-          ><i class="fa fa-search" aria-hidden="true"></i
-        ></span>
-        <input
-          type="text"
-          id="pr-search"
-          placeholder="Search by JC No, SO No or Item Name..."
-          oninput="debounceSearch()"
-        />
-      </div>
-      <button
-        class="btn-filter-toggle"
-        id="btn-filter-toggle-pr"
-        onclick="toggleFilters()"
-      >
-        <i class="fa fa-sliders" aria-hidden="true"></i>
-        <span>Filters</span>
-        <span
-          class="filter-count-badge"
-          id="filter-count-badge-pr"
-          style="display: none"
-          >0</span
-        >
-      </button>
-      <div class="export-btns">
-        <button class="btn-export" onclick="exportPRExcel()">
-          <i class="fa fa-file-download" aria-hidden="true"></i> Export Excel
-        </button>
-      </div>
-    </div>
-    <div id="pr-cards"></div>
-    <div class="row-count" id="pr-row-count"></div>
-  </div>
 
   <!-- Planning Sheet view -->
-  <div id="ps-view" style="display: none">
-    <div class="search-row">
-      <div class="search-box-wrap">
-        <span class="search-icon"
-          ><i class="fa fa-search" aria-hidden="true"></i
-        ></span>
-        <input
-          type="text"
-          id="ps-search"
-          placeholder="Search by JC No or Item Name..."
-          oninput="debounceSearch()"
-        />
-        <button
-          class="btn-clear-search"
-          id="ps-clear-search"
-          onclick="clearPSSearch()"
-          style="display: none"
-        >
-          <i class="fa fa-times" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div
-        class="ps-controls"
-        style="display: flex; gap: 10px; align-items: center"
-      >
-        <select
-          id="ps-wip-filter"
-          class="filter-select-inline"
-          onchange="loadPlanningSheet()"
-        >
-          <option value="">All WIP Stages</option>
-        </select>
-        <button class="btn-export" onclick="exportPSExcel()">
-          <i class="fa fa-download"></i> Export Excel
-        </button>
-      </div>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead id="ps-head"></thead>
-        <tbody id="ps-body">
-          <tr>
-            <td
-              colspan="25"
-              style="text-align: center; padding: 40px; color: var(--muted)"
-            >
-              Loading...
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="row-count" id="ps-row-count"></div>
-  </div>
-</div>
-
-<!-- ── Shared Stage Change Modal (reused from Page 3, self-contained) ──── -->
-<div id="stage-modal" class="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-title" id="modal-title">Change Stage?</div>
-    <div class="modal-body">
-      <div class="modal-qty-row">
-        <div class="modal-qty-field">
-          <span class="modal-qty-label">Planned Qty</span>
-          <input
-            class="modal-qty-input"
-            type="number"
-            id="modal-planned-qty"
-            min="0"
-            readonly
-          />
-        </div>
-        <div class="modal-qty-field">
-          <span class="modal-qty-label">Actual Qty</span>
-          <input
-            class="modal-qty-input"
-            type="number"
-            id="modal-actual-qty"
-            min="0"
-          />
-        </div>
-      </div>
-
-      <div style="margin-bottom: 12px">
-        <div
-          style="
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-          "
-        >
-          Complete Current Process
-        </div>
-        <span
-          style="
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            color: #16a34a;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-          "
-        >
-          <span id="modal-current-process"></span>
-        </span>
-      </div>
-
-      <div style="margin-bottom: 14px">
-        <div
-          style="
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-          "
-        >
-          Move To
-        </div>
-        <span
-          style="
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1a56db;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-          "
-        >
-          <i class="fa fa-check" aria-hidden="true"></i
-          ><span id="modal-next-process"></span>
-        </span>
-      </div>
-
-      <div class="modal-note" id="modal-note">
-        Supervisor must be selected at the bottom before confirming.
-      </div>
-
-      <div
-        id="subcontract-section"
-        style="
-          margin-top: 14px;
-          padding-top: 14px;
-          border-top: 1px solid var(--border);
-        "
-      >
-        <label
-          style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: #92400e;
-          "
-        >
-          <input
-            type="checkbox"
-            id="subcontract-checkbox"
-            style="width: 16px; height: 16px; cursor: pointer"
-            onchange="toggleSubcontractVendor(this.checked)"
-          />
-          <i class="fa fa-truck"></i> Send Next Stage to Subcontracting
-        </label>
-        <div id="vendor-row" style="display: none; margin-top: 10px">
-          <div style="margin-bottom: 8px">
-            <label
-              style="
-                font-size: 11px;
-                font-weight: 700;
-                color: #92400e;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                display: block;
-                margin-bottom: 4px;
-              "
-            >
-              Vendor &nbsp;<span style="color: #ef4444">*</span>
-            </label>
-            <input
-              type="text"
-              id="modal-vendor-name"
-              placeholder="Enter vendor / subcontractor name"
-              style="
-                width: 100%;
-                padding: 8px 12px;
-                border: 1px solid #fde68a;
-                border-radius: 4px;
-                font-size: 13px;
-                font-family: &quot;IBM Plex Sans&quot;, sans-serif;
-                outline: none;
-                background: #fffbeb;
-              "
-            />
-          </div>
-          <div>
-            <label
-              style="
-                font-size: 11px;
-                font-weight: 700;
-                color: #92400e;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                display: block;
-                margin-bottom: 4px;
-              "
-            >
-              Lead Days
-            </label>
-            <div style="display: flex; align-items: center; gap: 10px">
-              <input
-                type="number"
-                id="modal-lead-days"
-                min="1"
-                max="365"
-                placeholder="e.g. 5"
-                style="
-                  width: 100px;
-                  padding: 8px 12px;
-                  border: 1px solid #fde68a;
-                  border-radius: 4px;
-                  font-size: 13px;
-                  font-family: &quot;IBM Plex Sans&quot;, sans-serif;
-                  outline: none;
-                  background: #fffbeb;
-                "
-              />
-              <span
-                id="modal-expected-date-label"
-                style="font-size: 12px; color: var(--muted); font-weight: 500"
-              ></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        style="
-          margin-top: 14px;
-          padding-top: 14px;
-          border-top: 1px solid var(--border);
-        "
-      >
+<!-- WIP Summary tab -->
+<div id="ws-view" style="display: none; margin-top: 16px">
+  <div class="card" style="padding: 16px 20px; margin-bottom: 16px">
+    <div
+      style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap"
+    >
+      <div class="form-group" style="margin: 0">
         <label
           style="
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
           "
+          >From Date</label
         >
-          Supervisor <span style="color: #ef4444">*</span>
-        </label>
-        <select
-          id="shared-bottom-supervisor"
+        <input
+          type="date"
+          id="ws-from-date"
           style="
-            width: 100%;
-            padding: 9px 12px;
+            padding: 7px 10px;
             border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 13px;
             font-family: &quot;IBM Plex Sans&quot;, sans-serif;
           "
+        />
+      </div>
+      <div class="form-group" style="margin: 0">
+        <label
+          style="
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 4px;
+          "
+          >To Date</label
         >
-          <option value="">-- Select Supervisor --</option>
-        </select>
+        <input
+          type="date"
+          id="ws-to-date"
+          style="
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: &quot;IBM Plex Sans&quot;, sans-serif;
+          "
+        />
       </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeSharedStageModal()">
-        Cancel
-      </button>
       <button
-        class="btn-modal-confirm"
-        id="modal-confirm-btn"
-        onclick="confirmSharedStageChange()"
+        onclick="loadWipSummary()"
+        style="
+          padding: 7px 18px;
+          background: var(--accent);
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        "
       >
-        Confirm
+        Apply
       </button>
     </div>
   </div>
+  <div
+    id="ws-table-wrap"
+    style="
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    "
+  >
+    <div
+      id="ws-loading"
+      style="
+        padding: 32px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      "
+    >
+      Select a date range and click Apply.
+    </div>
+    <table
+      id="ws-table"
+      style="
+        display: none;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      "
+    >
+      <thead
+        id="ws-thead"
+        style="
+          position: sticky;
+          top: 0;
+          background: var(--header-bg);
+          color: #fff;
+        "
+      ></thead>
+      <tbody id="ws-tbody"></tbody>
+    </table>
+  </div>
 </div>
 
-<div id="confirm-stage-modal" class="modal-overlay">
-  <div class="modal-box" style="max-width: 400px">
-    <div class="modal-title" style="color: #dc2626">
-      <i class="fa fa-exclamation-triangle"></i> Confirm Stage Change
-    </div>
+<!-- Delivery Date Change Reason Modal -->
+<div
+  id="dd-reason-modal"
+  class="modal-overlay"
+  style="display: none; z-index: 10000"
+>
+  <div class="modal-box" style="width: 480px">
+    <div class="modal-title">Delivery Date Change — Reason Required</div>
     <div class="modal-body">
       <div
         style="
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 16px;
-          flex-wrap: wrap;
-        "
-      >
-        <span
-          id="csm-from"
-          style="
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            color: #16a34a;
-            padding: 5px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-          "
-        ></span>
-        <i class="fa fa-arrow-right" style="color: var(--muted)"></i>
-        <span
-          id="csm-to"
-          style="
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1a56db;
-            padding: 5px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-          "
-        ></span>
-      </div>
-      <div
-        style="
-          background: #fef2f2;
-          border: 1px solid #fca5a5;
-          border-radius: 6px;
+          margin-bottom: 12px;
           padding: 10px 14px;
-          font-size: 13px;
-          color: #dc2626;
-          font-weight: 500;
-        "
-      >
-        <i class="fa fa-lock"></i>&nbsp; This action
-        <strong>cannot be undone</strong>.
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeSharedConfirmModal()">
-        Cancel
-      </button>
-      <button
-        class="btn-modal-confirm"
-        style="background: #dc2626"
-        onclick="proceedSharedStageChange()"
-      >
-        Yes, Advance Stage
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Edit Job Card Fields Modal ──────────────────────────────────────── -->
-<div id="edit-jobcard-modal" class="modal-overlay">
-  <div class="modal-box" style="width: 620px">
-    <div class="modal-title">Edit Job Card Fields</div>
-    <div class="modal-body">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-        <div>
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Job Card No</label
-          >
-          <input
-            type="text"
-            id="ejc-job-card-no"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div>
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >SO No</label
-          >
-          <input
-            type="text"
-            id="ejc-so-no"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div style="grid-column: 1/-1">
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Customer Name</label
-          >
-          <input
-            type="text"
-            id="ejc-customer-name"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div>
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Parent Code</label
-          >
-          <input
-            type="text"
-            id="ejc-parent-code"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div>
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Child Code</label
-          >
-          <input
-            type="text"
-            id="ejc-child-code"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div style="grid-column: 1/-1">
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Item Name</label
-          >
-          <input
-            type="text"
-            id="ejc-item-name"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div>
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >SO Qty</label
-          >
-          <input
-            type="number"
-            id="ejc-so-qty"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div>
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Actual Qty</label
-          >
-          <input
-            type="number"
-            id="ejc-actual-qty"
-            min="0"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-        <div style="grid-column: 1/-1">
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Remarks</label
-          >
-          <textarea
-            id="ejc-remarks"
-            rows="3"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-              resize: vertical;
-              font-family: &quot;IBM Plex Sans&quot;, sans-serif;
-            "
-          ></textarea>
-        </div>
-        <div style="grid-column: 1/-1">
-          <label
-            style="
-              font-size: 12px;
-              font-weight: 600;
-              color: var(--muted);
-              display: block;
-              margin-bottom: 4px;
-            "
-            >Subcontractor / Vendor Name</label
-          >
-          <input
-            type="text"
-            id="ejc-vendor-name"
-            style="
-              width: 100%;
-              padding: 8px 10px;
-              border: 1px solid var(--border);
-              border-radius: 4px;
-              font-size: 13px;
-            "
-          />
-        </div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeEditJobCardModal()">
-        Cancel
-      </button>
-      <button class="btn-modal-confirm" onclick="saveEditJobCard()">
-        Save Changes
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Delete Item Confirmation Modal -->
-<div id="delete-item-modal" class="modal-overlay">
-  <div class="modal-box" style="max-width: 430px">
-    <div class="modal-title" style="color: #dc2626">
-      <i class="fa fa-trash"></i> Delete Item
-    </div>
-    <div class="modal-body">
-      <div style="font-size: 14px; color: var(--text); margin-bottom: 12px">
-        Delete this item from PPC?
-      </div>
-      <div
-        id="delete-item-label"
-        style="
-          background: #f8fafc;
-          border: 1px solid var(--border);
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
           border-radius: 6px;
-          padding: 9px 12px;
-          font-size: 13px;
-          font-weight: 700;
-          margin-bottom: 14px;
-        "
-      ></div>
-      <label
-        for="delete-item-reason"
-        style="
-          display: block;
           font-size: 12px;
-          font-weight: 700;
-          color: var(--muted);
-          margin-bottom: 5px;
+          color: #1e40af;
         "
       >
-        Remark
+        <strong>Original:</strong> <span id="dd-old-date"></span> &nbsp;→&nbsp;
+        <strong>New:</strong> <span id="dd-new-date"></span>
+      </div>
+      <label
+        style="
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          display: block;
+          margin-bottom: 4px;
+        "
+      >
+        Reason for change <span style="color: #ef4444">*</span>
       </label>
       <textarea
-        id="delete-item-reason"
-        rows="3"
-        placeholder="Enter delete reason (optional)"
+        id="dd-reason-input"
+        rows="4"
+        placeholder="Enter reason for changing delivery date..."
         style="
           width: 100%;
           padding: 8px 10px;
@@ -812,28 +316,215 @@ View | NMTG{% endblock %} {% block extra_head %}
           font-family: &quot;IBM Plex Sans&quot;, sans-serif;
         "
       ></textarea>
+      <div
+        id="dd-reason-error"
+        style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none"
+      >
+        Reason is required.
+      </div>
     </div>
     <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeDeleteItemModal()">
+      <button class="btn-modal-cancel" onclick="closeDdReasonModal()">
         Cancel
       </button>
-      <button
-        class="btn-modal-confirm"
-        id="delete-item-confirm-btn"
-        style="background: #dc2626"
-        onclick="confirmDeleteItem()"
-      >
-        Delete
+      <button class="btn-modal-confirm" onclick="confirmDdReasonAndSave()">
+        Confirm & Save
       </button>
     </div>
   </div>
 </div>
 {% endblock %} {% block extra_scripts %}
 <script>
+  window.JMS_IS_DISPATCH = {{ 'true' if session.get('role') == 'admin' else ('true' if dispatch_access else 'false') }};
   window.JMS_CURRENT_USERNAME = "{{ session.get('username', '') }}";
+  window.JMS_CURRENT_USER = "{{ session.get('full_name') or session.get('username') or '' }}";
   window.JMS_USER_ROLE = "{{ session.get('role', '') }}";
   window.JMS_IS_GAURANG_SPECIAL =
     {{ 'true' if session.get("user_id")|string == "5" or (session.get("username", "")|trim|lower) == "gaurang" else 'false' }};
 </script>
+
 <script src="{{ url_for('static', filename='js/page5.js') }}?v={{ version }}"></script>
+
+<!-- Stage Change Modal (restored) -->
+<div id="stage-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Change Stage?</div>
+    <div class="modal-body">
+      <div class="modal-qty-row">
+        <div class="modal-qty-field">
+          <span class="modal-qty-label">Planned Qty</span>
+          <input class="modal-qty-input" type="number" id="modal-planned-qty" min="0" readonly />
+        </div>
+        <div class="modal-qty-field">
+          <span class="modal-qty-label">Actual Qty</span>
+          <input class="modal-qty-input" type="number" id="modal-actual-qty" min="0" />
+        </div>
+      </div>
+      <div id="modal-current-row" style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Complete Current Process</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="background:#f0fdf4;border:1px solid #86efac;color:#16a34a;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;">
+            <span id="modal-current-process"></span>
+          </span>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Move To</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="background:#eff6ff;border:1px solid #bfdbfe;color:#1a56db;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;">
+            <i class="fa fa-check" aria-hidden="true"></i><span id="modal-next-process"></span>
+          </span>
+        </div>
+      </div>
+      <div id="rm-reason-section" style="display:none;margin-bottom:14px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;">
+        <div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">
+          <i class="fa fa-cube" aria-hidden="true"></i> Raw Material Status
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" id="rm-btn-testing" onclick="selectRmReason('testing')" style="flex:1;padding:12px;border:2px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;">
+            <i class="fa fa-flask"></i> Testing
+          </button>
+          <button type="button" id="rm-btn-shortage" onclick="selectRmReason('shortage')" style="flex:1;padding:12px;border:2px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;">
+            <i class="fa fa-exclamation-triangle"></i> Shortage
+          </button>
+        </div>
+        <input type="hidden" id="rm-hold-reason-value" value="" />
+      </div>
+      <div class="modal-note" id="modal-note"></div>
+      <div id="stage-remark-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;">
+          Stage Change Remark <span style="color:var(--muted);font-weight:500">(Optional)</span>
+        </label>
+        <textarea id="modal-stage-remark" placeholder="Enter remark for this stage change..." style="width:100%;min-height:70px;resize:vertical;padding:9px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;outline:none;background:#ffffff;"></textarea>
+      </div>
+      <div id="subcontract-section" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:#92400e;">
+          <input type="checkbox" id="subcontract-checkbox" style="width:16px;height:16px;cursor:pointer" onchange="toggleSubcontractVendor(this.checked)" />
+          <i class="fa fa-truck"></i> Send Next Stage to Subcontracting
+        </label>
+        <div id="vendor-row" style="display:none;margin-top:10px">
+          <div style="margin-bottom:8px">
+            <label style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;">
+              Vendor &nbsp;<span style="color:#ef4444">*</span>
+            </label>
+            <input type="text" id="modal-vendor-name" placeholder="Enter vendor / subcontractor name" style="width:100%;padding:8px 12px;border:1px solid #fde68a;border-radius:4px;font-size:13px;outline:none;background:#fffbeb;" />
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;">
+              Lead Days
+            </label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="number" id="modal-lead-days" min="1" max="365" placeholder="e.g. 5" style="width:100px;padding:8px 12px;border:1px solid #fde68a;border-radius:4px;font-size:13px;outline:none;background:#fffbeb;" oninput="updateExpectedDate()" />
+              <span id="modal-expected-date-label" style="font-size:12px;color:var(--muted);font-weight:500"></span>
+            </div>
+            <small id="lead-days-hint" style="font-size:11px;color:var(--muted);margin-top:4px;display:block;"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeSharedStageModal()">Cancel</button>
+      <button class="btn-modal-confirm" id="modal-confirm-btn" onclick="confirmSharedStageChange()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stage Change Confirmation Modal (restored) -->
+<div id="confirm-stage-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-title" style="color:#dc2626">
+      <i class="fa fa-exclamation-triangle"></i> Confirm Stage Change
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text);margin-bottom:12px">You are going back to the previous stage.</p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <span id="csm-from" style="background:#f0fdf4;border:1px solid #86efac;color:#16a34a;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;"></span>
+        <i class="fa fa-arrow-right" style="color:var(--muted)"></i>
+        <span id="csm-to" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1a56db;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;"></span>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:10px 14px;font-size:13px;color:#dc2626;font-weight:500;">
+        <i class="fa fa-lock"></i>&nbsp; This action <strong>cannot be undone</strong>. Make sure the current stage is fully complete.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeSharedConfirmStageModal()">Cancel</button>
+      <button class="btn-modal-confirm" id="csm-confirm-btn" style="background:#dc2626" onclick="proceedSharedStageChange()">Yes, Roll Back The Stage</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Job Card Modal (restored) -->
+<div id="edit-jobcard-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-title">Edit Job Card</div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">JC No</label>
+        <input type="text" id="ejc-job-card-no" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">SO No</label>
+        <input type="text" id="ejc-so-no" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Customer Name</label>
+        <input type="text" id="ejc-customer-name" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Parent Code</label>
+        <input type="text" id="ejc-parent-code" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Child Code</label>
+        <input type="text" id="ejc-child-code" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">WO No</label>
+        <input type="text" id="ejc-work-order-no" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Item Name</label>
+        <input type="text" id="ejc-item-name" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Material</label>
+        <input type="text" id="ejc-material" class="modal-qty-input" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1">
+          <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">SO Qty</label>
+          <input type="number" id="ejc-so-qty" class="modal-qty-input" min="0" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Actual Qty</label>
+          <input type="number" id="ejc-actual-qty" class="modal-qty-input" min="0" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+        </div>
+      </div>
+      <div id="ejc-delivery-date-wrap">
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Delivery Date</label>
+        <input type="date" id="ejc-delivery-date" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Remarks</label>
+        <textarea id="ejc-remarks" style="width:100%;min-height:60px;resize:vertical;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;"></textarea>
+      </div>
+      <div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#92400e;cursor:pointer;">
+          <input type="checkbox" id="ejc-is-subcontract" style="width:16px;height:16px;" onchange="document.getElementById('ejc-vendor-wrap').style.display=this.checked?'block':'none';var v=document.getElementById('ejc-vendor-name');if(v){v.disabled=false;v.readOnly=false;}" />
+          Subcontract
+        </label>
+      </div>
+      <div id="ejc-vendor-wrap" style="display:none">
+        <label style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Vendor Name</label>
+        <input type="text" id="ejc-vendor-name" style="width:100%;padding:8px 12px;border:1px solid #d0d7e2;border-radius:6px;font-size:13px;" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeEditJobCardModal()">Cancel</button>
+      <button class="btn-modal-confirm" onclick="saveEditJobCard()">Save</button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

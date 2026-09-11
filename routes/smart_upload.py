@@ -3,10 +3,12 @@ Smart Upload Wizard - Step 2
 Detects file header, generates signature, checks for saved mapping template.
 """
 
-from flask import Blueprint, jsonify, request
-from db import get_connection
 import hashlib
 import json
+
+from flask import Blueprint, jsonify, request
+
+from db import get_connection
 
 smart_upload_bp = Blueprint("smart_upload", __name__)
 
@@ -25,14 +27,15 @@ def read_file_rows(file_storage):
     """Read uploaded file (csv/xlsx) and return list of rows (list of lists)."""
     filename = file_storage.filename.lower()
     if filename.endswith(".csv"):
-        import io
         import csv
+        import io
         content = file_storage.read().decode("utf-8-sig", errors="ignore")
         reader = csv.reader(io.StringIO(content))
         return [list(r) for r in reader]
     else:
-        import openpyxl
         import io
+
+        import openpyxl
         wb = openpyxl.load_workbook(io.BytesIO(
             file_storage.read()), data_only=True)
         ws = wb.active

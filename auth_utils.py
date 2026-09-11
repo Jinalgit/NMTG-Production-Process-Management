@@ -1,13 +1,13 @@
 from functools import wraps
-from flask import jsonify, redirect, session, url_for
-from permission_utils import is_gaurang_special_user
 
+from flask import jsonify, redirect, session, url_for
+
+from permission_utils import is_gaurang_special_user
 
 PAGE_ACCESS = {
     "page1": {
         "admin": "full",
         "supervisor": "full",
-        "operator": "create",
     },
     "page2": {
         "admin": "full",
@@ -27,6 +27,11 @@ PAGE_ACCESS = {
         "admin": "full",
         "supervisor": "read",
     },
+    "oee_page": {
+        "admin": "full",
+        "supervisor": "read",
+        "operator": "read",
+    },
     "operator_dashboard": {
         "operator": "full",
     },
@@ -38,6 +43,10 @@ PAGE_ACCESS = {
     },
     "user_management": {
         "admin": "full",
+    },
+    "dispatch_tracker": {
+        "admin": "full",
+        "supervisor": "full",
     },
 }
 

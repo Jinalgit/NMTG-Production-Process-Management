@@ -1,0 +1,637 @@
+{% extends "base.html" %}
+
+{% block title %}OEE Summary{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+  --tp: #17365d; --ts: #53657a; --tm: #7a8ba1;
+  --bd: #d8e3ef; --rl: #f2f7fc; --rh: #f8fbfe; --ac: #0b5fa5;
+}
+.oees-wrap {
+  max-width: 1500px; margin: 0 auto; padding: 18px 22px;
+  font-family: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--tp); font-size: 13px; line-height: 1.45;
+}
+.oees-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.oees-title { margin: 0; font-size: 20px; font-weight: 700; color: var(--tp); letter-spacing: -0.01em; }
+.oees-sub { margin-top: 2px; font-size: 12px; color: var(--ts); }
+.oees-preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.oees-preset { height: 26px; padding: 0 12px; border: 1px solid var(--bd); background: #fff; color: var(--tp); font-family: inherit; font-size: 12px; font-weight: 500; border-radius: 14px; cursor: pointer; }
+.oees-preset:hover { background: var(--rh); }
+.oees-preset.active { background: var(--ac); color: #fff; border-color: var(--ac); }
+.oees-filters { background: #fff; border: 1px solid var(--bd); border-radius: 6px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 12px; }
+.oees-fld { display: flex; flex-direction: column; gap: 3px; }
+.oees-fld label { font-size: 10px; font-weight: 700; color: var(--tm); text-transform: uppercase; letter-spacing: 0.05em; }
+.oees-fld input, .oees-fld select { height: 32px; padding: 0 8px; border: 1px solid var(--bd); border-radius: 5px; font-family: inherit; font-size: 12px; color: var(--tp); background: #fff; min-width: 150px; }
+.oees-fld input:focus, .oees-fld select:focus { outline: none; border-color: var(--ac); box-shadow: 0 0 0 2px rgba(11,95,165,0.10); }
+.oees-btn { height: 32px; padding: 0 14px; border: 1px solid var(--ac); background: var(--ac); color: #fff; border-radius: 5px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.oees-btn:hover { filter: brightness(0.95); }
+.oees-btn.ghost { background: #fff; color: var(--ac); }
+.oees-stats { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; padding: 10px 14px; margin-bottom: 14px; background: #fff; border: 1px solid var(--bd); border-radius: 6px; font-size: 12px; color: var(--ts); font-variant-numeric: tabular-nums; }
+.oees-stats .k { font-weight: 700; color: var(--tp); }
+.oees-stats .sep { color: var(--bd); padding: 0 6px; }
+
+.oees-grid-top { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); gap: 14px; margin-bottom: 14px; }
+.oees-grid-single { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
+@media (max-width: 1000px) { .oees-grid-top { grid-template-columns: minmax(0, 1fr); } }
+
+.oees-card { background: #fff; border: 1px solid var(--bd); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; }
+.oees-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--bd); }
+.oees-card-head strong { font-size: 13px; font-weight: 700; color: var(--tp); }
+.oees-count { font-size: 11px; font-weight: 700; color: var(--tm); letter-spacing: 0.05em; text-transform: uppercase; }
+.oees-card-body { max-height: 420px; overflow: auto; }
+
+.oees-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+.oees-table thead th { position: sticky; top: 0; z-index: 2; background: var(--rl); padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tm); border-bottom: 1px solid var(--bd); white-space: nowrap; box-shadow: inset 0 -1px 0 var(--bd); }
+.oees-table thead th.num { text-align: right; }
+.oees-table tbody td { padding: 9px 12px; border-bottom: 1px solid #eef2f7; color: var(--tp); white-space: nowrap; vertical-align: middle; }
+.oees-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.oees-table tbody tr:nth-child(even) td { background: rgba(15,55,100,0.018); }
+.oees-table tbody tr:hover td { background: var(--rh); }
+.oees-table tbody tr.click { cursor: pointer; }
+.oees-table tbody tr:last-child td { border-bottom: 0; }
+.oees-empty, .oees-loading { padding: 30px; text-align: center; color: var(--tm); font-size: 12px; }
+.oee-val { font-weight: 700; color: var(--tp); }
+
+.shift-tag { display: inline-block; padding: 1px 7px; background: var(--rl); border: 1px solid var(--bd); border-radius: 4px; color: var(--ts); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.type-tag { display: inline-block; padding: 2px 8px; border-left: 2px solid var(--tm); color: var(--ts); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.type-tag.t-ml { border-left-color: #a35c68; }
+.type-tag.t-tr { border-left-color: #4a7ba8; }
+.type-tag.t-dv { border-left-color: #6b7a90; }
+.cat-pill { display: inline-block; padding: 1px 6px; border: 1px solid var(--bd); border-radius: 4px; font-size: 10px; font-weight: 700; color: var(--ts); background: #fff; letter-spacing: 0.04em; }
+.loss-code { display: inline-block; padding: 1px 8px; border: 1px solid var(--bd); border-radius: 4px; background: #fff; color: var(--tp); font-size: 11px; font-weight: 700; min-width: 34px; text-align: center; }
+
+.oee-drill-overlay { position: fixed; inset: 0; background: rgba(15,30,60,0.35); z-index: 900; opacity: 0; transition: opacity 0.18s ease; pointer-events: none; }
+.oee-drill-overlay.open { opacity: 1; pointer-events: auto; }
+.oee-drill-panel { position: fixed; top: 0; right: 0; height: 100vh; width: 620px; max-width: 100vw; background: #fff; border-left: 1px solid var(--bd); box-shadow: -12px 0 32px rgba(0,0,0,0.10); z-index: 1000; transform: translateX(100%); transition: transform 0.22s ease; display: flex; flex-direction: column; }
+.oee-drill-panel.open { transform: translateX(0); }
+.oee-drill-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--bd); background: var(--rl); }
+.oee-drill-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tm); margin-bottom: 4px; }
+.oee-drill-title { font-size: 15px; font-weight: 700; color: var(--tp); margin-bottom: 2px; }
+.oee-drill-sub { font-size: 12px; color: var(--ts); }
+.oee-drill-close { background: transparent; border: 0; font-size: 22px; line-height: 1; color: var(--tm); cursor: pointer; padding: 0 4px; }
+.oee-drill-close:hover { color: #b42318; }
+.oee-drill-body { flex: 1; overflow-y: auto; padding: 6px 0; }
+.oee-drill-section { padding: 14px 18px; border-bottom: 1px solid #eef2f7; }
+.oee-drill-section:last-child { border-bottom: 0; }
+.oee-drill-sec-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tm); margin-bottom: 10px; }
+.oee-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 12px; }
+.oee-kpi-cell { padding: 8px 10px; background: var(--rl); border: 1px solid var(--bd); border-radius: 6px; }
+.oee-kpi-cell .k { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tm); margin-bottom: 4px; }
+.oee-kpi-cell .v { font-size: 14px; font-weight: 700; color: var(--tp); font-variant-numeric: tabular-nums; }
+.oee-drill-kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; font-size: 12px; margin: 0; }
+.oee-drill-kv dt { color: var(--tm); font-weight: 600; }
+.oee-drill-kv dd { margin: 0; color: var(--tp); font-weight: 500; }
+.oee-drill-loss { display: grid; grid-template-columns: 46px 1fr 72px 46px; gap: 6px 10px; padding: 7px 0; border-bottom: 1px dashed #e4ebf2; font-size: 12px; align-items: center; }
+.oee-drill-loss:last-child { border-bottom: 0; }
+.oee-drill-loss .mins { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--tp); }
+.oee-drill-loss .cat { text-align: right; font-size: 10px; font-weight: 700; color: var(--tm); }
+.oee-drill-list-row { display: grid; grid-template-columns: 140px 1fr 130px; gap: 8px 12px; padding: 7px 0; border-bottom: 1px dashed #e4ebf2; font-size: 12px; align-items: center; }
+.oee-drill-list-row:last-child { border-bottom: 0; }
+.oee-drill-list-row .lhs { color: var(--ts); font-family: "IBM Plex Mono", monospace; font-size: 11px; }
+.oee-drill-list-row .mid { color: var(--tp); }
+.oee-drill-list-row .rhs { color: var(--ts); text-align: right; font-size: 11px; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="oees-wrap">
+  <div class="oees-header">
+    <div>
+      <h1 class="oees-title">OEE Summary</h1>
+      <div class="oees-sub" id="oees-period-sub">Loading...</div>
+    </div>
+    {% if can_export %}
+    <div>
+      <button class="oees-btn ghost" id="oees-export">Export Excel</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="oees-preset-row" id="oees-presets">
+    <button class="oees-preset" data-preset="today">Today</button>
+    <button class="oees-preset" data-preset="yesterday">Yesterday</button>
+    <button class="oees-preset" data-preset="this_week">This Week</button>
+    <button class="oees-preset" data-preset="last_week">Last Week</button>
+    <button class="oees-preset active" data-preset="this_month">This Month</button>
+    <button class="oees-preset" data-preset="last_month">Last Month</button>
+    <button class="oees-preset" data-preset="custom">Custom</button>
+  </div>
+
+  <div class="oees-filters">
+    <div class="oees-fld"><label>From Date</label><input type="date" id="oees-from"></div>
+    <div class="oees-fld"><label>To Date</label><input type="date" id="oees-to"></div>
+    <div class="oees-fld"><label>Zone</label><select id="oees-zone"><option value="">All</option></select></div>
+    <div class="oees-fld"><label>Machine</label><select id="oees-machine"><option value="">All</option></select></div>
+    <div class="oees-fld"><label>Operator</label><select id="oees-operator"><option value="">All</option></select></div>
+    <button class="oees-btn" id="oees-apply">Apply</button>
+    <button class="oees-btn ghost" id="oees-reset">Reset</button>
+  </div>
+
+  <div class="oees-stats" id="oees-stats-strip">Loading...</div>
+
+  <div class="oees-grid-top">
+    <div class="oees-card">
+      <div class="oees-card-head"><strong>Sessions</strong><span class="oees-count" id="c-sessions">0 rows</span></div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-sessions">
+          <thead><tr>
+            <th>Date</th><th>Shift</th><th>Machine</th><th>Operator</th><th>JC</th>
+            <th class="num">OK</th><th class="num">Planned</th><th class="num">Util</th><th class="num">Run</th>
+            <th class="num">AR %</th><th class="num">PR %</th><th class="num">QR %</th><th class="num">OEE %</th>
+          </tr></thead>
+          <tbody id="body-sessions"><tr><td colspan="13" class="oees-loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="oees-card">
+      <div class="oees-card-head"><strong>Top Losses</strong><span class="oees-count" id="c-losses">0 rows</span></div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-losses">
+          <thead><tr>
+            <th style="width: 60px;">Code</th><th>Reason</th>
+            <th style="width: 50px;">Cat</th><th class="num" style="width: 80px;">Minutes</th>
+          </tr></thead>
+          <tbody id="body-losses"><tr><td colspan="4" class="oees-loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="oees-grid-single">
+    <div class="oees-card">
+      <div class="oees-card-head"><strong>Activities</strong><span class="oees-count" id="c-activities">0 rows</span></div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-activities">
+          <thead><tr>
+            <th>Date</th><th>Shift</th><th>Type</th><th>Activity</th><th>Machine</th><th>Operator</th>
+            <th>Start</th><th>End</th>
+            <th class="num">Planned</th><th class="num">Util</th><th class="num">AR Loss</th><th class="num">PR Loss</th>
+          </tr></thead>
+          <tbody id="body-activities"><tr><td colspan="12" class="oees-loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="oees-grid-single">
+    <div class="oees-card">
+      <div class="oees-card-head"><strong>Tool Entries</strong><span class="oees-count" id="c-tools">0 rows</span></div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-tools">
+          <thead><tr>
+            <th>Date</th><th>Shift</th><th>JC</th><th>Machine</th><th>Operator</th>
+            <th class="num">Pos</th><th>Tool UID</th><th>Action</th><th>Corner</th><th>Reason</th>
+            <th class="num">Usage/Part</th>
+          </tr></thead>
+          <tbody id="body-tools"><tr><td colspan="11" class="oees-loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="oee-drill-overlay" id="drillOverlay"></div>
+<aside class="oee-drill-panel" id="drillPanel" aria-hidden="true">
+  <div class="oee-drill-head">
+    <div>
+      <div class="oee-drill-eyebrow" id="drillEyebrow">Details</div>
+      <div class="oee-drill-title" id="drillTitle">Select a row</div>
+      <div class="oee-drill-sub" id="drillSub"></div>
+    </div>
+    <button id="drillClose" class="oee-drill-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="oee-drill-body" id="drillBody"></div>
+</aside>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+  const CAN_EXPORT = "{{ 'true' if can_export else 'false' }}" === "true";
+  const API = "/api/oee-machine-summary";
+  let cache = {};
+  let byId = {};
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+
+  function fmt(v, d) {
+    if (v === null || v === undefined || v === "") return "\u2013";
+    const n = Number(v);
+    if (isNaN(n)) return "\u2013";
+    if (d === undefined) return n.toLocaleString();
+    return n.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d});
+  }
+  function fmtPct(v) { if (v === null || v === undefined) return "\u2013"; return Number(v).toFixed(1) + "%"; }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function firstOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+
+  function qString() {
+    const p = new URLSearchParams();
+    const fd = $("#oees-from").value, td = $("#oees-to").value;
+    if (fd) p.set("from_date", fd);
+    if (td) p.set("to_date", td);
+    const z = $("#oees-zone").value, m = $("#oees-machine").value, op = $("#oees-operator").value;
+    if (z) p.set("zone", z);
+    if (m) p.set("machine_id", m);
+    if (op) p.set("operator_master_id", op);
+    return p.toString();
+  }
+
+  function applyPreset(name) {
+    const t = new Date();
+    let fd, td;
+    if (name === "today") { fd = new Date(t); td = new Date(t); }
+    else if (name === "yesterday") { const y = new Date(t); y.setDate(y.getDate()-1); fd = y; td = y; }
+    else if (name === "this_week") { const day = (t.getDay()+6)%7; fd = new Date(t); fd.setDate(fd.getDate()-day); td = new Date(t); }
+    else if (name === "last_week") {
+      const day = (t.getDay()+6)%7;
+      const thisStart = new Date(t); thisStart.setDate(thisStart.getDate()-day);
+      td = new Date(thisStart); td.setDate(td.getDate()-1);
+      fd = new Date(td); fd.setDate(fd.getDate()-6);
+    }
+    else if (name === "this_month") { fd = firstOfMonth(t); td = new Date(t); }
+    else if (name === "last_month") {
+      const firstThis = firstOfMonth(t);
+      td = new Date(firstThis); td.setDate(td.getDate()-1);
+      fd = firstOfMonth(td);
+    } else return;
+    $("#oees-from").value = isoDate(fd);
+    $("#oees-to").value = isoDate(td);
+  }
+
+  async function loadFilters() {
+    try {
+      const r = await fetch(API + "/filters");
+      const d = await r.json();
+      if (d.error) return;
+      (d.zones || []).forEach(z => { const o = document.createElement("option"); o.value = z; o.textContent = z; $("#oees-zone").appendChild(o); });
+      (d.machines || []).forEach(m => { const o = document.createElement("option"); o.value = m.id; o.textContent = m.machine_no + " \u2014 " + m.machine_name; $("#oees-machine").appendChild(o); });
+      (d.operators || []).forEach(op => { const o = document.createElement("option"); o.value = op.id; o.textContent = op.employee_no + " \u2014 " + op.operator_name; $("#oees-operator").appendChild(o); });
+    } catch (e) { console.error(e); }
+  }
+
+  async function loadFlat() {
+    $("#body-sessions").innerHTML   = "<tr><td colspan='13' class='oees-loading'>Loading...</td></tr>";
+    $("#body-losses").innerHTML     = "<tr><td colspan='4'  class='oees-loading'>Loading...</td></tr>";
+    $("#body-activities").innerHTML = "<tr><td colspan='12' class='oees-loading'>Loading...</td></tr>";
+    $("#body-tools").innerHTML      = "<tr><td colspan='11' class='oees-loading'>Loading...</td></tr>";
+    try {
+      const r = await fetch(API + "/flat?" + qString());
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      cache = d;
+      byId = {};
+      (d.sessions   || []).forEach(s => { byId["session-" + s.entry_id]  = s; });
+      (d.activities || []).forEach(a => { byId["activity-" + a.entry_id] = a; });
+      (d.tool_entries || []).forEach(t => { byId["tool-" + t.tool_id]    = t; });
+      $("#oees-period-sub").textContent = "Showing " + d.period.from_date + " to " + d.period.to_date;
+      renderStats(d.totals);
+      renderSessions(d.sessions || []);
+      renderTopLosses(d.top_losses || []);
+      renderActivities(d.activities || []);
+      renderToolEntries(d.tool_entries || []);
+    } catch (e) {
+      const msg = "Error: " + esc(e.message);
+      $("#body-sessions").innerHTML   = "<tr><td colspan='13' class='oees-empty'>" + msg + "</td></tr>";
+      $("#body-losses").innerHTML     = "<tr><td colspan='4'  class='oees-empty'>" + msg + "</td></tr>";
+      $("#body-activities").innerHTML = "<tr><td colspan='12' class='oees-empty'>" + msg + "</td></tr>";
+      $("#body-tools").innerHTML      = "<tr><td colspan='11' class='oees-empty'>" + msg + "</td></tr>";
+    }
+  }
+
+  function renderStats(t) {
+    if (!t) { $("#oees-stats-strip").textContent = "No data"; return; }
+    const parts = [
+      "<span class='k'>" + fmt(t.session_count) + "</span>&nbsp;sessions",
+      "Avg&nbsp;OEE&nbsp;<span class='k'>" + fmtPct(t.avg_oee_pct) + "</span>",
+      "Planned&nbsp;<span class='k'>" + fmt(t.total_planned, 0) + "&nbsp;min</span>",
+      "Util&nbsp;<span class='k'>" + fmt(t.total_util, 0) + "&nbsp;min</span>",
+      "OK&nbsp;<span class='k'>" + fmt(t.total_ok) + "</span>",
+      "Losses&nbsp;<span class='k'>" + fmt(t.total_losses_min, 0) + "&nbsp;min</span>",
+      "<span class='k'>" + fmt(t.activity_count) + "</span>&nbsp;activities",
+      "<span class='k'>" + fmt(t.tool_entry_count) + "</span>&nbsp;tool entries"
+    ];
+    $("#oees-stats-strip").innerHTML = parts.join("<span class='sep'>\u00b7</span>");
+  }
+
+  function renderSessions(rows) {
+    const body = $("#body-sessions");
+    $("#c-sessions").textContent = rows.length + " rows";
+    if (!rows.length) { body.innerHTML = "<tr><td colspan='13' class='oees-empty'>No sessions.</td></tr>"; return; }
+    let h = "";
+    rows.forEach(s => {
+      h += "<tr class='click' data-key='session-" + s.entry_id + "'>" +
+        "<td>" + esc(s.entry_date) + "</td>" +
+        "<td><span class='shift-tag'>" + esc(s.shift_name) + "</span></td>" +
+        "<td>" + esc(((s.machine_no || "") + " " + (s.machine_name || "")).trim()) + "</td>" +
+        "<td>" + esc(s.operator_name || "") + "</td>" +
+        "<td>" + esc(s.job_card_no || "") + "</td>" +
+        "<td class='num'>" + fmt(s.ok_qty) + "</td>" +
+        "<td class='num'>" + fmt(s.planned_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(s.utilization_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(s.run_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmtPct(s.ar_pct) + "</td>" +
+        "<td class='num'>" + fmtPct(s.pr_pct) + "</td>" +
+        "<td class='num'>" + fmtPct(s.qr_pct) + "</td>" +
+        "<td class='num'><span class='oee-val'>" + fmtPct(s.oee_pct) + "</span></td>" +
+      "</tr>";
+    });
+    body.innerHTML = h;
+    body.querySelectorAll("tr.click").forEach(tr => tr.addEventListener("click", () => openDrill(tr.dataset.key)));
+  }
+
+  function renderTopLosses(rows) {
+    const body = $("#body-losses");
+    $("#c-losses").textContent = rows.length + " rows";
+    if (!rows.length) { body.innerHTML = "<tr><td colspan='4' class='oees-empty'>No losses.</td></tr>"; return; }
+    let h = "";
+    rows.forEach(l => {
+      h += "<tr>" +
+        "<td><span class='loss-code'>" + esc(l.code) + "</span></td>" +
+        "<td>" + esc(l.name || "") + "</td>" +
+        "<td><span class='cat-pill'>" + esc(l.category) + "</span></td>" +
+        "<td class='num'>" + fmt(l.total_min, 1) + "</td>" +
+      "</tr>";
+    });
+    body.innerHTML = h;
+  }
+
+  function typeTag(t) {
+    const u = String(t || "").toUpperCase();
+    if (u === "MACHINE_LOSS") return "<span class='type-tag t-ml'>Machine Loss</span>";
+    if (u === "TOOL_ROOM")    return "<span class='type-tag t-tr'>Tool Room</span>";
+    if (u === "DEVELOPMENT")  return "<span class='type-tag t-dv'>Development</span>";
+    return "<span class='type-tag'>" + esc(u) + "</span>";
+  }
+
+  function renderActivities(rows) {
+    const body = $("#body-activities");
+    $("#c-activities").textContent = rows.length + " rows";
+    if (!rows.length) { body.innerHTML = "<tr><td colspan='12' class='oees-empty'>No activities.</td></tr>"; return; }
+    let h = "";
+    rows.forEach(a => {
+      h += "<tr class='click' data-key='activity-" + a.entry_id + "'>" +
+        "<td>" + esc(a.entry_date) + "</td>" +
+        "<td><span class='shift-tag'>" + esc(a.shift_name) + "</span></td>" +
+        "<td>" + typeTag(a.activity_type) + "</td>" +
+        "<td>" + esc(a.activity_name || "") + "</td>" +
+        "<td>" + esc(((a.machine_no || "") + " " + (a.machine_name || "")).trim()) + "</td>" +
+        "<td>" + esc(a.operator_name || "") + "</td>" +
+        "<td>" + esc(a.start_time || "") + "</td>" +
+        "<td>" + esc(a.end_time || "") + "</td>" +
+        "<td class='num'>" + fmt(a.planned_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(a.utilization_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(a.ar_loss_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(a.pr_loss_minutes, 1) + "</td>" +
+      "</tr>";
+    });
+    body.innerHTML = h;
+    body.querySelectorAll("tr.click").forEach(tr => tr.addEventListener("click", () => openDrill(tr.dataset.key)));
+  }
+
+  function renderToolEntries(rows) {
+    const body = $("#body-tools");
+    $("#c-tools").textContent = rows.length + " rows";
+    if (!rows.length) { body.innerHTML = "<tr><td colspan='11' class='oees-empty'>No tool entries.</td></tr>"; return; }
+    let h = "";
+    rows.forEach(t => {
+      h += "<tr class='click' data-key='tool-" + t.tool_id + "'>" +
+        "<td>" + esc(t.entry_date) + "</td>" +
+        "<td><span class='shift-tag'>" + esc(t.shift_name) + "</span></td>" +
+        "<td>" + esc(t.job_card_no || "") + "</td>" +
+        "<td>" + esc(((t.machine_no || "") + " " + (t.machine_name || "")).trim()) + "</td>" +
+        "<td>" + esc(t.operator_name || "") + "</td>" +
+        "<td class='num'>" + esc(t.position || "") + "</td>" +
+        "<td>" + esc(t.uid) + "</td>" +
+        "<td>" + esc(t.action_name || t.action_code || "") + "</td>" +
+        "<td>" + esc(t.corner_name || t.corner_code || "") + "</td>" +
+        "<td>" + esc(t.reason_name || t.reason_code || "") + "</td>" +
+        "<td class='num'>" + esc(t.usage || "") + "</td>" +
+      "</tr>";
+    });
+    body.innerHTML = h;
+    body.querySelectorAll("tr.click").forEach(tr => tr.addEventListener("click", () => openDrill(tr.dataset.key)));
+  }
+
+  function openDrill(key) {
+    const rec = byId[key];
+    if (!rec) return;
+    const kind = key.split("-")[0];
+    if (kind === "session")  renderSessionPanel(rec);
+    if (kind === "activity") renderActivityPanel(rec);
+    if (kind === "tool")     renderToolPanel(rec);
+    $("#drillOverlay").classList.add("open");
+    $("#drillPanel").classList.add("open");
+    $("#drillPanel").setAttribute("aria-hidden", "false");
+  }
+  function closeDrill() {
+    $("#drillOverlay").classList.remove("open");
+    $("#drillPanel").classList.remove("open");
+    $("#drillPanel").setAttribute("aria-hidden", "true");
+  }
+
+  function cycleDisplay(m, s) {
+    const mm = String(m || 0).padStart(2, "0");
+    const ss = String(s || 0).padStart(2, "0");
+    return mm + ":" + ss;
+  }
+
+  function renderSessionPanel(s) {
+    $("#drillEyebrow").textContent = "Session";
+    $("#drillTitle").textContent = "Session \u00b7 " + s.entry_date + " \u00b7 " + s.shift_name;
+    $("#drillSub").textContent = ((s.machine_no || "") + " " + (s.machine_name || "")).trim() + " \u00b7 " + (s.operator_name || "");
+    let h = "";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Performance</div><div class='oee-kpi-grid'>";
+    h += "<div class='oee-kpi-cell'><div class='k'>PLANNED</div><div class='v'>" + fmt(s.planned_minutes, 1) + " min</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>UTIL</div><div class='v'>" + fmt(s.utilization_minutes, 1) + " min</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>RUN</div><div class='v'>" + fmt(s.run_minutes, 1) + " min</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>OK QTY</div><div class='v'>" + fmt(s.ok_qty) + "</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>AR %</div><div class='v'>" + fmt(s.ar_pct, 1) + "</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>PR %</div><div class='v'>" + fmt(s.pr_pct, 1) + "</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>QR %</div><div class='v'>" + fmt(s.qr_pct, 1) + "</div></div>";
+    h += "<div class='oee-kpi-cell'><div class='k'>OEE %</div><div class='v'>" + fmt(s.oee_pct, 1) + "</div></div>";
+    h += "</div></div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Job Card</div><dl class='oee-drill-kv'>";
+    h += "<dt>JC No</dt><dd>" + esc(s.job_card_no || "\u2013") + "</dd>";
+    h += "<dt>Item</dt><dd>" + esc(s.item_name || "\u2013") + "</dd>";
+    h += "<dt>Process</dt><dd>" + esc(s.process_name || "\u2013") + "</dd>";
+    h += "<dt>Start / End</dt><dd>" + esc(s.start_time || "\u2013") + " \u2013 " + esc(s.end_time || "\u2013") + "</dd>";
+    h += "<dt>Cycle / L\u00b7U</dt><dd>" + cycleDisplay(s.cycle_minutes, s.cycle_seconds) + " min / " + cycleDisplay(s.load_unload_minutes, s.load_unload_seconds) + " sec</dd>";
+    h += "<dt>OK / Rej / Hold</dt><dd>" + fmt(s.ok_qty) + " / " + fmt(s.rejected_qty) + " / " + fmt(s.hold_qty) + "</dd>";
+    h += "<dt>Formula profile</dt><dd>" + esc(s.formula_profile || "\u2013") + "</dd>";
+    h += "</dl></div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Losses (A1 \u2013 A27)</div>";
+    if (!s.losses || !s.losses.length) {
+      h += "<div style='color:var(--tm);font-size:12px;'>No losses recorded.</div>";
+    } else {
+      let total = 0;
+      s.losses.forEach(l => {
+        total += Number(l.minutes || 0);
+        h += "<div class='oee-drill-loss'>" +
+          "<div><span class='loss-code'>" + esc(l.code) + "</span></div>" +
+          "<div style='color:var(--ts);'>" + esc(l.name || "") + "</div>" +
+          "<div class='mins'>" + fmt(l.minutes, 0) + " min</div>" +
+          "<div class='cat'>" + esc(l.category) + "</div>" +
+        "</div>";
+      });
+      h += "<div class='oee-drill-loss' style='margin-top:6px;border-top:1px solid var(--bd);padding-top:8px;'>" +
+        "<div><span class='loss-code' style='opacity:0.6;'>\u2014</span></div>" +
+        "<div style='color:var(--tp);font-weight:600;'>Total loss</div>" +
+        "<div class='mins'>" + fmt(total, 0) + " min</div>" +
+        "<div class='cat'></div></div>";
+    }
+    h += "</div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Tool changes on this JC</div>";
+    if (!s.tools || !s.tools.length) {
+      h += "<div style='color:var(--tm);font-size:12px;'>No tool changes.</div>";
+    } else {
+      s.tools.forEach(t => {
+        const rhs = (t.usage ? (t.usage + " /part") : "\u2013");
+        h += "<div class='oee-drill-list-row'>" +
+          "<div class='lhs'>" + esc(t.uid || "") + "</div>" +
+          "<div class='mid'>Pos " + esc(t.position || "\u2013") + " \u00b7 " +
+            esc(t.action_name || t.action_code || "") +
+            (t.corner_name || t.corner_code ? " \u00b7 " + esc(t.corner_name || t.corner_code) : "") + "</div>" +
+          "<div class='rhs'>" + esc(t.reason_name || t.reason_code || "\u2013") + " \u00b7 " + rhs + "</div>" +
+        "</div>";
+      });
+    }
+    h += "</div>";
+    $("#drillBody").innerHTML = h;
+  }
+
+  function renderActivityPanel(a) {
+    $("#drillEyebrow").textContent = "Activity";
+    const label = (a.activity_type === "MACHINE_LOSS") ? "Machine Loss" :
+                   (a.activity_type === "TOOL_ROOM")   ? "Tool Room"     :
+                   (a.activity_type === "DEVELOPMENT") ? "Development"   : a.activity_type;
+    $("#drillTitle").textContent = label + " \u00b7 " + (a.activity_name || "");
+    $("#drillSub").textContent = a.entry_date + " \u00b7 " + a.shift_name + " \u00b7 " + (a.operator_name || "");
+    let h = "";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Details</div><dl class='oee-drill-kv'>";
+    h += "<dt>Type</dt><dd>" + esc(a.activity_type || "") + "</dd>";
+    h += "<dt>Activity</dt><dd>" + esc(a.activity_name || "") + "</dd>";
+    h += "<dt>Machine</dt><dd>" + esc(((a.machine_no || "") + " " + (a.machine_name || "")).trim()) + "</dd>";
+    h += "<dt>Operator</dt><dd>" + esc(a.operator_name || "") + "</dd>";
+    h += "<dt>Shift</dt><dd>" + esc(a.shift_name || "") + "</dd>";
+    h += "<dt>Start / End</dt><dd>" + esc(a.start_time || "") + " \u2013 " + esc(a.end_time || "") + "</dd>";
+    h += "<dt>Planned</dt><dd>" + fmt(a.planned_minutes, 1) + " min</dd>";
+    h += "<dt>Utilization</dt><dd>" + fmt(a.utilization_minutes, 1) + " min</dd>";
+    h += "<dt>AR Loss</dt><dd>" + fmt(a.ar_loss_minutes, 1) + " min</dd>";
+    h += "<dt>PR Loss</dt><dd>" + fmt(a.pr_loss_minutes, 1) + " min</dd>";
+    if (a.remarks) h += "<dt>Remarks</dt><dd>" + esc(a.remarks) + "</dd>";
+    h += "</dl></div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Losses on this activity</div>";
+    if (!a.losses || !a.losses.length) {
+      h += "<div style='color:var(--tm);font-size:12px;'>No losses.</div>";
+    } else {
+      let total = 0;
+      a.losses.forEach(l => {
+        total += Number(l.minutes || 0);
+        h += "<div class='oee-drill-loss'>" +
+          "<div><span class='loss-code'>" + esc(l.code) + "</span></div>" +
+          "<div style='color:var(--ts);'>" + esc(l.name || "") + "</div>" +
+          "<div class='mins'>" + fmt(l.minutes, 0) + " min</div>" +
+          "<div class='cat'>" + esc(l.category) + "</div>" +
+        "</div>";
+      });
+      h += "<div class='oee-drill-loss' style='margin-top:6px;border-top:1px solid var(--bd);padding-top:8px;'>" +
+        "<div><span class='loss-code' style='opacity:0.6;'>\u2014</span></div>" +
+        "<div style='color:var(--tp);font-weight:600;'>Total loss</div>" +
+        "<div class='mins'>" + fmt(total, 0) + " min</div>" +
+        "<div class='cat'></div></div>";
+    }
+    h += "</div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Tools used</div>";
+    if (!a.tools || !a.tools.length) {
+      h += "<div style='color:var(--tm);font-size:12px;'>No tools recorded.</div>";
+    } else {
+      a.tools.forEach(t => {
+        h += "<div class='oee-drill-list-row'>" +
+          "<div class='lhs'>" + esc(t.uid || "") + "</div>" +
+          "<div class='mid'>Pos " + esc(t.position || "\u2013") + " \u00b7 " +
+            esc(t.action_name || t.action_code || "") +
+            (t.corner_name || t.corner_code ? " \u00b7 " + esc(t.corner_name || t.corner_code) : "") + "</div>" +
+          "<div class='rhs'>" + esc(t.reason_name || t.reason_code || "\u2013") + "</div>" +
+        "</div>";
+      });
+    }
+    h += "</div>";
+    $("#drillBody").innerHTML = h;
+  }
+
+  function renderToolPanel(t) {
+    $("#drillEyebrow").textContent = "Tool Entry";
+    $("#drillTitle").textContent = t.uid || "Tool";
+    $("#drillSub").textContent = "JC " + (t.job_card_no || "\u2013") + " \u00b7 " + (t.operator_name || "");
+    let h = "";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Entry</div><dl class='oee-drill-kv'>";
+    h += "<dt>Date</dt><dd>" + esc(t.entry_date) + "</dd>";
+    h += "<dt>Shift</dt><dd>" + esc(t.shift_name) + "</dd>";
+    h += "<dt>Job Card</dt><dd>" + esc(t.job_card_no || "\u2013") + "</dd>";
+    h += "<dt>Item</dt><dd>" + esc(t.item_name || "\u2013") + "</dd>";
+    h += "<dt>Machine</dt><dd>" + esc(((t.machine_no || "") + " " + (t.machine_name || "")).trim()) + "</dd>";
+    h += "<dt>Operator</dt><dd>" + esc(t.operator_name || "") + "</dd>";
+    h += "<dt>Position</dt><dd>" + esc(t.position || "") + "</dd>";
+    h += "<dt>Tool UID</dt><dd>" + esc(t.uid || "") + "</dd>";
+    h += "<dt>Action</dt><dd>" + esc(t.action_name || t.action_code || "") + "</dd>";
+    h += "<dt>Corner</dt><dd>" + esc(t.corner_name || t.corner_code || "\u2013") + "</dd>";
+    h += "<dt>Change Reason</dt><dd>" + esc(t.reason_name || t.reason_code || "\u2013") + "</dd>";
+    h += "<dt>Usage / Part</dt><dd>" + esc(t.usage || "\u2013") + "</dd>";
+    h += "</dl></div>";
+    $("#drillBody").innerHTML = h;
+  }
+
+  function refresh() { loadFlat(); }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    applyPreset("this_month");
+    await loadFilters();
+    $$(".oees-preset").forEach(b => {
+      b.addEventListener("click", () => {
+        $$(".oees-preset").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        applyPreset(b.dataset.preset);
+        refresh();
+      });
+    });
+    $("#oees-apply").addEventListener("click", () => {
+      $$(".oees-preset").forEach(x => x.classList.remove("active"));
+      $$(".oees-preset[data-preset='custom']").forEach(x => x.classList.add("active"));
+      refresh();
+    });
+    $("#oees-reset").addEventListener("click", () => {
+      $("#oees-zone").value = "";
+      $("#oees-machine").value = "";
+      $("#oees-operator").value = "";
+      $$(".oees-preset").forEach(x => x.classList.remove("active"));
+      $$(".oees-preset[data-preset='this_month']").forEach(x => x.classList.add("active"));
+      applyPreset("this_month");
+      refresh();
+    });
+    $("#drillClose").addEventListener("click", closeDrill);
+    $("#drillOverlay").addEventListener("click", closeDrill);
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#drillPanel").classList.contains("open")) closeDrill(); });
+    if (CAN_EXPORT) {
+      const btn = document.getElementById("oees-export");
+      if (btn) btn.addEventListener("click", () => {
+        const mid = $("#oees-machine").value;
+        if (!mid) { alert("Select a specific Machine in the filter first, then click Export."); return; }
+        const p = new URLSearchParams(qString());
+        window.location.href = API + "/export-excel?" + p.toString();
+      });
+    }
+    refresh();
+  });
+})();
+</script>
+{% endblock %}

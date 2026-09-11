@@ -1,0 +1,36 @@
+﻿{% extends "base.html" %}
+{% set active_page = "page2" %}
+
+{% block title %}
+Process Master Vue Pilot | NMTG
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='vue/process-master/process-master.css') }}?v={{ version }}"
+/>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div
+  id="process-master-vue"
+  data-original-url="{{ url_for('pages.page2') }}"
+></div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+
+<script
+  type="module"
+  src="{{ url_for('static', filename='vue/process-master/process-master.js') }}?v={{ version }}"
+></script>
+
+{% endblock %}

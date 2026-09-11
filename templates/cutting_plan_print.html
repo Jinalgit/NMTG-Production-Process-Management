@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Cutting Plan
+        {% if plan.plan_batch_no %}
+            - Batch {{ plan.plan_batch_no }}
+        {% endif %}
+    </title>
+
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/cutting_plan_print.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- ======================================================
+     SCREEN ACTIONS
+     Not printed
+     ====================================================== -->
+
+<div class="screen-actions no-print">
+
+    <button
+        type="button"
+        class="screen-btn secondary"
+        onclick="window.close()"
+    >
+        Close
+    </button>
+
+
+    <button
+        type="button"
+        class="screen-btn primary"
+        onclick="window.print()"
+    >
+        Print Cutting Plan
+    </button>
+
+</div>
+
+
+
+{% set ns = namespace(total_qty=0) %}
+
+{% for row in plans %}
+
+    {% set ns.total_qty =
+        ns.total_qty +
+        (row.planned_qty or 0)
+    %}
+
+{% endfor %}
+
+
+
+<!-- ======================================================
+     DOCUMENT
+     ====================================================== -->
+
+<main class="print-sheet">
+
+
+    <!-- ==================================================
+         COMPANY / DOCUMENT HEADER
+         ================================================== -->
+
+    <header class="document-header">
+
+
+        <div class="brand-section">
+
+
+                <img
+                    class="nmtg-logo"
+                    src="{{ url_for('static', filename='img/nmtg_logo.svg') }}"
+                    alt="NMTG"
+                >
+
+
+            <div class="company-copy">
+
+                <div class="company-name">
+                    NMTG Mechtrans Techniques Pvt. Ltd.
+                </div>
+
+                
+
+                
+
+            </div>
+
+        </div>
+
+
+
+        <div class="document-title">
+
+            
+
+            <h1>
+                RAW MATERIAL CUTTING PLAN
+            </h1>
+
+            <!-- CUTTING_PLAN_PRINT_DATE_V1 -->
+            <div
+                style="
+                    margin-top:6px;
+                    font-size:11px;
+                    font-weight:600;
+                    color:#222222;
+                "
+            >
+                Date:
+                <span id="cp-print-date">-</span>
+            </div>
+
+            
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- ==================================================
+         CUTTING PLAN TABLE
+         ================================================== -->
+
+    <section class="table-section">
+
+
+        <table class="cutting-plan-table">
+
+
+            <thead>
+
+                <tr>
+
+                    <th class="col-sr">
+                        Sr.
+                    </th>
+
+                    <th class="col-jc">
+                        Job Card No.
+                    </th>
+
+                    <th class="col-date">
+                        Planned Date
+                    </th>
+
+                    <th class="col-material">
+                        Material Specs
+                    </th>
+
+                    <th class="col-cut">
+                        Cut Size
+                    </th>
+
+                    <th class="col-qty">
+                        Qty
+                    </th>
+
+                    <th class="col-part">
+                        Part
+                    </th>
+
+                    <th class="col-model">
+                        Model &amp; Size
+                    </th>
+
+                    <th class="col-so">
+                        SO No.
+                    </th>
+
+                    <th class="col-move">
+                        Move To
+                    </th>
+
+                    <th class="col-remarks">
+                        Remarks
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+
+            <tbody>
+
+
+                {% for row in plans %}
+
+                <tr>
+
+
+                    <!-- SR NO -->
+
+                    <td class="center strong">
+                        {{ loop.index }}
+                    </td>
+
+
+
+                    <!-- JOB CARD -->
+
+                    <td class="jc-cell">
+
+                        {{
+                            row.source_job_card_no
+                            or
+                            row.job_card_no
+                            or
+                            '-'
+                        }}
+
+                    </td>
+
+
+
+                    <!-- PLANNED DATE -->
+
+                    <td
+                        class="center cp-date"
+                        data-date="{{ row.planned_date or '' }}"
+                    >
+
+                        {{ row.planned_date or '-' }}
+
+                    </td>
+
+
+
+                    <!-- MATERIAL -->
+
+                    <td class="material-cell">
+
+                        {{
+                            row.material_spec
+                            or
+                            '-'
+                        }}
+
+                    </td>
+
+
+
+                    <!-- CUT SIZE -->
+
+                    <td class="center cut-size-cell">
+
+                        {{
+                            row.cut_size
+                            or
+                            '-'
+                        }}
+
+                    </td>
+
+
+
+                    <!-- QTY -->
+
+                    <td class="center qty-cell">
+
+                        {{
+                            row.planned_qty
+                            or
+                            0
+                        }}
+
+                    </td>
+
+
+
+                    <!-- PART -->
+
+                    <td>
+
+                        {{
+                            row.part
+                            or
+                            '-'
+                        }}
+
+                    </td>
+
+
+
+                    <!-- MODEL & SIZE -->
+
+                    <td>
+
+                        {{
+                            row.model_size
+                            or
+                            row.item_name
+                            or
+                            '-'
+                        }}
+
+                    </td>
+
+
+
+                    <!-- SO NO -->
+
+                    <td class="center">
+
+                        {% if row.so_no %}
+
+                            {{ row.so_no }}
+
+                        {% else %}
+
+                            <span class="advance-plan">
+                                Advance Plan
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+
+                    <!-- MOVE TO -->
+
+                    <td class="center">
+
+                        <span class="move-badge">
+
+                            {{
+                                row.move_to
+                                or
+                                '-'
+                            }}
+
+                        </span>
+
+                    </td>
+
+
+
+                    <!-- REMARKS -->
+
+                    <td>
+
+                        {{
+                            row.remarks
+                            or
+                            ''
+                        }}
+
+                    </td>
+
+
+                </tr>
+
+                {% endfor %}
+
+
+            </tbody>
+
+
+            <tfoot>
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        class="total-label"
+                    >
+                        BATCH TOTAL
+                    </td>
+
+
+                    <td class="total-qty">
+
+                        {{ ns.total_qty }}
+
+                    </td>
+
+
+                    <td colspan="5"></td>
+
+                </tr>
+
+            </tfoot>
+
+
+        </table>
+
+
+    </section>
+
+
+
+    <!-- ==================================================
+         NOTES
+         ================================================== -->
+
+    
+
+
+
+    <!-- ==================================================
+         SIGNATURE BLOCK
+         ================================================== -->
+
+    <section class="signature-section">
+
+
+        <div class="signature-box">
+
+            <div class="signature-space"></div>
+
+            <div class="signature-line"></div>
+
+            <strong>
+                Prepared By
+            </strong>
+
+            
+
+        </div>
+
+
+
+        <div class="signature-box">
+
+            <div class="signature-space"></div>
+
+            <div class="signature-line"></div>
+
+            <strong>
+                Checked By
+            </strong>
+
+            
+
+        </div>
+
+
+
+        <div class="signature-box">
+
+            <div class="signature-space"></div>
+
+            <div class="signature-line"></div>
+
+            <strong>
+                Approved By
+            </strong>
+
+            
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ==================================================
+         FOOTER
+         ================================================== -->
+
+    
+
+
+</main>
+
+
+
+<script>
+
+(function(){
+
+    /*
+     * PRINT DATE
+     */
+
+    const now =
+        new Date();
+
+
+    const dateValue = [
+        String(
+            now.getDate()
+        ).padStart(2, "0"),
+
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0"),
+
+        now.getFullYear()
+    ].join("-");
+
+
+    const dateElement =
+        document.getElementById(
+            "cp-print-date"
+        );
+
+
+    if(dateElement){
+
+        dateElement.textContent =
+            dateValue;
+
+    }
+
+
+
+    /*
+     * FORMAT DATABASE DATE:
+     * YYYY-MM-DD -> DD-MM-YYYY
+     */
+
+    document
+        .querySelectorAll(
+            ".cp-date"
+        )
+        .forEach(function(cell){
+
+            const raw =
+                String(
+                    cell.dataset.date || ""
+                ).trim();
+
+
+            const match =
+                raw.match(
+                    /^(\d{4})-(\d{2})-(\d{2})/
+                );
+
+
+            if(match){
+
+                cell.textContent =
+                    `${match[3]}-${match[2]}-${match[1]}`;
+
+            }
+
+        });
+
+})();
+
+</script>
+
+
+</body>
+
+</html>

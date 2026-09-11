@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from flask import Blueprint, jsonify
 from mysql.connector import Error
+
 from db import get_connection
 
 _IST = timedelta(hours=5, minutes=30)

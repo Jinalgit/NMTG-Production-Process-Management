@@ -1,0 +1,5186 @@
+
+
+/* ==============================
+   CUTTING PLAN PAGE
+   ============================== */
+
+
+.cutting-plan-page {
+    padding: 20px;
+}
+
+
+/* HEADER */
+
+.cutting-header {
+    background: var(--card-bg, #ffffff);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+
+.cutting-header h1 {
+    margin:0;
+    font-size:28px;
+    font-weight:700;
+    color:#0f2a4d;
+}
+
+
+.cutting-header p {
+    margin-top:6px;
+    color:#64748b;
+}
+
+
+/* BUTTONS */
+
+.cutting-actions {
+    display:flex;
+    gap:10px;
+}
+
+
+.cp-btn {
+    padding:8px 16px;
+    border-radius:6px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+}
+
+
+.cp-primary {
+    background:#0f4c81;
+    color:white;
+}
+
+
+.cp-secondary {
+    background:#e5e7eb;
+    color:#1f2937;
+}
+
+
+
+/* SUMMARY CARDS */
+
+.cutting-summary {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-bottom:20px;
+}
+
+
+.cp-summary-card {
+
+    background:white;
+    padding:18px;
+    border-radius:10px;
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,.08);
+
+}
+
+
+.cp-summary-title {
+
+    color:#64748b;
+    font-size:13px;
+    font-weight:600;
+
+}
+
+
+.cp-summary-value {
+
+    margin-top:8px;
+    font-size:28px;
+    font-weight:700;
+    color:#0f2a4d;
+
+}
+
+
+
+/* TABLE CARD */
+
+.cutting-table-card {
+
+    background:white;
+
+    border-radius:10px;
+
+    padding:20px;
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,.08);
+
+}
+
+
+.cutting-table-card h2 {
+
+    margin-top:0;
+
+    color:#0f2a4d;
+
+}
+
+
+
+/* TABLE */
+
+
+.cutting-table {
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+
+.cutting-table th {
+
+    background:#f1f5f9;
+
+    padding:12px;
+
+    text-align:left;
+
+    font-size:13px;
+
+}
+
+
+.cutting-table td {
+
+    padding:12px;
+
+    border-bottom:1px solid #e5e7eb;
+
+    font-size:14px;
+
+}
+
+
+.cutting-table tr:hover {
+
+    background:#f8fafc;
+
+}
+
+
+
+/* STATUS */
+
+.cp-status {
+
+    padding:4px 10px;
+
+    border-radius:20px;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    background:#e0f2fe;
+
+    color:#075985;
+
+}
+
+
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+.cutting-summary{
+
+grid-template-columns:repeat(2,1fr);
+
+}
+
+.cutting-header{
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:15px;
+
+}
+
+}
+
+
+
+/* =====================================================
+   CUTTING PLAN PRINT MODE
+   ===================================================== */
+
+
+@media print {
+
+
+    body.print-mode * {
+
+        visibility:hidden;
+
+    }
+
+
+
+    body.print-mode #cutting-plan-container,
+    body.print-mode #cutting-plan-container * {
+
+        visibility:visible;
+
+    }
+
+
+
+    body.print-mode #cutting-plan-container {
+
+        position:absolute;
+
+        left:0;
+
+        top:0;
+
+        width:100%;
+
+    }
+
+
+
+    body.print-mode .sidebar,
+    body.print-mode nav,
+    body.print-mode button,
+    body.print-mode .cutting-actions,
+    body.print-mode .summary-card,
+    body.print-mode .filter-section {
+
+        display:none !important;
+
+    }
+
+
+
+    body.print-mode table {
+
+        width:100%;
+
+        border-collapse:collapse;
+
+    }
+
+
+
+    body.print-mode th,
+    body.print-mode td {
+
+        border:1px solid #000;
+
+        padding:8px;
+
+    }
+
+
+
+}
+
+
+
+
+.print-area,
+.print-area *{
+
+visibility:visible;
+
+}
+
+
+.print-area{
+
+display:block;
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+}
+
+
+.print-only-row{
+
+display:none;
+
+}
+
+
+.print-table{
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+
+.print-table th,
+.print-table td{
+
+border:1px solid black;
+
+padding:8px;
+
+text-align:center;
+
+}
+
+
+}
+
+
+
+/* ===============================
+   MANUAL CUTTING PLAN MODAL
+================================ */
+
+.cp-modal-overlay{
+
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.45);
+    z-index:9999;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+
+}
+
+
+.cp-modal-box{
+
+    background:#ffffff;
+    width:650px;
+    max-width:100%;
+
+    border-radius:12px;
+    padding:25px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+
+}
+
+
+.cp-modal-header{
+
+    font-size:22px;
+    font-weight:700;
+    color:#12345b;
+
+    margin-bottom:20px;
+
+}
+
+
+.cp-modal-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:15px;
+
+}
+
+
+.cp-form-group{
+
+    display:flex;
+    flex-direction:column;
+
+    gap:5px;
+
+}
+
+
+.cp-form-group label{
+
+    font-size:14px;
+    font-weight:600;
+
+}
+
+
+.cp-form-input{
+
+    width:100%;
+
+    padding:9px 12px;
+
+    border:1px solid #cfd6df;
+
+    border-radius:6px;
+
+    font-size:14px;
+
+}
+
+
+.cp-form-input:focus{
+
+    outline:none;
+
+    border-color:#135b9e;
+
+}
+
+
+.cp-modal-footer{
+
+    margin-top:20px;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:10px;
+
+}
+
+
+
+/* TABLET */
+
+@media(max-width:900px){
+
+    .cp-modal-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+
+
+/* MOBILE */
+
+@media(max-width:600px){
+
+    .cp-modal-box{
+
+        padding:18px;
+
+    }
+
+
+    .cp-modal-footer{
+
+        flex-direction:column;
+
+    }
+
+
+    .cp-modal-footer .cp-btn{
+
+        width:100%;
+
+    }
+
+}
+
+
+
+/* Manual Cutting Plan Modal Fix */
+
+#manual-plan-modal.cp-modal-overlay {
+
+    display:none;
+
+    position:fixed !important;
+
+    top:0;
+    left:0;
+
+    width:100vw;
+    height:100vh;
+
+    background:rgba(0,0,0,0.45);
+
+    z-index:99999;
+
+    align-items:center;
+    justify-content:center;
+
+}
+
+
+#manual-plan-modal.cp-modal-overlay .cp-modal-box {
+
+    background:#fff;
+
+    width:650px;
+    max-width:95%;
+
+    max-height:90vh;
+
+    overflow-y:auto;
+
+    border-radius:12px;
+
+    padding:25px;
+
+}
+
+/* Cutting Plan View Modal Fix */
+
+#cutting-plan-view-modal.cp-modal-overlay {
+
+    display:none;
+
+    position:fixed !important;
+
+    top:0;
+    left:0;
+
+    width:100vw;
+    height:100vh;
+
+    background:rgba(0,0,0,0.45);
+
+    z-index:99999;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+
+}
+
+
+#cutting-plan-view-modal.cp-modal-overlay .cp-modal-box {
+
+    background:#fff;
+
+    width:650px;
+    max-width:95%;
+
+    max-height:90vh;
+
+    overflow-y:auto;
+
+    border-radius:12px;
+
+    padding:25px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.20);
+
+}
+
+
+
+/* Cutting Plan Edit Modal Fix */
+
+#edit-cutting-plan-modal.cp-modal-overlay {
+
+    display:none;
+
+    position:fixed !important;
+
+    top:0;
+    left:0;
+
+    width:100vw;
+    height:100vh;
+
+    background:rgba(0,0,0,0.45);
+
+    z-index:99999;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+
+}
+
+
+#edit-cutting-plan-modal.cp-modal-overlay .cp-modal-box {
+
+    background:#fff;
+
+    width:650px;
+    max-width:95%;
+
+    max-height:90vh;
+
+    overflow-y:auto;
+
+    border-radius:12px;
+
+    padding:25px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,0.20);
+
+}
+
+
+/* Cutting Plan Move To Pills */
+
+.cp-move-pills {
+
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+
+}
+
+
+.cp-move-pill {
+
+    min-width:58px;
+
+    padding:9px 16px;
+
+    border:1px solid #cbd5e1;
+    border-radius:999px;
+
+    background:#f8fafc;
+    color:#334155;
+
+    font-size:13px;
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:
+        background .15s ease,
+        border-color .15s ease,
+        color .15s ease,
+        box-shadow .15s ease;
+
+}
+
+
+.cp-move-pill:hover {
+
+    border-color:#0f4c81;
+    color:#0f4c81;
+
+}
+
+
+.cp-move-pill.selected {
+
+    background:#0f4c81;
+    border-color:#0f4c81;
+    color:#ffffff;
+
+    box-shadow:
+        0 2px 6px rgba(15,76,129,.20);
+
+}
+
+
+@media(max-width:600px){
+
+    .cp-move-pills {
+
+        display:grid;
+        grid-template-columns:repeat(4,1fr);
+
+    }
+
+
+    .cp-move-pill {
+
+        width:100%;
+        min-width:0;
+        padding:9px 6px;
+
+    }
+
+}
+
+
+/* Cutting Plan Structured Cut Size */
+
+.cp-cut-size-row {
+
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    min-height:40px;
+
+    padding:5px 8px;
+
+    border:1px solid #cfd6df;
+    border-radius:6px;
+
+    background:#ffffff;
+
+}
+
+
+.cp-cut-number {
+
+    width:74px;
+
+    padding:7px 8px;
+
+    border:1px solid #cbd5e1;
+    border-radius:5px;
+
+    background:#ffffff;
+
+    font-size:14px;
+    text-align:center;
+
+    outline:none;
+
+}
+
+
+.cp-cut-number:focus {
+
+    border-color:#135b9e;
+
+    box-shadow:
+        0 0 0 2px rgba(19,91,158,.10);
+
+}
+
+
+.cp-cut-fixed {
+
+    color:#334155;
+
+    font-size:13px;
+    font-weight:700;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-cut-x {
+
+    color:#64748b;
+
+    font-size:14px;
+    font-weight:800;
+
+    white-space:nowrap;
+
+}
+
+
+@media(max-width:600px){
+
+    .cp-cut-size-row {
+
+        flex-wrap:wrap;
+
+    }
+
+}
+
+
+/* Cutting Plan Multi Row Create */
+
+#manual-plan-modal .cp-batch-create-modal {
+
+    width:min(96vw, 1600px);
+    max-width:1600px;
+
+}
+
+
+.cp-batch-create-body {
+
+    padding:18px;
+
+}
+
+
+.cp-batch-table-wrap {
+
+    width:100%;
+    overflow-x:auto;
+
+    border:1px solid #d9e1ea;
+    border-radius:7px;
+
+}
+
+
+.cp-batch-entry-table {
+
+    width:100%;
+    min-width:1450px;
+
+    border-collapse:collapse;
+
+    background:#ffffff;
+
+}
+
+
+.cp-batch-entry-table th {
+
+    padding:9px 7px;
+
+    border-right:1px solid #d9e1ea;
+    border-bottom:1px solid #cbd5e1;
+
+    background:#f4f8fc;
+
+    color:#25364a;
+
+    font-size:12px;
+    font-weight:700;
+
+    text-align:center;
+    white-space:nowrap;
+
+}
+
+
+.cp-batch-entry-table td {
+
+    padding:7px 6px;
+
+    border-right:1px solid #e1e6ec;
+    border-bottom:1px solid #e1e6ec;
+
+    vertical-align:middle;
+
+}
+
+
+.cp-batch-entry-table tbody tr:last-child td {
+
+    border-bottom:none;
+
+}
+
+
+.cp-batch-sr-col,
+.cp-batch-sr-cell {
+
+    width:52px;
+    text-align:center;
+
+}
+
+
+.cp-batch-row-number {
+
+    font-weight:700;
+    color:#334155;
+
+}
+
+
+.cp-batch-qty-col {
+
+    width:85px;
+
+}
+
+
+.cp-batch-remove-col,
+.cp-batch-remove-cell {
+
+    width:42px;
+
+}
+
+
+.cp-batch-input {
+
+    width:100%;
+    min-width:115px;
+
+    padding:8px 7px;
+
+    border:1px solid #cbd5e1;
+    border-radius:5px;
+
+    background:#ffffff;
+
+    font-size:12px;
+
+    outline:none;
+
+}
+
+
+.cp-row-model {
+
+    min-width:220px;
+
+}
+
+
+.cp-row-material {
+
+    min-width:105px;
+
+}
+
+
+.cp-row-so {
+
+    min-width:135px;
+
+}
+
+
+.cp-row-planned-date {
+
+    min-width:135px;
+
+}
+
+
+.cp-row-part {
+
+    min-width:110px;
+
+}
+
+
+.cp-batch-input:focus,
+.cp-batch-small-input:focus {
+
+    border-color:#135b9e;
+
+    box-shadow:
+        0 0 0 2px rgba(19,91,158,.10);
+
+}
+
+
+.cp-batch-cut-size {
+
+    display:flex;
+    align-items:center;
+
+    gap:5px;
+
+    min-width:245px;
+
+    color:#334155;
+
+    font-size:12px;
+    font-weight:700;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-batch-small-input {
+
+    width:60px;
+
+    padding:8px 5px;
+
+    border:1px solid #cbd5e1;
+    border-radius:5px;
+
+    background:#ffffff;
+
+    font-size:12px;
+    text-align:center;
+
+    outline:none;
+
+}
+
+
+.cp-batch-move-pills {
+
+    display:flex;
+    align-items:center;
+
+    gap:4px;
+
+    min-width:220px;
+
+}
+
+
+.cp-batch-move-pill {
+
+    min-width:44px;
+
+    padding:7px 9px;
+
+    border:1px solid #cbd5e1;
+    border-radius:999px;
+
+    background:#f8fafc;
+    color:#334155;
+
+    font-size:11px;
+    font-weight:700;
+
+    cursor:pointer;
+
+}
+
+
+.cp-batch-move-pill:hover {
+
+    border-color:#0f4c81;
+    color:#0f4c81;
+
+}
+
+
+.cp-batch-move-pill.selected {
+
+    background:#0f4c81;
+    border-color:#0f4c81;
+    color:#ffffff;
+
+}
+
+
+.cp-batch-remove-btn {
+
+    width:28px;
+    height:28px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    border:1px solid #e2e8f0;
+    border-radius:50%;
+
+    background:#ffffff;
+    color:#b42318;
+
+    font-size:19px;
+    line-height:1;
+
+    cursor:pointer;
+
+}
+
+
+.cp-batch-remove-btn:hover {
+
+    background:#fff1f0;
+    border-color:#f3b6b2;
+
+}
+
+
+.cp-batch-add-row-wrap {
+
+    margin-top:12px;
+
+}
+
+
+.cp-batch-add-row-btn {
+
+    font-weight:700;
+
+}
+
+
+.cp-batch-remarks {
+
+    margin-top:16px;
+
+}
+
+
+.cp-batch-remarks textarea {
+
+    min-height:70px;
+    resize:vertical;
+
+}
+
+
+@media(max-width:900px){
+
+    #manual-plan-modal .cp-batch-create-modal {
+
+        width:98vw;
+
+    }
+
+}
+
+
+/* Cutting Plan Batch Card UX V2 */
+
+#manual-plan-modal {
+
+    padding:18px;
+
+}
+
+
+#manual-plan-modal .cp-batch-create-modal {
+
+    width:min(1500px, 97vw);
+    max-width:1500px;
+
+    max-height:94vh;
+
+    display:flex;
+    flex-direction:column;
+
+}
+
+
+#manual-plan-modal .cp-batch-create-body {
+
+    flex:1;
+
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    padding:20px;
+
+}
+
+
+.cp-batch-card-list {
+
+    display:flex;
+    flex-direction:column;
+
+    gap:14px;
+
+}
+
+
+.cp-batch-row-card {
+
+    border:1px solid #d7e0ea;
+    border-radius:9px;
+
+    background:#ffffff;
+
+    box-shadow:
+        0 1px 3px rgba(15,23,42,.05);
+
+    overflow:hidden;
+
+}
+
+
+.cp-batch-row-card-head {
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:8px 12px;
+
+    background:#f4f8fc;
+
+    border-bottom:1px solid #dce4ed;
+
+}
+
+
+.cp-batch-row-title {
+
+    color:#0f4c81;
+
+    font-size:13px;
+    font-weight:800;
+
+}
+
+
+.cp-batch-row-grid {
+
+    display:grid;
+
+    gap:14px;
+
+    padding:14px 16px;
+
+}
+
+
+.cp-batch-row-grid-top {
+
+    grid-template-columns:
+        minmax(150px, .85fr)
+        minmax(150px, 1fr)
+        minmax(290px, 1.5fr)
+        minmax(90px, .5fr);
+
+}
+
+
+.cp-batch-row-grid-bottom {
+
+    grid-template-columns:
+        minmax(150px, .8fr)
+        minmax(320px, 1.8fr)
+        minmax(170px, .9fr)
+        minmax(230px, 1.1fr);
+
+    border-top:1px dashed #e2e8f0;
+
+    padding-top:13px;
+
+}
+
+
+.cp-batch-field {
+
+    min-width:0;
+
+}
+
+
+.cp-batch-field label {
+
+    display:block;
+
+    margin-bottom:6px;
+
+    color:#475569;
+
+    font-size:11px;
+    font-weight:700;
+
+}
+
+
+.cp-batch-input {
+
+    width:100%;
+    min-width:0;
+
+    box-sizing:border-box;
+
+}
+
+
+.cp-row-model,
+.cp-row-material,
+.cp-row-so,
+.cp-row-planned-date,
+.cp-row-part {
+
+    min-width:0;
+
+}
+
+
+.cp-batch-cut-size {
+
+    min-width:0;
+
+    height:36px;
+
+    padding:0 9px;
+
+    border:1px solid #cbd5e1;
+    border-radius:5px;
+
+    box-sizing:border-box;
+
+    background:#ffffff;
+
+}
+
+
+.cp-batch-small-input {
+
+    width:62px;
+
+}
+
+
+.cp-batch-move-pills {
+
+    min-width:0;
+
+    flex-wrap:nowrap;
+
+}
+
+
+.cp-batch-move-pill {
+
+    flex:1;
+
+    min-width:42px;
+
+}
+
+
+.cp-batch-remove-btn {
+
+    flex:0 0 auto;
+
+}
+
+
+.cp-batch-add-row-wrap {
+
+    margin-top:14px;
+
+}
+
+
+@media(max-width:1100px){
+
+    .cp-batch-row-grid-top {
+
+        grid-template-columns:
+            1fr 1fr;
+
+    }
+
+
+    .cp-batch-row-grid-bottom {
+
+        grid-template-columns:
+            1fr 1fr;
+
+    }
+
+}
+
+
+@media(max-width:700px){
+
+    #manual-plan-modal {
+
+        padding:7px;
+
+    }
+
+
+    #manual-plan-modal .cp-batch-create-modal {
+
+        width:100%;
+        max-height:97vh;
+
+    }
+
+
+    .cp-batch-row-grid-top,
+    .cp-batch-row-grid-bottom {
+
+        grid-template-columns:1fr;
+
+    }
+
+
+    .cp-batch-move-pills {
+
+        max-width:320px;
+
+    }
+
+}
+
+
+/* Cutting Plan Wide Sheet UX V3 */
+
+#manual-plan-modal.cp-modal-overlay {
+    padding:14px !important;
+}
+
+
+#manual-plan-modal.cp-modal-overlay
+> .cp-modal-box.cp-batch-create-modal {
+
+    width:calc(100vw - 40px) !important;
+    max-width:1580px !important;
+
+    height:auto;
+    max-height:94vh;
+
+    display:flex;
+    flex-direction:column;
+}
+
+
+#manual-plan-modal .cp-modal-header {
+
+    padding:16px 22px;
+
+    font-size:21px;
+}
+
+
+#manual-plan-modal .cp-batch-create-body {
+
+    flex:1;
+    min-height:0;
+
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+
+    padding:16px 20px;
+}
+
+
+#manual-plan-modal .cp-modal-footer {
+
+    flex:0 0 auto;
+
+    padding:13px 20px;
+
+    border-top:1px solid #dde5ed;
+
+    background:#fff;
+}
+
+
+/* SHEET */
+
+.cp-cutting-sheet {
+
+    width:100%;
+
+    border:1px solid #ccd8e4;
+    border-radius:7px;
+
+    overflow:hidden;
+
+    background:#fff;
+}
+
+
+.cp-cutting-sheet-header,
+.cp-cutting-sheet-row {
+
+    display:grid;
+
+    grid-template-columns:
+        46px
+        135px
+        minmax(105px, .75fr)
+        230px
+        75px
+        minmax(105px, .75fr)
+        minmax(220px, 1.7fr)
+        minmax(120px, .85fr)
+        190px
+        38px;
+
+    align-items:stretch;
+}
+
+
+.cp-cutting-sheet-header {
+
+    min-height:42px;
+
+    background:#eaf3fb;
+
+    border-bottom:1px solid #cbd9e5;
+}
+
+
+.cp-cutting-sheet-header > div {
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:7px 5px;
+
+    box-sizing:border-box;
+
+    border-right:1px solid #d4e0ea;
+
+    color:#173d62;
+
+    font-size:11px;
+    font-weight:800;
+
+    text-align:center;
+    white-space:nowrap;
+}
+
+
+.cp-cutting-sheet-header > div:last-child {
+    border-right:none;
+}
+
+
+/* ROW */
+
+.cp-cutting-sheet-row {
+
+    min-height:58px;
+
+    border-bottom:1px solid #e0e7ee;
+}
+
+
+.cp-cutting-sheet-row:last-child {
+    border-bottom:none;
+}
+
+
+.cp-sheet-cell {
+
+    min-width:0;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:7px 5px;
+
+    box-sizing:border-box;
+
+    border-right:1px solid #e3e9ef;
+}
+
+
+.cp-sheet-cell:last-child {
+    border-right:none;
+}
+
+
+.cp-sheet-sr {
+
+    justify-content:center;
+
+    color:#174c78;
+
+    font-size:12px;
+    font-weight:800;
+}
+
+
+/* NORMAL INPUT */
+
+.cp-cutting-sheet-row .cp-batch-input {
+
+    width:100%;
+    min-width:0;
+
+    height:35px;
+
+    padding:6px 7px;
+
+    box-sizing:border-box;
+
+    border:1px solid #c7d2dd;
+    border-radius:5px;
+
+    font-size:11px;
+
+    background:#fff;
+}
+
+
+.cp-cutting-sheet-row .cp-batch-input:focus,
+.cp-cutting-sheet-row .cp-batch-small-input:focus {
+
+    outline:none;
+
+    border-color:#0f5a91;
+
+    box-shadow:
+        0 0 0 2px rgba(15,90,145,.09);
+}
+
+
+/* CUT SIZE */
+
+.cp-sheet-cut-size {
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:4px;
+
+    color:#35485b;
+
+    font-size:10px;
+    font-weight:700;
+
+    white-space:nowrap;
+}
+
+
+.cp-sheet-cut-size .cp-batch-small-input {
+
+    width:51px;
+    height:34px;
+
+    padding:4px;
+
+    box-sizing:border-box;
+
+    border:1px solid #c7d2dd;
+    border-radius:5px;
+
+    text-align:center;
+
+    font-size:11px;
+}
+
+
+/* MOVE TO */
+
+.cp-sheet-move-pills {
+
+    width:100%;
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap:3px;
+}
+
+
+.cp-sheet-move-pills .cp-batch-move-pill {
+
+    width:100%;
+    min-width:0;
+
+    padding:7px 2px;
+
+    border-radius:15px;
+
+    font-size:10px;
+}
+
+
+/* REMOVE */
+
+.cp-sheet-remove-cell {
+
+    justify-content:center;
+}
+
+
+.cp-sheet-remove-cell .cp-batch-remove-btn {
+
+    width:26px;
+    height:26px;
+
+    padding:0;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    font-family:Arial, sans-serif;
+    font-size:18px;
+    line-height:1;
+
+    border-radius:50%;
+}
+
+
+/* LOWER AREA */
+
+.cp-batch-add-row-wrap {
+
+    margin-top:11px;
+}
+
+
+.cp-batch-remarks {
+
+    margin-top:14px;
+}
+
+
+.cp-batch-remarks textarea {
+
+    min-height:58px;
+}
+
+
+/* Make old card rules harmless */
+
+.cp-batch-card-list {
+    display:block;
+}
+
+
+
+/* Cutting Plan Compact Batch Cards V4 */
+
+
+/* ============================================================
+   MODAL SIZE
+   ============================================================ */
+
+#manual-plan-modal.cp-modal-overlay {
+
+    padding:24px !important;
+
+}
+
+
+#manual-plan-modal.cp-modal-overlay
+> .cp-modal-box.cp-batch-create-modal {
+
+    width:min(1320px, 94vw) !important;
+
+    max-width:1320px !important;
+
+    min-width:0 !important;
+    min-height:0 !important;
+
+    height:auto !important;
+    max-height:92vh;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+}
+
+
+/* Header */
+
+#manual-plan-modal .cp-modal-header {
+
+    padding:17px 22px;
+
+    font-size:20px;
+
+    border-bottom:1px solid #dbe4ed;
+
+}
+
+
+/* Body */
+
+#manual-plan-modal .cp-batch-create-body {
+
+    padding:16px 20px !important;
+
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+
+}
+
+
+/* ============================================================
+   HIDE OLD SPREADSHEET HEADER
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-header {
+
+    display:none !important;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet {
+
+    border:none !important;
+
+    border-radius:0;
+
+    overflow:visible;
+
+    background:transparent;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-body {
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+
+/* ============================================================
+   EACH CUTTING PLAN LINE = CARD
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row {
+
+    position:relative;
+
+    display:grid !important;
+
+    grid-template-columns:
+        1.05fr
+        1fr
+        1.65fr
+        .55fr;
+
+    gap:13px 15px;
+
+    min-height:0;
+
+    padding:48px 16px 16px;
+
+    border:1px solid #cfdae5 !important;
+
+    border-radius:9px;
+
+    background:#ffffff;
+
+    box-shadow:
+        0 1px 3px rgba(15,23,42,.05);
+
+}
+
+
+/* ============================================================
+   ROW NUMBER AS CARD HEADER
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-sr {
+
+    position:absolute;
+
+    top:0;
+    left:0;
+    right:0;
+
+    height:36px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:flex-start;
+
+    padding:0 14px;
+
+    box-sizing:border-box;
+
+    background:#edf5fc;
+
+    border-bottom:1px solid #d5e1ec;
+
+    border-right:none;
+
+    border-radius:9px 9px 0 0;
+
+    color:#164a75;
+
+    font-size:12px;
+    font-weight:800;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-sr::before {
+
+    content:"Row ";
+
+}
+
+
+/* ============================================================
+   REMOVE BUTTON
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-remove-cell {
+
+    position:absolute;
+
+    top:5px;
+    right:8px;
+
+    width:27px;
+    height:27px;
+
+    padding:0;
+
+    border:none;
+
+    z-index:2;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-remove-cell
+.cp-batch-remove-btn {
+
+    width:27px;
+    height:27px;
+
+    background:#ffffff;
+
+    border:1px solid #e4b6b6;
+
+    color:#c62828;
+
+    font-size:17px;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-remove-cell
+.cp-batch-remove-btn:hover {
+
+    background:#fff1f1;
+
+}
+
+
+/* ============================================================
+   GENERAL FIELD CELLS
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell {
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:stretch;
+
+    justify-content:flex-start;
+
+    height:auto;
+
+    min-width:0;
+
+    padding:0;
+
+    border:none !important;
+
+}
+
+
+/* Field labels */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell::before {
+
+    display:block;
+
+    margin-bottom:5px;
+
+    color:#506174;
+
+    font-size:11px;
+
+    font-weight:700;
+
+}
+
+
+/* Child 2 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(2)::before {
+
+    content:"Planned Date";
+
+}
+
+
+/* Child 3 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(3)::before {
+
+    content:"Material Specs";
+
+}
+
+
+/* Child 4 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(4)::before {
+
+    content:"Cut Size";
+
+}
+
+
+/* Child 5 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(5)::before {
+
+    content:"Qty";
+
+}
+
+
+/* Child 6 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(6)::before {
+
+    content:"Part";
+
+}
+
+
+/* Child 7 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(7)::before {
+
+    content:"Model & Size";
+
+}
+
+
+/* Child 8 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(8)::before {
+
+    content:"SO No.";
+
+}
+
+
+/* Child 9 */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(9)::before {
+
+    content:"Move To";
+
+}
+
+
+/* ============================================================
+   SECOND LINE POSITIONING
+   ============================================================ */
+
+/* Part */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(6) {
+
+    grid-column:1;
+
+}
+
+
+/* Model & Size */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(7) {
+
+    grid-column:2 / span 2;
+
+}
+
+
+/* SO */
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(8) {
+
+    grid-column:4;
+
+}
+
+
+/* Move To gets its own clean full-width line */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(9) {
+
+    grid-column:1 / -1;
+
+    max-width:420px;
+
+}
+
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-batch-input {
+
+    width:100%;
+
+    height:38px;
+
+    padding:7px 9px;
+
+    box-sizing:border-box;
+
+    border:1px solid #cbd6e0;
+
+    border-radius:6px;
+
+    background:#ffffff;
+
+    font-size:12px;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-batch-input:focus {
+
+    border-color:#0d5a93;
+
+    box-shadow:
+        0 0 0 2px rgba(13,90,147,.09);
+
+}
+
+
+/* ============================================================
+   CUT SIZE
+   ============================================================ */
+
+#manual-plan-modal
+.cp-sheet-cut-size {
+
+    height:38px;
+
+    justify-content:flex-start;
+
+    gap:6px;
+
+    padding:0 9px;
+
+    box-sizing:border-box;
+
+    border:1px solid #cbd6e0;
+
+    border-radius:6px;
+
+    background:#ffffff;
+
+    font-size:11px;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-cut-size
+.cp-batch-small-input {
+
+    width:62px;
+
+    height:30px;
+
+    border:1px solid #d2dbe4;
+
+}
+
+
+/* ============================================================
+   MOVE TO PILLS
+   ============================================================ */
+
+#manual-plan-modal
+.cp-sheet-move-pills {
+
+    display:flex;
+
+    gap:7px;
+
+    width:auto;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-move-pills
+.cp-batch-move-pill {
+
+    flex:0 0 auto;
+
+    min-width:55px;
+
+    padding:8px 13px;
+
+    font-size:11px;
+
+}
+
+
+/* ============================================================
+   ADD ROW / REMARKS / FOOTER
+   ============================================================ */
+
+#manual-plan-modal
+.cp-batch-add-row-wrap {
+
+    margin-top:12px;
+
+}
+
+
+#manual-plan-modal
+.cp-batch-add-row-btn {
+
+    padding:8px 14px;
+
+}
+
+
+#manual-plan-modal
+.cp-batch-remarks {
+
+    margin-top:15px;
+
+}
+
+
+#manual-plan-modal
+.cp-batch-remarks textarea {
+
+    min-height:60px;
+
+}
+
+
+#manual-plan-modal
+.cp-modal-footer {
+
+    padding:13px 20px;
+
+    border-top:1px solid #dde5ed;
+
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media(max-width:900px){
+
+    #manual-plan-modal
+    .cp-cutting-sheet-row {
+
+        grid-template-columns:
+            1fr 1fr;
+
+    }
+
+
+    #manual-plan-modal
+    .cp-cutting-sheet-row
+    .cp-sheet-cell:nth-child(6),
+
+    #manual-plan-modal
+    .cp-cutting-sheet-row
+    .cp-sheet-cell:nth-child(7),
+
+    #manual-plan-modal
+    .cp-cutting-sheet-row
+    .cp-sheet-cell:nth-child(8),
+
+    #manual-plan-modal
+    .cp-cutting-sheet-row
+    .cp-sheet-cell:nth-child(9) {
+
+        grid-column:auto;
+
+    }
+
+
+    #manual-plan-modal
+    .cp-cutting-sheet-row
+    .cp-sheet-cell:nth-child(9) {
+
+        grid-column:1 / -1;
+
+    }
+
+}
+
+
+
+/* Cutting Plan Final Sheet Layout V5 */
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+#manual-plan-modal.cp-modal-overlay {
+
+    padding:12px !important;
+
+}
+
+
+#manual-plan-modal.cp-modal-overlay
+> .cp-modal-box.cp-batch-create-modal {
+
+    width:97vw !important;
+    max-width:1600px !important;
+
+    min-width:0 !important;
+
+    max-height:94vh;
+
+    display:flex !important;
+    flex-direction:column !important;
+
+    border-radius:10px;
+
+}
+
+
+#manual-plan-modal .cp-modal-header {
+
+    padding:15px 20px !important;
+
+    font-size:20px !important;
+
+    border-bottom:1px solid #dbe4ec;
+
+}
+
+
+#manual-plan-modal .cp-batch-create-body {
+
+    flex:1;
+
+    min-height:0;
+
+    padding:15px 18px !important;
+
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+
+}
+
+
+#manual-plan-modal .cp-modal-footer {
+
+    padding:12px 18px !important;
+
+    border-top:1px solid #dbe4ec;
+
+    background:#fff;
+
+}
+
+
+/* ============================================================
+   SHEET
+   ============================================================ */
+
+#manual-plan-modal .cp-cutting-sheet {
+
+    width:100% !important;
+
+    display:block !important;
+
+    border:1px solid #cad7e3 !important;
+
+    border-radius:7px !important;
+
+    overflow:hidden !important;
+
+    background:#fff !important;
+
+}
+
+
+#manual-plan-modal .cp-cutting-sheet-body {
+
+    display:block !important;
+
+}
+
+
+/* ============================================================
+   HEADER + DATA ROW USE EXACT SAME GRID
+   ============================================================ */
+
+#manual-plan-modal .cp-cutting-sheet-header,
+#manual-plan-modal .cp-cutting-sheet-row {
+
+    display:grid !important;
+
+    grid-template-columns:
+        42px
+        138px
+        118px
+        220px
+        68px
+        115px
+        minmax(250px, 1fr)
+        135px
+        205px
+        38px !important;
+
+    gap:0 !important;
+
+    width:100% !important;
+
+    box-sizing:border-box;
+
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+#manual-plan-modal .cp-cutting-sheet-header {
+
+    min-height:40px !important;
+
+    background:#eaf3fb !important;
+
+    border-bottom:1px solid #c7d6e3 !important;
+
+}
+
+
+#manual-plan-modal .cp-cutting-sheet-header > div {
+
+    display:flex !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    padding:6px 5px !important;
+
+    box-sizing:border-box;
+
+    border-right:1px solid #d1dde7 !important;
+
+    color:#173e61 !important;
+
+    font-size:11px !important;
+    font-weight:800 !important;
+
+    white-space:nowrap;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-header > div:last-child {
+
+    border-right:none !important;
+
+}
+
+
+/* ============================================================
+   ROW
+   ============================================================ */
+
+#manual-plan-modal .cp-cutting-sheet-row {
+
+    position:relative !important;
+
+    min-height:58px !important;
+
+    padding:0 !important;
+
+    border:none !important;
+    border-bottom:1px solid #e0e7ee !important;
+
+    border-radius:0 !important;
+
+    background:#fff !important;
+
+    box-shadow:none !important;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-row:last-child {
+
+    border-bottom:none !important;
+
+}
+
+
+/* ============================================================
+   CELLS
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell {
+
+    position:static !important;
+
+    display:flex !important;
+
+    flex-direction:row !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    min-width:0 !important;
+    height:58px !important;
+
+    padding:6px 5px !important;
+
+    box-sizing:border-box;
+
+    border:none !important;
+    border-right:1px solid #e1e8ee !important;
+
+    background:transparent !important;
+
+}
+
+
+/* Remove all V4 generated labels */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell::before {
+
+    content:none !important;
+    display:none !important;
+
+}
+
+
+/* ============================================================
+   SR NO
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-sr {
+
+    position:static !important;
+
+    width:auto !important;
+
+    height:58px !important;
+
+    padding:0 !important;
+
+    justify-content:center !important;
+
+    background:#f8fbfd !important;
+
+    border-radius:0 !important;
+
+    color:#174c78 !important;
+
+    font-size:12px !important;
+    font-weight:800 !important;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-sr::before {
+
+    content:none !important;
+
+}
+
+
+/* ============================================================
+   NORMAL INPUTS
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-batch-input {
+
+    width:100% !important;
+    min-width:0 !important;
+
+    height:35px !important;
+
+    padding:5px 7px !important;
+
+    box-sizing:border-box;
+
+    border:1px solid #c7d3de !important;
+    border-radius:5px !important;
+
+    background:#fff !important;
+
+    font-size:11px !important;
+
+}
+
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-batch-input:focus {
+
+    outline:none;
+
+    border-color:#0d5a93 !important;
+
+    box-shadow:
+        0 0 0 2px rgba(13,90,147,.08) !important;
+
+}
+
+
+/* ============================================================
+   CUT SIZE
+   ============================================================ */
+
+#manual-plan-modal
+.cp-sheet-cut-size {
+
+    width:100% !important;
+
+    height:36px !important;
+
+    display:flex !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    gap:4px !important;
+
+    padding:0 4px !important;
+
+    box-sizing:border-box;
+
+    border:1px solid #c7d3de !important;
+    border-radius:5px !important;
+
+    background:#fff !important;
+
+    color:#34495e !important;
+
+    font-size:10px !important;
+    font-weight:700 !important;
+
+    white-space:nowrap;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-cut-size
+.cp-batch-small-input {
+
+    width:49px !important;
+    height:29px !important;
+
+    padding:3px !important;
+
+    border:1px solid #d1dae3 !important;
+    border-radius:4px !important;
+
+    text-align:center;
+
+    font-size:11px !important;
+
+}
+
+
+/* ============================================================
+   MOVE TO
+   ============================================================ */
+
+#manual-plan-modal
+.cp-sheet-move-pills {
+
+    width:100% !important;
+
+    display:grid !important;
+
+    grid-template-columns:
+        repeat(4, 1fr) !important;
+
+    gap:4px !important;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-move-pills
+.cp-batch-move-pill {
+
+    width:100% !important;
+
+    min-width:0 !important;
+
+    padding:7px 2px !important;
+
+    border-radius:15px !important;
+
+    font-size:10px !important;
+
+}
+
+
+/* ============================================================
+   REMOVE BUTTON
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-remove-cell {
+
+    position:static !important;
+
+    width:auto !important;
+    height:58px !important;
+
+    padding:0 !important;
+
+    display:flex !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    border-right:none !important;
+
+}
+
+
+#manual-plan-modal
+.cp-sheet-remove-cell
+.cp-batch-remove-btn {
+
+    width:25px !important;
+    height:25px !important;
+
+    padding:0 !important;
+
+    display:flex !important;
+
+    align-items:center !important;
+    justify-content:center !important;
+
+    border:1px solid #efb8b8 !important;
+    border-radius:50% !important;
+
+    background:#fff !important;
+    color:#c62828 !important;
+
+    font-family:Arial, sans-serif !important;
+    font-size:16px !important;
+
+}
+
+
+/* ============================================================
+   ADD ROW / REMARKS
+   ============================================================ */
+
+#manual-plan-modal
+.cp-batch-add-row-wrap {
+
+    margin-top:11px !important;
+
+}
+
+
+#manual-plan-modal
+.cp-batch-add-row-btn {
+
+    padding:7px 13px !important;
+
+}
+
+
+#manual-plan-modal
+.cp-batch-remarks {
+
+    margin-top:13px !important;
+
+}
+
+
+#manual-plan-modal
+.cp-batch-remarks textarea {
+
+    min-height:58px !important;
+
+}
+
+
+/* ============================================================
+   REMOVE OLD CARD-SPECIFIC POSITIONING
+   ============================================================ */
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(6),
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(7),
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(8),
+
+#manual-plan-modal
+.cp-cutting-sheet-row
+.cp-sheet-cell:nth-child(9) {
+
+    grid-column:auto !important;
+
+    max-width:none !important;
+
+}
+
+
+/* ============================================================
+   SMALL SCREEN
+   ============================================================ */
+
+@media(max-width:1200px){
+
+    #manual-plan-modal.cp-modal-overlay
+    > .cp-modal-box.cp-batch-create-modal {
+
+        width:98vw !important;
+
+    }
+
+}
+
+
+
+
+/* ==========================================================
+   AUTO_PENDING_REQUIREMENTS_UI_V1
+   ========================================================== */
+
+.cp-auto-workbench{
+
+    background:#ffffff;
+
+    border:1px solid #d8e6f2;
+
+    border-radius:14px;
+
+    margin-bottom:22px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 4px 16px rgba(15, 42, 77, 0.07);
+
+}
+
+
+.cp-auto-workbench-head{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+
+    padding:20px 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fcff 0%,
+            #edf7ff 100%
+        );
+
+    border-bottom:1px solid #dceaf4;
+
+}
+
+
+.cp-section-kicker{
+
+    margin-bottom:4px;
+
+    color:#0b5fa5;
+
+    font-size:11px;
+
+    font-weight:800;
+
+    letter-spacing:.08em;
+
+}
+
+
+.cp-auto-workbench h2,
+.cp-batch-section-label h2{
+
+    margin:0;
+
+    color:#17365d;
+
+    font-size:20px;
+
+    font-weight:750;
+
+}
+
+
+.cp-auto-workbench-head p,
+.cp-batch-section-label p{
+
+    margin:5px 0 0;
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+
+.cp-auto-head-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+.cp-pending-counter{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    padding:7px 11px;
+
+    border:1px solid #bfd8ec;
+
+    border-radius:20px;
+
+    background:#ffffff;
+
+    color:#31536f;
+
+    font-size:12px;
+
+    font-weight:700;
+
+}
+
+
+.cp-pending-counter span{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:23px;
+
+    height:23px;
+
+    padding:0 6px;
+
+    border-radius:12px;
+
+    background:#0b5fa5;
+
+    color:#ffffff;
+
+    font-size:12px;
+
+}
+
+
+.cp-auto-toolbar{
+
+    min-height:54px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:10px 18px;
+
+    background:#fbfdff;
+
+    border-bottom:1px solid #e6edf3;
+
+}
+
+
+.cp-select-all{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    color:#34495e;
+
+    font-size:13px;
+
+    font-weight:650;
+
+    cursor:pointer;
+
+}
+
+
+.cp-select-all input,
+.cp-auto-row-check{
+
+    width:17px;
+
+    height:17px;
+
+    cursor:pointer;
+
+    accent-color:#0b5fa5;
+
+}
+
+
+.cp-auto-selection-label{
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+
+.cp-create-batch-btn{
+
+    margin-left:auto;
+
+    min-width:135px;
+
+}
+
+
+.cp-create-batch-btn:disabled{
+
+    opacity:.45;
+
+    cursor:not-allowed;
+
+}
+
+
+.cp-auto-table-wrap{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+
+.cp-auto-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    min-width:1000px;
+
+}
+
+
+.cp-auto-table th{
+
+    padding:11px 12px;
+
+    background:#f4f8fb;
+
+    border-bottom:1px solid #dde7ef;
+
+    color:#52677b;
+
+    font-size:11px;
+
+    font-weight:750;
+
+    text-transform:uppercase;
+
+    letter-spacing:.03em;
+
+    white-space:nowrap;
+
+    text-align:left;
+
+}
+
+
+.cp-auto-table td{
+
+    padding:12px;
+
+    border-bottom:1px solid #edf1f5;
+
+    color:#263b4d;
+
+    font-size:13px;
+
+    vertical-align:middle;
+
+}
+
+
+.cp-auto-table tbody tr{
+
+    transition:
+        background .15s ease,
+        box-shadow .15s ease;
+
+}
+
+
+.cp-auto-table tbody tr:hover{
+
+    background:#f8fbfd;
+
+}
+
+
+.cp-auto-table tbody tr.selected{
+
+    background:#eef7ff;
+
+    box-shadow:
+        inset 3px 0 0 #0b5fa5;
+
+}
+
+
+.cp-check-col{
+
+    width:42px;
+
+    text-align:center !important;
+
+}
+
+
+.cp-auto-jc{
+
+    color:#17365d;
+
+    font-weight:750;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-auto-source-id{
+
+    margin-top:2px;
+
+    color:#94a3b8;
+
+    font-size:10px;
+
+}
+
+
+.cp-qty-badge{
+
+    display:inline-flex;
+
+    min-width:34px;
+
+    justify-content:center;
+
+    padding:4px 8px;
+
+    border-radius:6px;
+
+    background:#edf3f7;
+
+    color:#17365d;
+
+    font-weight:750;
+
+}
+
+
+.cp-model-cell{
+
+    min-width:200px;
+
+}
+
+
+.cp-value-missing{
+
+    color:#9a6a16;
+
+    font-style:italic;
+
+}
+
+
+.cp-auto-move-pills{
+
+    display:flex;
+
+    gap:5px;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-auto-move-pill{
+
+    min-width:34px;
+
+    height:30px;
+
+    padding:0 8px;
+
+    border:1px solid #c9d6e2;
+
+    border-radius:7px;
+
+    background:#ffffff;
+
+    color:#52677b;
+
+    font-size:11px;
+
+    font-weight:750;
+
+    cursor:pointer;
+
+    transition:
+        background .15s ease,
+        color .15s ease,
+        border-color .15s ease,
+        transform .15s ease;
+
+}
+
+
+.cp-auto-move-pill:hover{
+
+    border-color:#0b5fa5;
+
+    color:#0b5fa5;
+
+    transform:translateY(-1px);
+
+}
+
+
+.cp-auto-move-pill.active{
+
+    background:#0b5fa5;
+
+    border-color:#0b5fa5;
+
+    color:#ffffff;
+
+    box-shadow:
+        0 2px 5px rgba(11,95,165,.2);
+
+}
+
+
+.cp-auto-empty{
+
+    padding:30px !important;
+
+    text-align:center;
+
+    color:#7a8b9a !important;
+
+}
+
+
+.cp-auto-empty-title{
+
+    margin-bottom:4px;
+
+    color:#455d72;
+
+    font-weight:700;
+
+}
+
+
+.cp-auto-error{
+
+    color:#a33b3b !important;
+
+}
+
+
+.cp-batch-section-label{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-end;
+
+    margin:
+        4px 2px 10px;
+
+}
+
+
+@media(max-width:900px){
+
+    .cp-auto-workbench-head{
+
+        flex-direction:column;
+
+    }
+
+
+    .cp-auto-head-actions{
+
+        width:100%;
+
+        justify-content:space-between;
+
+    }
+
+}
+
+
+/* AUTO_PENDING_REQUIREMENTS_UI_V1_END */
+
+
+
+/* ==========================================================
+   CUTTING_PLAN_FINAL_UI_V5_CSS
+   ========================================================== */
+
+
+/* Search card */
+
+.cp-v5-search-card{
+
+    background:#ffffff;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    margin-bottom:24px;
+
+    box-shadow:
+        0 2px 8px rgba(0,0,0,.08);
+
+}
+
+
+/* Header */
+
+.cp-v5-header{
+
+    padding:20px 24px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    flex-wrap:wrap;
+
+    background:#eef7fd;
+
+    border-bottom:1px solid #d8e4ed;
+
+}
+
+
+.cp-v5-eyebrow{
+
+    font-size:12px;
+
+    font-weight:700;
+
+    letter-spacing:.05em;
+
+    color:#0869a6;
+
+    margin-bottom:7px;
+
+}
+
+
+.cp-v5-header h2{
+
+    margin:0;
+
+    color:#0f2a4d;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+
+.cp-v5-header p{
+
+    margin:6px 0 0 0;
+
+    color:#64748b;
+
+    font-size:14px;
+
+}
+
+
+.cp-v5-search-controls{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+}
+
+
+#cp-parent-code-search{
+
+    width:250px;
+
+    height:40px;
+
+    padding:8px 12px;
+
+    border:1px solid #cbd5df;
+
+    border-radius:7px;
+
+    font-size:14px;
+
+    background:#ffffff;
+
+}
+
+
+#cp-parent-code-search:focus{
+
+    outline:none;
+
+    border-color:#135b9e;
+
+}
+
+
+/* Result summary */
+
+.cp-v5-summary{
+
+    margin:12px 20px;
+
+    padding:9px 12px;
+
+    background:#f4f7fa;
+
+    border-radius:7px;
+
+    color:#475569;
+
+    font-size:13px;
+
+}
+
+
+/* Toolbar */
+
+.cp-v5-toolbar{
+
+    min-height:64px;
+
+    padding:12px 20px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:14px;
+
+    background:#ffffff;
+
+    border-top:1px solid #e3e9ef;
+
+    border-bottom:1px solid #dce4eb;
+
+}
+
+
+.cp-v5-select-area{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    color:#1f3d5a;
+
+    font-size:14px;
+
+}
+
+
+#cp-parent-selected-count{
+
+    color:#64748b;
+
+    font-weight:400;
+
+}
+
+
+.cp-v5-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
+
+}
+
+
+#cp-search-existing-batch{
+
+    height:38px;
+
+    min-width:190px;
+
+    padding:7px 10px;
+
+    border:1px solid #cbd5df;
+
+    border-radius:7px;
+
+    background:#ffffff;
+
+    font-size:14px;
+
+}
+
+
+/* Table */
+
+.cp-v5-table-scroll{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+
+.cp-v5-table{
+
+    width:100%;
+
+    min-width:1380px;
+
+    border-collapse:collapse;
+
+    background:#ffffff;
+
+}
+
+
+.cp-v5-table th{
+
+    background:#f1f5f9;
+
+    color:#3c556c;
+
+    padding:12px 13px;
+
+    border-bottom:1px solid #dce4eb;
+
+    text-align:left;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-v5-table td{
+
+    padding:11px 13px;
+
+    border-bottom:1px solid #e7edf2;
+
+    vertical-align:middle;
+
+    font-size:13px;
+
+    color:#173b5c;
+
+}
+
+
+.cp-v5-table tbody tr:hover{
+
+    background:#f8fafc;
+
+}
+
+
+.cp-v5-table tbody tr:last-child td{
+
+    border-bottom:none;
+
+}
+
+
+.cp-v5-check-col{
+
+    width:42px;
+
+    text-align:center !important;
+
+}
+
+
+.cp-v5-jc{
+
+    color:#003f76;
+
+    font-weight:700;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-v5-child{
+
+    font-weight:600;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-v5-nowrap{
+
+    white-space:nowrap;
+
+}
+
+
+.cp-v5-model{
+
+    min-width:180px;
+
+}
+
+
+.cp-v5-subtext{
+
+    margin-top:3px;
+
+    color:#94a3b8;
+
+    font-size:10px;
+
+}
+
+
+.cp-v5-row-disabled{
+
+    opacity:.55;
+
+    background:#f8fafc;
+
+}
+
+
+/* Inputs */
+
+.cp-v5-input{
+
+    padding:7px 9px;
+
+    border:1px solid #cfd8e2;
+
+    border-radius:6px;
+
+    background:#ffffff;
+
+    box-sizing:border-box;
+
+    font:inherit;
+
+}
+
+
+.cp-v5-input:focus{
+
+    outline:none;
+
+    border-color:#135b9e;
+
+}
+
+
+.cp-v5-input.required{
+
+    border-color:#ef5350;
+
+}
+
+
+.cp-v5-material{
+
+    width:100%;
+
+    min-width:195px;
+
+}
+
+
+.cp-v5-cut-size{
+
+    width:120px;
+
+}
+
+
+.cp-v5-qty{
+
+    width:75px;
+
+    text-align:center;
+
+    font-weight:600;
+
+}
+
+
+.cp-v5-warning{
+
+    margin-top:3px;
+
+    color:#c62828;
+
+    font-size:10px;
+
+    font-weight:700;
+
+    white-space:nowrap;
+
+}
+
+
+/* Move To */
+
+.cp-v5-move{
+
+    display:flex;
+
+    gap:5px;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-v5-move-btn{
+
+    min-width:36px;
+
+    height:34px;
+
+    padding:0 9px;
+
+    border:1px solid #cbd5df;
+
+    border-radius:7px;
+
+    background:#ffffff;
+
+    color:#24415d;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+}
+
+
+.cp-v5-move-btn:hover:not(:disabled){
+
+    border-color:#0f5d93;
+
+}
+
+
+.cp-v5-move-btn.active{
+
+    background:#0f5d93;
+
+    border-color:#0f5d93;
+
+    color:#ffffff;
+
+}
+
+
+.cp-v5-move-btn:disabled{
+
+    cursor:not-allowed;
+
+}
+
+
+/* Empty */
+
+.cp-v5-empty{
+
+    padding:24px !important;
+
+    text-align:center;
+
+    color:#64748b !important;
+
+}
+
+
+/* Ready to Print */
+
+.cp-v5-print-card{
+
+    margin-top:0;
+
+}
+
+
+.cp-v5-print-card h2{
+
+    font-size:21px;
+
+    margin-bottom:16px;
+
+}
+
+
+/* Remove summary cards from final workflow */
+
+.cutting-summary{
+
+    display:none !important;
+
+}
+
+
+/* Responsive */
+
+@media(max-width:1100px){
+
+    .cp-v5-header{
+
+        align-items:flex-start;
+
+    }
+
+
+    .cp-v5-toolbar{
+
+        align-items:flex-start;
+
+    }
+
+}
+
+
+@media(max-width:700px){
+
+    .cp-v5-search-controls,
+    .cp-v5-actions{
+
+        width:100%;
+
+    }
+
+
+    #cp-parent-code-search{
+
+        flex:1;
+
+        width:auto;
+
+    }
+
+
+    .cp-v5-toolbar{
+
+        flex-direction:column;
+
+    }
+
+}
+
+
+/* CUTTING_PLAN_FINAL_UI_V5_CSS_END */
+
+
+
+/* ==========================================================
+   CUTTING_PLAN_UI_CLEANUP_V6_CSS
+   Custom selection boxes
+   ========================================================== */
+
+
+/*
+ * Search table row checkbox
+ * and Select All checkbox.
+ */
+
+#cp-parent-search-results input[type="checkbox"]{
+
+    -webkit-appearance:none;
+    appearance:none;
+
+    width:19px;
+    height:19px;
+
+    margin:0;
+
+    border:1.5px solid #aebdcc;
+    border-radius:5px;
+
+    background:#ffffff;
+
+    cursor:pointer;
+
+    vertical-align:middle;
+
+    transition:
+        background-color .15s ease,
+        border-color .15s ease,
+        box-shadow .15s ease;
+
+}
+
+
+#cp-parent-search-results input[type="checkbox"]:hover{
+
+    border-color:#0f67a3;
+
+    box-shadow:
+        0 0 0 3px rgba(15,103,163,.08);
+
+}
+
+
+#cp-parent-search-results input[type="checkbox"]:checked{
+
+    border-color:#0f67a3;
+
+    background-color:#0f67a3;
+
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 7.2 5.7 10 11 4.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+    background-repeat:no-repeat;
+    background-position:center;
+
+}
+
+
+#cp-parent-search-results input[type="checkbox"]:disabled{
+
+    cursor:not-allowed;
+    opacity:.45;
+
+}
+
+
+/*
+ * Selected JC gets a clear visual state.
+ */
+
+.cp-v5-table tbody tr.cp-v6-selected-row{
+
+    background:#eef7fd;
+
+    box-shadow:
+        inset 3px 0 0 #0f67a3;
+
+}
+
+
+.cp-v5-table tbody tr.cp-v6-selected-row:hover{
+
+    background:#e8f4fc;
+
+}
+
+
+/*
+ * Select All area should feel like a proper control,
+ * rather than a loose native checkbox.
+ */
+
+.cp-v5-select-area{
+
+    min-height:38px;
+
+}
+
+
+.cp-v5-select-area strong{
+
+    cursor:default;
+
+}
+
+
+/* CUTTING_PLAN_UI_CLEANUP_V6_CSS_END */
+
+
+
+/* ==========================================================
+   CUTTING PLAN EXISTING BATCH DROPDOWN V1
+   ========================================================== */
+
+#cp-today-existing-batch {
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    min-width: 205px;
+    height: 40px;
+
+    padding: 0 42px 0 14px;
+
+    border: 1px solid #c7d3df;
+    border-radius: 8px;
+
+    background-color: #ffffff;
+
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23364f68' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 15px;
+
+    color: #183b5b;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    outline: none;
+
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease,
+        background-color .15s ease;
+}
+
+
+#cp-today-existing-batch:hover {
+
+    border-color: #0f67a3;
+
+    background-color: #fbfdff;
+}
+
+
+#cp-today-existing-batch:focus {
+
+    border-color: #0f67a3;
+
+    box-shadow:
+        0 0 0 3px rgba(15, 103, 163, .10);
+}
+
+
+#cp-today-existing-batch:disabled {
+
+    background-color: #f1f4f7;
+
+    color: #8a9aaa;
+
+    cursor: not-allowed;
+
+    opacity: .75;
+}
+
+
+#cp-today-existing-batch option {
+
+    background: #ffffff;
+
+    color: #183b5b;
+
+    font-size: 14px;
+}
+
+
+/* CUTTING PLAN EXISTING BATCH DROPDOWN V1 END */
+
+
+
+/* ==========================================================
+   CUTTING_PLAN_PENDING_FILTER_UI_V1_CSS
+   ========================================================== */
+
+
+/* ----------------------------------------------------------
+   FILTER BAR
+   ---------------------------------------------------------- */
+
+#cp-pending-filter-bar{
+
+    padding:
+        14px
+        20px;
+
+    display:flex;
+
+    align-items:flex-end;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+
+    background:#ffffff;
+
+    border-bottom:
+        1px solid
+        #dce5ed;
+
+}
+
+
+
+/* ----------------------------------------------------------
+   UNIVERSAL SEARCH
+   ---------------------------------------------------------- */
+
+.cp-pending-search-wrap{
+
+    position:relative;
+
+    flex:
+        1
+        1
+        380px;
+
+    min-width:280px;
+
+}
+
+
+.cp-pending-search-icon{
+
+    position:absolute;
+
+    left:12px;
+
+    top:50%;
+
+    transform:
+        translateY(-50%);
+
+    font-size:14px;
+
+    line-height:1;
+
+    opacity:.55;
+
+    pointer-events:none;
+
+}
+
+
+#cp-pending-search{
+
+    width:100%;
+
+    height:40px;
+
+    padding:
+        8px
+        12px
+        8px
+        37px;
+
+    border:
+        1px solid
+        #c8d4df;
+
+    border-radius:8px;
+
+    background:#ffffff;
+
+    color:#183b5b;
+
+    font-size:14px;
+
+    font-family:inherit;
+
+    outline:none;
+
+    box-sizing:border-box;
+
+}
+
+
+#cp-pending-search:focus{
+
+    border-color:#0f67a3;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(15,103,163,.08);
+
+}
+
+
+
+/* ----------------------------------------------------------
+   TODAY / ALL PENDING
+   ---------------------------------------------------------- */
+
+.cp-pending-mode-group{
+
+    height:40px;
+
+    padding:3px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:2px;
+
+    border:
+        1px solid
+        #c8d4df;
+
+    border-radius:9px;
+
+    background:#f4f7fa;
+
+}
+
+
+.cp-pending-mode-btn{
+
+    height:32px;
+
+    padding:
+        0
+        13px;
+
+    border:0;
+
+    border-radius:6px;
+
+    background:transparent;
+
+    color:#53697d;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    font-weight:650;
+
+    cursor:pointer;
+
+    transition:
+        background .15s ease,
+        color .15s ease,
+        box-shadow .15s ease;
+
+}
+
+
+.cp-pending-mode-btn:hover{
+
+    color:#0f5d93;
+
+}
+
+
+.cp-pending-mode-btn.active{
+
+    background:#ffffff;
+
+    color:#0f5d93;
+
+    box-shadow:
+        0 1px 4px
+        rgba(15,50,80,.12);
+
+}
+
+
+
+/* ----------------------------------------------------------
+   DATE FIELDS
+   ---------------------------------------------------------- */
+
+.cp-pending-date-field{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:4px;
+
+}
+
+
+.cp-pending-date-field span{
+
+    color:#64748b;
+
+    font-size:10px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.03em;
+
+}
+
+
+.cp-pending-date-field input{
+
+    height:40px;
+
+    min-width:145px;
+
+    padding:
+        7px
+        10px;
+
+    border:
+        1px solid
+        #c8d4df;
+
+    border-radius:8px;
+
+    background:#ffffff;
+
+    color:#183b5b;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    outline:none;
+
+}
+
+
+.cp-pending-date-field input:focus{
+
+    border-color:#0f67a3;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(15,103,163,.08);
+
+}
+
+
+.cp-pending-clear-btn{
+
+    height:40px;
+
+}
+
+
+
+/* ----------------------------------------------------------
+   PAGINATION
+   ---------------------------------------------------------- */
+
+#cp-pending-pagination{
+
+    min-height:60px;
+
+    padding:
+        11px
+        20px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:14px;
+
+    flex-wrap:wrap;
+
+    border-top:
+        1px solid
+        #e0e7ed;
+
+    background:#fafcfd;
+
+}
+
+
+.cp-pending-result-info{
+
+    color:#64748b;
+
+    font-size:13px;
+
+    font-weight:500;
+
+}
+
+
+.cp-pending-page-controls{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+.cp-pending-page-info{
+
+    min-width:95px;
+
+    color:#344b60;
+
+    font-size:13px;
+
+    font-weight:650;
+
+    text-align:center;
+
+}
+
+
+
+/* ----------------------------------------------------------
+   COUNT BADGE
+   ---------------------------------------------------------- */
+
+#cp-today-count{
+
+    min-width:38px !important;
+
+}
+
+
+
+/* ----------------------------------------------------------
+   RESPONSIVE
+   ---------------------------------------------------------- */
+
+@media(max-width:1200px){
+
+    #cp-pending-filter-bar{
+
+        align-items:flex-end;
+
+    }
+
+
+    .cp-pending-search-wrap{
+
+        flex-basis:100%;
+
+    }
+
+}
+
+
+@media(max-width:700px){
+
+    .cp-pending-date-field{
+
+        flex:1;
+
+    }
+
+
+    .cp-pending-date-field input{
+
+        width:100%;
+
+        min-width:0;
+
+    }
+
+
+    #cp-pending-pagination{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+
+    .cp-pending-page-controls{
+
+        justify-content:space-between;
+
+    }
+
+}
+
+
+/* CUTTING_PLAN_PENDING_FILTER_UI_V1_CSS_END */
+
+
+
+/* ==========================================================
+   CUTTING_PLAN_HISTORY_MODAL_V1
+   ========================================================== */
+
+.cp-history-open-btn{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+
+    background:#ffffff;
+    color:#0b4f87;
+
+    border:1px solid #b8cce0;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-history-open-btn:hover{
+
+    background:#f3f8fc;
+    border-color:#7ea5c8;
+
+}
+
+
+.cp-history-count-badge{
+
+    min-width:20px;
+    height:20px;
+
+    padding:0 6px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:999px;
+
+    background:#0b5fa5;
+    color:#ffffff;
+
+    font-size:11px;
+    font-weight:700;
+
+}
+
+
+.cp-history-overlay{
+
+    display:none;
+
+    position:fixed;
+    inset:0;
+
+    z-index:100000;
+
+    background:rgba(15, 23, 42, .48);
+
+    padding:24px;
+
+    align-items:center;
+    justify-content:center;
+
+}
+
+
+.cp-history-overlay.open{
+
+    display:flex;
+
+}
+
+
+body.cp-history-modal-open{
+
+    overflow:hidden;
+
+}
+
+
+.cp-history-modal{
+
+    width:min(1500px, 98vw);
+    height:min(850px, 94vh);
+
+    background:#ffffff;
+
+    border-radius:14px;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 24px 70px
+        rgba(15, 23, 42, .28);
+
+}
+
+
+.cp-history-header{
+
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+
+    gap:20px;
+
+    padding:20px 24px 16px;
+
+    border-bottom:
+        1px solid #dce6ef;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f7fcff 0%,
+            #e5f4ff 100%
+        );
+
+    border-left:
+        5px solid #0b5fa5;
+
+}
+
+
+.cp-history-header h2{
+
+    margin:0;
+
+    color:#12345b;
+
+    font-size:21px;
+    font-weight:700;
+
+}
+
+
+.cp-history-header p{
+
+    margin:5px 0 0;
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+
+.cp-history-close{
+
+    width:34px;
+    height:34px;
+
+    border:none;
+    border-radius:6px;
+
+    background:transparent;
+
+    color:#64748b;
+
+    cursor:pointer;
+
+    font-size:29px;
+    line-height:30px;
+
+}
+
+
+.cp-history-close:hover{
+
+    background:#e2e8f0;
+    color:#0f172a;
+
+}
+
+
+.cp-history-filters{
+
+    display:flex;
+    align-items:flex-end;
+
+    gap:10px;
+
+    padding:14px 20px;
+
+    border-bottom:
+        1px solid #e2e8f0;
+
+    background:#ffffff;
+
+}
+
+
+.cp-history-search-wrap{
+
+    height:38px;
+
+    flex:1 1 420px;
+
+    display:flex;
+    align-items:center;
+
+    gap:8px;
+
+    padding:0 11px;
+
+    border:
+        1px solid #cbd5e1;
+
+    border-radius:7px;
+
+    background:#ffffff;
+
+}
+
+
+.cp-history-search-wrap:focus-within{
+
+    border-color:#0b5fa5;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(11, 95, 165, .08);
+
+}
+
+
+.cp-history-search-wrap i{
+
+    color:#94a3b8;
+
+}
+
+
+.cp-history-search-wrap input{
+
+    width:100%;
+
+    border:none;
+    outline:none;
+
+    font-size:13px;
+
+    background:transparent;
+
+}
+
+
+.cp-history-date-field{
+
+    display:flex;
+    flex-direction:column;
+
+    gap:4px;
+
+}
+
+
+.cp-history-date-field label{
+
+    color:#64748b;
+
+    font-size:11px;
+    font-weight:700;
+
+}
+
+
+.cp-history-date-field input{
+
+    height:38px;
+
+    padding:0 9px;
+
+    border:
+        1px solid #cbd5e1;
+
+    border-radius:7px;
+
+    font-size:13px;
+
+}
+
+
+.cp-history-summary{
+
+    min-height:40px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:15px;
+
+    padding:8px 20px;
+
+    background:#f8fafc;
+
+    border-bottom:
+        1px solid #e2e8f0;
+
+    color:#64748b;
+
+    font-size:12px;
+
+}
+
+
+.cp-history-summary strong{
+
+    color:#0f4c81;
+
+    font-size:14px;
+
+}
+
+
+.cp-history-table-wrap{
+
+    flex:1;
+
+    overflow:auto;
+
+}
+
+
+.cp-history-table{
+
+    width:100%;
+
+    border-collapse:separate;
+    border-spacing:0;
+
+    min-width:1100px;
+
+}
+
+
+.cp-history-table th{
+
+    position:sticky;
+    top:0;
+
+    z-index:2;
+
+    padding:10px 12px;
+
+    background:#edf4fa;
+
+    border-bottom:
+        1px solid #cbd5e1;
+
+    color:#274968;
+
+    text-align:left;
+
+    font-size:12px;
+    font-weight:700;
+
+    white-space:nowrap;
+
+}
+
+
+.cp-history-table td{
+
+    padding:10px 12px;
+
+    border-bottom:
+        1px solid #edf2f7;
+
+    color:#334155;
+
+    font-size:12.5px;
+
+    vertical-align:middle;
+
+}
+
+
+.cp-history-table tbody tr:hover{
+
+    background:#f8fbfd;
+
+}
+
+
+.cp-history-date,
+.cp-history-jc,
+.cp-history-qty{
+
+    white-space:nowrap;
+
+}
+
+
+.cp-history-jc{
+
+    font-weight:600;
+    color:#0f4c81 !important;
+
+}
+
+
+.cp-history-material{
+
+    min-width:210px;
+
+    font-weight:600;
+
+}
+
+
+.cp-history-qty{
+
+    text-align:right;
+
+    font-weight:700;
+
+}
+
+
+.cp-history-move-badge{
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    min-width:32px;
+
+    padding:3px 8px;
+
+    border-radius:999px;
+
+    background:#e8f2fb;
+    color:#0b5fa5;
+
+    font-size:11px;
+    font-weight:700;
+
+}
+
+
+.cp-history-empty{
+
+    padding:35px !important;
+
+    text-align:center;
+
+    color:#94a3b8 !important;
+
+}
+
+
+.cp-history-error{
+
+    color:#b91c1c !important;
+
+}
+
+
+.cp-history-footer{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:15px;
+
+    padding:12px 20px;
+
+    border-top:
+        1px solid #dce6ef;
+
+    background:#ffffff;
+
+}
+
+
+.cp-history-footer-info{
+
+    color:#64748b;
+
+    font-size:12px;
+
+}
+
+
+.cp-history-pagination{
+
+    display:flex;
+
+    gap:8px;
+
+}
+
+
+.cp-history-pagination .cp-btn:disabled{
+
+    opacity:.5;
+    cursor:not-allowed;
+
+}
+
+
+@media(max-width:900px){
+
+    .cp-history-overlay{
+
+        padding:10px;
+
+    }
+
+
+    .cp-history-modal{
+
+        width:100%;
+        height:96vh;
+
+    }
+
+
+    .cp-history-filters{
+
+        flex-wrap:wrap;
+
+    }
+
+
+    .cp-history-search-wrap{
+
+        flex-basis:100%;
+
+    }
+
+}
+
+
+/* CUTTING_PLAN_HISTORY_MODAL_V1_END */
+
+

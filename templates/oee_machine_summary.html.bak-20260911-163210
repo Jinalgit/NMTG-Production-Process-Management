@@ -1,0 +1,673 @@
+{% extends "base.html" %}
+
+{% block title %}OEE Summary{% endblock %}
+
+{% block extra_head %}
+<style>
+:root {
+  --tp: #17365d;
+  --ts: #53657a;
+  --tm: #7a8ba1;
+  --bd: #d8e3ef;
+  --pg: #f5f8fc;
+  --rl: #f2f7fc;
+  --rh: #f8fbfe;
+  --ac: #0b5fa5;
+}
+.oees-wrap {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 18px 22px;
+  font-family: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--tp);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.oees-title { margin: 0; font-size: 20px; font-weight: 700; color: var(--tp); letter-spacing: -0.01em; }
+.oees-sub   { margin-top: 2px; font-size: 12px; color: var(--ts); }
+.oees-preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.oees-preset {
+  height: 26px; padding: 0 12px; border: 1px solid var(--bd); background: #fff;
+  color: var(--tp); font-family: inherit; font-size: 12px; font-weight: 500;
+  border-radius: 14px; cursor: pointer;
+}
+.oees-preset:hover { background: var(--rh); }
+.oees-preset.active { background: var(--ac); color: #fff; border-color: var(--ac); }
+.oees-filters {
+  background: #fff; border: 1px solid var(--bd); border-radius: 6px;
+  padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px 14px;
+  align-items: flex-end; margin-bottom: 12px;
+}
+.oees-fld { display: flex; flex-direction: column; gap: 3px; }
+.oees-fld label {
+  font-size: 10px; font-weight: 700; color: var(--tm);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.oees-fld input, .oees-fld select {
+  height: 32px; padding: 0 8px; border: 1px solid var(--bd); border-radius: 5px;
+  font-family: inherit; font-size: 12px; color: var(--tp); background: #fff; min-width: 150px;
+}
+.oees-fld input:focus, .oees-fld select:focus {
+  outline: none; border-color: var(--ac); box-shadow: 0 0 0 2px rgba(11,95,165,0.10);
+}
+.oees-btn {
+  height: 32px; padding: 0 14px; border: 1px solid var(--ac);
+  background: var(--ac); color: #fff; border-radius: 5px;
+  font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.oees-btn:hover { filter: brightness(0.95); }
+.oees-btn.ghost { background: #fff; color: var(--ac); }
+.oees-stats {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px;
+  padding: 10px 14px; margin-bottom: 12px; background: #fff;
+  border: 1px solid var(--bd); border-radius: 6px;
+  font-size: 12px; color: var(--ts); font-variant-numeric: tabular-nums;
+}
+.oees-stats .k { font-weight: 700; color: var(--tp); }
+.oees-stats .sep { color: var(--bd); padding: 0 6px; }
+.oees-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--bd); }
+.oees-tab {
+  padding: 8px 16px; border: 1px solid transparent; border-bottom: none;
+  background: transparent; font-family: inherit; font-size: 13px;
+  color: var(--ts); cursor: pointer; border-radius: 5px 5px 0 0;
+  margin-bottom: -1px;
+}
+.oees-tab:hover { background: var(--rh); }
+.oees-tab.active {
+  background: #fff; border-color: var(--bd); color: var(--tp); font-weight: 700;
+}
+.oees-card {
+  background: #fff; border: 1px solid var(--bd); border-radius: 0 8px 8px 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden;
+}
+.oees-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--bd);
+}
+.oees-card-head strong { font-size: 13px; font-weight: 700; color: var(--tp); }
+.oees-count { font-size: 11px; font-weight: 700; color: var(--tm); letter-spacing: 0.05em; text-transform: uppercase; }
+.oees-card-body { overflow-x: auto; max-height: 640px; overflow-y: auto; }
+.oees-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+.oees-table thead th {
+  position: sticky; top: 0; z-index: 1; background: var(--rl);
+  padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--tm);
+  border-bottom: 1px solid var(--bd); white-space: nowrap;
+}
+.oees-table thead th.num { text-align: right; }
+.oees-table tbody td {
+  padding: 9px 12px; border-bottom: 1px solid #eef2f7;
+  color: var(--tp); white-space: nowrap; vertical-align: middle;
+}
+.oees-table tbody td.num {
+  text-align: right; font-variant-numeric: tabular-nums;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 12px;
+}
+.oees-table tbody tr:nth-child(even) td { background: rgba(15,55,100,0.018); }
+.oees-table tbody tr:hover td { background: var(--rh); }
+.oees-table tbody tr.click { cursor: pointer; }
+.oees-table td .oee-val { font-weight: 700; color: var(--tp); }
+.oees-empty, .oees-loading { padding: 30px; text-align: center; color: var(--tm); font-size: 12px; }
+.oees-export {
+  height: 26px; padding: 0 10px; font-size: 11px; border: 1px solid var(--ac);
+  background: #fff; color: var(--ac); border-radius: 4px; cursor: pointer; font-family: inherit;
+}
+.oees-export:hover { background: var(--ac); color: #fff; }
+
+/* drill panel */
+.oee-drill-overlay { position: fixed; inset: 0; background: rgba(15,30,60,0.35); z-index: 900; opacity: 0; transition: opacity 0.18s ease; pointer-events: none; }
+.oee-drill-overlay.open { opacity: 1; pointer-events: auto; }
+.oee-drill-panel {
+  position: fixed; top: 0; right: 0; height: 100vh; width: 620px; max-width: 100vw;
+  background: #fff; border-left: 1px solid var(--bd);
+  box-shadow: -12px 0 32px rgba(0,0,0,0.10); z-index: 1000;
+  transform: translateX(100%); transition: transform 0.22s ease;
+  display: flex; flex-direction: column;
+}
+.oee-drill-panel.open { transform: translateX(0); }
+.oee-drill-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  padding: 14px 18px; border-bottom: 1px solid var(--bd); background: var(--rl);
+}
+.oee-drill-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tm); margin-bottom: 4px; }
+.oee-drill-title { font-size: 15px; font-weight: 700; color: var(--tp); margin-bottom: 2px; }
+.oee-drill-sub { font-size: 12px; color: var(--ts); }
+.oee-drill-close { background: transparent; border: 0; font-size: 22px; line-height: 1; color: var(--tm); cursor: pointer; padding: 0 4px; }
+.oee-drill-close:hover { color: #b42318; }
+.oee-drill-body { flex: 1; overflow-y: auto; padding: 6px 0; }
+.oee-drill-section { padding: 14px 18px; border-bottom: 1px solid #eef2f7; }
+.oee-drill-section:last-child { border-bottom: 0; }
+.oee-drill-sec-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tm); margin-bottom: 10px; }
+.oee-inner-scroll { max-height: 260px; overflow: auto; border: 1px solid var(--bd); border-radius: 5px; }
+.oee-inner-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.oee-inner-table th {
+  background: var(--rl); padding: 6px 8px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--tm);
+  border-bottom: 1px solid var(--bd); text-align: left; white-space: nowrap;
+}
+.oee-inner-table th.num { text-align: right; }
+.oee-inner-table td { padding: 6px 8px; border-bottom: 1px solid #eef2f7; color: var(--tp); white-space: nowrap; vertical-align: top; }
+.oee-inner-table td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.cat-pill { display: inline-block; padding: 1px 6px; border: 1px solid var(--bd); border-radius: 4px; font-size: 10px; font-weight: 700; color: var(--ts); background: #fff; letter-spacing: 0.04em; }
+.shift-tag { display: inline-block; padding: 1px 7px; background: var(--rl); border: 1px solid var(--bd); border-radius: 4px; color: var(--ts); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.type-tag { display: inline-block; padding: 2px 8px; border-left: 2px solid var(--tm); color: var(--ts); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.type-tag.t-ml { border-left-color: #a35c68; }
+.type-tag.t-tr { border-left-color: #4a7ba8; }
+.type-tag.t-dv { border-left-color: #6b7a90; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="oees-wrap">
+  <div class="oees-header">
+    <h1 class="oees-title">OEE Summary</h1>
+    <div class="oees-sub" id="oees-period-sub">Loading...</div>
+  </div>
+
+  <div class="oees-preset-row" id="oees-presets">
+    <button class="oees-preset" data-preset="today">Today</button>
+    <button class="oees-preset" data-preset="yesterday">Yesterday</button>
+    <button class="oees-preset" data-preset="this_week">This Week</button>
+    <button class="oees-preset" data-preset="last_week">Last Week</button>
+    <button class="oees-preset active" data-preset="this_month">This Month</button>
+    <button class="oees-preset" data-preset="last_month">Last Month</button>
+    <button class="oees-preset" data-preset="custom">Custom</button>
+  </div>
+
+  <div class="oees-filters">
+    <div class="oees-fld"><label>From Date</label><input type="date" id="oees-from"></div>
+    <div class="oees-fld"><label>To Date</label><input type="date" id="oees-to"></div>
+    <div class="oees-fld"><label>Zone</label><select id="oees-zone"><option value="">All</option></select></div>
+    <div class="oees-fld"><label>Machine</label><select id="oees-machine"><option value="">All</option></select></div>
+    <div class="oees-fld"><label>Operator</label><select id="oees-operator"><option value="">All</option></select></div>
+    <button class="oees-btn" id="oees-apply">Apply</button>
+    <button class="oees-btn ghost" id="oees-reset">Reset</button>
+  </div>
+
+  <div class="oees-stats" id="oees-stats-strip">Loading...</div>
+
+  <div class="oees-tabs">
+    <button class="oees-tab active" data-tab="machine">Machine-wise</button>
+    <button class="oees-tab" data-tab="operator">Operator-wise</button>
+  </div>
+
+  <div class="oees-card" id="oees-machine-card">
+    <div class="oees-card-head">
+      <strong>Machine Performance</strong>
+      <span class="oees-count" id="oees-machine-count"></span>
+    </div>
+    <div class="oees-card-body">
+      <table class="oees-table" id="oees-machine-table">
+        <thead>
+          <tr>
+            <th>M/C No.</th><th>Machine</th>
+            <th class="num">Sessions</th><th class="num">OK</th><th class="num">Rej</th><th class="num">Hold</th>
+            <th class="num">Planned</th><th class="num">Util</th><th class="num">Run</th>
+            <th class="num">AR Loss</th><th class="num">PR Loss</th>
+            <th class="num">Act Min</th><th class="num">Act Loss</th>
+            <th class="num">PLVA</th>
+            <th class="num">AR %</th><th class="num">PR %</th><th class="num">QR %</th><th class="num">OEE %</th>
+            {% if can_export %}<th>Export</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody id="oees-machine-body">
+          <tr><td colspan="19" class="oees-loading">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="oees-card" id="oees-operator-card" hidden>
+    <div class="oees-card-head">
+      <strong>Operator Performance</strong>
+      <span class="oees-count" id="oees-operator-count"></span>
+    </div>
+    <div class="oees-card-body">
+      <table class="oees-table" id="oees-operator-table">
+        <thead>
+          <tr>
+            <th>Emp No.</th><th>Operator</th>
+            <th class="num">Sessions</th><th class="num">OK</th><th class="num">Rej</th><th class="num">Hold</th>
+            <th class="num">Planned</th><th class="num">Util</th><th class="num">Run</th>
+            <th class="num">AR Loss</th><th class="num">PR Loss</th>
+            <th class="num">Act Min</th><th class="num">Act Loss</th>
+            <th class="num">PLVA</th>
+            <th class="num">AR %</th><th class="num">PR %</th><th class="num">QR %</th><th class="num">OEE %</th>
+          </tr>
+        </thead>
+        <tbody id="oees-operator-body">
+          <tr><td colspan="18" class="oees-loading">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="oee-drill-overlay" id="drillOverlay"></div>
+<aside class="oee-drill-panel" id="drillPanel" aria-hidden="true">
+  <div class="oee-drill-head">
+    <div>
+      <div class="oee-drill-eyebrow" id="drillEyebrow">Details</div>
+      <div class="oee-drill-title" id="drillTitle">Select a row</div>
+      <div class="oee-drill-sub" id="drillSub"></div>
+    </div>
+    <button id="drillClose" class="oee-drill-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="oee-drill-body" id="drillBody"></div>
+</aside>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+(function () {
+  "use strict";
+
+  const CAN_EXPORT = "{{ 'true' if can_export else 'false' }}" === "true";
+  const MACH_COL = CAN_EXPORT ? 19 : 18;
+  const OP_COL = 18;
+  const API = "/api/oee-machine-summary";
+
+  let currentTab = "machine";
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+
+  function fmt(v, d) {
+    if (v === null || v === undefined || v === "") return "\u2013";
+    const n = Number(v);
+    if (isNaN(n)) return "\u2013";
+    if (d === undefined) return n.toLocaleString();
+    return n.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d});
+  }
+  function fmtPct(v) { if (v === null || v === undefined) return "\u2013"; return Number(v).toFixed(1) + "%"; }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function firstOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function qString() {
+    const p = new URLSearchParams();
+    const fd = $("#oees-from").value, td = $("#oees-to").value;
+    if (fd) p.set("from_date", fd);
+    if (td) p.set("to_date", td);
+    const z = $("#oees-zone").value, m = $("#oees-machine").value, op = $("#oees-operator").value;
+    if (z) p.set("zone", z);
+    if (m) p.set("machine_id", m);
+    if (op) p.set("operator_master_id", op);
+    return p.toString();
+  }
+
+  function applyPreset(name) {
+    const t = new Date();
+    let fd, td;
+    if (name === "today") { fd = new Date(t); td = new Date(t); }
+    else if (name === "yesterday") { const y = new Date(t); y.setDate(y.getDate()-1); fd = y; td = y; }
+    else if (name === "this_week") {
+      const day = (t.getDay()+6)%7;
+      fd = new Date(t); fd.setDate(fd.getDate()-day);
+      td = new Date(t);
+    }
+    else if (name === "last_week") {
+      const day = (t.getDay()+6)%7;
+      const thisStart = new Date(t); thisStart.setDate(thisStart.getDate()-day);
+      td = new Date(thisStart); td.setDate(td.getDate()-1);
+      fd = new Date(td); fd.setDate(fd.getDate()-6);
+    }
+    else if (name === "this_month") { fd = firstOfMonth(t); td = new Date(t); }
+    else if (name === "last_month") {
+      const firstThis = firstOfMonth(t);
+      td = new Date(firstThis); td.setDate(td.getDate()-1);
+      fd = firstOfMonth(td);
+    } else { return; }
+    $("#oees-from").value = isoDate(fd);
+    $("#oees-to").value = isoDate(td);
+  }
+
+  async function loadFilters() {
+    try {
+      const r = await fetch(API + "/filters");
+      const d = await r.json();
+      if (d.error) return;
+      (d.zones || []).forEach(z => { const o = document.createElement("option"); o.value = z; o.textContent = z; $("#oees-zone").appendChild(o); });
+      (d.machines || []).forEach(m => { const o = document.createElement("option"); o.value = m.id; o.textContent = m.machine_no + " \u2014 " + m.machine_name; $("#oees-machine").appendChild(o); });
+      (d.operators || []).forEach(op => { const o = document.createElement("option"); o.value = op.id; o.textContent = op.employee_no + " \u2014 " + op.operator_name; $("#oees-operator").appendChild(o); });
+    } catch (e) { console.error(e); }
+  }
+
+  async function loadKPI() {
+    try {
+      const r = await fetch(API + "/kpi?" + qString());
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      $("#oees-period-sub").textContent = "Showing " + d.period.from_date + " to " + d.period.to_date;
+      const parts = [
+        "<span class='k'>" + fmt(d.active_machines) + " / " + fmt(d.total_machines) + "</span>&nbsp;machines",
+        "<span class='k'>" + fmt(d.total_sessions) + "</span>&nbsp;sessions",
+        "OK&nbsp;<span class='k'>" + fmt(d.ok_qty) + "</span>&nbsp;/&nbsp;" + fmt(d.total_qty),
+        "OEE&nbsp;<span class='k'>" + fmtPct(d.oee_pct) + "</span>",
+        "AR&nbsp;<span class='k'>" + fmtPct(d.ar_pct) + "</span>",
+        "PR&nbsp;<span class='k'>" + fmtPct(d.pr_pct) + "</span>",
+        "QR&nbsp;<span class='k'>" + fmtPct(d.qr_pct) + "</span>",
+        "Loss&nbsp;<span class='k'>" + fmt(d.loss_hours, 1) + "&nbsp;h</span>",
+        "Activity&nbsp;<span class='k'>" + fmt(d.activity_min, 0) + "&nbsp;min</span>"
+      ];
+      $("#oees-stats-strip").innerHTML = parts.join("<span class='sep'>&middot;</span>");
+    } catch (e) {
+      $("#oees-stats-strip").textContent = "Failed to load stats: " + e.message;
+    }
+  }
+
+  async function loadMachine() {
+    const body = $("#oees-machine-body");
+    body.innerHTML = "<tr><td colspan='" + MACH_COL + "' class='oees-loading'>Loading...</td></tr>";
+    try {
+      const r = await fetch(API + "/machine-wise?" + qString());
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      if (!d.machines || !d.machines.length) {
+        body.innerHTML = "<tr><td colspan='" + MACH_COL + "' class='oees-empty'>No data for this period.</td></tr>";
+        $("#oees-machine-count").textContent = "0 machines";
+        return;
+      }
+      $("#oees-machine-count").textContent = d.machines.length + " machines";
+      body.innerHTML = "";
+      d.machines.forEach(m => {
+        const tr = document.createElement("tr");
+        tr.className = "click";
+        tr.dataset.kind = "machine";
+        tr.dataset.id = m.machine_id;
+        tr.dataset.title = (m.machine_no || "") + " \u00b7 " + (m.machine_name || "");
+        tr.dataset.sub = "Sessions " + fmt(m.session_count) + " \u00b7 Zone " + (m.zone || "\u2013");
+        tr.innerHTML =
+          "<td>" + esc(m.machine_no || "") + "</td>" +
+          "<td>" + esc(m.machine_name || "") + "</td>" +
+          "<td class='num'>" + fmt(m.session_count) + "</td>" +
+          "<td class='num'>" + fmt(m.ok_qty) + "</td>" +
+          "<td class='num'>" + fmt(m.rejected_qty) + "</td>" +
+          "<td class='num'>" + fmt(m.hold_qty) + "</td>" +
+          "<td class='num'>" + fmt(m.planned_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(m.utilization_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(m.run_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(m.ar_loss_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(m.pr_loss_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(m.activity_min, 1) + "</td>" +
+          "<td class='num'>" + fmt(m.activity_loss_min, 1) + "</td>" +
+          "<td class='num'>" + (m.plan_vs_actual === null ? "\u2013" : fmtPct(m.plan_vs_actual * 100)) + "</td>" +
+          "<td class='num'>" + fmtPct(m.ar_pct) + "</td>" +
+          "<td class='num'>" + fmtPct(m.pr_pct) + "</td>" +
+          "<td class='num'>" + fmtPct(m.qr_pct) + "</td>" +
+          "<td class='num'><span class='oee-val'>" + fmtPct(m.oee_pct) + "</span></td>" +
+          (CAN_EXPORT ? "<td><button class='oees-export' data-machine='" + m.machine_id + "'>Excel</button></td>" : "");
+        body.appendChild(tr);
+      });
+      attachRowHandlers(body);
+    } catch (e) {
+      body.innerHTML = "<tr><td colspan='" + MACH_COL + "' class='oees-empty'>Error: " + esc(e.message) + "</td></tr>";
+    }
+  }
+
+  async function loadOperator() {
+    const body = $("#oees-operator-body");
+    body.innerHTML = "<tr><td colspan='" + OP_COL + "' class='oees-loading'>Loading...</td></tr>";
+    try {
+      const r = await fetch(API + "/operator-wise?" + qString());
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      if (!d.operators || !d.operators.length) {
+        body.innerHTML = "<tr><td colspan='" + OP_COL + "' class='oees-empty'>No data for this period.</td></tr>";
+        $("#oees-operator-count").textContent = "0 operators";
+        return;
+      }
+      $("#oees-operator-count").textContent = d.operators.length + " operators";
+      body.innerHTML = "";
+      d.operators.forEach(o => {
+        const tr = document.createElement("tr");
+        tr.className = "click";
+        tr.dataset.kind = "operator";
+        tr.dataset.id = o.operator_master_id;
+        tr.dataset.title = (o.employee_no || "\u2014") + " \u00b7 " + (o.operator_name || "");
+        tr.dataset.sub = "Sessions " + fmt(o.session_count);
+        tr.innerHTML =
+          "<td>" + esc(o.employee_no || "") + "</td>" +
+          "<td>" + esc(o.operator_name || "") + "</td>" +
+          "<td class='num'>" + fmt(o.session_count) + "</td>" +
+          "<td class='num'>" + fmt(o.ok_qty) + "</td>" +
+          "<td class='num'>" + fmt(o.rejected_qty) + "</td>" +
+          "<td class='num'>" + fmt(o.hold_qty) + "</td>" +
+          "<td class='num'>" + fmt(o.planned_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(o.utilization_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(o.run_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(o.ar_loss_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(o.pr_loss_minutes, 1) + "</td>" +
+          "<td class='num'>" + fmt(o.activity_min, 1) + "</td>" +
+          "<td class='num'>" + fmt(o.activity_loss_min, 1) + "</td>" +
+          "<td class='num'>" + (o.plan_vs_actual === null ? "\u2013" : fmtPct(o.plan_vs_actual * 100)) + "</td>" +
+          "<td class='num'>" + fmtPct(o.ar_pct) + "</td>" +
+          "<td class='num'>" + fmtPct(o.pr_pct) + "</td>" +
+          "<td class='num'>" + fmtPct(o.qr_pct) + "</td>" +
+          "<td class='num'><span class='oee-val'>" + fmtPct(o.oee_pct) + "</span></td>";
+        body.appendChild(tr);
+      });
+      attachRowHandlers(body);
+    } catch (e) {
+      body.innerHTML = "<tr><td colspan='" + OP_COL + "' class='oees-empty'>Error: " + esc(e.message) + "</td></tr>";
+    }
+  }
+
+  function attachRowHandlers(tbody) {
+    tbody.querySelectorAll("tr.click").forEach(row => {
+      row.addEventListener("click", () => openDrill(row.dataset.kind, row.dataset.id, row.dataset.title, row.dataset.sub));
+    });
+    tbody.querySelectorAll("button.oees-export").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        const mid = btn.dataset.machine;
+        const p = new URLSearchParams(qString());
+        p.set("machine_id", mid);
+        window.location.href = API + "/export-excel?" + p.toString();
+      });
+    });
+  }
+
+  async function openDrill(kind, id, title, sub) {
+    $("#drillEyebrow").textContent = kind === "machine" ? "Machine" : "Operator";
+    $("#drillTitle").textContent = title || "Details";
+    $("#drillSub").textContent = sub || "";
+    $("#drillBody").innerHTML = "<div class='oee-drill-section'><div class='oees-loading'>Loading...</div></div>";
+    $("#drillOverlay").classList.add("open");
+    $("#drillPanel").classList.add("open");
+    $("#drillPanel").setAttribute("aria-hidden", "false");
+    const p = new URLSearchParams(qString());
+    p.set("kind", kind);
+    p.set("id", id);
+    try {
+      const r = await fetch(API + "/drill-down?" + p.toString());
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      $("#drillBody").innerHTML = renderDrill(d);
+    } catch (e) {
+      $("#drillBody").innerHTML = "<div class='oee-drill-section' style='color:#b42318;'>Error: " + esc(e.message) + "</div>";
+    }
+  }
+
+  function closeDrill() {
+    $("#drillOverlay").classList.remove("open");
+    $("#drillPanel").classList.remove("open");
+    $("#drillPanel").setAttribute("aria-hidden", "true");
+  }
+
+  function typeTag(t) {
+    const u = String(t || "").toUpperCase();
+    if (u === "MACHINE_LOSS") return "<span class='type-tag t-ml'>Machine Loss</span>";
+    if (u === "TOOL_ROOM")    return "<span class='type-tag t-tr'>Tool Room</span>";
+    if (u === "DEVELOPMENT")  return "<span class='type-tag t-dv'>Development</span>";
+    return "<span class='type-tag'>" + esc(u) + "</span>";
+  }
+
+  function renderSessions(sess, kind) {
+    if (!sess || !sess.length) return "<div style='color:var(--tm);font-size:12px;'>No sessions.</div>";
+    const perCol = kind === "operator" ? "Machine" : "Opened By";
+    let h = "<div class='oee-inner-scroll'><table class='oee-inner-table'><thead><tr>" +
+      "<th>Date</th><th>Shift</th><th>" + perCol + "</th>" +
+      "<th class='num'>OK</th><th class='num'>Planned</th><th class='num'>Util</th><th class='num'>Run</th>" +
+      "<th class='num'>AR %</th><th class='num'>PR %</th><th class='num'>QR %</th><th class='num'>OEE %</th>" +
+      "</tr></thead><tbody>";
+    sess.forEach(s => {
+      const per = kind === "operator" ? ((s.machine_no || "") + " " + (s.machine_name || "")) : (s.opened_by_name || "");
+      h += "<tr>" +
+        "<td>" + esc(s.session_date || s.entry_date || "") + "</td>" +
+        "<td><span class='shift-tag'>" + esc(s.shift_name || "") + "</span></td>" +
+        "<td>" + esc(per) + "</td>" +
+        "<td class='num'>" + fmt(s.ok_qty) + "</td>" +
+        "<td class='num'>" + fmt(s.planned_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(s.utilization_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(s.run_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmtPct(s.ar_pct) + "</td>" +
+        "<td class='num'>" + fmtPct(s.pr_pct) + "</td>" +
+        "<td class='num'>" + fmtPct(s.qr_pct) + "</td>" +
+        "<td class='num'><b>" + fmtPct(s.oee_pct) + "</b></td>" +
+      "</tr>";
+    });
+    h += "</tbody></table></div>";
+    return h;
+  }
+
+  function renderTopLosses(rows) {
+    if (!rows || !rows.length) return "<div style='color:var(--tm);font-size:12px;'>No losses recorded.</div>";
+    let h = "<div class='oee-inner-scroll'><table class='oee-inner-table'><thead><tr>" +
+      "<th>Code</th><th>Reason</th><th>Cat</th><th class='num'>Minutes</th>" +
+      "</tr></thead><tbody>";
+    rows.forEach(l => {
+      const cat = String(l.loss_category || "AR").toUpperCase();
+      h += "<tr>" +
+        "<td><span class='cat-pill'>" + esc(l.loss_code || "") + "</span></td>" +
+        "<td>" + esc(l.loss_name || "") + "</td>" +
+        "<td><span class='cat-pill'>" + esc(cat) + "</span></td>" +
+        "<td class='num'>" + fmt(l.total_min, 1) + "</td>" +
+      "</tr>";
+    });
+    h += "</tbody></table></div>";
+    return h;
+  }
+
+  function renderActivities(acts, kind) {
+    if (!acts || !acts.length) return "<div style='color:var(--tm);font-size:12px;'>No Tool Room or Development activities.</div>";
+    const perCol = kind === "operator" ? "Machine" : "Operator";
+    let h = "<div class='oee-inner-scroll'><table class='oee-inner-table'><thead><tr>" +
+      "<th>Date</th><th>Shift</th><th>Type</th><th>Activity</th><th>" + perCol + "</th>" +
+      "<th>Start</th><th>End</th>" +
+      "<th class='num'>Planned</th><th class='num'>Util</th><th class='num'>AR Loss</th><th class='num'>PR Loss</th>" +
+      "</tr></thead><tbody>";
+    acts.forEach(a => {
+      const per = kind === "operator" ? ((a.machine_no || "") + " " + (a.machine_name || "")) : (a.operator_name || "");
+      h += "<tr>" +
+        "<td>" + esc(a.entry_date || "") + "</td>" +
+        "<td><span class='shift-tag'>" + esc(a.shift_name || "") + "</span></td>" +
+        "<td>" + typeTag(a.activity_type) + "</td>" +
+        "<td>" + esc(a.activity_name || "") + "</td>" +
+        "<td>" + esc(per) + "</td>" +
+        "<td>" + esc(a.start_time || "") + "</td>" +
+        "<td>" + esc(a.end_time || "") + "</td>" +
+        "<td class='num'>" + fmt(a.planned_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(a.utilization_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(a.ar_loss_minutes, 1) + "</td>" +
+        "<td class='num'>" + fmt(a.pr_loss_minutes, 1) + "</td>" +
+      "</tr>";
+    });
+    h += "</tbody></table></div>";
+    return h;
+  }
+
+  function renderTools(tools, kind) {
+    if (!tools || !tools.length) return "<div style='color:var(--tm);font-size:12px;'>No tool entries recorded.</div>";
+    const perCol = kind === "operator" ? "Machine" : "Operator";
+    let h = "<div class='oee-inner-scroll'><table class='oee-inner-table'><thead><tr>" +
+      "<th>Date</th><th>Shift</th><th>JC</th><th>" + perCol + "</th>" +
+      "<th class='num'>Pos</th><th>Tool UID</th><th>Action</th><th>Corner</th><th>Reason</th><th>Usage/Part</th>" +
+      "</tr></thead><tbody>";
+    tools.forEach(t => {
+      const per = kind === "operator" ? ((t.machine_no || "") + " " + (t.machine_name || "")) : (t.operator_name || "");
+      h += "<tr>" +
+        "<td>" + esc(t.entry_date || "") + "</td>" +
+        "<td><span class='shift-tag'>" + esc(t.shift_name || "") + "</span></td>" +
+        "<td>" + esc(t.job_card_no || "") + "</td>" +
+        "<td>" + esc(per) + "</td>" +
+        "<td class='num'>" + esc(t.tool_position || "") + "</td>" +
+        "<td>" + esc(t.tool_uid || "") + "</td>" +
+        "<td>" + esc(t.tool_action_name || t.tool_action_code || "") + "</td>" +
+        "<td>" + esc(t.corner_name || t.corner_code || "") + "</td>" +
+        "<td>" + esc(t.change_reason_name || t.change_reason_code || "") + "</td>" +
+        "<td class='num'>" + esc(t.usage_per_part || "") + "</td>" +
+      "</tr>";
+    });
+    h += "</tbody></table></div>";
+    return h;
+  }
+
+  function renderDrill(d) {
+    const kind = d.kind || "machine";
+    const sessions = d.sessions || d.entries || [];
+    const losses = d.top_losses || [];
+    const activities = d.activities || [];
+    const tools = d.tools || [];
+    let h = "";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Sessions (" + sessions.length + ")</div>" + renderSessions(sessions, kind) + "</div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Top Losses (" + losses.length + ")</div>" + renderTopLosses(losses) + "</div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Activities (" + activities.length + ")</div>" + renderActivities(activities, kind) + "</div>";
+    h += "<div class='oee-drill-section'><div class='oee-drill-sec-title'>Tool Entries (" + tools.length + ")</div>" + renderTools(tools, kind) + "</div>";
+    return h;
+  }
+
+  function switchTab(name) {
+    currentTab = name;
+    $$(".oees-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+    $("#oees-machine-card").hidden = name !== "machine";
+    $("#oees-operator-card").hidden = name !== "operator";
+    if (name === "machine") loadMachine();
+    if (name === "operator") loadOperator();
+  }
+
+  function refresh() {
+    loadKPI();
+    if (currentTab === "machine") loadMachine();
+    if (currentTab === "operator") loadOperator();
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    applyPreset("this_month");
+    await loadFilters();
+    $$(".oees-preset").forEach(b => {
+      b.addEventListener("click", () => {
+        $$(".oees-preset").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        applyPreset(b.dataset.preset);
+        refresh();
+      });
+    });
+    $("#oees-apply").addEventListener("click", () => {
+      $$(".oees-preset").forEach(x => x.classList.remove("active"));
+      $$(".oees-preset[data-preset='custom']").forEach(x => x.classList.add("active"));
+      refresh();
+    });
+    $("#oees-reset").addEventListener("click", () => {
+      $("#oees-zone").value = "";
+      $("#oees-machine").value = "";
+      $("#oees-operator").value = "";
+      $$(".oees-preset").forEach(x => x.classList.remove("active"));
+      $$(".oees-preset[data-preset='this_month']").forEach(x => x.classList.add("active"));
+      applyPreset("this_month");
+      refresh();
+    });
+    $$(".oees-tab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+    $("#drillClose").addEventListener("click", closeDrill);
+    $("#drillOverlay").addEventListener("click", closeDrill);
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#drillPanel").classList.contains("open")) closeDrill(); });
+    refresh();
+  });
+})();
+</script>
+{% endblock %}

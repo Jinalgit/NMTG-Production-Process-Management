@@ -1,0 +1,1146 @@
+NMTG JMS - OEE EXCEL FORMULA PROFILE EXTRACTION
+==========================================================================================
+OEE Root          : C:\Users\IT system\Desktop\OEE
+Workbooks scanned : 30
+Formula sheets    : 30
+Unique profiles   : 9
+Files with errors : 0
+
+IMPORTANT:
+Profiles are derived directly from each workbook's Excel formulas.
+No single global AR/PR/Target formula is assumed.
+AH:BH is translated to semantic loss codes A1:A27.
+
+==========================================================================================
+UNIQUE FORMULA PROFILES
+==========================================================================================
+
+P01
+  AR Loss        : ALL A1-A27
+  PR Loss        : A17, A21, A22
+  Target Deduct  : A7
+  AR/PR Overlap  : A17, A21, A22
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =MAX(BK#-BL#,0)
+  Used by:
+    [A] A CNC 01 Ct-20 .xlsx
+        Sheet : CNC-01 CT-20
+        Rows  : 3-57, 59-505
+        Count : 502
+    [A] A CNC 02 SMALL HARDINGE .xlsx
+        Sheet :  CNC-02 SMALL HARDINGE
+        Rows  : 3-296, 298-508
+        Count : 505
+
+P02
+  AR Loss        : ALL A1-A27
+  PR Loss        : A17, A21, A22
+  Target Deduct  : A8
+  AR/PR Overlap  : A17, A21, A22
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =MAX(BK#-BL#,0)
+  Used by:
+    [A] A CNC 03 CTX Alfa 300 .xlsx
+        Sheet : SMALL HARDINGE CNC 02
+        Rows  : 3-13, 16-500
+        Count : 496
+    [A] A NL 2500 CNC 05.xlsx
+        Sheet : NL 2500
+        Rows  : 3-4, 6-505
+        Count : 502
+    [A] A NLX 1500 CNC 06.xlsx
+        Sheet : NLX 1500
+        Rows  : 3-97, 99-500
+        Count : 497
+    [A] A NLX 1500-500 CNC 31.xlsx
+        Sheet : SMALL HARDINGE CNC 02
+        Rows  : 3-506
+        Count : 504
+
+P03
+  AR Loss        : A7, A14, A19
+  PR Loss        : A26
+  Target Deduct  : NONE
+  AR/PR Overlap  : NONE
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =IFERROR((O#*(IF(M#<1,M#*1440,M#)+IF(N#<1,N#*1440,N#)))/BK#,0)
+  Used by:
+    [A] A NLX 1500-500 CNC 32.xlsx
+        Sheet : SMALL HARDINGE CNC 02
+        Rows  : 3-18, 20-32, 34-66, 68-107, 109-114, 116-498
+        Count : 491
+
+P04
+  AR Loss        : A7, A14, A19
+  PR Loss        : A26
+  Target Deduct  : NONE
+  AR/PR Overlap  : NONE
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =IFERROR((O#*(IF(#REF!<1,#REF!*1440,#REF!)+IF(N#<1,N#*1440,N#)))/BK#,0)
+  Used by:
+    [A] A NLX 1500-500 CNC 32.xlsx
+        Sheet : SMALL HARDINGE CNC 02
+        Rows  : 19, 33
+        Count : 2
+
+P05
+  AR Loss        : A7, A14, A19
+  PR Loss        : A26
+  Target Deduct  : NONE
+  AR/PR Overlap  : NONE
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =IFERROR((O#*(IF(M#<1,M#*1440,M#)+IF(#REF!<1,#REF!*1440,#REF!)))/BK#,0)
+  Used by:
+    [A] A NLX 1500-500 CNC 32.xlsx
+        Sheet : SMALL HARDINGE CNC 02
+        Rows  : 67
+        Count : 1
+
+P06
+  AR Loss        : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+  PR Loss        : A4, A6, A9, A16
+  Target Deduct  : A7
+  AR/PR Overlap  : NONE
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =MAX(BK#-BL#,0)
+  Used by:
+    [B] A CNC 15 SL - 25.xlsx
+        Sheet : CNC 15 SL - 25
+        Rows  : 3-30, 32-77, 79-82, 84-393
+        Count : 388
+    [B] A CNC 17 SL- 35.xlsx
+        Sheet : CNC 17 SL-  35
+        Rows  : 3-80, 82-83, 86-390
+        Count : 385
+    [B] A VMC 01 DMC 635V.xlsx
+        Sheet : VMC 01 DMC 635V
+        Rows  : 3-11, 13-393
+        Count : 390
+    [B] A VMC 02 DMC 650V.xlsx
+        Sheet : VMC 02 DMC 650V
+        Rows  : 3-18, 20-124, 126-219, 221-390
+        Count : 385
+    [B] A VMC 03 EcoMill 600v.xlsx
+        Sheet : VMC 03 EcoMill 600v
+        Rows  : 3, 5-22, 24-35, 37-143, 145-391
+        Count : 385
+    [C] A CNC 11 CTX-310 NEW.xlsx
+        Sheet : CNC 11 CTX-310 NEW
+        Rows  : 3-387
+        Count : 385
+    [C] A CNC 19 NLX 2000.xlsx
+        Sheet : CNC 19 NLX 2000
+        Rows  : 3-28, 30-45, 48-54, 56-389
+        Count : 383
+    [C] A CNC 20 CL 2000.xlsx
+        Sheet : CNC 20 CL 2000
+        Rows  : 3-28, 30-61, 63-248, 250-398
+        Count : 393
+    [C] A CNC 27 CTX 310 MORI.xlsx
+        Sheet : CNC 27 CTX 310 MORI
+        Rows  : 3-391
+        Count : 389
+    [D] A CNC 16 SL - 45.xlsx
+        Sheet : CNC 16 SL - 45
+        Rows  : 3-32, 34-73, 75-77, 79-399
+        Count : 394
+    [D] A CNC 24 CL-200-OLD.xlsx
+        Sheet : CNC 24 CL-200-OLD
+        Rows  : 3-28, 30-62, 64-81, 83-392
+        Count : 387
+    [D] A CNC 34 DOOSAN 280N.xlsx
+        Sheet : DOOSAN
+        Rows  : 3-244
+        Count : 242
+    [D] A VMC 04 MV - 40E.xlsx
+        Sheet : VMC 04 MV - 40E
+        Rows  : 3-17, 19-22, 24-390
+        Count : 386
+    [D] A VMC 6 LMW J4.xlsx
+        Sheet : VMC 6 LMW J4
+        Rows  : 3-136, 138-392
+        Count : 389
+    [E] A CNC 10 CTX-310 OLD.xlsx
+        Sheet : CNC 10 CTX-310 OLD
+        Rows  : 3-390
+        Count : 388
+    [E] A CNC 13 SL-20.xlsx
+        Sheet : CNC 13 SL-20
+        Rows  : 3-98, 102-131, 133-140, 142-143, 145-150, 152-395
+        Count : 386
+    [E] A CNC 22 SL-150.xlsx
+        Sheet : CNC 22 SL-150
+        Rows  : 3-389
+        Count : 387
+    [E] A CNC 23 Mazak 1.xlsx
+        Sheet : CNC 23 Mazak  1
+        Rows  : 3-399
+        Count : 397
+    [E] A CNC 25 Mazak 2.xlsx
+        Sheet : CNC 25 Mazak  2
+        Rows  : 3-31, 35-36, 39-390
+        Count : 383
+    [E] A CNC 26 CL 253.xlsx
+        Sheet : CNC 26 CL 253
+        Rows  : 3-395
+        Count : 393
+    [E] A CNC 28 CL 200- NEW.xlsx
+        Sheet : CNC 28 CL 200- NEW
+        Rows  : 3-391
+        Count : 389
+    [E] A CNC 29 LMW L7.xlsx
+        Sheet : CNC 29 LMW L7
+        Rows  : 3-400
+        Count : 398
+    [E] A CNC 33 LMW.xlsx
+        Sheet : CNC - 33
+        Rows  : 3-392
+        Count : 390
+
+P07
+  AR Loss        : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+  PR Loss        : A4, A6, A9, A16
+  Target Deduct  : A7
+  AR/PR Overlap  : NONE
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : 
+  Used by:
+    [B] A CNC 15 SL - 25.xlsx
+        Sheet : CNC 15 SL - 25
+        Rows  : 31
+        Count : 1
+    [C] A CNC 20 CL 2000.xlsx
+        Sheet : CNC 20 CL 2000
+        Rows  : 29
+        Count : 1
+
+P08
+  AR Loss        : A1, A2
+  PR Loss        : NONE
+  Target Deduct  : NONE
+  AR/PR Overlap  : NONE
+  Utilization BK : =MAX(BI#-BJ#,0)
+  After PR BM    : =MAX(BK#-BL#,0)
+  Used by:
+    [B] A VMC 03 EcoMill 600v.xlsx
+        Sheet : VMC 03 EcoMill 600v
+        Rows  : 36
+        Count : 1
+
+P09
+  AR Loss        : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+  PR Loss        : A4, A6, A9, A16
+  Target Deduct  : A7
+  AR/PR Overlap  : NONE
+  Utilization BK : 
+  After PR BM    : 
+  Used by:
+    [D] A CNC 24 CL-200-OLD.xlsx
+        Sheet : CNC 24 CL-200-OLD
+        Rows  : 82
+        Count : 1
+
+
+==========================================================================================
+DETAILED WORKBOOK / SHEET FORMULA MAP
+==========================================================================================
+
+[A] A CNC 01 Ct-20 .xlsx
+Sheet              : CNC-01 CT-20
+Profile            : P01
+Rows using profile : 3-57, 59-505
+Formula row count  : 502
+
+AR Loss A-codes    : ALL A1-A27
+AR Excel columns   : AH, AI, AJ, AK, AL, AM, AN, AO, AP, AQ, AR, AS, AT, AU, AV, AW, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A17, A21, A22
+PR Excel columns   : AX, BB, BC
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : A17, A21, A22
+
+Target Formula X   : =(T3-AN3)/W3
+AR Formula BJ      : =SUM(AH3:BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AX3,BB3,BC3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A CNC 02 SMALL HARDINGE .xlsx
+Sheet              :  CNC-02 SMALL HARDINGE
+Profile            : P01
+Rows using profile : 3-296, 298-508
+Formula row count  : 505
+
+AR Loss A-codes    : ALL A1-A27
+AR Excel columns   : AH, AI, AJ, AK, AL, AM, AN, AO, AP, AQ, AR, AS, AT, AU, AV, AW, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A17, A21, A22
+PR Excel columns   : AX, BB, BC
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : A17, A21, A22
+
+Target Formula X   : =(T3-AN3)/W3
+AR Formula BJ      : =SUM(AH3:BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AX3,BB3,BC3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A CNC 03 CTX Alfa 300 .xlsx
+Sheet              : SMALL HARDINGE CNC 02
+Profile            : P02
+Rows using profile : 3-13, 16-500
+Formula row count  : 496
+
+AR Loss A-codes    : ALL A1-A27
+AR Excel columns   : AH, AI, AJ, AK, AL, AM, AN, AO, AP, AQ, AR, AS, AT, AU, AV, AW, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A17, A21, A22
+PR Excel columns   : AX, BB, BC
+
+Target deduction   : A8
+Target Excel col   : AO
+
+AR/PR overlap      : A17, A21, A22
+
+Target Formula X   : =(T3-AO3)/W3
+AR Formula BJ      : =SUM(AH3:BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AX3,BB3,BC3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A NL 2500 CNC 05.xlsx
+Sheet              : NL 2500
+Profile            : P02
+Rows using profile : 3-4, 6-505
+Formula row count  : 502
+
+AR Loss A-codes    : ALL A1-A27
+AR Excel columns   : AH, AI, AJ, AK, AL, AM, AN, AO, AP, AQ, AR, AS, AT, AU, AV, AW, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A17, A21, A22
+PR Excel columns   : AX, BB, BC
+
+Target deduction   : A8
+Target Excel col   : AO
+
+AR/PR overlap      : A17, A21, A22
+
+Target Formula X   : =(T3-AO3)/W3
+AR Formula BJ      : =SUM(AH3:BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AX3,BB3,BC3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A NLX 1500 CNC 06.xlsx
+Sheet              : NLX 1500
+Profile            : P02
+Rows using profile : 3-97, 99-500
+Formula row count  : 497
+
+AR Loss A-codes    : ALL A1-A27
+AR Excel columns   : AH, AI, AJ, AK, AL, AM, AN, AO, AP, AQ, AR, AS, AT, AU, AV, AW, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A17, A21, A22
+PR Excel columns   : AX, BB, BC
+
+Target deduction   : A8
+Target Excel col   : AO
+
+AR/PR overlap      : A17, A21, A22
+
+Target Formula X   : =(T3-AO3)/W3
+AR Formula BJ      : =SUM(AH3:BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AX3,BB3,BC3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A NLX 1500-500 CNC 31.xlsx
+Sheet              : SMALL HARDINGE CNC 02
+Profile            : P02
+Rows using profile : 3-506
+Formula row count  : 504
+
+AR Loss A-codes    : ALL A1-A27
+AR Excel columns   : AH, AI, AJ, AK, AL, AM, AN, AO, AP, AQ, AR, AS, AT, AU, AV, AW, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A17, A21, A22
+PR Excel columns   : AX, BB, BC
+
+Target deduction   : A8
+Target Excel col   : AO
+
+AR/PR overlap      : A17, A21, A22
+
+Target Formula X   : =(T3-AO3)/W3
+AR Formula BJ      : =SUM(AH3:BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AX3,BB3,BC3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A NLX 1500-500 CNC 32.xlsx
+Sheet              : SMALL HARDINGE CNC 02
+Profile            : P03
+Rows using profile : 3-18, 20-32, 34-66, 68-107, 109-114, 116-498
+Formula row count  : 491
+
+AR Loss A-codes    : A7, A14, A19
+AR Excel columns   : AN, AU, AZ
+
+PR Loss A-codes    : A26
+PR Excel columns   : BG
+
+Target deduction   : NONE
+Target Excel col   : NONE
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =O3-P3
+AR Formula BJ      : =SUM(AN3,AZ3,AU3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =IFERROR(BI3/BG3,0)
+After PR BM        : =IFERROR((O3*(IF(M3<1,M3*1440,M3)+IF(N3<1,N3*1440,N3)))/BK3,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A NLX 1500-500 CNC 32.xlsx
+Sheet              : SMALL HARDINGE CNC 02
+Profile            : P04
+Rows using profile : 19, 33
+Formula row count  : 2
+
+AR Loss A-codes    : A7, A14, A19
+AR Excel columns   : AN, AU, AZ
+
+PR Loss A-codes    : A26
+PR Excel columns   : BG
+
+Target deduction   : NONE
+Target Excel col   : NONE
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =O8-P8
+AR Formula BJ      : =SUM(AN4,AZ4,AU4)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =IFERROR(BI3/BG3,0)
+After PR BM        : =IFERROR((O19*(IF(#REF!<1,#REF!*1440,#REF!)+IF(N19<1,N19*1440,N19)))/BK19,0)
+
+------------------------------------------------------------------------------------------
+
+[A] A NLX 1500-500 CNC 32.xlsx
+Sheet              : SMALL HARDINGE CNC 02
+Profile            : P05
+Rows using profile : 67
+Formula row count  : 1
+
+AR Loss A-codes    : A7, A14, A19
+AR Excel columns   : AN, AU, AZ
+
+PR Loss A-codes    : A26
+PR Excel columns   : BG
+
+Target deduction   : NONE
+Target Excel col   : NONE
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =O8-P8
+AR Formula BJ      : =SUM(AN66,AZ66,AU66)
+Utilization BK     : =MAX(BI65-BJ65,0)
+PR Formula BL      : =IFERROR(BI65/BG65,0)
+After PR BM        : =IFERROR((O67*(IF(M67<1,M67*1440,M67)+IF(#REF!<1,#REF!*1440,#REF!)))/BK67,0)
+
+------------------------------------------------------------------------------------------
+
+[B] A CNC 15 SL - 25.xlsx
+Sheet              : CNC 15 SL - 25
+Profile            : P06
+Rows using profile : 3-30, 32-77, 79-82, 84-393
+Formula row count  : 388
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[B] A CNC 15 SL - 25.xlsx
+Sheet              : CNC 15 SL - 25
+Profile            : P07
+Rows using profile : 31
+Formula row count  : 1
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : 
+
+------------------------------------------------------------------------------------------
+
+[B] A CNC 17 SL- 35.xlsx
+Sheet              : CNC 17 SL-  35
+Profile            : P06
+Rows using profile : 3-80, 82-83, 86-390
+Formula row count  : 385
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[B] A VMC 01 DMC 635V.xlsx
+Sheet              : VMC 01 DMC 635V
+Profile            : P06
+Rows using profile : 3-11, 13-393
+Formula row count  : 390
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[B] A VMC 02 DMC 650V.xlsx
+Sheet              : VMC 02 DMC 650V
+Profile            : P06
+Rows using profile : 3-18, 20-124, 126-219, 221-390
+Formula row count  : 385
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[B] A VMC 03 EcoMill 600v.xlsx
+Sheet              : VMC 03 EcoMill 600v
+Profile            : P06
+Rows using profile : 3, 5-22, 24-35, 37-143, 145-391
+Formula row count  : 385
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[B] A VMC 03 EcoMill 600v.xlsx
+Sheet              : VMC 03 EcoMill 600v
+Profile            : P08
+Rows using profile : 36
+Formula row count  : 1
+
+AR Loss A-codes    : A1, A2
+AR Excel columns   : AH, AI
+
+PR Loss A-codes    : NONE
+PR Excel columns   : NONE
+
+Target deduction   : NONE
+Target Excel col   : NONE
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T36-#REF!)/W36,"")
+AR Formula BJ      : =SUM(AH36+AI36+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!+#REF!)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(#REF!+#REF!+#REF!+#REF!)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[C] A CNC 11 CTX-310 NEW.xlsx
+Sheet              : CNC 11 CTX-310 NEW
+Profile            : P06
+Rows using profile : 3-387
+Formula row count  : 385
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[C] A CNC 19 NLX 2000.xlsx
+Sheet              : CNC 19 NLX 2000
+Profile            : P06
+Rows using profile : 3-28, 30-45, 48-54, 56-389
+Formula row count  : 383
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[C] A CNC 20 CL 2000.xlsx
+Sheet              : CNC 20 CL 2000
+Profile            : P06
+Rows using profile : 3-28, 30-61, 63-248, 250-398
+Formula row count  : 393
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[C] A CNC 20 CL 2000.xlsx
+Sheet              : CNC 20 CL 2000
+Profile            : P07
+Rows using profile : 29
+Formula row count  : 1
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T8-AN8)/W8,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : 
+
+------------------------------------------------------------------------------------------
+
+[C] A CNC 27 CTX 310 MORI.xlsx
+Sheet              : CNC 27 CTX 310 MORI
+Profile            : P06
+Rows using profile : 3-391
+Formula row count  : 389
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[D] A CNC 16 SL - 45.xlsx
+Sheet              : CNC 16 SL - 45
+Profile            : P06
+Rows using profile : 3-32, 34-73, 75-77, 79-399
+Formula row count  : 394
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[D] A CNC 24 CL-200-OLD.xlsx
+Sheet              : CNC 24 CL-200-OLD
+Profile            : P06
+Rows using profile : 3-28, 30-62, 64-81, 83-392
+Formula row count  : 387
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[D] A CNC 24 CL-200-OLD.xlsx
+Sheet              : CNC 24 CL-200-OLD
+Profile            : P09
+Rows using profile : 82
+Formula row count  : 1
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T72-AN72)/W72,"")
+AR Formula BJ      : =SUM(AH72+AI72+AJ72+AL72+AN72+AO72+AQ72+AR72+AS72+AT72+AU72+AV72+AX72+AY72+AZ72+BA72+BB72+BC72+BD72+BE72+BF72+BG72+BH72)
+Utilization BK     : 
+PR Formula BL      : =SUM(AK72+AM72+AP72+AW72)
+After PR BM        : 
+
+------------------------------------------------------------------------------------------
+
+[D] A CNC 34 DOOSAN 280N.xlsx
+Sheet              : DOOSAN
+Profile            : P06
+Rows using profile : 3-244
+Formula row count  : 242
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[D] A VMC 04 MV - 40E.xlsx
+Sheet              : VMC 04 MV - 40E
+Profile            : P06
+Rows using profile : 3-17, 19-22, 24-390
+Formula row count  : 386
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[D] A VMC 6 LMW J4.xlsx
+Sheet              : VMC 6 LMW J4
+Profile            : P06
+Rows using profile : 3-136, 138-392
+Formula row count  : 389
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 10 CTX-310 OLD.xlsx
+Sheet              : CNC 10 CTX-310 OLD
+Profile            : P06
+Rows using profile : 3-390
+Formula row count  : 388
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 13 SL-20.xlsx
+Sheet              : CNC 13 SL-20
+Profile            : P06
+Rows using profile : 3-98, 102-131, 133-140, 142-143, 145-150, 152-395
+Formula row count  : 386
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 22 SL-150.xlsx
+Sheet              : CNC 22 SL-150
+Profile            : P06
+Rows using profile : 3-389
+Formula row count  : 387
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 23 Mazak 1.xlsx
+Sheet              : CNC 23 Mazak  1
+Profile            : P06
+Rows using profile : 3-399
+Formula row count  : 397
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 25 Mazak 2.xlsx
+Sheet              : CNC 25 Mazak  2
+Profile            : P06
+Rows using profile : 3-31, 35-36, 39-390
+Formula row count  : 383
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 26 CL 253.xlsx
+Sheet              : CNC 26 CL 253
+Profile            : P06
+Rows using profile : 3-395
+Formula row count  : 393
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 28 CL 200- NEW.xlsx
+Sheet              : CNC 28 CL 200- NEW
+Profile            : P06
+Rows using profile : 3-391
+Formula row count  : 389
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 29 LMW L7.xlsx
+Sheet              : CNC 29 LMW L7
+Profile            : P06
+Rows using profile : 3-400
+Formula row count  : 398
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------
+
+[E] A CNC 33 LMW.xlsx
+Sheet              : CNC - 33
+Profile            : P06
+Rows using profile : 3-392
+Formula row count  : 390
+
+AR Loss A-codes    : A1, A2, A3, A5, A7, A8, A10, A11, A12, A13, A14, A15, A17, A18, A19, A20, A21, A22, A23, A24, A25, A26, A27
+AR Excel columns   : AH, AI, AJ, AL, AN, AO, AQ, AR, AS, AT, AU, AV, AX, AY, AZ, BA, BB, BC, BD, BE, BF, BG, BH
+
+PR Loss A-codes    : A4, A6, A9, A16
+PR Excel columns   : AK, AM, AP, AW
+
+Target deduction   : A7
+Target Excel col   : AN
+
+AR/PR overlap      : NONE
+
+Target Formula X   : =IFERROR((T3-AN3)/W3,"")
+AR Formula BJ      : =SUM(AH3+AI3+AJ3+AL3+AN3+AO3+AQ3+AR3+AS3+AT3+AU3+AV3+AX3+AY3+AZ3+BA3+BB3+BC3+BD3+BE3+BF3+BG3+BH3)
+Utilization BK     : =MAX(BI3-BJ3,0)
+PR Formula BL      : =SUM(AK3+AM3+AP3+AW3)
+After PR BM        : =MAX(BK3-BL3,0)
+
+------------------------------------------------------------------------------------------

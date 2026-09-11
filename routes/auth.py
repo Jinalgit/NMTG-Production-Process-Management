@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
+
 from db import get_connection
 from permission_utils import is_gaurang_special_user
 
@@ -9,16 +10,16 @@ auth_bp = Blueprint("auth", __name__)
 def redirect_by_role(role):
     # Special operational access for gaurang user_id=5; excludes user management.
     if is_gaurang_special_user():
-        return redirect(url_for("pages.supervisor_dashboard"))
+        return redirect(url_for("pages.welcome"))
 
     if role == "admin":
-        return redirect(url_for("pages.admin_dashboard"))
+        return redirect(url_for("pages.welcome"))
 
     if role == "supervisor":
-        return redirect(url_for("pages.supervisor_dashboard"))
+        return redirect(url_for("pages.welcome"))
 
     if role == "operator":
-        return redirect(url_for("pages.index"))
+        return redirect(url_for("pages.welcome"))
 
     return redirect(url_for("auth.login"))
 
@@ -52,6 +53,7 @@ def login():
             session["full_name"] = user["full_name"]
             session["role"] = user["role"]
             session["show_welcome"] = True
+
 
             return redirect_by_role(user["role"])
 

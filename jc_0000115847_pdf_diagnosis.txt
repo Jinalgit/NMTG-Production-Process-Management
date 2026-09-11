@@ -1,0 +1,67 @@
+===========================================================================
+NMTG PDF MATERIAL / CUTTING SIZE DIAGNOSIS
+===========================================================================
+Folder : C:\Users\IT system\Desktop\JOBCARD\JOBCARD\07.07.2024\030926\jobcard\aajna
+PDFs   : 7
+Target : 0000115847
+
+---------------------------------------------------------------------------
+FILE: 3.pdf
+JC  : 0000115845
+CURRENT PARSER -> Material=[Nut of N7012 ID 40 x OD 65 - C] Cutting=[]
+WIDER BLOCK    -> Code=[NCONS0000868] UOM=[Nos.] Qty=[24.000] Material=[Nut of N7012 ID 40 x OD 65 - C] Cutting=[]
+POSITIONS       -> ItemDetails=1075 | CuttingSize=-1 | RawMaterial=1049 | Processes=1338
+---------------------------------------------------------------------------
+FILE: 4.pdf
+JC  : 0000115846
+CURRENT PARSER -> Material=[Nut of N7012 ID 40 x OD 65 - C] Cutting=[]
+WIDER BLOCK    -> Code=[NCONS0000868] UOM=[Nos.] Qty=[24.000] Material=[Nut of N7012 ID 40 x OD 65 - C] Cutting=[]
+POSITIONS       -> ItemDetails=1074 | CuttingSize=-1 | RawMaterial=1048 | Processes=1337
+---------------------------------------------------------------------------
+FILE: 5.pdf
+JC  : 0000115847
+CURRENT PARSER -> Material=[Round Bar EN9 56 MM] Cutting=[66mm]
+WIDER BLOCK    -> Code=[NRRBR0000116] UOM=[Kg.] Qty=[2720.000] Material=[Round Bar EN9 56 MM] Cutting=[66mm]
+POSITIONS       -> ItemDetails=837 | CuttingSize=1073 | RawMaterial=811 | Processes=1116
+
+TARGET JC ITEM DETAILS / RAW MATERIAL AREA:
+
+01: UOM Qty.
+02: NRRBR0000116 Kg. 2720.000
+03: Round Bar EN9 56 MM
+04: CUTTING SIZE - 66mm
+
+CURRENT PARSER BLOCK AFTER 'Raw Material':
+
+01: Item Details UOM Qty.
+02: NRRBR0000116 Kg. 2720.000
+03: Round Bar EN9 56 MM
+04: CUTTING SIZE - 66mm
+---------------------------------------------------------------------------
+FILE: 6.pdf
+JC  : 0000115848
+CURRENT PARSER -> Material=[Inner Ring of N7012 ID 40 x OD 65 - C] Cutting=[]
+WIDER BLOCK    -> Code=[NCONS0000797] UOM=[Nos.] Qty=[40.000] Material=[Inner Ring of N7012 ID 40 x OD 65 - C] Cutting=[]
+POSITIONS       -> ItemDetails=1069 | CuttingSize=-1 | RawMaterial=1043 | Processes=1339
+---------------------------------------------------------------------------
+FILE: 7.pdf
+JC  : 0000115849
+CURRENT PARSER -> Material=[Round Bar EN9 75 MM] Cutting=[66mm]
+WIDER BLOCK    -> Code=[NRRBR0000111] UOM=[mm] Qty=[2720.000] Material=[Round Bar EN9 75 MM] Cutting=[66mm]
+POSITIONS       -> ItemDetails=837 | CuttingSize=1072 | RawMaterial=811 | Processes=1115
+---------------------------------------------------------------------------
+FILE: 8.pdf
+JC  : 0000115850
+CURRENT PARSER -> Material=[Outer Ring of N7012 ID 40 x OD 65 - C] Cutting=[]
+WIDER BLOCK    -> Code=[NCONS0000798] UOM=[Nos.] Qty=[40.000] Material=[Outer Ring of N7012 ID 40 x OD 65 - C] Cutting=[]
+POSITIONS       -> ItemDetails=1076 | CuttingSize=-1 | RawMaterial=1050 | Processes=1346
+---------------------------------------------------------------------------
+FILE: 9.pdf
+JC  : 0000115850
+CURRENT PARSER -> Material=[Outer Ring of N7012 ID 40 x OD 65 - C] Cutting=[]
+WIDER BLOCK    -> Code=[NCONS0000798] UOM=[Nos.] Qty=[40.000] Material=[Outer Ring of N7012 ID 40 x OD 65 - C] Cutting=[]
+POSITIONS       -> ItemDetails=1076 | CuttingSize=-1 | RawMaterial=1050 | Processes=1346
+
+===========================================================================
+TARGET JC 0000115847: FOUND
+===========================================================================

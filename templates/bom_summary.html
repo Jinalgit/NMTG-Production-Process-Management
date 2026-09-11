@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+{% set active_page = "page5" %}
+{% block title %}BOM Summary | NMTG{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+  .bom-main {
+    margin-left: 240px;
+    min-height: 100vh;
+    padding: 22px 26px 34px;
+  }
+
+  .bom-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .bom-page-header h1 {
+    color: var(--header-bg);
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 4px;
+  }
+
+  .bom-page-header p {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .bom-toolbar {
+    background: var(--card-bg, var(--surface, #ffffff));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+
+  .bom-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .bom-stat {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-width: 0;
+  }
+
+  .bom-stat-label {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .bom-stat-value {
+    color: var(--header-bg);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 5px;
+  }
+
+  .bom-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .bom-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+  }
+
+  .bom-search-wrap i {
+    color: #64748b;
+    left: 12px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .bom-search-wrap input {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+    padding: 10px 36px 10px 36px;
+  }
+
+  .bom-search-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
+  }
+
+  .bom-clear-search {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #64748b;
+    cursor: pointer;
+    display: none;
+    height: 28px;
+    justify-content: center;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+  }
+
+  .bom-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .bom-filter-btn,
+  .bom-clear-btn,
+  .bom-export-btn,
+  .bom-page-btn {
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 12px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .bom-filter-btn {
+    background: #ffffff;
+    color: var(--header-bg);
+  }
+
+  .bom-filter-btn.active {
+    background: #eff6ff;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .bom-clear-btn {
+    background: #ffffff;
+    color: #64748b;
+  }
+
+  .bom-export-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  .bom-table-wrap {
+    background: var(--card-bg, var(--surface, #ffffff));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .bom-table-scroll {
+    overflow-x: auto;
+  }
+
+  .bom-table {
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 900px;
+    width: 100%;
+  }
+
+  .bom-table th {
+    background: var(--header-bg);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 11px 14px;
+    position: sticky;
+    text-align: left;
+    text-transform: uppercase;
+    top: 0;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  .bom-table td {
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    vertical-align: middle;
+  }
+
+  .bom-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  .bom-code-cell {
+    color: var(--header-bg);
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .bom-description-cell {
+    min-width: 280px;
+  }
+
+  .bom-badge {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 66px;
+    padding: 6px 10px;
+    justify-content: center;
+  }
+
+  .bom-badge-make,
+  .bom-badge-yes {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .bom-badge-buy {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .bom-badge-no {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .bom-empty,
+  .bom-loading {
+    color: #64748b;
+    padding: 36px 20px;
+    text-align: center;
+  }
+
+  .bom-error {
+    color: var(--danger);
+    font-weight: 700;
+  }
+
+  .bom-footer {
+    align-items: center;
+    background: #ffffff;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 12px 14px;
+    flex-wrap: wrap;
+  }
+
+  .bom-row-count {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .bom-pagination {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+  }
+
+  .bom-page-btn {
+    background: #ffffff;
+    color: var(--header-bg);
+    min-height: 34px;
+    padding: 7px 11px;
+  }
+
+  .bom-page-btn:disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .bom-page-status {
+    color: var(--header-bg);
+    font-size: 12px;
+    font-weight: 800;
+    min-width: 92px;
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .bom-main {
+      margin-left: 0;
+      padding: 72px 14px 24px;
+    }
+
+    .bom-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bom-page-header {
+      flex-direction: column;
+    }
+
+    .bom-search-wrap {
+      min-width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="bom-main">
+  <div class="bom-page-header">
+    <div>
+      <h1>BOM Summary</h1>
+      <p>Search BOM links, filter make/buy items, and export the current view.</p>
+    </div>
+  </div>
+
+  <section class="bom-toolbar">
+    <div class="bom-summary-grid" aria-label="BOM summary counts">
+      <div class="bom-stat">
+        <div class="bom-stat-label">Total Rows</div>
+        <div class="bom-stat-value" id="bom-total-count">0</div>
+      </div>
+      <div class="bom-stat">
+        <div class="bom-stat-label">Make</div>
+        <div class="bom-stat-value" id="bom-make-count">0</div>
+      </div>
+      <div class="bom-stat">
+        <div class="bom-stat-label">Buy</div>
+        <div class="bom-stat-value" id="bom-buy-count">0</div>
+      </div>
+      <div class="bom-stat">
+        <div class="bom-stat-label">Has Processes</div>
+        <div class="bom-stat-value" id="bom-has-count">0</div>
+      </div>
+      <div class="bom-stat">
+        <div class="bom-stat-label">No Processes</div>
+        <div class="bom-stat-value" id="bom-no-count">0</div>
+      </div>
+    </div>
+
+    <div class="bom-control-row">
+      <div class="bom-search-wrap">
+        <i class="fa fa-search" aria-hidden="true"></i>
+        <input
+          id="bom-search"
+          type="text"
+          autocomplete="off"
+          placeholder="Search parent code, child code or item description"
+        />
+        <button class="bom-clear-search" id="bom-clear-search" type="button" title="Clear search">
+          <i class="fa fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="bom-filter-actions">
+        <button class="bom-filter-btn" type="button" data-filter-type="makeBuy" data-filter-value="A">
+          <i class="fa fa-industry" aria-hidden="true"></i> Make (A)
+        </button>
+        <button class="bom-filter-btn" type="button" data-filter-type="makeBuy" data-filter-value="I">
+          <i class="fa fa-shopping-cart" aria-hidden="true"></i> Buy (I)
+        </button>
+        <button class="bom-filter-btn" type="button" data-filter-type="process" data-filter-value="Yes">
+          <i class="fa fa-check-circle" aria-hidden="true"></i> Has Processes
+        </button>
+        <button class="bom-filter-btn" type="button" data-filter-type="process" data-filter-value="No">
+          <i class="fa fa-ban" aria-hidden="true"></i> No Processes
+        </button>
+        <button class="bom-clear-btn" id="bom-clear-filters" type="button">
+          <i class="fa fa-times" aria-hidden="true"></i> Clear Filters
+        </button>
+        <button class="bom-export-btn" id="bom-export-excel" type="button">
+          <i class="fa fa-download" aria-hidden="true"></i> Export to Excel
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="bom-table-wrap">
+    <div class="bom-table-scroll">
+      <table class="bom-table">
+        <thead>
+          <tr>
+            <th>Parent Code</th>
+            <th>Child Code</th>
+            <th>Item Description</th>
+            <th>Make/Buy</th>
+            <th>Has Processes</th>
+          </tr>
+        </thead>
+        <tbody id="bom-table-body">
+          <tr>
+            <td colspan="5" class="bom-loading">Loading BOM data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bom-footer">
+      <div class="bom-row-count" id="bom-row-count">Showing 0 rows</div>
+      <div class="bom-pagination">
+        <button class="bom-page-btn" id="bom-prev-page" type="button">
+          <i class="fa fa-chevron-left" aria-hidden="true"></i> Prev
+        </button>
+        <span class="bom-page-status" id="bom-page-status">Page 1 of 1</span>
+        <button class="bom-page-btn" id="bom-next-page" type="button">
+          Next <i class="fa fa-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    const PAGE_SIZE = 50;
+    const state = {
+      allRows: [],
+      filteredRows: [],
+      currentPage: 1,
+      search: "",
+      filters: {
+        makeBuy: new Set(),
+        process: new Set()
+      }
+    };
+
+    const els = {};
+
+    function cacheElements() {
+      els.search = document.getElementById("bom-search");
+      els.clearSearch = document.getElementById("bom-clear-search");
+      els.clearFilters = document.getElementById("bom-clear-filters");
+      els.exportExcel = document.getElementById("bom-export-excel");
+      els.tableBody = document.getElementById("bom-table-body");
+      els.rowCount = document.getElementById("bom-row-count");
+      els.prevPage = document.getElementById("bom-prev-page");
+      els.nextPage = document.getElementById("bom-next-page");
+      els.pageStatus = document.getElementById("bom-page-status");
+      els.filterButtons = Array.from(document.querySelectorAll(".bom-filter-btn"));
+      els.counts = {
+        total: document.getElementById("bom-total-count"),
+        make: document.getElementById("bom-make-count"),
+        buy: document.getElementById("bom-buy-count"),
+        has: document.getElementById("bom-has-count"),
+        no: document.getElementById("bom-no-count")
+      };
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normalize(value) {
+      return String(value ?? "").trim();
+    }
+
+    function normalizeLower(value) {
+      return normalize(value).toLowerCase();
+    }
+
+    function formatNumber(value) {
+      return Number(value || 0).toLocaleString("en-IN");
+    }
+
+    function makeBuyLabel(value) {
+      const code = normalize(value).toUpperCase();
+      if (code === "A") return "Make";
+      if (code === "I") return "Buy";
+      return normalize(value);
+    }
+
+    function makeBuyBadge(row) {
+      const code = normalize(row.make_buy).toUpperCase();
+      if (code === "A") {
+        return '<span class="bom-badge bom-badge-make">Make</span>';
+      }
+      if (code === "I") {
+        return '<span class="bom-badge bom-badge-buy">Buy</span>';
+      }
+      return escapeHtml(row.make_buy || "");
+    }
+
+    function processBadge(row) {
+      const hasProcesses = normalize(row.has_processes);
+      if (hasProcesses === "Yes") {
+        return '<span class="bom-badge bom-badge-yes">Yes</span>';
+      }
+      return '<span class="bom-badge bom-badge-no">No</span>';
+    }
+
+    function rowMatchesSearch(row) {
+      if (!state.search) return true;
+      return [
+        row.parent_code,
+        row.child_code,
+        row.item_description
+      ].some(value => normalizeLower(value).includes(state.search));
+    }
+
+    function rowMatchesFilters(row) {
+      const makeBuy = normalize(row.make_buy).toUpperCase();
+      const process = normalize(row.has_processes);
+      const makeBuyOk = !state.filters.makeBuy.size || state.filters.makeBuy.has(makeBuy);
+      const processOk = !state.filters.process.size || state.filters.process.has(process);
+      return makeBuyOk && processOk;
+    }
+
+    function applyFilters() {
+      state.filteredRows = state.allRows.filter(row => rowMatchesSearch(row) && rowMatchesFilters(row));
+      const maxPage = Math.max(1, Math.ceil(state.filteredRows.length / PAGE_SIZE));
+      if (state.currentPage > maxPage) state.currentPage = maxPage;
+      render();
+    }
+
+    function updateSummary() {
+      const rows = state.filteredRows;
+      els.counts.total.textContent = formatNumber(rows.length);
+      els.counts.make.textContent = formatNumber(rows.filter(row => normalize(row.make_buy).toUpperCase() === "A").length);
+      els.counts.buy.textContent = formatNumber(rows.filter(row => normalize(row.make_buy).toUpperCase() === "I").length);
+      els.counts.has.textContent = formatNumber(rows.filter(row => normalize(row.has_processes) === "Yes").length);
+      els.counts.no.textContent = formatNumber(rows.filter(row => normalize(row.has_processes) === "No").length);
+    }
+
+    function renderRows() {
+      if (!state.filteredRows.length) {
+        els.tableBody.innerHTML = '<tr><td colspan="5" class="bom-empty">No BOM rows match the current filters.</td></tr>';
+        return;
+      }
+
+      const start = (state.currentPage - 1) * PAGE_SIZE;
+      const pageRows = state.filteredRows.slice(start, start + PAGE_SIZE);
+
+      els.tableBody.innerHTML = pageRows.map(row => `
+        <tr>
+          <td class="bom-code-cell">${escapeHtml(row.parent_code)}</td>
+          <td class="bom-code-cell">${escapeHtml(row.child_code)}</td>
+          <td class="bom-description-cell">${escapeHtml(row.item_description || "")}</td>
+          <td>${makeBuyBadge(row)}</td>
+          <td>${processBadge(row)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderPagination() {
+      const total = state.filteredRows.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      const start = total ? (state.currentPage - 1) * PAGE_SIZE + 1 : 0;
+      const end = Math.min(total, state.currentPage * PAGE_SIZE);
+
+      els.rowCount.textContent = total
+        ? `Showing ${formatNumber(start)}-${formatNumber(end)} of ${formatNumber(total)} rows`
+        : "Showing 0 rows";
+      els.pageStatus.textContent = `Page ${state.currentPage} of ${totalPages}`;
+      els.prevPage.disabled = state.currentPage <= 1;
+      els.nextPage.disabled = state.currentPage >= totalPages;
+    }
+
+    function updateFilterButtonStates() {
+      els.filterButtons.forEach(button => {
+        const type = button.dataset.filterType;
+        const value = button.dataset.filterValue;
+        button.classList.toggle("active", state.filters[type].has(value));
+      });
+      els.clearSearch.style.display = state.search ? "flex" : "none";
+    }
+
+    function render() {
+      updateSummary();
+      renderRows();
+      renderPagination();
+      updateFilterButtonStates();
+    }
+
+    function toggleFilter(button) {
+      const type = button.dataset.filterType;
+      const value = button.dataset.filterValue;
+      if (!state.filters[type]) return;
+
+      if (state.filters[type].has(value)) {
+        state.filters[type].delete(value);
+      } else {
+        state.filters[type].add(value);
+      }
+      state.currentPage = 1;
+      applyFilters();
+    }
+
+    function clearFilters() {
+      state.search = "";
+      state.filters.makeBuy.clear();
+      state.filters.process.clear();
+      state.currentPage = 1;
+      els.search.value = "";
+      applyFilters();
+    }
+
+    function clearSearch() {
+      state.search = "";
+      state.currentPage = 1;
+      els.search.value = "";
+      applyFilters();
+    }
+
+    function exportExcel() {
+      if (!window.XLSX) {
+        alert("Excel export library is still loading. Please try again.");
+        return;
+      }
+
+      const headers = ["Parent Code", "Child Code", "Item Description", "Make/Buy", "Has Processes"];
+      const rows = state.filteredRows.map(row => [
+        row.parent_code || "",
+        row.child_code || "",
+        row.item_description || "",
+        makeBuyLabel(row.make_buy),
+        row.has_processes || ""
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "BOM Summary");
+      XLSX.writeFile(wb, "bom_summary.xlsx");
+    }
+
+    async function loadBomSummary() {
+      try {
+        const res = await fetch("/api/bom/summary");
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Failed to load BOM data");
+        }
+
+        state.allRows = Array.isArray(data.rows) ? data.rows : [];
+        state.filteredRows = state.allRows.slice();
+        render();
+      } catch (error) {
+        els.tableBody.innerHTML = `<tr><td colspan="5" class="bom-empty bom-error">${escapeHtml(error.message || "Failed to load BOM data.")}</td></tr>`;
+        state.allRows = [];
+        state.filteredRows = [];
+        renderPagination();
+        updateSummary();
+      }
+    }
+
+    function bindEvents() {
+      els.search.addEventListener("input", function () {
+        state.search = normalizeLower(this.value);
+        state.currentPage = 1;
+        applyFilters();
+      });
+
+      els.clearSearch.addEventListener("click", clearSearch);
+      els.clearFilters.addEventListener("click", clearFilters);
+      els.exportExcel.addEventListener("click", exportExcel);
+
+      els.filterButtons.forEach(button => {
+        button.addEventListener("click", function () {
+          toggleFilter(button);
+        });
+      });
+
+      els.prevPage.addEventListener("click", function () {
+        if (state.currentPage > 1) {
+          state.currentPage -= 1;
+          render();
+        }
+      });
+
+      els.nextPage.addEventListener("click", function () {
+        const totalPages = Math.max(1, Math.ceil(state.filteredRows.length / PAGE_SIZE));
+        if (state.currentPage < totalPages) {
+          state.currentPage += 1;
+          render();
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      cacheElements();
+      bindEvents();
+      loadBomSummary();
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,157 +1,521 @@
-{% extends "base.html" %}
-{% set active_page = "page1" %}
-{% block title %}Job Card Entry | NMTG{% endblock %}
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/page1.css') }}?v={{ version }}" />
+{% extends "base.html" %} {% set active_page = "page1" %} {% block title %}Job
+Card Entry | NMTG{% endblock %} {% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/page1.css') }}?v={{ version }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/page1_erp.css') }}?v={{ version }}"
+/>
+<style>
+  /* Multi-child table */
+  .child-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+  .child-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 700px;
+  }
+  .child-table thead tr {
+    background: var(--header-bg);
+    color: #fff;
+  }
+  .child-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .child-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .child-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .child-table tbody tr.row-checked {
+    background: #f0fdf4;
+  }
+  .child-table tbody tr.row-unchecked {
+    background: #fafafa;
+    opacity: 0.6;
+  }
+  .child-code-cell {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .child-desc-cell {
+    font-size: 12px;
+    color: var(--text);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .child-input {
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: "IBM Plex Sans", sans-serif;
+    color: var(--text);
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .child-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .child-input:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+  .child-input.jc-input {
+    width: 130px;
+  }
+  .child-input.qty-input {
+    width: 70px;
+    text-align: center;
+  }
+  .child-table-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .child-table-toolbar button {
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #f9fafb;
+    color: var(--text);
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+  .child-table-toolbar button:hover {
+    background: #e5e7eb;
+  }
+  .child-count-badge {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* Preview modal */
+  .preview-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9998;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-modal-overlay.open {
+    display: flex;
+  }
+  .preview-modal {
+    background: #fff;
+    border-radius: 10px;
+    width: 90vw;
+    max-width: 860px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+  }
+  .preview-modal-header {
+    background: var(--header-bg);
+    color: #fff;
+    padding: 16px 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .preview-modal-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .preview-modal-body {
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .preview-table thead tr {
+    background: var(--header-bg);
+    color: #fff;
+  }
+  .preview-table th {
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .preview-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  .preview-modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background: #f8fafc;
+    border-radius: 0 0 10px 10px;
+  }
+  .btn-preview-cancel {
+    padding: 9px 18px;
+    background: #f3f4f6;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+  .btn-preview-confirm {
+    padding: 9px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+  .preview-summary {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+  }
+</style>
 {% endblock %} {% block content %}
 <div class="main">
-  <div class="page-header">
-    <h1>
-      Job Card Entry
-      <span
-        style="
-          font-size: 16px;
-          font-weight: 500;
-          color: var(--muted);
-          margin-left: 8px;
-        "
-      ></span>
-    </h1>
-    <p>Create a new job card &nbsp;&nbsp;</p>
-  </div>
+  <div class="page-header ppc-page-header">
+    <div class="ppc-breadcrumb" style="font-size: large;">PPC / Job Card Entry</div>
 
-  <!-- Order Info -->
-  <div class="card">
-    <div class="card-title">
-      📋 Order Information &nbsp;<span
-        style="
-          font-size: 11px;
-          font-weight: 500;
-          color: var(--muted);
-          text-transform: none;
-        "
-      ></span>
-    </div>
-    <div class="order-info-layout">
-      <div class="order-info-column">
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Job Card No &nbsp;<span style="color: #ef4444;">*</span></span><span class="gu"></span
-          ></label>
-          <input
-            type="text"
-            id="job_card_no"
-            placeholder="e.g. 108553 or 108554/108701"
-          />
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Sale Order No</span><span class="gu"></span
-          ></label>
-          <div class="prefix-input-wrap">
-            <span class="prefix">S</span>
-            <input
-              type="text"
-              id="so_no"
-              placeholder="42219"
-              inputmode="numeric"
-            />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Work Order No</span><span class="gu"></span
-          ></label>
-          <div class="prefix-input-wrap">
-            <span class="prefix">WO</span>
-            <input
-              type="text"
-              id="work_order_no"
-              placeholder="1001"
-              inputmode="numeric"
-            />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Finished Goods Code</span><span class="gu"></span
-          ></label>
-          <input
-            type="text"
-            id="parent_code"
-            placeholder="Enter parent code"
-          />
-        </div>
-
-        <div class="form-group customer-ac-wrap">
-          <label class="bilingual"
-            ><span class="en">Customer Name &nbsp;<span style="color: #ef4444;">*</span></span><span class="gu"></span
-          ></label>
-          <input type="text" id="customer_name" placeholder="Enter customer name" autocomplete="off" required />
-          <div id="customer-ac-list" class="customer-ac-list" role="listbox"></div>
-        </div>
-        
-      </div>
-
-      <div class="order-info-column">
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">SO Date</span><span class="gu"></span
-          ></label>
-          <input type="date" id="so_date" />
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Job Card Date</span><span class="gu"></span
-          ></label>
-          <input type="date" id="job_card_date" />
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Work Order Date</span><span class="gu"></span
-          ></label>
-          <input type="date" id="work_order_date" />
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Semi-finished Goods Code</span><span class="gu"></span
-          ></label>
-          <input type="text" id="child_code" placeholder="Enter child code" />
-        </div>
-
-        <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Final Delivery Date &nbsp;<span style="color: #ef4444;">*</span></span><span class="gu"></span
-          ></label>
-          <input type="date" id="delivery_date" required />
-        </div>
+    <div class="ppc-page-title-row">
+      <div>
+        <h1>Job Card Entry</h1>
+        <p>Create and manage production job cards</p>
       </div>
     </div>
   </div>
-  <!-- Item Information -->
-  <div class="card">
-    <div class="card-title">
-      <i class="fa fa-box" aria-hidden="true"></i>&nbsp;Item Information &nbsp;<span
-        style="
-          font-size: 11px;
-          font-weight: 500;
-          color: var(--muted);
-          text-transform: none;
-        "
-      ></span>
+  <!-- Section 1: Order Information -->
+  <div class="card ppc-order-card" style="position: relative; z-index: 10">
+    <div class="card-title">Order Information</div>
+
+    <div class="ppc-order-grid">
+
+      <!-- Sale Order No -->
+      <div class="form-group">
+        <label for="so_no">
+          Sale Order No
+        </label>
+
+        <div class="prefix-input-wrap">
+          <span class="prefix">S</span>
+          <input
+            type="text"
+            id="so_no"
+            placeholder="e.g. 42219"
+            inputmode="numeric"
+          />
+        </div>
+      </div>
+
+
+      <!-- SO Date -->
+      <div class="form-group">
+        <label for="so_date">
+          SO Date
+        </label>
+
+        <input
+          type="date"
+          id="so_date"
+        />
+      </div>
+
+
+      <!-- Customer -->
+      <div class="form-group customer-ac-wrap">
+        <label for="customer_name">
+          Customer Name
+          <span class="ppc-required">*</span>
+        </label>
+
+        <input
+          type="text"
+          id="customer_name"
+          placeholder="Search customer..."
+          autocomplete="off"
+        />
+
+        <div
+          id="customer-ac-list"
+          class="customer-ac-list"
+          role="listbox"
+        ></div>
+      </div>
+
+
+      <!-- Work Order No -->
+      <div class="form-group">
+        <label for="work_order_no">
+          Work Order No
+        </label>
+
+        <div class="prefix-input-wrap">
+          <span class="prefix">WO</span>
+          <input
+            type="text"
+            id="work_order_no"
+            placeholder="e.g. 1001"
+            inputmode="numeric"
+          />
+        </div>
+      </div>
+
+
+      <!-- Work Order Date -->
+      <div class="form-group">
+        <label for="work_order_date">
+          Work Order Date
+        </label>
+
+        <input
+          type="date"
+          id="work_order_date"
+        />
+      </div>
+
+
+      <!-- Final Delivery -->
+      <div class="form-group">
+        <label for="delivery_date">
+          Final Delivery Date
+          <span class="ppc-required">*</span>
+        </label>
+
+        <input
+          type="date"
+          id="delivery_date"
+          required
+        />
+      </div>
+
+
+      <!-- Job Card Date -->
+      <div class="form-group">
+        <label for="job_card_date">
+          Job Card Date
+        </label>
+
+        <input
+          type="date"
+          id="job_card_date"
+        />
+      </div>
+
+
+      <!-- Remarks -->
+      <div class="form-group ppc-span-2">
+        <label for="remarks">
+          Remarks
+        </label>
+
+        <input
+          type="text"
+          id="remarks"
+          placeholder="Add remarks"
+        />
+      </div>
+
+    </div>
+  </div>
+  <!-- Section 2: BOM Selection -->
+  <div class="card ppc-bom-card">
+
+    <div class="card-title">BOM Selection</div>
+
+    <div class="ppc-bom-fields">
+
+      <div class="form-group ppc-bom-parent">
+        <label for="parent_code">Finished Goods Code</label>
+
+        <input
+          type="text"
+          id="parent_code"
+          placeholder="Enter parent code"
+          autocomplete="off"
+        />
+
+        <span
+          id="parent-code-status"
+          class="ppc-parent-status"
+          style="display: none"
+        ></span>
+      </div>
+
+
+      <div
+        id="manual-child-section"
+        class="ppc-manual-child"
+      >
+        <div class="form-group">
+          <label for="child_code_manual">Semi-finished Goods Code</label>
+
+          <input
+            type="text"
+            id="child_code_manual"
+            placeholder="Enter child code manually"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
     </div>
 
+
+    <!-- Child table: visible when BOM is found -->
+    <div
+      id="child-table-section"
+      class="ppc-child-section"
+      style="display: none"
+    >
+
+      <div class="child-table-toolbar ppc-child-toolbar">
+
+        <div class="ppc-child-actions">
+          <button
+            type="button"
+            class="ppc-secondary-btn"
+            onclick="selectAllChildren()"
+          >
+            Select All
+          </button>
+
+          <button
+            type="button"
+            class="ppc-secondary-btn"
+            onclick="deselectAllChildren()"
+          >
+            Clear Selection
+          </button>
+        </div>
+
+
+        <div class="ppc-child-search-wrap">
+          <label for="child-search">Search</label>
+
+          <input
+            type="text"
+            id="child-search"
+            placeholder="Search child code or description"
+            oninput="filterChildTable()"
+            autocomplete="off"
+          />
+        </div>
+
+
+        <span
+          class="child-count-badge"
+          id="child-count-badge"
+        ></span>
+
+      </div>
+
+
+      <div class="child-table-wrap">
+        <table class="child-table">
+
+          <thead>
+            <tr>
+
+              <th class="ppc-check-col">
+                <input
+                  type="checkbox"
+                  id="select-all-cb"
+                  aria-label="Select all child items"
+                  onchange="toggleAllChildren(this.checked)"
+                />
+              </th>
+
+              <th>Child Code</th>
+
+              <th>Item Description</th>
+
+              <th class="ppc-qty-col">
+                Qty <span class="ppc-required">*</span>
+              </th>
+
+              <th class="ppc-jc-col">
+                Job Card No <span class="ppc-required">*</span>
+              </th>
+
+            </tr>
+          </thead>
+
+          <tbody id="child-table-body"></tbody>
+
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Section 3: Manual single JC -->
+  <div class="card" id="single-jc-section">
+    <div class="card-title">Item Information</div>
     <div class="item-row">
       <div class="form-group ac-wrap">
         <label class="bilingual"
-          ><span class="en">Item Name &nbsp;<span style="color: #ef4444;">*</span></span></span><span class="gu"></span
-        ></label>
+          ><span class="en"
+            >Job Card No &nbsp;<span style="color: #ef4444">*</span></span
+          ></label
+        >
+        <input type="text" id="job_card_no" placeholder="e.g. 108553" />
+      </div>
+      <div class="form-group ac-wrap">
+        <label class="bilingual"
+          ><span class="en"
+            >Item Name &nbsp;<span style="color: #ef4444">*</span></span
+          ></label
+        >
         <input
           type="text"
           id="item_name"
@@ -164,55 +528,78 @@
       </div>
       <div class="form-group">
         <label class="bilingual"
-          ><span class="en">Quantity &nbsp;<span style="color: #ef4444;">*</span></span></span><span class="gu"></span
-        ></label>
+          ><span class="en"
+            >Quantity &nbsp;<span style="color: #ef4444">*</span></span
+          ></label
+        >
         <input type="number" id="item_qty" placeholder="Enter qty" min="1" />
       </div>
       <div class="form-group">
-        <label class="bilingual"
-          ><span class="en">Advance Stock</span><span class="gu"></span
-        ></label>
-        <input type="text" id="advance_stock" placeholder="Enter advance stock" />
+        <label class="bilingual"><span class="en">Advance Stock</span></label>
+        <input
+          type="text"
+          id="advance_stock"
+          placeholder="Enter advance stock"
+        />
       </div>
     </div>
-    <div class="priority-row" style="margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px;">
-      <button type="button" id="priority-chip" style="display: inline-flex; align-items: center; gap: 6px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer;" onclick="this.classList.toggle('active'); document.getElementById('is_priority').checked = this.classList.contains('active'); this.style.background = this.classList.contains('active') ? '#dc2626' : '#fef2f2'; this.style.color = this.classList.contains('active') ? '#fff' : '#b91c1c';" this.fontFamily="IBM Plex Sans, sans-serif">
+    <div
+      class="priority-row"
+      style="
+        margin-top: 14px;
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+      "
+    >
+      <button
+        type="button"
+        id="priority-chip"
+        style="
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #fef2f2;
+          color: #b91c1c;
+          border: 1px solid #fca5a5;
+          border-radius: 6px;
+          padding: 6px 14px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        "
+        onclick="
+          this.classList.toggle('active');
+          document.getElementById('is_priority').checked =
+            this.classList.contains('active');
+          this.style.background = this.classList.contains('active')
+            ? '#dc2626'
+            : '#fef2f2';
+          this.style.color = this.classList.contains('active')
+            ? '#fff'
+            : '#b91c1c';
+        "
+      >
         Most Urgent
       </button>
-      <input type="checkbox" id="is_priority" style="display: none;" />
+      <input type="checkbox" id="is_priority" style="display: none" />
     </div>
-    
-
     <!-- Auto-filled section -->
     <div id="item-autofill" class="autofill-section" style="display: none">
-      <div class="autofill-header">
-        ✅ Auto-filled from Process Master &nbsp;<span
-          style="font-size: 10px; text-transform: none"
-        ></span>
-      </div>
-
+      <div class="autofill-header">Auto-filled from Process Master</div>
       <div class="form-grid" style="margin-bottom: 16px">
         <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Material</span><span class="gu"></span
-          ></label>
+          <label class="bilingual"><span class="en">Material</span></label>
           <input type="text" id="af_material" class="af-field" />
         </div>
         <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Size</span><span class="gu"></span
-          ></label>
+          <label class="bilingual"><span class="en">Size</span></label>
           <input type="text" id="af_size" readonly class="af-field" />
         </div>
         <div class="form-group">
-          <label class="bilingual"
-            ><span class="en">Part Name</span><span class="gu"></span
-          ></label>
+          <label class="bilingual"><span class="en">Part Name</span></label>
           <input type="text" id="af_part_name" readonly class="af-field" />
         </div>
       </div>
-
-      <!-- Process days -->
       <div id="process-days-section">
         <div
           style="
@@ -224,78 +611,94 @@
             margin-bottom: 10px;
           "
         >
-          Process Days &nbsp;<span
+          Process Days
+          <span
             style="
               font-size: 10px;
               font-weight: 500;
               text-transform: none;
               color: var(--muted);
             "
-          >
-            (editable)</span
+            >(editable)</span
           >
         </div>
         <div id="process-days-grid" class="process-days-grid"></div>
         <div class="total-days-row">
-          <span class="total-label"
-            >Total Days &nbsp;<span
-              style="font-size: 10px; font-weight: 400"
-            ></span
-          ></span>
+          <span class="total-label">Total Days</span>
           <span class="total-value" id="total-days-display">0</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Remarks -->
-  <div class="card">
-    <div class="form-group">
-      <label class="bilingual">
-        <span class="en">Remarks</span>
-        <span class="gu"></span>
-      </label>
-      <textarea
-        id="remarks"
-        placeholder="Add remarks (optional)..."
-        style="
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          font-family: &quot;IBM Plex Sans&quot;, sans-serif;
-          font-size: 14px;
-          padding: 9px 12px;
-          min-height: 70px;
-          resize: vertical;
-          width: 100%;
-          color: var(--text);
-          outline: none;
-          transition: border-color 0.15s;
-        "
-        onfocus="this.style.borderColor = 'var(--accent)'"
-        onblur="this.style.borderColor = 'var(--border)'"
-      ></textarea>
-    </div>
-  </div>
-
+  <!-- Footer -->
   <div class="form-footer">
-    <button class="btn-bulk" onclick="openBulkModal()">
-      <i class="fa fa-table" aria-hidden="true"></i>&nbsp;Bulk Entry
     </button>
     <button class="btn-reset" onclick="resetForm()">
-      <i class="fa fa-refresh" aria-hidden="true"></i>&nbsp;Reset &nbsp;<span style="font-size: 11px; font-weight: 400"></span>
+      <i class="fa fa-refresh" aria-hidden="true"></i>&nbsp;Reset
     </button>
     <button class="btn-upload" onclick="openUploadModal('jc')">
       <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;Upload Excel
     </button>
-    <button class="btn-submit" onclick="submitJobCard()">
-      <i class="fa fa-floppy-o" aria-hidden="true"></i>&nbsp;Save Job Card &nbsp;<span
-        style="font-size: 12px; font-weight: 500"
-      ></span>
+    <button class="btn-submit" id="main-save-btn" onclick="handleMainSave()">
+      <i class="fa fa-floppy-o" aria-hidden="true"></i>&nbsp;<span
+        id="main-save-label"
+        >Save Job Card</span
+      >
     </button>
   </div>
 </div>
 
-<!-- UPLOAD MODAL -->
+<!-- Preview Modal -->
+<div class="preview-modal-overlay" id="preview-modal">
+  <div class="preview-modal">
+    <div class="preview-modal-header">
+      <h3>Preview - Job Cards to Create</h3>
+      <button
+        onclick="closePreviewModal()"
+        style="
+          background: rgba(255, 255, 255, 0.15);
+          border: none;
+          color: #fff;
+          border-radius: 6px;
+          padding: 5px 12px;
+          cursor: pointer;
+          font-size: 16px;
+        "
+      >X</button>
+    </div>
+    <div class="preview-modal-body">
+      <div class="preview-summary" id="preview-summary"></div>
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Job Card No</th>
+            <th>Child Code</th>
+            <th>Item Description</th>
+            <th>Qty</th>
+            <th>Delivery Date</th>
+          </tr>
+        </thead>
+        <tbody id="preview-table-body"></tbody>
+      </table>
+    </div>
+    <div class="preview-modal-footer">
+      <button class="btn-preview-cancel" onclick="closePreviewModal()">
+        Back to Edit
+      </button>
+      <button
+        class="btn-preview-confirm"
+        id="preview-confirm-btn"
+        onclick="confirmBulkCreate()"
+      >
+        <i class="fa fa-check"></i>&nbsp;Confirm & Create
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
 <div class="modal-overlay" id="upload-modal">
   <div class="modal" style="max-width: 900px; width: 95vw">
     <div class="modal-header">
@@ -311,15 +714,57 @@
       <input
         type="file"
         id="upload-file-input"
-        accept=".xlsx,.xls"
+        accept=".xlsx,.xls,.csv"
+        multiple
         style="display: none"
         onchange="handleFileSelect(event)"
       />
+      <div
+        style="
+          margin-bottom: 12px;
+          padding: 12px 14px;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 8px;
+          font-size: 12px;
+          color: #1e40af;
+        "
+      >
+        <div style="font-weight: 700; margin-bottom: 4px">
+How to upload:
+        </div>
+        <div>
+          1. Select your <strong>job card file(s)</strong> - one or multiple
+        </div>
+        <div>
+          2. If SO mapping is outdated, also select today's
+          <strong>SO Details file</strong> in the same selection
+        </div>
+        <div style="margin-top: 4px; color: #64748b">
+          Hold
+          <kbd
+            style="
+              background: #e2e8f0;
+              padding: 1px 5px;
+              border-radius: 3px;
+              font-size: 11px;
+            "
+            >Ctrl</kbd
+          >
+          to select multiple files at once
+        </div>
+      </div>
+      <div
+        id="so-mapping-status"
+        style="margin-bottom: 12px; font-size: 12px; color: var(--muted)"
+      >
+        Checking SO mapping status...
+      </div>
       <button
         class="btn-primary"
         onclick="document.getElementById('upload-file-input').click()"
       >
-        Select Excel File
+        Select Files
       </button>
       <span
         id="upload-filename"
@@ -375,87 +820,44 @@
   </div>
 </div>
 
-<!-- ── Bulk Entry Modal ──────────────────────────────────────────────────── -->
-<div id="bulk-modal" class="bulk-modal-overlay">
-  <div class="bulk-modal">
-    <div class="bulk-modal-header">
-      <h2><i class="fa fa-table"></i> &nbsp;Bulk Job Card Entry</h2>
-      <button class="bulk-modal-close" onclick="closeBulkModal()"><i class="fa fa-times"></i></button>
+<!-- Upload Loading Overlay -->
+<div
+  class="upload-loading-overlay"
+  id="upload-loading-overlay"
+  role="status"
+  aria-live="polite"
+  aria-modal="true"
+>
+  <div class="upload-loading-card">
+    <div class="upload-spinner" aria-hidden="true"></div>
+    <h3 id="upload-loading-title">Uploading Job Cards...</h3>
+    <p id="upload-loading-message">
+      Please wait while system reads and validates your files.
+    </p>
+    <div id="upload-loading-percent" class="upload-loading-percent">0%</div>
+    <div class="upload-loading-bar" aria-hidden="true">
+      <div class="upload-loading-bar-fill"></div>
     </div>
-
-    <!-- Common fields for all rows -->
-    <div class="bulk-common-fields">
-      <div class="form-group">
-        <label>SO No (applies to all)</label>
-        <div class="prefix-input-wrap">
-          <span class="prefix">S</span>
-          <input
-            type="text"
-            id="bulk-so"
-            placeholder="42219"
-            inputmode="numeric"
-            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-          />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Work Order No (applies to all)</label>
-        <div class="prefix-input-wrap">
-          <span class="prefix">WO</span>
-          <input
-            type="text"
-            id="bulk-wo"
-            placeholder="1001"
-            inputmode="numeric"
-            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-          />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>SO Date (applies to all)</label>
-        <input type="date" id="bulk-so-date" />
-      </div>
-      <div class="form-group">
-        <label>JC Date (applies to all)</label>
-        <input type="date" id="bulk-jc-date" />
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="bulk-table-wrap">
-      <table class="bulk-table">
-        <thead>
-          <tr>
-            <th style="width: 40px">#</th>
-            <th style="width: 130px">JC No &nbsp;<span style="color: #ef4444;">*</span></th>
-            <th>Item Name &nbsp;<span style="color: #ef4444;">*</span></th>
-            <th style="width: 80px">Qty &nbsp;<span style="color: #ef4444;">*</span></th>
-            <th style="width: 140px">Advance Stock</th>
-            <th style="width: 140px">Delivery Date &nbsp;<span style="color: #ef4444;">*</span></th>
-            <th style="width: 40px"></th>
-          </tr>
-        </thead>
-        <tbody id="bulk-tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="bulk-footer">
-      <div class="bulk-footer-left">
-        <button class="btn-upload" onclick="addBulkRow()">
-          <i class="fa fa-plus"></i> Add Row
-        </button>
-        <button class="btn-reset" onclick="clearBulkAll()">
-          <i class="fa fa-refresh"></i> Clear All
-        </button>
-      </div>
-      <button class="btn-submit" id="bulk-save-btn" onclick="saveBulkAll()">
-        <i class="fa fa-save"></i> Save All
-      </button>
-    </div>
+    <small>Do not refresh or close this page.</small>
   </div>
 </div>
 
 {% endblock %} {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/page1.js') }}?v={{ version }}"></script>
 <script src="{{ url_for('static', filename='js/upload.js') }}?v={{ version }}"></script>
+
+<script
+  src="{{ url_for('static', filename='js/page1_erp.js') }}?v={{ version }}"
+></script>
+
 {% endblock %}
+
+
+
+
+
+
+
+
+
+

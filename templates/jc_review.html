@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% set active_page = "page1" %}
+{% block title %}Upload Review | NMTG{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/jc_review.css') }}?v={{ version }}" />
+{% endblock %}
+
+{% block content %}
+<div class="main jc-review-page">
+
+  <div class="page-header review-page-header">
+    <div>
+      <!-- <div class="review-breadcrumb">JMS &rsaquo; Job Card Entry &rsaquo; Upload Review</div> -->
+      <h1>Job Card Import Review</h1>
+      <!-- <p>Review process-route differences before importing job cards.</p> -->
+    </div>
+    <div class="review-header-actions">
+      <a href="{{ url_for('pages.index') }}" class="btn-cancel review-back-btn">
+        <i class="fa fa-arrow-left" aria-hidden="true"></i>&nbsp;Back to Entry
+      </a>
+      <button
+        id="import-all-btn"
+        class="btn-submit review-import-btn"
+        onclick="openImportModal()"
+        disabled
+        title="Resolve all pending records before importing"
+      >
+        <i class="fa fa-cloud-upload" aria-hidden="true"></i>&nbsp;
+        <span id="import-all-label">Import Ready</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="batch-info-bar" id="batch-info-bar" style="display:none">
+    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+    <span id="batch-files-display">&mdash;</span>
+    <span class="batch-sep">&middot;</span>
+    <span class="batch-token-wrap">Token: <span class="batch-token" id="batch-token-display" title="Review token">&mdash;</span></span>
+    <span class="batch-sep">&middot;</span>
+    <span id="batch-count-display">&mdash;</span>
+  </div>
+
+  <div id="loading-state" class="review-loading">
+    <div class="review-spinner"></div>
+    <p>Loading review batch&hellip;</p>
+  </div>
+
+  <div id="error-state" class="review-error-state" style="display:none">
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+    <p id="error-message">Could not load review batch.</p>
+    <br />
+    <button class="btn-primary" onclick="loadBatch()">
+      <i class="fa fa-refresh" aria-hidden="true"></i>&nbsp;Retry
+    </button>
+  </div>
+
+  <div id="main-content" style="display:none">
+    <div class="review-stat-grid" id="stat-grid"></div>
+
+    <div class="review-filter-bar">
+      <div class="review-toolbar-left">
+        <label class="review-search-wrap" for="search-input">
+          <i class="fa fa-search" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search job card, BOM, parent, child, item..."
+            oninput="applyFilter()"
+            autocomplete="off"
+          />
+        </label>
+        <button
+          class="btn-cancel btn-sm"
+          id="clear-filter-btn"
+          onclick="clearFilter()"
+          style="display:none"
+        >
+          <i class="fa fa-times" aria-hidden="true"></i>&nbsp;Clear filters
+        </button>
+        <span class="filter-count-label" id="filter-count"></span>
+      </div>
+    </div>
+
+    <section class="review-section needs-review-section" aria-labelledby="needs-review-title">
+      <div class="review-section-header">
+        <div>
+          <h2 id="needs-review-title">Needs Review</h2>
+          <p id="needs-review-copy">Records that need a route decision before import.</p>
+        </div>
+        <span class="section-count-pill section-count-warning" id="needs-review-count">0 pending</span>
+      </div>
+      <div class="review-card">
+        <div class="review-table-wrap">
+          <table class="review-table" aria-label="Job card import review records">
+            <thead>
+              <tr>
+                <th>Sr.</th>
+                <th>Job Card</th>
+                <th>Child Code</th>
+                <th>Item</th>
+                <th>Source File</th>
+                <th style="text-align:center">Route Match</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="review-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="review-section ready-import-section" id="ready-import-section" style="display:none" aria-labelledby="ready-import-title">
+      <div class="review-section-header">
+        <div>
+          <h2 id="ready-import-title">Ready to Import</h2>
+          <p>Resolved routes that can be imported now.</p>
+        </div>
+        <span class="section-count-pill section-count-ready" id="ready-import-count">0 ready</span>
+      </div>
+      <div class="review-card">
+        <div class="review-table-wrap">
+          <table class="review-table review-table-compact" aria-label="Ready job cards">
+            <thead>
+              <tr>
+                <th>Sr.</th>
+                <th>Job Card</th>
+                <th>Child Code</th>
+                <th>Item</th>
+                <th>Source File</th>
+                <th style="text-align:center">Route Match</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="ready-import-body-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="previously-approved review-section" id="previously-approved-section" style="display:none">
+      <button
+        type="button"
+        class="previously-approved-toggle"
+        onclick="togglePreviouslyApproved()"
+        aria-expanded="false"
+        id="previously-approved-toggle"
+      >
+        <span class="pa-toggle-left">
+          <i class="fa fa-chevron-right" aria-hidden="true" id="previously-approved-icon"></i>
+          <span>
+            <span class="pa-title">Previously Approved</span>
+            <span class="pa-copy">These routes were approved earlier and do not require another manual review.</span>
+          </span>
+        </span>
+        <span class="pa-count" id="previously-approved-count">0</span>
+      </button>
+      <div class="previously-approved-body" id="previously-approved-body" hidden>
+        <div class="review-table-wrap">
+          <table class="review-table review-table-compact" aria-label="Previously approved job cards">
+            <thead>
+              <tr>
+                <th>Sr.</th>
+                <th>Job Card</th>
+                <th>Child Code</th>
+                <th>Item</th>
+                <th>Source File</th>
+                <th style="text-align:center">Route Match</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="previously-approved-body-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="panel-overlay" class="panel-overlay" onclick="closePanel()"></div>
+
+<aside id="review-panel" class="review-panel" role="complementary" aria-label="Review detail">
+  <div class="panel-header">
+    <div class="panel-header-left">
+      <div class="panel-jc-no" id="panel-jc-no">&mdash;</div>
+      <div class="panel-mode-label" id="panel-mode-label">Review detail</div>
+    </div>
+    <button class="panel-close-btn" onclick="closePanel()" aria-label="Close panel">
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="panel-toast-bar" id="panel-toast-bar" role="status">
+    <i class="fa fa-check-circle" id="panel-toast-icon" aria-hidden="true"></i>
+    <span id="panel-toast-msg"></span>
+  </div>
+
+  <div class="panel-body" id="panel-body"></div>
+  <div class="panel-footer" id="panel-footer"></div>
+</aside>
+
+<div class="modal-overlay" id="import-confirm-modal">
+  <div class="modal import-modal" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+    <div class="modal-header">
+      <h2 id="import-modal-title">
+        <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+        Confirm import
+      </h2>
+      <button class="modal-close" onclick="closeImportModal()" aria-label="Close import confirmation">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="import-modal-body">
+      <p class="import-confirm-msg" id="import-confirm-msg">
+        The following job cards are ready to import:
+      </p>
+      <div class="import-list" id="import-confirm-list"></div>
+    </div>
+
+    <div id="import-pending-warning" class="import-pending-warning" style="display:none">
+      <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+      <span id="import-pending-warning-text"></span>
+      records still have unresolved issues and will not be imported.
+    </div>
+
+    <div class="import-modal-actions">
+      <button class="btn-cancel" onclick="closeImportModal()">Cancel</button>
+      <button class="btn-success" id="import-confirm-btn" onclick="confirmImport()">
+        <i class="fa fa-check" aria-hidden="true"></i>&nbsp;Import now
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/jc_review.js') }}?v={{ version }}"></script>
+{% endblock %}

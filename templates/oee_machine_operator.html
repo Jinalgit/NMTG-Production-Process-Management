@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ machine.machine_no }} - Machine OEE{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/oee_machine_operator.css') }}?v={{ version }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- MACHINE_OEE_RUNTIME_REPAIR_V7 -->
+
+<!-- MAIN CONTENT AREA (existing cards — unchanged for now) -->
+<div class="oee-shell">
+
+    <!-- MACHINE TABS + KPI CARD V60 -->
+    <div class="card oee-machtabs-card-v60">
+
+        <nav class="oee-sph-tabs-v60" id="oee-sph-tabs-v60">
+
+            {% for m in zone_machines %}
+
+            <a
+                class="oee-sph-tab-v60{% if m.id == machine.id %} active{% endif %}"
+                href="/oee-machine/operator?machine_id={{ m.id }}"
+                data-machine-id="{{ m.id }}"
+            >
+                <span class="oee-sph-tab-dot-v60"></span>
+                {{ m.machine_no }}
+            </a>
+
+            {% endfor %}
+
+        </nav>
+
+        <div class="oee-sph-kpi-v60">
+
+            <div class="oee-sph-kpi-tile-v60" id="oee-kpi-plva-v60">
+                <span>PlvA</span>
+                <strong id="oee-kpi-plva-val-v60">—</strong>
+                <div class="oee-sph-kpi-bar-v60">
+                    <div class="oee-sph-kpi-fill-v60" id="oee-kpi-plva-fill-v60" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="oee-sph-kpi-tile-v60" id="oee-kpi-pr-v60">
+                <span>PR</span>
+                <strong id="oee-kpi-pr-val-v60">—</strong>
+                <div class="oee-sph-kpi-bar-v60">
+                    <div class="oee-sph-kpi-fill-v60" id="oee-kpi-pr-fill-v60" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="oee-sph-kpi-tile-v60" id="oee-kpi-oee-v60">
+                <span>OEE</span>
+                <strong id="oee-kpi-oee-val-v60">—</strong>
+                <div class="oee-sph-kpi-bar-v60">
+                    <div class="oee-sph-kpi-fill-v60" id="oee-kpi-oee-fill-v60" style="width:0%"></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- OP + SHIFT CARD V60 -->
+    <div class="card oee-opshift-card-v60">
+
+        <div id="machine-oee-actual-operator-host-v1"></div>
+
+        <div class="oee-opshift-divider-v60"></div>
+
+        <div class="machine-shift-box-v1 machine-shift-timing-v11">
+
+            <div class="machine-shift-controls-v11">
+
+                <div class="machine-shift-control-v11">
+
+                    <label for="machine-oee-shift-v1">
+                        <i class="fa fa-industry" aria-hidden="true"></i>
+                        Shift
+                    </label>
+
+                    <select
+                        id="machine-oee-shift-v1"
+                        class="machine-shift-select-v1"
+                    >
+                        <option value="">-- Select Shift --</option>
+                        <option value="Shift 1">Shift 1</option>
+                        <option value="Shift 2">Shift 2</option>
+                    </select>
+
+                </div>
+
+                <div class="machine-shift-control-v11">
+
+                    <label for="machine-oee-shift-start-v11">
+                        <i class="fa fa-play-circle" aria-hidden="true"></i>
+                        Start Time
+                    </label>
+
+                    <input
+                        id="machine-oee-shift-start-v11"
+                        class="machine-shift-time-v11"
+                        type="time"
+                        disabled
+                    >
+
+                </div>
+
+                <div class="machine-shift-control-v11">
+
+                    <label for="machine-oee-shift-end-v11">
+                        <i class="fa fa-stop-circle" aria-hidden="true"></i>
+                        End Time
+                    </label>
+
+                    <input
+                        id="machine-oee-shift-end-v11"
+                        class="machine-shift-time-v11"
+                        type="time"
+                        disabled
+                    >
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="workspace-grid">
+
+
+        <main>
+
+
+            <section class="card">
+                <label
+                    class="jc-label"
+                    for="machine-oee-jc-input"
+                >
+                    Job Card No.
+                </label>
+
+
+                <div class="jc-search">
+
+                    <input
+                        id="machine-oee-jc-input"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="Scan or enter Job Card number"
+                        autofocus
+                    >
+
+                    <button
+                        id="machine-oee-fetch-btn"
+                        type="button"
+                    >
+                        Fetch
+                    </button>
+
+                </div>
+                <div
+                    id="machine-oee-jc-result-v1"
+                    class="jc-result-v1"
+                >
+
+                    <div class="upcoming">
+                        <strong>Ready for Job Card</strong>
+                        <span>Scan / enter the JC above.</span>
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+
+                    </main>
+
+
+        <div id="machine-live-oee-host-v1" hidden></div>
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+window.NMTG_MACHINE_OEE_CONTEXT = {
+    machine_id:
+        {{ machine.id | tojson }},
+
+    machine_no:
+        {{ machine.machine_no | tojson }},
+
+    machine_name:
+        {{ machine.machine_name | tojson }},
+
+    machine_category:
+        {{ machine.machine_category | tojson }},
+
+    zone:
+        {{ machine.zone | tojson }},
+
+    zone_supervisor_name:
+        {{ (machine.zone_supervisor_name or '') | tojson }},
+
+    is_zone_login:
+        {{ (zone_login is not none) | tojson }}
+};
+
+</script>
+
+<script src="{{ url_for('static', filename='js/oee_machine_operator.js') }}"></script>
+
+{% endblock %}
+
+
+{# OEE_SELECTED_MACHINE_SUPERVISOR_UI_V98 #}

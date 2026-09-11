@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active_page = "page4" %}
+
+{% block title %}
+Analytics | NMTG
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='vue/analytics/analytics.css') }}?v={{ version }}"
+/>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div
+  id="analytics-vue"
+></div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+
+<script>
+  window.NMTG_ANALYTICS = {
+    role:
+      {{ (session.get("role") or "") | tojson }},
+
+    username:
+      {{ (session.get("username") or "") | tojson }}
+  };
+</script>
+
+<script
+  type="module"
+  src="{{ url_for('static', filename='vue/analytics/analytics.js') }}?v={{ version }}"
+></script>
+
+{% endblock %}

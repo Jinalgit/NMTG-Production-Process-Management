@@ -1,0 +1,757 @@
+
+{% extends "base.html" %}
+
+
+{% block title %}
+Cutting Plan
+
+
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/cutting_plan.css') }}?v={{ version }}">
+
+
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<div class="cutting-plan-page">
+
+
+    <!-- HEADER -->
+
+    <div class="cutting-header">
+
+        <div>
+
+            <h1>
+                Cutting Plan Management
+            </h1>
+
+            <p>
+                Planning and monitoring of cutting requirements
+            </p>
+
+        </div>
+
+
+        <div class="cutting-actions">
+
+
+            <button class="cp-btn cp-primary" onclick="openManualPlanModal()">
+
+                <i class="fa fa-plus"></i>
+                Create Manual Plan
+
+            </button>
+
+
+            
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+    <!-- SUMMARY -->
+
+
+    <div class="cutting-summary">
+
+
+        <div class="cp-summary-card">
+
+            <div class="cp-summary-title">
+                Total Plans
+            </div>
+
+            <div class="cp-summary-value"
+            id="cp-total">
+                0
+            </div>
+
+        </div>
+
+
+
+        <div class="cp-summary-card">
+
+            <div class="cp-summary-title">
+                Draft
+            </div>
+
+            <div class="cp-summary-value"
+            id="cp-draft">
+                0
+            </div>
+
+        </div>
+
+
+
+        <div class="cp-summary-card">
+
+            <div class="cp-summary-title">
+                Released
+            </div>
+
+            <div class="cp-summary-value"
+            id="cp-released">
+                0
+            </div>
+
+        </div>
+
+
+
+        <div class="cp-summary-card">
+
+            <div class="cp-summary-title">
+                Completed
+            </div>
+
+            <div class="cp-summary-value"
+            id="cp-completed">
+                0
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+    <!-- TABLE -->
+
+
+    
+<!-- AUTO_PENDING_REQUIREMENTS_UI_V1 -->
+
+<section class="cp-auto-workbench">
+
+    <div class="cp-auto-workbench-head">
+
+        <div>
+            <div class="cp-section-kicker">
+                AUTOMATIC PLANNING
+            </div>
+
+            <h2>
+                Pending Cutting Requirements
+            </h2>
+
+            <p>
+                Job Cards received automatically when
+                Raw Material advances to Cutting.
+            </p>
+        </div>
+
+
+        <div class="cp-auto-head-actions">
+
+            <div class="cp-pending-counter">
+                <span id="cp-auto-count">0</span>
+                Pending
+            </div>
+
+            <button
+                type="button"
+                class="cp-btn cp-secondary"
+                onclick="loadPendingAutoRequirements()"
+            >
+                Refresh
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="cp-auto-toolbar">
+
+        <label class="cp-select-all">
+
+            <input
+                type="checkbox"
+                id="cp-auto-select-all"
+                onchange="togglePendingAutoSelectAll(this.checked)"
+            >
+
+            <span>
+                Select All
+            </span>
+
+        </label>
+
+
+        <div
+            id="cp-auto-selection-label"
+            class="cp-auto-selection-label"
+        >
+            0 selected
+        </div>
+
+
+        <button
+            type="button"
+            id="cp-auto-create-batch-btn"
+            class="cp-btn cp-primary cp-create-batch-btn"
+            onclick="createSelectedAutoBatch()"
+            disabled
+        >
+            Create Batch
+        </button>
+
+    </div>
+
+
+    <div class="cp-auto-table-wrap">
+
+        <table class="cp-auto-table">
+
+            <thead>
+                <tr>
+                    <th class="cp-check-col"></th>
+                    <th>Job Card</th>
+                    <th>Planned Date</th>
+                    <th>Material</th>
+                    <th>Qty</th>
+                    <th>Part</th>
+                    <th>Model &amp; Size</th>
+                    <th>Move To</th>
+                </tr>
+            </thead>
+
+            <tbody id="cp-auto-body">
+
+                <tr>
+                    <td
+                        colspan="8"
+                        class="cp-auto-empty"
+                    >
+                        Loading pending requirements...
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<div class="cp-batch-section-label">
+
+    <div>
+        <div class="cp-section-kicker">
+            RELEASED PLANS
+        </div>
+
+        <h2>
+            Cutting Plan Batches
+        </h2>
+
+        <p>
+            Finalized batches ready for printing.
+        </p>
+    </div>
+
+</div>
+
+<div class="cutting-table-card">
+
+
+        <h2>
+            Cutting Plans
+        </h2>
+
+
+
+        <table class="cutting-table">
+
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                    Source
+                    </th>
+
+                    <th>
+                    Job Card
+                    </th>
+
+                    <th>
+Records
+</th>
+
+                    <th>
+Materials
+</th>
+
+                    <th>
+Total Qty
+</th>
+
+                    <th>
+Planned Date
+</th>
+
+                    
+
+                    <th>
+                    Action
+                    </th>
+
+
+                </tr>
+
+            </thead>
+
+
+
+            <tbody id="cutting-plan-body">
+
+
+                <tr>
+
+                    <td colspan="7"
+                    style="text-align:center">
+
+                    Loading...
+
+                    </td>
+
+                </tr>
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+
+</div>
+
+
+
+
+
+
+<!-- Manual Plan Modal -->
+
+<div id="manual-plan-modal" class="cp-modal-overlay">
+
+  <div class="cp-modal-box cp-batch-create-modal">
+
+    <div class="cp-modal-header">
+      Create Manual Cutting Plan
+    </div>
+
+    <div class="cp-batch-create-body">
+
+      <div class="cp-cutting-sheet">
+
+        <div class="cp-cutting-sheet-header">
+          <div>Sr No</div>
+          <div>Planned Date</div>
+          <div>Material Specs</div>
+          <div>Cut Size</div>
+          <div>Qty</div>
+          <div>Part</div>
+          <div>Model &amp; Size</div>
+          <div>SO No.</div>
+          <div>Move To</div>
+          <div></div>
+        </div>
+
+        <div id="manual-batch-rows"
+             class="cp-cutting-sheet-body">
+        </div>
+
+      </div>
+
+
+      <div class="cp-batch-add-row-wrap">
+
+        <button
+          type="button"
+          class="cp-btn cp-batch-add-row-btn"
+          onclick="addManualCuttingPlanRow()">
+          + Add Row
+        </button>
+
+      </div>
+
+
+      <div class="cp-form-group cp-batch-remarks">
+
+        <label>Remarks</label>
+
+        <textarea
+          id="manual-remarks"
+          class="cp-form-input"
+          placeholder="Optional remarks for this Cutting Plan"></textarea>
+
+      </div>
+
+    </div>
+
+
+    <div class="cp-modal-footer">
+
+      <button
+        type="button"
+        class="cp-btn"
+        onclick="closeManualPlanModal()">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="cp-btn cp-primary"
+        onclick="createManualCuttingPlan()">
+        Create Plan
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Cutting Plan View Modal -->
+
+<div id="cutting-plan-view-modal" class="cp-modal-overlay">
+
+  <div class="cp-modal-box">
+
+    <div class="cp-modal-header">
+      Cutting Plan Details
+    </div>
+
+    <div class="cp-modal-grid">
+
+      <div class="cp-form-group">
+        <label>Source</label>
+        <input id="view-source"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Job Card</label>
+        <input id="view-job-card"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Part</label>
+        <input id="view-part"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Material Specification</label>
+        <input id="view-material"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Cut Size</label>
+        <input id="view-cut-size"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Planned Quantity</label>
+        <input id="view-qty"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Model & Size</label>
+        <input id="view-model-size"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>SO No.</label>
+        <input id="view-so"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Move To</label>
+        <input id="view-move-to"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Status</label>
+        <input id="view-status"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Created Date</label>
+        <input id="view-created-date"
+               class="cp-form-input"
+               readonly>
+      </div>
+
+      <div class="cp-form-group">
+        <label>Remarks</label>
+        <textarea id="view-remarks"
+                  class="cp-form-input"
+                  readonly></textarea>
+      </div>
+
+    </div>
+
+    <div class="cp-modal-footer">
+
+      <button
+        class="cp-btn cp-secondary"
+        onclick="closeCuttingPlanView()">
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- Edit Cutting Plan Modal -->
+
+<div id="edit-cutting-plan-modal" class="cp-modal-overlay">
+
+  <div class="cp-modal-box">
+
+    <div class="cp-modal-header">
+      Edit Cutting Plan
+    </div>
+
+    <input type="hidden" id="edit-plan-id">
+
+    <div class="cp-modal-grid">
+
+      <div class="cp-form-group">
+        <label>Planned Date</label>
+        <input
+          id="edit-planned-date"
+          type="date"
+          class="cp-form-input">
+      </div>
+
+      <div class="cp-form-group">
+        <label>Material Specification</label>
+        <input
+          id="edit-material"
+          class="cp-form-input">
+      </div>
+
+      <div class="cp-form-group">
+        <label>Cut Size</label>
+
+        <input
+          id="edit-cut-size"
+          type="hidden"
+          value="">
+
+        <div class="cp-cut-size-row">
+
+          <span class="cp-cut-fixed">D</span>
+
+          <input
+            id="edit-cut-dia"
+            type="number"
+            min="0"
+            step="any"
+            class="cp-cut-number"
+            placeholder="90"
+            oninput="syncCuttingCutSize('edit')">
+
+          <span class="cp-cut-fixed">mm</span>
+
+          <span class="cp-cut-x">x</span>
+
+          <span class="cp-cut-fixed">TL</span>
+
+          <input
+            id="edit-cut-tl"
+            type="number"
+            min="0"
+            step="any"
+            class="cp-cut-number"
+            placeholder="35"
+            oninput="syncCuttingCutSize('edit')">
+
+          <span class="cp-cut-fixed">mm</span>
+
+        </div>
+
+      </div>
+
+      <div class="cp-form-group">
+        <label>Quantity</label>
+        <input
+          id="edit-qty"
+          type="number"
+          min="1"
+          class="cp-form-input">
+      </div>
+
+      <div class="cp-form-group">
+        <label>Part</label>
+        <input
+          id="edit-part"
+          class="cp-form-input">
+      </div>
+
+      <div class="cp-form-group">
+        <label>Model & Size</label>
+        <input
+          id="edit-model-size"
+          class="cp-form-input"
+          placeholder="N7012 - 85 x 125 x 28">
+      </div>
+
+      <div class="cp-form-group">
+        <label>SO No.</label>
+        <input
+          id="edit-so"
+          class="cp-form-input"
+          placeholder="Leave blank for Advance Plan">
+      </div>
+
+      <div class="cp-form-group">
+        <label>Move To</label>
+
+        <input
+          id="edit-move"
+          type="hidden"
+          value="">
+
+        <div class="cp-move-pills" data-scope="edit">
+
+          <button type="button"
+                  class="cp-move-pill"
+                  data-value="F"
+                  onclick="selectCuttingMoveTo('edit','F')">F</button>
+
+          <button type="button"
+                  class="cp-move-pill"
+                  data-value="SC"
+                  onclick="selectCuttingMoveTo('edit','SC')">SC</button>
+
+          <button type="button"
+                  class="cp-move-pill"
+                  data-value="U1"
+                  onclick="selectCuttingMoveTo('edit','U1')">U1</button>
+
+          <button type="button"
+                  class="cp-move-pill"
+                  data-value="U2"
+                  onclick="selectCuttingMoveTo('edit','U2')">U2</button>
+
+        </div>
+
+      </div>
+
+      <div class="cp-form-group">
+        <label>Remarks</label>
+        <textarea
+          id="edit-remarks"
+          class="cp-form-input"></textarea>
+      </div>
+
+    </div>
+
+    <div class="cp-modal-footer">
+
+      <button
+        class="cp-btn cp-secondary"
+        onclick="closeEditCuttingPlan()">
+        Cancel
+      </button>
+
+      <button
+        id="edit-save-btn"
+        class="cp-btn cp-primary"
+        onclick="saveEditCuttingPlan()">
+        Save Changes
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+{% block extra_scripts %}
+
+<script src="{{ url_for('static', filename='js/cutting_plan.js') }}?v={{ version }}">
+</script>
+
+
+
+
+
+
+
+
+{% endblock %}
+
+
+
+
+</div>
+

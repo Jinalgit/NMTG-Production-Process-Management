@@ -1,0 +1,4374 @@
+
+===== AROUND LINE 14 =====
+1: """
+2: Quality Check / Tracibility routes for Demo 2.
+3: Includes WIP status tracking, in/out time recording, and audit trail.
+4: """
+5: 
+6: import re
+7: from datetime import date as date_cls
+8: from datetime import datetime, timedelta
+9: 
+10: from flask import Blueprint, jsonify, request, session
+11: from mysql.connector import Error
+12: 
+13: from db import get_connection
+14: from .oee_persistence import save_oee_entry
+15: from permission_utils import (
+16:     PAGE3_TRACEABILITY,
+17:     can_user_edit_field,
+18:     ensure_permission_tables,
+19:     is_gaurang_special_identity,
+20:     is_gaurang_special_user,
+21:     seed_default_permissions,
+22: )
+23: 
+24: _IST = timedelta(hours=5, minutes=30)
+25: def _to_ist(dt): return dt + _IST if dt else dt
+26: 
+27: 
+28: quality_check_bp = Blueprint("quality_check", __name__)
+29: 
+30: PROCESS_COUNT = 25
+31: PROCESS_COLUMNS = [f"p{i}" for i in range(1, PROCESS_COUNT + 1)]
+32: PROCESS_COLUMNS_SQL = ",".join(PROCESS_COLUMNS)
+33: 
+34: 
+35: def _fmt(v, date_only=False):
+36:     """Format a date or datetime object to string, or return None."""
+37:     if v is None:
+38:         return None
+39:     if hasattr(v, "strftime"):
+40:         return v.strftime("%Y-%m-%d") if date_only else v.strftime("%Y-%m-%d")
+41:     s = str(v)
+42:     return s[:10] if s else None
+43: 
+44: 
+45: def _has_column(cursor, table, column):
+46:     """Check if a column exists in the given table."""
+47:     cursor.execute(
+48:         """
+49:         SELECT COUNT(*) AS cnt
+50:         FROM information_schema.COLUMNS
+51:         WHERE TABLE_SCHEMA = DATABASE()
+52:           AND TABLE_NAME   = %s
+53:           AND COLUMN_NAME  = %s
+54:     """,
+55:         (table, column),
+56:     )
+57:     return cursor.fetchone()["cnt"] > 0
+58: 
+59: 
+60: def supervisor_has_process_access(cursor, user_id, process_name):
+61:     if is_gaurang_special_identity(user_id) or is_gaurang_special_user():
+62:         return True
+63:     cursor.execute("""
+64:         SELECT 1
+65:         FROM supervisor_process_access
+66:         WHERE user_id = %s
+67:           AND LOWER(TRIM(process_name)) = LOWER(TRIM(%s))
+68:         LIMIT 1
+69:     """, (user_id, process_name or ""))
+70:     return cursor.fetchone() is not None
+71: 
+72: 
+73: def _match_processes(a, b):
+74:     """
+75:     Fuzzy match two process names.
+76:     Handles variations like 'R/Turning' == 'Rough Turning' == 'RT'.
+77:     """
+78:     a_low = (a or "").lower().strip()
+79:     b_low = (b or "").lower().strip()
+80:     if not a_low or not b_low:
+81:         return False
+82:     if a_low == b_low:
+83:         return True
+84:     a_norm = re.sub(r"[\s/\-]+", " ", a_low).strip()
+85:     b_norm = re.sub(r"[\s/\-]+", " ", b_low).strip()
+86:     aliases = {
+87:         "rm": "raw material",
+88:         "raw mat": "raw material",
+89:         "rawmaterial": "raw material",
+90:         "qc": "quality check",
+91:         "quality": "quality check",
+92:         "qualitycheck": "quality check",
+93:     }
+94:     a_alias = aliases.get(a_norm, aliases.get(
+95:         re.sub(r"[^a-z0-9]+", "", a_norm), a_norm))
+96:     b_alias = aliases.get(b_norm, aliases.get(
+97:         re.sub(r"[^a-z0-9]+", "", b_norm), b_norm))
+98:     if a_alias == b_alias:
+99:         return True
+100:     if a_norm == b_norm:
+101:         return True
+102:     a_words = [w for w in re.split(r"[\s/\-]+", a_low) if w]
+103:     b_words = [w for w in re.split(r"[\s/\-]+", b_low) if w]
+104:     a_init = "".join(w[0] for w in a_words)
+105:     b_init = "".join(w[0] for w in b_words)
+106:     if a_init == b_init and len(a_init) > 1:
+107:         return True
+108:     if len(a_words) == len(b_words):
+109:         if all(
+110:             wa == wb or wb.startswith(wa) or wa.startswith(wb)
+111:             for wa, wb in zip(a_words, b_words)
+112:         ):
+113:             return True
+114:     return False
+115: 
+116: 
+117: def _norm_process_name(v):
+118:     """Normalize process name for safer matching."""
+119:     return re.sub(r"[\s/\-]+", " ", (v or "").lower().strip())
+120: 
+121: 
+122: def _find_pd_row(proc_name, pd_rows):
+123:     proc_raw = (proc_name or "").strip().lower()
+124:     proc_norm = _norm_process_name(proc_name)
+125:     for row in pd_rows:
+126:         row_name = (row.get("process_name") or "").strip().lower()
+127:         if row_name == proc_raw:
+128:             return row
+129:     for row in pd_rows:
+130:         row_norm = _norm_process_name(row.get("process_name"))
+131:         if row_norm == proc_norm:
+132:             return row
+133:     return None
+
+===== AROUND LINE 1461 =====
+1426:                     WHEN (
+1427:                         SELECT COUNT(*)
+1428:                         FROM job_card_process_days jpd
+1429:                         WHERE jpd.job_card_no = cj.job_card_no
+1430:                           AND (
+1431:                               COALESCE(jpd.is_completed, 0) = 0
+1432:                               OR jpd.out_time IS NULL
+1433:                           )
+1434:                     ) = 0 THEN 'CHILD -C COMPLETED - UPPER CAN START'
+1435:                     ELSE 'CHILD -C PENDING - BLOCK UPPER'
+1436:                 END AS gate_status
+1437: 
+1438:             FROM c_items ci
+1439:             LEFT JOIN c_job_cards cj
+1440:                 ON (TRIM(cj.item_name) COLLATE utf8mb4_unicode_ci)
+1441:                  = (TRIM(ci.c_item_description) COLLATE utf8mb4_unicode_ci)
+1442:                AND (COALESCE(NULLIF(TRIM(cj.so_no), ''), '__BLANK_SO__') COLLATE utf8mb4_unicode_ci)
+1443:                  = (COALESCE(NULLIF(TRIM(ci.upper_so_no), ''), '__BLANK_SO__') COLLATE utf8mb4_unicode_ci)
+1444:         )
+1445: 
+1446:         SELECT *
+1447:         FROM gate_rows
+1448:         WHERE gate_status IN (
+1449:             'CHILD -C PENDING - BLOCK UPPER',
+1450:             'CHILD -C JOB CARD NOT FOUND',
+1451:             'CHILD -C HAS NO PROCESS ROWS'
+1452:         )
+1453:         ORDER BY level_no DESC, c_item_description, c_job_card_no
+1454:     """, (job_card_no, item_name))
+1455: 
+1456:     return cursor.fetchall()
+1457: 
+1458: 
+1459: 
+1460: # OPERATOR_COMPLETION_UNDO_BACKEND_V1_START
+1461: def _ensure_operator_completion_log_table(cursor):
+1462:     """
+1463:     Stores the exact pre-completion database state required for a safe
+1464:     Operator-only reversal.
+1465: 
+1466:     Admin and Supervisor workflows do not use this table.
+1467:     """
+1468:     cursor.execute("""
+1469:         CREATE TABLE IF NOT EXISTS operator_completion_log (
+1470:             id BIGINT NOT NULL AUTO_INCREMENT,
+1471:             operator_user_id INT NOT NULL,
+1472:             operator_name VARCHAR(100) NULL,
+1473: 
+1474:             job_card_no VARCHAR(50) NOT NULL,
+1475:             item_name VARCHAR(500) NOT NULL,
+1476: 
+1477:             old_stage VARCHAR(100) NOT NULL,
+1478:             new_stage VARCHAR(100) NOT NULL,
+1479: 
+1480:             old_process_id INT NOT NULL,
+1481:             next_process_id INT NULL,
+1482: 
+1483:             previous_item_wip_status VARCHAR(100) NULL,
+1484:             previous_item_actual_qty INT NULL,
+1485:             previous_item_rejected_qty INT NULL,
+1486:             previous_item_hold_qty INT NULL,
+1487:             previous_item_rejection_reason VARCHAR(255) NULL,
+1488:             previous_item_hold_reason VARCHAR(255) NULL,
+1489:             previous_item_remarks VARCHAR(500) NULL,
+1490:             previous_item_remaining_days INT NULL,
+1491:             previous_item_wip_stage_days INT NULL,
+1492:             previous_job_final_status VARCHAR(50) NULL,
+1493: 
+1494:             old_process_in_time DATETIME NULL,
+1495:             old_process_out_time DATETIME NULL,
+1496:             old_process_is_completed TINYINT NULL,
+1497:             old_process_actual_days INT NULL,
+1498:             old_process_end_date DATE NULL,
+1499:             old_process_is_subcontract TINYINT NULL,
+1500:             old_process_vendor_name VARCHAR(255) NULL,
+1501: 
+1502:             next_process_in_time DATETIME NULL,
+1503:             next_process_out_time DATETIME NULL,
+1504:             next_process_is_completed TINYINT NULL,
+1505:             next_process_actual_days INT NULL,
+1506:             next_process_end_date DATE NULL,
+1507:             next_process_is_subcontract TINYINT NULL,
+1508:             next_process_vendor_name VARCHAR(255) NULL,
+1509: 
+1510:             submitted_ok_qty INT NULL,
+1511:             submitted_rejected_qty INT NULL,
+1512:             submitted_hold_qty INT NULL,
+1513:             submitted_rejection_reason VARCHAR(255) NULL,
+1514:             submitted_hold_reason VARCHAR(255) NULL,
+1515:             submitted_stage_remark VARCHAR(500) NULL,
+1516: 
+1517:             completion_audit_id INT NULL,
+1518:             reversal_audit_id INT NULL,
+1519: 
+1520:             status VARCHAR(20) NOT NULL DEFAULT 'active',
+1521:             completed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+1522:             undone_at DATETIME NULL,
+1523:             undo_reason VARCHAR(255) NULL,
+1524: 
+1525:             PRIMARY KEY (id),
+1526:             INDEX idx_operator_completion_user (
+1527:                 operator_user_id,
+1528:                 status,
+1529:                 id
+1530:             ),
+1531:             INDEX idx_operator_completion_job (
+1532:                 job_card_no,
+1533:                 item_name,
+1534:                 id
+1535:             ),
+1536:             INDEX idx_operator_completion_audit (
+1537:                 completion_audit_id
+1538:             )
+1539:         )
+1540:         ENGINE=InnoDB
+1541:         DEFAULT CHARSET=utf8mb4
+1542:         COLLATE=utf8mb4_unicode_ci
+1543:     """)
+1544: 
+1545: 
+1546: def _update_wip_from_saved_timeline():
+1547:     conn = None
+1548:     cursor = None
+1549:     try:
+1550:         data = request.json or {}
+1551:         role = (session.get("role") or "").strip().lower()
+1552:         if role not in ("admin", "supervisor", "operator") and not is_gaurang_special_user():
+1553:             return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
+1554: 
+1555:         job_card_no = (data.get("job_card_no") or "").strip()
+1556:         item_name = (data.get("item_name") or "").strip()
+1557:         requested_stage = (data.get("new_stage") or "").strip()
+1558:         changed_by = data.get("changed_by") or ""
+1559:         if not changed_by or changed_by.strip().lower() in ("not assigned", "system", ""):
+1560:             changed_by = session.get("username") or session.get(
+1561:                 "full_name") or "System"
+1562: 
+1563:         stage_remark = (data.get("stage_remark") or "").strip()
+1564:         rm_hold_reason = (data.get("rm_hold_reason") or "").strip() or None
+1565:         actual_qty = data.get("actual_qty")
+1566:         try:
+1567:             actual_qty = int(actual_qty) if actual_qty not in (
+1568:                 None, "") else None
+1569:         except Exception:
+1570:             actual_qty = None
+1571: 
+1572:         # Optional operator quantity-outcome payload.
+1573:         # Existing supervisor/admin requests remain backward compatible.
+1574:         outcome_keys_present = (
+1575:             role == "operator"
+1576:             and all(
+1577:                 key in data
+1578:                 for key in ("ok_qty", "rejected_qty", "hold_qty")
+1579:             )
+1580:         )
+
+===== AROUND LINE 1469 =====
+1434:                     ) = 0 THEN 'CHILD -C COMPLETED - UPPER CAN START'
+1435:                     ELSE 'CHILD -C PENDING - BLOCK UPPER'
+1436:                 END AS gate_status
+1437: 
+1438:             FROM c_items ci
+1439:             LEFT JOIN c_job_cards cj
+1440:                 ON (TRIM(cj.item_name) COLLATE utf8mb4_unicode_ci)
+1441:                  = (TRIM(ci.c_item_description) COLLATE utf8mb4_unicode_ci)
+1442:                AND (COALESCE(NULLIF(TRIM(cj.so_no), ''), '__BLANK_SO__') COLLATE utf8mb4_unicode_ci)
+1443:                  = (COALESCE(NULLIF(TRIM(ci.upper_so_no), ''), '__BLANK_SO__') COLLATE utf8mb4_unicode_ci)
+1444:         )
+1445: 
+1446:         SELECT *
+1447:         FROM gate_rows
+1448:         WHERE gate_status IN (
+1449:             'CHILD -C PENDING - BLOCK UPPER',
+1450:             'CHILD -C JOB CARD NOT FOUND',
+1451:             'CHILD -C HAS NO PROCESS ROWS'
+1452:         )
+1453:         ORDER BY level_no DESC, c_item_description, c_job_card_no
+1454:     """, (job_card_no, item_name))
+1455: 
+1456:     return cursor.fetchall()
+1457: 
+1458: 
+1459: 
+1460: # OPERATOR_COMPLETION_UNDO_BACKEND_V1_START
+1461: def _ensure_operator_completion_log_table(cursor):
+1462:     """
+1463:     Stores the exact pre-completion database state required for a safe
+1464:     Operator-only reversal.
+1465: 
+1466:     Admin and Supervisor workflows do not use this table.
+1467:     """
+1468:     cursor.execute("""
+1469:         CREATE TABLE IF NOT EXISTS operator_completion_log (
+1470:             id BIGINT NOT NULL AUTO_INCREMENT,
+1471:             operator_user_id INT NOT NULL,
+1472:             operator_name VARCHAR(100) NULL,
+1473: 
+1474:             job_card_no VARCHAR(50) NOT NULL,
+1475:             item_name VARCHAR(500) NOT NULL,
+1476: 
+1477:             old_stage VARCHAR(100) NOT NULL,
+1478:             new_stage VARCHAR(100) NOT NULL,
+1479: 
+1480:             old_process_id INT NOT NULL,
+1481:             next_process_id INT NULL,
+1482: 
+1483:             previous_item_wip_status VARCHAR(100) NULL,
+1484:             previous_item_actual_qty INT NULL,
+1485:             previous_item_rejected_qty INT NULL,
+1486:             previous_item_hold_qty INT NULL,
+1487:             previous_item_rejection_reason VARCHAR(255) NULL,
+1488:             previous_item_hold_reason VARCHAR(255) NULL,
+1489:             previous_item_remarks VARCHAR(500) NULL,
+1490:             previous_item_remaining_days INT NULL,
+1491:             previous_item_wip_stage_days INT NULL,
+1492:             previous_job_final_status VARCHAR(50) NULL,
+1493: 
+1494:             old_process_in_time DATETIME NULL,
+1495:             old_process_out_time DATETIME NULL,
+1496:             old_process_is_completed TINYINT NULL,
+1497:             old_process_actual_days INT NULL,
+1498:             old_process_end_date DATE NULL,
+1499:             old_process_is_subcontract TINYINT NULL,
+1500:             old_process_vendor_name VARCHAR(255) NULL,
+1501: 
+1502:             next_process_in_time DATETIME NULL,
+1503:             next_process_out_time DATETIME NULL,
+1504:             next_process_is_completed TINYINT NULL,
+1505:             next_process_actual_days INT NULL,
+1506:             next_process_end_date DATE NULL,
+1507:             next_process_is_subcontract TINYINT NULL,
+1508:             next_process_vendor_name VARCHAR(255) NULL,
+1509: 
+1510:             submitted_ok_qty INT NULL,
+1511:             submitted_rejected_qty INT NULL,
+1512:             submitted_hold_qty INT NULL,
+1513:             submitted_rejection_reason VARCHAR(255) NULL,
+1514:             submitted_hold_reason VARCHAR(255) NULL,
+1515:             submitted_stage_remark VARCHAR(500) NULL,
+1516: 
+1517:             completion_audit_id INT NULL,
+1518:             reversal_audit_id INT NULL,
+1519: 
+1520:             status VARCHAR(20) NOT NULL DEFAULT 'active',
+1521:             completed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+1522:             undone_at DATETIME NULL,
+1523:             undo_reason VARCHAR(255) NULL,
+1524: 
+1525:             PRIMARY KEY (id),
+1526:             INDEX idx_operator_completion_user (
+1527:                 operator_user_id,
+1528:                 status,
+1529:                 id
+1530:             ),
+1531:             INDEX idx_operator_completion_job (
+1532:                 job_card_no,
+1533:                 item_name,
+1534:                 id
+1535:             ),
+1536:             INDEX idx_operator_completion_audit (
+1537:                 completion_audit_id
+1538:             )
+1539:         )
+1540:         ENGINE=InnoDB
+1541:         DEFAULT CHARSET=utf8mb4
+1542:         COLLATE=utf8mb4_unicode_ci
+1543:     """)
+1544: 
+1545: 
+1546: def _update_wip_from_saved_timeline():
+1547:     conn = None
+1548:     cursor = None
+1549:     try:
+1550:         data = request.json or {}
+1551:         role = (session.get("role") or "").strip().lower()
+1552:         if role not in ("admin", "supervisor", "operator") and not is_gaurang_special_user():
+1553:             return jsonify({"success": False, "error": "You do not have permission to update WIP stage."}), 403
+1554: 
+1555:         job_card_no = (data.get("job_card_no") or "").strip()
+1556:         item_name = (data.get("item_name") or "").strip()
+1557:         requested_stage = (data.get("new_stage") or "").strip()
+1558:         changed_by = data.get("changed_by") or ""
+1559:         if not changed_by or changed_by.strip().lower() in ("not assigned", "system", ""):
+1560:             changed_by = session.get("username") or session.get(
+1561:                 "full_name") or "System"
+1562: 
+1563:         stage_remark = (data.get("stage_remark") or "").strip()
+1564:         rm_hold_reason = (data.get("rm_hold_reason") or "").strip() or None
+1565:         actual_qty = data.get("actual_qty")
+1566:         try:
+1567:             actual_qty = int(actual_qty) if actual_qty not in (
+1568:                 None, "") else None
+1569:         except Exception:
+1570:             actual_qty = None
+1571: 
+1572:         # Optional operator quantity-outcome payload.
+1573:         # Existing supervisor/admin requests remain backward compatible.
+1574:         outcome_keys_present = (
+1575:             role == "operator"
+1576:             and all(
+1577:                 key in data
+1578:                 for key in ("ok_qty", "rejected_qty", "hold_qty")
+1579:             )
+1580:         )
+1581: 
+1582:         ok_qty = None
+1583:         rejected_qty = None
+1584:         hold_qty = None
+1585: 
+1586:         rejection_reason = (
+1587:             data.get("rejection_reason") or ""
+1588:         ).strip()
+
+===== AROUND LINE 2162 =====
+2127:             if submitted_codes != expected_codes:
+2128:                 missing_codes = sorted(expected_codes - submitted_codes)
+2129:                 extra_codes = sorted(submitted_codes - expected_codes)
+2130:                 details = []
+2131: 
+2132:                 if missing_codes:
+2133:                     details.append("missing " + ", ".join(missing_codes))
+2134: 
+2135:                 if extra_codes:
+2136:                     details.append("unknown " + ", ".join(extra_codes))
+2137: 
+2138:                 return jsonify({
+2139:                     "success": False,
+2140:                     "error": (
+2141:                         "OEE loss details must contain exactly A1-A27"
+2142:                         + (
+2143:                             " (" + "; ".join(details) + ")"
+2144:                             if details
+2145:                             else ""
+2146:                         )
+2147:                         + "."
+2148:                     ),
+2149:                 }), 400
+2150: 
+2151:             oee_resolved_losses = []
+2152: 
+2153:             for loss_code in expected_loss_codes:
+2154:                 master_row = oee_loss_master[loss_code]
+2155:                 oee_resolved_losses.append({
+2156:                     "loss_type_id": master_row["id"],
+2157:                     "loss_code": loss_code,
+2158:                     "loss_name": master_row["loss_name"],
+2159:                     "loss_minutes": submitted_loss_map[loss_code],
+2160:                 })
+2161: 
+2162:         operator_completion_log_id = None
+2163: 
+2164:         if role == "operator":
+2165:             operator_user_id = session.get("user_id")
+2166: 
+2167:             if not operator_user_id:
+2168:                 return jsonify({
+2169:                     "success": False,
+2170:                     "error": "Operator session is missing the user ID."
+2171:                 }), 403
+2172: 
+2173:             _ensure_operator_completion_log_table(cursor)
+2174: 
+2175:             next_snapshot = new_process or {}
+2176: 
+2177:             snapshot_values = (
+2178:                 operator_user_id,
+2179:                 changed_by,
+2180:                 job_card_no,
+2181:                 item_name,
+2182:                 old_stage,
+2183:                 new_stage,
+2184:                 old_process["id"],
+2185:                 next_snapshot.get("id"),
+2186: 
+2187:                 item_row.get("wip_status"),
+2188:                 item_row.get("actual_qty"),
+2189:                 item_row.get("rejected_qty"),
+2190:                 item_row.get("hold_qty"),
+2191:                 item_row.get("rejection_reason"),
+2192:                 item_row.get("hold_reason"),
+2193:                 item_row.get("remarks"),
+2194:                 item_row.get("remaining_days"),
+2195:                 item_row.get("wip_stage_days"),
+2196:                 item_row.get("job_final_status"),
+2197: 
+2198:                 old_process.get("in_time"),
+2199:                 old_process.get("out_time"),
+2200:                 old_process.get("is_completed"),
+2201:                 old_process.get("actual_days"),
+2202:                 old_process.get("end_date"),
+2203:                 old_process.get("is_subcontract"),
+2204:                 old_process.get("vendor_name"),
+2205: 
+2206:                 next_snapshot.get("in_time"),
+2207:                 next_snapshot.get("out_time"),
+2208:                 next_snapshot.get("is_completed"),
+2209:                 next_snapshot.get("actual_days"),
+2210:                 next_snapshot.get("end_date"),
+2211:                 next_snapshot.get("is_subcontract"),
+2212:                 next_snapshot.get("vendor_name"),
+2213: 
+2214:                 submitted_ok if outcome_keys_present else actual_qty,
+2215:                 submitted_rej if outcome_keys_present else rejected_qty,
+2216:                 submitted_hold if outcome_keys_present else hold_qty,
+2217:                 rejection_reason,
+2218:                 hold_reason,
+2219:                 stage_remark,
+2220:             )
+2221: 
+2222:             placeholders = ",".join(
+2223:                 ["%s"] * len(snapshot_values)
+2224:             )
+2225: 
+2226:             cursor.execute(
+2227:                 f"""
+2228:                 INSERT INTO operator_completion_log (
+2229:                     operator_user_id,
+2230:                     operator_name,
+2231:                     job_card_no,
+2232:                     item_name,
+2233:                     old_stage,
+2234:                     new_stage,
+2235:                     old_process_id,
+2236:                     next_process_id,
+2237: 
+2238:                     previous_item_wip_status,
+2239:                     previous_item_actual_qty,
+2240:                     previous_item_rejected_qty,
+2241:                     previous_item_hold_qty,
+2242:                     previous_item_rejection_reason,
+2243:                     previous_item_hold_reason,
+2244:                     previous_item_remarks,
+2245:                     previous_item_remaining_days,
+2246:                     previous_item_wip_stage_days,
+2247:                     previous_job_final_status,
+2248: 
+2249:                     old_process_in_time,
+2250:                     old_process_out_time,
+2251:                     old_process_is_completed,
+2252:                     old_process_actual_days,
+2253:                     old_process_end_date,
+2254:                     old_process_is_subcontract,
+2255:                     old_process_vendor_name,
+2256: 
+2257:                     next_process_in_time,
+2258:                     next_process_out_time,
+2259:                     next_process_is_completed,
+2260:                     next_process_actual_days,
+2261:                     next_process_end_date,
+2262:                     next_process_is_subcontract,
+2263:                     next_process_vendor_name,
+2264: 
+2265:                     submitted_ok_qty,
+2266:                     submitted_rejected_qty,
+2267:                     submitted_hold_qty,
+2268:                     submitted_rejection_reason,
+2269:                     submitted_hold_reason,
+2270:                     submitted_stage_remark
+2271:                 )
+2272:                 VALUES ({placeholders})
+2273:                 """,
+2274:                 snapshot_values,
+2275:             )
+2276: 
+2277:             operator_completion_log_id = cursor.lastrowid
+2278: 
+2279:         stage_days = int(old_process.get("lead_days") or 0)
+2280:         new_remaining = _remaining_days_from_delivery(
+2281:             item_row.get("delivery_date"))
+
+===== AROUND LINE 2173 =====
+2138:                 return jsonify({
+2139:                     "success": False,
+2140:                     "error": (
+2141:                         "OEE loss details must contain exactly A1-A27"
+2142:                         + (
+2143:                             " (" + "; ".join(details) + ")"
+2144:                             if details
+2145:                             else ""
+2146:                         )
+2147:                         + "."
+2148:                     ),
+2149:                 }), 400
+2150: 
+2151:             oee_resolved_losses = []
+2152: 
+2153:             for loss_code in expected_loss_codes:
+2154:                 master_row = oee_loss_master[loss_code]
+2155:                 oee_resolved_losses.append({
+2156:                     "loss_type_id": master_row["id"],
+2157:                     "loss_code": loss_code,
+2158:                     "loss_name": master_row["loss_name"],
+2159:                     "loss_minutes": submitted_loss_map[loss_code],
+2160:                 })
+2161: 
+2162:         operator_completion_log_id = None
+2163: 
+2164:         if role == "operator":
+2165:             operator_user_id = session.get("user_id")
+2166: 
+2167:             if not operator_user_id:
+2168:                 return jsonify({
+2169:                     "success": False,
+2170:                     "error": "Operator session is missing the user ID."
+2171:                 }), 403
+2172: 
+2173:             _ensure_operator_completion_log_table(cursor)
+2174: 
+2175:             next_snapshot = new_process or {}
+2176: 
+2177:             snapshot_values = (
+2178:                 operator_user_id,
+2179:                 changed_by,
+2180:                 job_card_no,
+2181:                 item_name,
+2182:                 old_stage,
+2183:                 new_stage,
+2184:                 old_process["id"],
+2185:                 next_snapshot.get("id"),
+2186: 
+2187:                 item_row.get("wip_status"),
+2188:                 item_row.get("actual_qty"),
+2189:                 item_row.get("rejected_qty"),
+2190:                 item_row.get("hold_qty"),
+2191:                 item_row.get("rejection_reason"),
+2192:                 item_row.get("hold_reason"),
+2193:                 item_row.get("remarks"),
+2194:                 item_row.get("remaining_days"),
+2195:                 item_row.get("wip_stage_days"),
+2196:                 item_row.get("job_final_status"),
+2197: 
+2198:                 old_process.get("in_time"),
+2199:                 old_process.get("out_time"),
+2200:                 old_process.get("is_completed"),
+2201:                 old_process.get("actual_days"),
+2202:                 old_process.get("end_date"),
+2203:                 old_process.get("is_subcontract"),
+2204:                 old_process.get("vendor_name"),
+2205: 
+2206:                 next_snapshot.get("in_time"),
+2207:                 next_snapshot.get("out_time"),
+2208:                 next_snapshot.get("is_completed"),
+2209:                 next_snapshot.get("actual_days"),
+2210:                 next_snapshot.get("end_date"),
+2211:                 next_snapshot.get("is_subcontract"),
+2212:                 next_snapshot.get("vendor_name"),
+2213: 
+2214:                 submitted_ok if outcome_keys_present else actual_qty,
+2215:                 submitted_rej if outcome_keys_present else rejected_qty,
+2216:                 submitted_hold if outcome_keys_present else hold_qty,
+2217:                 rejection_reason,
+2218:                 hold_reason,
+2219:                 stage_remark,
+2220:             )
+2221: 
+2222:             placeholders = ",".join(
+2223:                 ["%s"] * len(snapshot_values)
+2224:             )
+2225: 
+2226:             cursor.execute(
+2227:                 f"""
+2228:                 INSERT INTO operator_completion_log (
+2229:                     operator_user_id,
+2230:                     operator_name,
+2231:                     job_card_no,
+2232:                     item_name,
+2233:                     old_stage,
+2234:                     new_stage,
+2235:                     old_process_id,
+2236:                     next_process_id,
+2237: 
+2238:                     previous_item_wip_status,
+2239:                     previous_item_actual_qty,
+2240:                     previous_item_rejected_qty,
+2241:                     previous_item_hold_qty,
+2242:                     previous_item_rejection_reason,
+2243:                     previous_item_hold_reason,
+2244:                     previous_item_remarks,
+2245:                     previous_item_remaining_days,
+2246:                     previous_item_wip_stage_days,
+2247:                     previous_job_final_status,
+2248: 
+2249:                     old_process_in_time,
+2250:                     old_process_out_time,
+2251:                     old_process_is_completed,
+2252:                     old_process_actual_days,
+2253:                     old_process_end_date,
+2254:                     old_process_is_subcontract,
+2255:                     old_process_vendor_name,
+2256: 
+2257:                     next_process_in_time,
+2258:                     next_process_out_time,
+2259:                     next_process_is_completed,
+2260:                     next_process_actual_days,
+2261:                     next_process_end_date,
+2262:                     next_process_is_subcontract,
+2263:                     next_process_vendor_name,
+2264: 
+2265:                     submitted_ok_qty,
+2266:                     submitted_rejected_qty,
+2267:                     submitted_hold_qty,
+2268:                     submitted_rejection_reason,
+2269:                     submitted_hold_reason,
+2270:                     submitted_stage_remark
+2271:                 )
+2272:                 VALUES ({placeholders})
+2273:                 """,
+2274:                 snapshot_values,
+2275:             )
+2276: 
+2277:             operator_completion_log_id = cursor.lastrowid
+2278: 
+2279:         stage_days = int(old_process.get("lead_days") or 0)
+2280:         new_remaining = _remaining_days_from_delivery(
+2281:             item_row.get("delivery_date"))
+2282: 
+2283:         # CHILD_C_GATE_BLOCK_START
+2284:         # Upper-level process cannot move/start until all child -C job cards
+2285:         # are completed, unless an authorised Continue Anyway override exists.
+2286:         pending_c_rows = _get_pending_c_child_gate_rows(
+2287:             cursor,
+2288:             job_card_no,
+2289:             item_name
+2290:         )
+2291: 
+2292:         child_c_gate_overridden = _child_c_gate_override_exists(
+
+===== AROUND LINE 2228 =====
+2193:                 item_row.get("remarks"),
+2194:                 item_row.get("remaining_days"),
+2195:                 item_row.get("wip_stage_days"),
+2196:                 item_row.get("job_final_status"),
+2197: 
+2198:                 old_process.get("in_time"),
+2199:                 old_process.get("out_time"),
+2200:                 old_process.get("is_completed"),
+2201:                 old_process.get("actual_days"),
+2202:                 old_process.get("end_date"),
+2203:                 old_process.get("is_subcontract"),
+2204:                 old_process.get("vendor_name"),
+2205: 
+2206:                 next_snapshot.get("in_time"),
+2207:                 next_snapshot.get("out_time"),
+2208:                 next_snapshot.get("is_completed"),
+2209:                 next_snapshot.get("actual_days"),
+2210:                 next_snapshot.get("end_date"),
+2211:                 next_snapshot.get("is_subcontract"),
+2212:                 next_snapshot.get("vendor_name"),
+2213: 
+2214:                 submitted_ok if outcome_keys_present else actual_qty,
+2215:                 submitted_rej if outcome_keys_present else rejected_qty,
+2216:                 submitted_hold if outcome_keys_present else hold_qty,
+2217:                 rejection_reason,
+2218:                 hold_reason,
+2219:                 stage_remark,
+2220:             )
+2221: 
+2222:             placeholders = ",".join(
+2223:                 ["%s"] * len(snapshot_values)
+2224:             )
+2225: 
+2226:             cursor.execute(
+2227:                 f"""
+2228:                 INSERT INTO operator_completion_log (
+2229:                     operator_user_id,
+2230:                     operator_name,
+2231:                     job_card_no,
+2232:                     item_name,
+2233:                     old_stage,
+2234:                     new_stage,
+2235:                     old_process_id,
+2236:                     next_process_id,
+2237: 
+2238:                     previous_item_wip_status,
+2239:                     previous_item_actual_qty,
+2240:                     previous_item_rejected_qty,
+2241:                     previous_item_hold_qty,
+2242:                     previous_item_rejection_reason,
+2243:                     previous_item_hold_reason,
+2244:                     previous_item_remarks,
+2245:                     previous_item_remaining_days,
+2246:                     previous_item_wip_stage_days,
+2247:                     previous_job_final_status,
+2248: 
+2249:                     old_process_in_time,
+2250:                     old_process_out_time,
+2251:                     old_process_is_completed,
+2252:                     old_process_actual_days,
+2253:                     old_process_end_date,
+2254:                     old_process_is_subcontract,
+2255:                     old_process_vendor_name,
+2256: 
+2257:                     next_process_in_time,
+2258:                     next_process_out_time,
+2259:                     next_process_is_completed,
+2260:                     next_process_actual_days,
+2261:                     next_process_end_date,
+2262:                     next_process_is_subcontract,
+2263:                     next_process_vendor_name,
+2264: 
+2265:                     submitted_ok_qty,
+2266:                     submitted_rejected_qty,
+2267:                     submitted_hold_qty,
+2268:                     submitted_rejection_reason,
+2269:                     submitted_hold_reason,
+2270:                     submitted_stage_remark
+2271:                 )
+2272:                 VALUES ({placeholders})
+2273:                 """,
+2274:                 snapshot_values,
+2275:             )
+2276: 
+2277:             operator_completion_log_id = cursor.lastrowid
+2278: 
+2279:         stage_days = int(old_process.get("lead_days") or 0)
+2280:         new_remaining = _remaining_days_from_delivery(
+2281:             item_row.get("delivery_date"))
+2282: 
+2283:         # CHILD_C_GATE_BLOCK_START
+2284:         # Upper-level process cannot move/start until all child -C job cards
+2285:         # are completed, unless an authorised Continue Anyway override exists.
+2286:         pending_c_rows = _get_pending_c_child_gate_rows(
+2287:             cursor,
+2288:             job_card_no,
+2289:             item_name
+2290:         )
+2291: 
+2292:         child_c_gate_overridden = _child_c_gate_override_exists(
+2293:             cursor,
+2294:             job_card_no,
+2295:             item_name
+2296:         )
+2297: 
+2298:         if pending_c_rows and not child_c_gate_overridden:
+2299:             first_block = pending_c_rows[0]
+2300:             child_jc = first_block.get("c_job_card_no") or "NOT FOUND"
+2301:             child_item = first_block.get("c_item_description") or "-"
+2302:             child_wip = first_block.get("c_wip_status") or "-"
+2303:             gate_status = first_block.get("gate_status") or "CHILD -C BLOCKED"
+2304: 
+2305:             return jsonify({
+2306:                 "success": False,
+2307:                 "status": "CHILD_C_GATE_BLOCKED",
+2308:                 "error": (
+2309:                     "Cannot start / move upper-level process. "
+2310:                     f"Child -C item is not completed. "
+2311:                     f"Child JC: {child_jc}, "
+2312:                     f"Child Item: {child_item}, "
+2313:                     f"Child WIP: {child_wip}, "
+2314:                     f"Status: {gate_status}"
+2315:                 ),
+2316:                 "gate_status": gate_status,
+2317:                 "blocking_count": len(pending_c_rows),
+2318:                 "blocking_rows": pending_c_rows,
+2319:                 "continue_anyway_allowed": True
+2320:             }), 400
+2321:         # CHILD_C_GATE_BLOCK_END
+2322: 
+2323:         if old_process.get("in_time") is None:
+2324:             cursor.execute(
+2325:                 """
+2326:                 UPDATE job_card_process_days
+2327:                 SET in_time = COALESCE(%s, NOW())
+2328:                 WHERE id = %s
+2329:                 """,
+2330:                 (item_row.get("job_card_date"), old_process["id"]),
+2331:             )
+2332: 
+2333:         cursor.execute(
+2334:             """
+2335:             UPDATE job_card_process_days
+2336:             SET out_time = NOW(),
+2337:                 is_completed = 1,
+2338:                 end_date = CURDATE(),
+2339:                 actual_days = DATEDIFF(NOW(), COALESCE(in_time, NOW()))
+2340:             WHERE id = %s
+2341:             """,
+2342:             (old_process["id"],),
+2343:         )
+2344: 
+2345:         # A terminal -C completion has no next process row.
+2346:         if not is_terminal_c_completion:
+2347:             if _is_store_stage(new_stage):
+
+===== AROUND LINE 2277 =====
+2242:                     previous_item_rejection_reason,
+2243:                     previous_item_hold_reason,
+2244:                     previous_item_remarks,
+2245:                     previous_item_remaining_days,
+2246:                     previous_item_wip_stage_days,
+2247:                     previous_job_final_status,
+2248: 
+2249:                     old_process_in_time,
+2250:                     old_process_out_time,
+2251:                     old_process_is_completed,
+2252:                     old_process_actual_days,
+2253:                     old_process_end_date,
+2254:                     old_process_is_subcontract,
+2255:                     old_process_vendor_name,
+2256: 
+2257:                     next_process_in_time,
+2258:                     next_process_out_time,
+2259:                     next_process_is_completed,
+2260:                     next_process_actual_days,
+2261:                     next_process_end_date,
+2262:                     next_process_is_subcontract,
+2263:                     next_process_vendor_name,
+2264: 
+2265:                     submitted_ok_qty,
+2266:                     submitted_rejected_qty,
+2267:                     submitted_hold_qty,
+2268:                     submitted_rejection_reason,
+2269:                     submitted_hold_reason,
+2270:                     submitted_stage_remark
+2271:                 )
+2272:                 VALUES ({placeholders})
+2273:                 """,
+2274:                 snapshot_values,
+2275:             )
+2276: 
+2277:             operator_completion_log_id = cursor.lastrowid
+2278: 
+2279:         stage_days = int(old_process.get("lead_days") or 0)
+2280:         new_remaining = _remaining_days_from_delivery(
+2281:             item_row.get("delivery_date"))
+2282: 
+2283:         # CHILD_C_GATE_BLOCK_START
+2284:         # Upper-level process cannot move/start until all child -C job cards
+2285:         # are completed, unless an authorised Continue Anyway override exists.
+2286:         pending_c_rows = _get_pending_c_child_gate_rows(
+2287:             cursor,
+2288:             job_card_no,
+2289:             item_name
+2290:         )
+2291: 
+2292:         child_c_gate_overridden = _child_c_gate_override_exists(
+2293:             cursor,
+2294:             job_card_no,
+2295:             item_name
+2296:         )
+2297: 
+2298:         if pending_c_rows and not child_c_gate_overridden:
+2299:             first_block = pending_c_rows[0]
+2300:             child_jc = first_block.get("c_job_card_no") or "NOT FOUND"
+2301:             child_item = first_block.get("c_item_description") or "-"
+2302:             child_wip = first_block.get("c_wip_status") or "-"
+2303:             gate_status = first_block.get("gate_status") or "CHILD -C BLOCKED"
+2304: 
+2305:             return jsonify({
+2306:                 "success": False,
+2307:                 "status": "CHILD_C_GATE_BLOCKED",
+2308:                 "error": (
+2309:                     "Cannot start / move upper-level process. "
+2310:                     f"Child -C item is not completed. "
+2311:                     f"Child JC: {child_jc}, "
+2312:                     f"Child Item: {child_item}, "
+2313:                     f"Child WIP: {child_wip}, "
+2314:                     f"Status: {gate_status}"
+2315:                 ),
+2316:                 "gate_status": gate_status,
+2317:                 "blocking_count": len(pending_c_rows),
+2318:                 "blocking_rows": pending_c_rows,
+2319:                 "continue_anyway_allowed": True
+2320:             }), 400
+2321:         # CHILD_C_GATE_BLOCK_END
+2322: 
+2323:         if old_process.get("in_time") is None:
+2324:             cursor.execute(
+2325:                 """
+2326:                 UPDATE job_card_process_days
+2327:                 SET in_time = COALESCE(%s, NOW())
+2328:                 WHERE id = %s
+2329:                 """,
+2330:                 (item_row.get("job_card_date"), old_process["id"]),
+2331:             )
+2332: 
+2333:         cursor.execute(
+2334:             """
+2335:             UPDATE job_card_process_days
+2336:             SET out_time = NOW(),
+2337:                 is_completed = 1,
+2338:                 end_date = CURDATE(),
+2339:                 actual_days = DATEDIFF(NOW(), COALESCE(in_time, NOW()))
+2340:             WHERE id = %s
+2341:             """,
+2342:             (old_process["id"],),
+2343:         )
+2344: 
+2345:         # A terminal -C completion has no next process row.
+2346:         if not is_terminal_c_completion:
+2347:             if _is_store_stage(new_stage):
+2348:                 cursor.execute(
+2349:                     """
+2350:                     UPDATE job_card_process_days
+2351:                     SET in_time = COALESCE(in_time, NOW()),
+2352:                         out_time = COALESCE(out_time, NOW()),
+2353:                         is_completed = 1,
+2354:                         end_date = CURDATE(),
+2355:                         actual_days = COALESCE(actual_days, 0)
+2356:                     WHERE id = %s
+2357:                     """,
+2358:                     (new_process["id"],),
+2359:                 )
+2360:             else:
+2361:                 cursor.execute(
+2362:                     """
+2363:                     UPDATE job_card_process_days
+2364:                     SET in_time = COALESCE(in_time, NOW()),
+2365:                         out_time = NULL,
+2366:                         is_completed = 0,
+2367:                         actual_days = NULL,
+2368:                         end_date = NULL
+2369:                     WHERE id = %s
+2370:                     """,
+2371:                     (new_process["id"],),
+2372:                 )
+2373: 
+2374:         # If partial submission, stay on current process instead of advancing.
+2375:         if outcome_keys_present and (pending_qty > 0 or hold_qty > 0):
+2376:             effective_stage = old_stage
+2377:         else:
+2378:             effective_stage = new_stage
+2379: 
+2380:         cursor.execute(
+2381:             """
+2382:             UPDATE job_card_items
+2383:             SET wip_status = %s,
+2384:                 remaining_days = %s,
+2385:                 wip_stage_days = 0,
+2386:                 actual_qty = COALESCE(%s, actual_qty),
+2387:                 rejected_qty = CASE
+2388:                     WHEN %s IS NULL THEN rejected_qty
+2389:                     ELSE %s
+2390:                 END,
+2391:                 hold_qty = CASE
+2392:                     WHEN %s IS NULL THEN hold_qty
+2393:                     ELSE %s
+2394:                 END,
+2395:                 pending_qty = CASE
+2396:                     WHEN %s IS NULL THEN pending_qty
+
+===== AROUND LINE 2445 =====
+2410:                 END,
+2411:                 rm_hold_reason = CASE
+2412:                     WHEN %s IS NULL THEN rm_hold_reason
+2413:                     ELSE %s
+2414:                 END
+2415:             WHERE job_card_no = %s
+2416:               AND TRIM(item_name) = TRIM(%s)
+2417:             """,
+2418:             (
+2419:                 effective_stage,
+2420:                 new_remaining,
+2421:                 actual_qty,
+2422:                 rejected_qty,
+2423:                 rejected_qty,
+2424:                 hold_qty,
+2425:                 hold_qty,
+2426:                 pending_qty if outcome_keys_present else None,
+2427:                 pending_qty if outcome_keys_present else None,
+2428:                 rejection_reason
+2429:                     if outcome_keys_present else None,
+2430:                 rejection_reason,
+2431:                 hold_reason
+2432:                     if outcome_keys_present else None,
+2433:                 hold_reason,
+2434:                 stage_remark,
+2435:                 stage_remark,
+2436:                 rm_hold_reason,
+2437:                 rm_hold_reason,
+2438:                 job_card_no,
+2439:                 item_name,
+2440:             ),
+2441:         )
+2442: 
+2443:         # Undo the process_days advancement if partial submission.
+2444:         # Fix completion log: store effective_stage, not requested stage
+2445:         if operator_completion_log_id is not None and effective_stage != new_stage:
+2446:             cursor.execute(
+2447:                 """
+2448:                 UPDATE operator_completion_log
+2449:                 SET new_stage = %s
+2450:                 WHERE id = %s
+2451:                 """,
+2452:                 (effective_stage, operator_completion_log_id),
+2453:             )
+2454: 
+2455:         if outcome_keys_present and (pending_qty > 0 or hold_qty > 0):
+2456:             # Revert old process — mark it back as not completed.
+2457:             cursor.execute(
+2458:                 """
+2459:                 UPDATE job_card_process_days
+2460:                 SET out_time = NULL,
+2461:                     is_completed = 0,
+2462:                     end_date = NULL,
+2463:                     actual_days = NULL
+2464:                 WHERE id = %s
+2465:                 """,
+2466:                 (old_process["id"],),
+2467:             )
+2468:             # Revert next process in_time if it was set.
+2469:             if not is_terminal_c_completion and new_process:
+2470:                 cursor.execute(
+2471:                     """
+2472:                     UPDATE job_card_process_days
+2473:                     SET in_time = NULL,
+2474:                         is_completed = 0
+2475:                     WHERE id = %s
+2476:                     """,
+2477:                     (new_process["id"],),
+2478:                 )
+2479: 
+2480:         cursor.execute("""
+2481:             SELECT
+2482:                 COUNT(*) AS total_items,
+2483:                 SUM(
+2484:                     CASE
+2485:                         WHEN LOWER(TRIM(wip_status)) IN ('completed', 'store')
+2486:                         THEN 1 ELSE 0
+2487:                     END
+2488:                 ) AS completed_items,
+2489:                 SUM(
+2490:                     CASE
+2491:                         WHEN COALESCE(pending_qty, 0) > 0
+2492:                           OR COALESCE(hold_qty, 0) > 0
+2493:                         THEN 1 ELSE 0
+2494:                     END
+2495:                 ) AS partial_items
+2496:             FROM job_card_items
+2497:             WHERE job_card_no = %s
+2498:         """, (job_card_no,))
+2499:         status_row = cursor.fetchone()
+2500: 
+2501:         total = int(status_row["total_items"] or 0)
+2502:         completed = int(status_row["completed_items"] or 0)
+2503:         partial = int(status_row["partial_items"] or 0)
+2504: 
+2505:         if total > 0 and total == completed:
+2506:             new_final_status = 'Completed'
+2507:         elif partial > 0:
+2508:             new_final_status = 'Partial'
+2509:         else:
+2510:             new_final_status = 'Pending'
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+
+===== AROUND LINE 2448 =====
+2413:                     ELSE %s
+2414:                 END
+2415:             WHERE job_card_no = %s
+2416:               AND TRIM(item_name) = TRIM(%s)
+2417:             """,
+2418:             (
+2419:                 effective_stage,
+2420:                 new_remaining,
+2421:                 actual_qty,
+2422:                 rejected_qty,
+2423:                 rejected_qty,
+2424:                 hold_qty,
+2425:                 hold_qty,
+2426:                 pending_qty if outcome_keys_present else None,
+2427:                 pending_qty if outcome_keys_present else None,
+2428:                 rejection_reason
+2429:                     if outcome_keys_present else None,
+2430:                 rejection_reason,
+2431:                 hold_reason
+2432:                     if outcome_keys_present else None,
+2433:                 hold_reason,
+2434:                 stage_remark,
+2435:                 stage_remark,
+2436:                 rm_hold_reason,
+2437:                 rm_hold_reason,
+2438:                 job_card_no,
+2439:                 item_name,
+2440:             ),
+2441:         )
+2442: 
+2443:         # Undo the process_days advancement if partial submission.
+2444:         # Fix completion log: store effective_stage, not requested stage
+2445:         if operator_completion_log_id is not None and effective_stage != new_stage:
+2446:             cursor.execute(
+2447:                 """
+2448:                 UPDATE operator_completion_log
+2449:                 SET new_stage = %s
+2450:                 WHERE id = %s
+2451:                 """,
+2452:                 (effective_stage, operator_completion_log_id),
+2453:             )
+2454: 
+2455:         if outcome_keys_present and (pending_qty > 0 or hold_qty > 0):
+2456:             # Revert old process — mark it back as not completed.
+2457:             cursor.execute(
+2458:                 """
+2459:                 UPDATE job_card_process_days
+2460:                 SET out_time = NULL,
+2461:                     is_completed = 0,
+2462:                     end_date = NULL,
+2463:                     actual_days = NULL
+2464:                 WHERE id = %s
+2465:                 """,
+2466:                 (old_process["id"],),
+2467:             )
+2468:             # Revert next process in_time if it was set.
+2469:             if not is_terminal_c_completion and new_process:
+2470:                 cursor.execute(
+2471:                     """
+2472:                     UPDATE job_card_process_days
+2473:                     SET in_time = NULL,
+2474:                         is_completed = 0
+2475:                     WHERE id = %s
+2476:                     """,
+2477:                     (new_process["id"],),
+2478:                 )
+2479: 
+2480:         cursor.execute("""
+2481:             SELECT
+2482:                 COUNT(*) AS total_items,
+2483:                 SUM(
+2484:                     CASE
+2485:                         WHEN LOWER(TRIM(wip_status)) IN ('completed', 'store')
+2486:                         THEN 1 ELSE 0
+2487:                     END
+2488:                 ) AS completed_items,
+2489:                 SUM(
+2490:                     CASE
+2491:                         WHEN COALESCE(pending_qty, 0) > 0
+2492:                           OR COALESCE(hold_qty, 0) > 0
+2493:                         THEN 1 ELSE 0
+2494:                     END
+2495:                 ) AS partial_items
+2496:             FROM job_card_items
+2497:             WHERE job_card_no = %s
+2498:         """, (job_card_no,))
+2499:         status_row = cursor.fetchone()
+2500: 
+2501:         total = int(status_row["total_items"] or 0)
+2502:         completed = int(status_row["completed_items"] or 0)
+2503:         partial = int(status_row["partial_items"] or 0)
+2504: 
+2505:         if total > 0 and total == completed:
+2506:             new_final_status = 'Completed'
+2507:         elif partial > 0:
+2508:             new_final_status = 'Partial'
+2509:         else:
+2510:             new_final_status = 'Pending'
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+
+===== AROUND LINE 2452 =====
+2417:             """,
+2418:             (
+2419:                 effective_stage,
+2420:                 new_remaining,
+2421:                 actual_qty,
+2422:                 rejected_qty,
+2423:                 rejected_qty,
+2424:                 hold_qty,
+2425:                 hold_qty,
+2426:                 pending_qty if outcome_keys_present else None,
+2427:                 pending_qty if outcome_keys_present else None,
+2428:                 rejection_reason
+2429:                     if outcome_keys_present else None,
+2430:                 rejection_reason,
+2431:                 hold_reason
+2432:                     if outcome_keys_present else None,
+2433:                 hold_reason,
+2434:                 stage_remark,
+2435:                 stage_remark,
+2436:                 rm_hold_reason,
+2437:                 rm_hold_reason,
+2438:                 job_card_no,
+2439:                 item_name,
+2440:             ),
+2441:         )
+2442: 
+2443:         # Undo the process_days advancement if partial submission.
+2444:         # Fix completion log: store effective_stage, not requested stage
+2445:         if operator_completion_log_id is not None and effective_stage != new_stage:
+2446:             cursor.execute(
+2447:                 """
+2448:                 UPDATE operator_completion_log
+2449:                 SET new_stage = %s
+2450:                 WHERE id = %s
+2451:                 """,
+2452:                 (effective_stage, operator_completion_log_id),
+2453:             )
+2454: 
+2455:         if outcome_keys_present and (pending_qty > 0 or hold_qty > 0):
+2456:             # Revert old process — mark it back as not completed.
+2457:             cursor.execute(
+2458:                 """
+2459:                 UPDATE job_card_process_days
+2460:                 SET out_time = NULL,
+2461:                     is_completed = 0,
+2462:                     end_date = NULL,
+2463:                     actual_days = NULL
+2464:                 WHERE id = %s
+2465:                 """,
+2466:                 (old_process["id"],),
+2467:             )
+2468:             # Revert next process in_time if it was set.
+2469:             if not is_terminal_c_completion and new_process:
+2470:                 cursor.execute(
+2471:                     """
+2472:                     UPDATE job_card_process_days
+2473:                     SET in_time = NULL,
+2474:                         is_completed = 0
+2475:                     WHERE id = %s
+2476:                     """,
+2477:                     (new_process["id"],),
+2478:                 )
+2479: 
+2480:         cursor.execute("""
+2481:             SELECT
+2482:                 COUNT(*) AS total_items,
+2483:                 SUM(
+2484:                     CASE
+2485:                         WHEN LOWER(TRIM(wip_status)) IN ('completed', 'store')
+2486:                         THEN 1 ELSE 0
+2487:                     END
+2488:                 ) AS completed_items,
+2489:                 SUM(
+2490:                     CASE
+2491:                         WHEN COALESCE(pending_qty, 0) > 0
+2492:                           OR COALESCE(hold_qty, 0) > 0
+2493:                         THEN 1 ELSE 0
+2494:                     END
+2495:                 ) AS partial_items
+2496:             FROM job_card_items
+2497:             WHERE job_card_no = %s
+2498:         """, (job_card_no,))
+2499:         status_row = cursor.fetchone()
+2500: 
+2501:         total = int(status_row["total_items"] or 0)
+2502:         completed = int(status_row["completed_items"] or 0)
+2503:         partial = int(status_row["partial_items"] or 0)
+2504: 
+2505:         if total > 0 and total == completed:
+2506:             new_final_status = 'Completed'
+2507:         elif partial > 0:
+2508:             new_final_status = 'Partial'
+2509:         else:
+2510:             new_final_status = 'Pending'
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+
+===== AROUND LINE 2529 =====
+2494:                     END
+2495:                 ) AS partial_items
+2496:             FROM job_card_items
+2497:             WHERE job_card_no = %s
+2498:         """, (job_card_no,))
+2499:         status_row = cursor.fetchone()
+2500: 
+2501:         total = int(status_row["total_items"] or 0)
+2502:         completed = int(status_row["completed_items"] or 0)
+2503:         partial = int(status_row["partial_items"] or 0)
+2504: 
+2505:         if total > 0 and total == completed:
+2506:             new_final_status = 'Completed'
+2507:         elif partial > 0:
+2508:             new_final_status = 'Partial'
+2509:         else:
+2510:             new_final_status = 'Pending'
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+2572:                     cycle_minutes=oee_payload.get("cycle_minutes"),
+2573:                     cycle_seconds=oee_payload.get("cycle_seconds"),
+2574:                     load_unload_minutes=oee_payload.get(
+2575:                         "load_unload_minutes"
+2576:                     ),
+2577:                     load_unload_seconds=oee_payload.get(
+2578:                         "load_unload_seconds"
+2579:                     ),
+2580:                     ok_qty=submitted_ok,
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+
+===== AROUND LINE 2532 =====
+2497:             WHERE job_card_no = %s
+2498:         """, (job_card_no,))
+2499:         status_row = cursor.fetchone()
+2500: 
+2501:         total = int(status_row["total_items"] or 0)
+2502:         completed = int(status_row["completed_items"] or 0)
+2503:         partial = int(status_row["partial_items"] or 0)
+2504: 
+2505:         if total > 0 and total == completed:
+2506:             new_final_status = 'Completed'
+2507:         elif partial > 0:
+2508:             new_final_status = 'Partial'
+2509:         else:
+2510:             new_final_status = 'Pending'
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+2572:                     cycle_minutes=oee_payload.get("cycle_minutes"),
+2573:                     cycle_seconds=oee_payload.get("cycle_seconds"),
+2574:                     load_unload_minutes=oee_payload.get(
+2575:                         "load_unload_minutes"
+2576:                     ),
+2577:                     load_unload_seconds=oee_payload.get(
+2578:                         "load_unload_seconds"
+2579:                     ),
+2580:                     ok_qty=submitted_ok,
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+2649: 
+2650:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+2651:             return jsonify({
+
+===== AROUND LINE 2540 =====
+2505:         if total > 0 and total == completed:
+2506:             new_final_status = 'Completed'
+2507:         elif partial > 0:
+2508:             new_final_status = 'Partial'
+2509:         else:
+2510:             new_final_status = 'Pending'
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+2572:                     cycle_minutes=oee_payload.get("cycle_minutes"),
+2573:                     cycle_seconds=oee_payload.get("cycle_seconds"),
+2574:                     load_unload_minutes=oee_payload.get(
+2575:                         "load_unload_minutes"
+2576:                     ),
+2577:                     load_unload_seconds=oee_payload.get(
+2578:                         "load_unload_seconds"
+2579:                     ),
+2580:                     ok_qty=submitted_ok,
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+2649: 
+2650:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+2651:             return jsonify({
+2652:                 "success": False,
+2653:                 "error": "Admin or Supervisor access is required."
+2654:             }), 403
+2655: 
+2656:         data = request.json or {}
+2657: 
+2658:         job_card_no = str(
+2659:             data.get("job_card_no") or ""
+
+===== AROUND LINE 2546 =====
+2511: 
+2512:         cursor.execute("""
+2513:             UPDATE job_cards
+2514:             SET final_status = %s
+2515:             WHERE job_card_no = %s
+2516:         """, (new_final_status, job_card_no,))
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+2572:                     cycle_minutes=oee_payload.get("cycle_minutes"),
+2573:                     cycle_seconds=oee_payload.get("cycle_seconds"),
+2574:                     load_unload_minutes=oee_payload.get(
+2575:                         "load_unload_minutes"
+2576:                     ),
+2577:                     load_unload_seconds=oee_payload.get(
+2578:                         "load_unload_seconds"
+2579:                     ),
+2580:                     ok_qty=submitted_ok,
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+2649: 
+2650:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+2651:             return jsonify({
+2652:                 "success": False,
+2653:                 "error": "Admin or Supervisor access is required."
+2654:             }), 403
+2655: 
+2656:         data = request.json or {}
+2657: 
+2658:         job_card_no = str(
+2659:             data.get("job_card_no") or ""
+2660:         ).strip()
+2661: 
+2662:         item_name = str(
+2663:             data.get("item_name") or ""
+2664:         ).strip()
+2665: 
+
+===== AROUND LINE 2552 =====
+2517: 
+2518:         cursor.execute(
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+2572:                     cycle_minutes=oee_payload.get("cycle_minutes"),
+2573:                     cycle_seconds=oee_payload.get("cycle_seconds"),
+2574:                     load_unload_minutes=oee_payload.get(
+2575:                         "load_unload_minutes"
+2576:                     ),
+2577:                     load_unload_seconds=oee_payload.get(
+2578:                         "load_unload_seconds"
+2579:                     ),
+2580:                     ok_qty=submitted_ok,
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+2649: 
+2650:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+2651:             return jsonify({
+2652:                 "success": False,
+2653:                 "error": "Admin or Supervisor access is required."
+2654:             }), 403
+2655: 
+2656:         data = request.json or {}
+2657: 
+2658:         job_card_no = str(
+2659:             data.get("job_card_no") or ""
+2660:         ).strip()
+2661: 
+2662:         item_name = str(
+2663:             data.get("item_name") or ""
+2664:         ).strip()
+2665: 
+2666:         override_reason = str(
+2667:             data.get("override_reason") or
+2668:             "User selected Continue Anyway."
+2669:         ).strip()
+2670: 
+2671:         if not job_card_no or not item_name:
+
+===== AROUND LINE 2554 =====
+2519:             """
+2520:             INSERT INTO audit_trail
+2521:             (job_card_no, item_name, old_stage, new_stage, changed_by)
+2522:             VALUES (%s, %s, %s, %s, %s)
+2523:             """,
+2524:             (job_card_no, item_name, old_stage, new_stage, changed_by),
+2525:         )
+2526: 
+2527:         completion_audit_id = cursor.lastrowid
+2528: 
+2529:         if operator_completion_log_id is not None:
+2530:             cursor.execute(
+2531:                 """
+2532:                 UPDATE operator_completion_log
+2533:                 SET completion_audit_id = %s,
+2534:                     status = 'active'
+2535:                 WHERE id = %s
+2536:                   AND operator_user_id = %s
+2537:                 """,
+2538:                 (
+2539:                     completion_audit_id,
+2540:                     operator_completion_log_id,
+2541:                     session.get("user_id"),
+2542:                 ),
+2543:             )
+2544: 
+2545:         if oee_required:
+2546:             if operator_completion_log_id is None:
+2547:                 raise RuntimeError(
+2548:                     "OEE completion link was not created."
+2549:                 )
+2550: 
+2551:             try:
+2552:                 oee_result = save_oee_entry(
+2553:                     cursor,
+2554:                     operator_completion_id=operator_completion_log_id,
+2555:                     job_card_item_id=item_row.get("job_card_item_id"),
+2556:                     process_day_id=old_process.get("id"),
+2557:                     machine=oee_machine,
+2558:                     operator_user_id=session.get("user_id"),
+2559:                     operator_name=(
+2560:                         session.get("full_name")
+2561:                         or session.get("username")
+2562:                         or changed_by
+2563:                         or "Operator"
+2564:                     ),
+2565:                     entry_date=oee_payload.get("entry_date"),
+2566:                     shift_name=oee_payload.get("shift_name"),
+2567:                     job_card_no=job_card_no,
+2568:                     item_name=item_name,
+2569:                     process_name=old_stage,
+2570:                     start_time=oee_payload.get("start_time"),
+2571:                     end_time=oee_payload.get("end_time"),
+2572:                     cycle_minutes=oee_payload.get("cycle_minutes"),
+2573:                     cycle_seconds=oee_payload.get("cycle_seconds"),
+2574:                     load_unload_minutes=oee_payload.get(
+2575:                         "load_unload_minutes"
+2576:                     ),
+2577:                     load_unload_seconds=oee_payload.get(
+2578:                         "load_unload_seconds"
+2579:                     ),
+2580:                     ok_qty=submitted_ok,
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+2649: 
+2650:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+2651:             return jsonify({
+2652:                 "success": False,
+2653:                 "error": "Admin or Supervisor access is required."
+2654:             }), 403
+2655: 
+2656:         data = request.json or {}
+2657: 
+2658:         job_card_no = str(
+2659:             data.get("job_card_no") or ""
+2660:         ).strip()
+2661: 
+2662:         item_name = str(
+2663:             data.get("item_name") or ""
+2664:         ).strip()
+2665: 
+2666:         override_reason = str(
+2667:             data.get("override_reason") or
+2668:             "User selected Continue Anyway."
+2669:         ).strip()
+2670: 
+2671:         if not job_card_no or not item_name:
+2672:             return jsonify({
+2673:                 "success": False,
+
+===== AROUND LINE 2616 =====
+2581:                     rejected_qty=submitted_rej,
+2582:                     hold_qty=submitted_hold,
+2583:                     losses=oee_resolved_losses,
+2584:                     remarks=stage_remark,
+2585:                 )
+2586:             except ValueError as oee_error:
+2587:                 conn.rollback()
+2588:                 return jsonify({
+2589:                     "success": False,
+2590:                     "error": str(oee_error),
+2591:                 }), 400
+2592: 
+2593:         conn.commit()
+2594: 
+2595:         return jsonify({
+2596:             "success": True,
+2597:             "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+2598:             "old_stage": old_stage,
+2599:             "new_stage": effective_stage,
+2600:             "stage_days": stage_days,
+2601:             "process_found": True,
+2602:             "remaining_days": new_remaining,
+2603:             "total_days": item_row.get("total_days") or 0,
+2604:             "available_qty": available_qty,
+2605:             "ok_qty": ok_qty if outcome_keys_present else actual_qty,
+2606:             "submitted_ok": submitted_ok if outcome_keys_present else actual_qty,
+2607:             "submitted_rejected": submitted_rej if outcome_keys_present else rejected_qty,
+2608:             "submitted_hold": submitted_hold if outcome_keys_present else hold_qty,
+2609:             "rejected_qty": rejected_qty,
+2610:             "hold_qty": hold_qty,
+2611:             "pending_qty": pending_qty if outcome_keys_present else 0,
+2612:             "is_partial": (pending_qty > 0 or hold_qty > 0) if outcome_keys_present else False,
+2613:             "rejection_reason": rejection_reason,
+2614:             "hold_reason": hold_reason,
+2615:             "rm_hold_reason": rm_hold_reason,
+2616:             "operator_completion_id": operator_completion_log_id,
+2617:             "oee_entry_id": (
+2618:                 oee_result.get("oee_entry_id")
+2619:                 if oee_result
+2620:                 else None
+2621:             ),
+2622:         })
+2623: 
+2624:     except Error as e:
+2625:         if conn:
+2626:             conn.rollback()
+2627:         return jsonify({"success": False, "error": str(e)}), 500
+2628:     except Exception as e:
+2629:         if conn:
+2630:             conn.rollback()
+2631:         return jsonify({"success": False, "error": str(e)}), 500
+2632:     finally:
+2633:         if cursor:
+2634:             cursor.close()
+2635:         if conn:
+2636:             conn.close()
+2637: 
+2638: 
+2639: @quality_check_bp.route(
+2640:     "/api/quality_check/child_c_gate/continue_anyway",
+2641:     methods=["POST"]
+2642: )
+2643: def continue_anyway_child_c_gate():
+2644:     conn = None
+2645:     cursor = None
+2646: 
+2647:     try:
+2648:         role = (session.get("role") or "").strip().lower()
+2649: 
+2650:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+2651:             return jsonify({
+2652:                 "success": False,
+2653:                 "error": "Admin or Supervisor access is required."
+2654:             }), 403
+2655: 
+2656:         data = request.json or {}
+2657: 
+2658:         job_card_no = str(
+2659:             data.get("job_card_no") or ""
+2660:         ).strip()
+2661: 
+2662:         item_name = str(
+2663:             data.get("item_name") or ""
+2664:         ).strip()
+2665: 
+2666:         override_reason = str(
+2667:             data.get("override_reason") or
+2668:             "User selected Continue Anyway."
+2669:         ).strip()
+2670: 
+2671:         if not job_card_no or not item_name:
+2672:             return jsonify({
+2673:                 "success": False,
+2674:                 "error": "Job Card number and item name are required."
+2675:             }), 400
+2676: 
+2677:         conn = get_connection()
+2678:         cursor = conn.cursor(dictionary=True)
+2679: 
+2680:         actual_job_card_no = _resolve_job_card_no(
+2681:             cursor,
+2682:             job_card_no
+2683:         )
+2684: 
+2685:         if not actual_job_card_no:
+2686:             return jsonify({
+2687:                 "success": False,
+2688:                 "error": f"Job Card not found: {job_card_no}"
+2689:             }), 404
+2690: 
+2691:         cursor.execute("""
+2692:             SELECT id
+2693:             FROM job_card_items
+2694:             WHERE job_card_no = %s
+2695:               AND TRIM(item_name) = TRIM(%s)
+2696:             LIMIT 1
+2697:         """, (
+2698:             actual_job_card_no,
+2699:             item_name,
+2700:         ))
+2701: 
+2702:         if not cursor.fetchone():
+2703:             return jsonify({
+2704:                 "success": False,
+2705:                 "error": "The selected item was not found in this Job Card."
+2706:             }), 404
+2707: 
+2708:         pending_rows = _get_pending_c_child_gate_rows(
+2709:             cursor,
+2710:             actual_job_card_no,
+2711:             item_name
+2712:         )
+2713: 
+2714:         if not pending_rows:
+2715:             return jsonify({
+2716:                 "success": False,
+2717:                 "status": "CHILD_C_GATE_NOT_BLOCKED",
+2718:                 "error": (
+2719:                     "This Job Card item is not currently blocked "
+2720:                     "by a child -C gate."
+2721:                 )
+2722:             }), 400
+2723: 
+2724:         _ensure_child_c_gate_override_table(cursor)
+2725: 
+2726:         item_name_norm = " ".join(
+2727:             item_name.lower().split()
+2728:         )
+2729: 
+2730:         overridden_by = (
+2731:             session.get("username")
+2732:             or session.get("full_name")
+2733:             or "System"
+2734:         )
+2735: 
+
+===== AROUND LINE 2799 =====
+2764:             overridden_by,
+2765:             overridden_user_id,
+2766:         ))
+2767: 
+2768:         conn.commit()
+2769: 
+2770:         return jsonify({
+2771:             "success": True,
+2772:             "status": "CHILD_C_GATE_OVERRIDE_SAVED",
+2773:             "message": (
+2774:                 "Continue Anyway approval was saved for this "
+2775:                 "Job Card item."
+2776:             ),
+2777:             "job_card_no": actual_job_card_no,
+2778:             "item_name": item_name,
+2779:             "blocking_count": len(pending_rows)
+2780:         })
+2781: 
+2782:     except Exception as e:
+2783:         if conn:
+2784:             conn.rollback()
+2785: 
+2786:         return jsonify({
+2787:             "success": False,
+2788:             "error": str(e)
+2789:         }), 500
+2790: 
+2791:     finally:
+2792:         if cursor:
+2793:             cursor.close()
+2794: 
+2795:         if conn:
+2796:             conn.close()
+2797: 
+2798: 
+2799: @quality_check_bp.route("/api/wip/update", methods=["POST"])
+2800: def update_wip():
+2801:     return _update_wip_from_saved_timeline()
+2802: 
+2803: 
+2804: @quality_check_bp.route(
+2805:     "/api/operator/recent_completions",
+2806:     methods=["GET"]
+2807: )
+2808: def operator_recent_completions():
+2809:     """
+2810:     Database-backed recent completions for the logged-in Operator only.
+2811:     """
+2812:     conn = None
+2813:     cursor = None
+2814: 
+2815:     try:
+2816:         role = (session.get("role") or "").strip().lower()
+2817:         operator_user_id = session.get("user_id")
+2818: 
+2819:         if role != "operator":
+2820:             return jsonify({
+2821:                 "success": False,
+2822:                 "error": "Operator access required."
+2823:             }), 403
+2824: 
+2825:         if not operator_user_id:
+2826:             return jsonify({
+2827:                 "success": False,
+2828:                 "error": "Operator session is missing the user ID."
+2829:             }), 403
+2830: 
+2831:         conn = get_connection()
+2832:         cursor = conn.cursor(dictionary=True)
+2833: 
+2834:         _ensure_operator_completion_log_table(cursor)
+2835:         conn.commit()
+2836: 
+2837:         cursor.execute(
+2838:             """
+2839:             SELECT
+2840:                 ocl.id,
+2841:                 ocl.job_card_no,
+2842:                 ocl.item_name,
+2843:                 ocl.old_stage AS completed_process,
+2844:                 ocl.new_stage AS moved_to,
+2845:                 COALESCE(ji.actual_qty, ocl.submitted_ok_qty) AS ok_qty,
+2846:                 COALESCE(ji.rejected_qty, ocl.submitted_rejected_qty) AS rejected_qty,
+2847:                 COALESCE(ji.hold_qty, ocl.submitted_hold_qty) AS hold_qty,
+2848:                 ocl.submitted_rejection_reason AS rejection_reason,
+2849:                 ocl.submitted_hold_reason AS hold_reason,
+2850:                 ocl.submitted_stage_remark AS stage_remark,
+2851:                 ocl.completed_at
+2852:             FROM operator_completion_log ocl
+2853:             LEFT JOIN job_card_items ji
+2854:               ON (ji.job_card_no COLLATE utf8mb4_unicode_ci) = (ocl.job_card_no COLLATE utf8mb4_unicode_ci)
+2855:               AND (TRIM(ji.item_name) COLLATE utf8mb4_unicode_ci) = (TRIM(ocl.item_name) COLLATE utf8mb4_unicode_ci)
+2856:             WHERE ocl.operator_user_id = %s
+2857:               AND ocl.status = 'active'
+2858:               AND ocl.old_stage != ocl.new_stage
+2859:             ORDER BY ocl.id DESC
+2860:             LIMIT 10
+2861:             """,
+2862:             (operator_user_id,),
+2863:         )
+2864: 
+2865:         rows = cursor.fetchall()
+2866: 
+2867:         for row in rows:
+2868:             row["can_undo"] = True
+2869:             row["undo_validation"] = "server_checked"
+2870: 
+2871:             if (
+2872:                 row.get("completed_at")
+2873:                 and hasattr(row["completed_at"], "strftime")
+2874:             ):
+2875:                 row["completed_at"] = row[
+2876:                     "completed_at"
+2877:                 ].strftime("%Y-%m-%d %H:%M:%S")
+2878: 
+2879:         return jsonify({
+2880:             "success": True,
+2881:             "completed_job_cards": rows,
+2882:             "completions": rows,
+2883:             "total": len(rows),
+2884:         })
+2885: 
+2886:     except Exception as error:
+2887:         return jsonify({
+2888:             "success": False,
+2889:             "error": str(error),
+2890:         }), 500
+2891: 
+2892:     finally:
+2893:         if cursor:
+2894:             cursor.close()
+2895: 
+2896:         if conn:
+2897:             conn.close()
+2898: 
+2899: 
+2900: @quality_check_bp.route(
+2901:     "/api/operator/undo_completion",
+2902:     methods=["POST"]
+2903: )
+2904: def operator_undo_completion():
+2905:     """
+2906:     Reverses only the logged-in Operator's latest valid completion.
+2907: 
+2908:     It does not use or modify the Admin/Supervisor rollback route.
+2909:     """
+2910:     conn = None
+2911:     cursor = None
+2912: 
+2913:     try:
+2914:         role = (session.get("role") or "").strip().lower()
+2915:         operator_user_id = session.get("user_id")
+2916:         operator_name = (
+2917:             session.get("full_name")
+2918:             or session.get("username")
+
+===== AROUND LINE 2834 =====
+2799: @quality_check_bp.route("/api/wip/update", methods=["POST"])
+2800: def update_wip():
+2801:     return _update_wip_from_saved_timeline()
+2802: 
+2803: 
+2804: @quality_check_bp.route(
+2805:     "/api/operator/recent_completions",
+2806:     methods=["GET"]
+2807: )
+2808: def operator_recent_completions():
+2809:     """
+2810:     Database-backed recent completions for the logged-in Operator only.
+2811:     """
+2812:     conn = None
+2813:     cursor = None
+2814: 
+2815:     try:
+2816:         role = (session.get("role") or "").strip().lower()
+2817:         operator_user_id = session.get("user_id")
+2818: 
+2819:         if role != "operator":
+2820:             return jsonify({
+2821:                 "success": False,
+2822:                 "error": "Operator access required."
+2823:             }), 403
+2824: 
+2825:         if not operator_user_id:
+2826:             return jsonify({
+2827:                 "success": False,
+2828:                 "error": "Operator session is missing the user ID."
+2829:             }), 403
+2830: 
+2831:         conn = get_connection()
+2832:         cursor = conn.cursor(dictionary=True)
+2833: 
+2834:         _ensure_operator_completion_log_table(cursor)
+2835:         conn.commit()
+2836: 
+2837:         cursor.execute(
+2838:             """
+2839:             SELECT
+2840:                 ocl.id,
+2841:                 ocl.job_card_no,
+2842:                 ocl.item_name,
+2843:                 ocl.old_stage AS completed_process,
+2844:                 ocl.new_stage AS moved_to,
+2845:                 COALESCE(ji.actual_qty, ocl.submitted_ok_qty) AS ok_qty,
+2846:                 COALESCE(ji.rejected_qty, ocl.submitted_rejected_qty) AS rejected_qty,
+2847:                 COALESCE(ji.hold_qty, ocl.submitted_hold_qty) AS hold_qty,
+2848:                 ocl.submitted_rejection_reason AS rejection_reason,
+2849:                 ocl.submitted_hold_reason AS hold_reason,
+2850:                 ocl.submitted_stage_remark AS stage_remark,
+2851:                 ocl.completed_at
+2852:             FROM operator_completion_log ocl
+2853:             LEFT JOIN job_card_items ji
+2854:               ON (ji.job_card_no COLLATE utf8mb4_unicode_ci) = (ocl.job_card_no COLLATE utf8mb4_unicode_ci)
+2855:               AND (TRIM(ji.item_name) COLLATE utf8mb4_unicode_ci) = (TRIM(ocl.item_name) COLLATE utf8mb4_unicode_ci)
+2856:             WHERE ocl.operator_user_id = %s
+2857:               AND ocl.status = 'active'
+2858:               AND ocl.old_stage != ocl.new_stage
+2859:             ORDER BY ocl.id DESC
+2860:             LIMIT 10
+2861:             """,
+2862:             (operator_user_id,),
+2863:         )
+2864: 
+2865:         rows = cursor.fetchall()
+2866: 
+2867:         for row in rows:
+2868:             row["can_undo"] = True
+2869:             row["undo_validation"] = "server_checked"
+2870: 
+2871:             if (
+2872:                 row.get("completed_at")
+2873:                 and hasattr(row["completed_at"], "strftime")
+2874:             ):
+2875:                 row["completed_at"] = row[
+2876:                     "completed_at"
+2877:                 ].strftime("%Y-%m-%d %H:%M:%S")
+2878: 
+2879:         return jsonify({
+2880:             "success": True,
+2881:             "completed_job_cards": rows,
+2882:             "completions": rows,
+2883:             "total": len(rows),
+2884:         })
+2885: 
+2886:     except Exception as error:
+2887:         return jsonify({
+2888:             "success": False,
+2889:             "error": str(error),
+2890:         }), 500
+2891: 
+2892:     finally:
+2893:         if cursor:
+2894:             cursor.close()
+2895: 
+2896:         if conn:
+2897:             conn.close()
+2898: 
+2899: 
+2900: @quality_check_bp.route(
+2901:     "/api/operator/undo_completion",
+2902:     methods=["POST"]
+2903: )
+2904: def operator_undo_completion():
+2905:     """
+2906:     Reverses only the logged-in Operator's latest valid completion.
+2907: 
+2908:     It does not use or modify the Admin/Supervisor rollback route.
+2909:     """
+2910:     conn = None
+2911:     cursor = None
+2912: 
+2913:     try:
+2914:         role = (session.get("role") or "").strip().lower()
+2915:         operator_user_id = session.get("user_id")
+2916:         operator_name = (
+2917:             session.get("full_name")
+2918:             or session.get("username")
+2919:             or "Operator"
+2920:         )
+2921: 
+2922:         if role != "operator":
+2923:             return jsonify({
+2924:                 "success": False,
+2925:                 "error": "Operator access required."
+2926:             }), 403
+2927: 
+2928:         if not operator_user_id:
+2929:             return jsonify({
+2930:                 "success": False,
+2931:                 "error": "Operator session is missing the user ID."
+2932:             }), 403
+2933: 
+2934:         data = request.json or {}
+2935: 
+2936:         try:
+2937:             completion_id = int(data.get("completion_id"))
+2938:         except (TypeError, ValueError):
+2939:             return jsonify({
+2940:                 "success": False,
+2941:                 "error": "A valid completion ID is required."
+2942:             }), 400
+2943: 
+2944:         undo_reason = (
+2945:             data.get("undo_reason")
+2946:             or ""
+2947:         ).strip()
+2948: 
+2949:         if not undo_reason:
+2950:             return jsonify({
+2951:                 "success": False,
+2952:                 "error": "Undo reason is required."
+2953:             }), 400
+
+===== AROUND LINE 2852 =====
+2817:         operator_user_id = session.get("user_id")
+2818: 
+2819:         if role != "operator":
+2820:             return jsonify({
+2821:                 "success": False,
+2822:                 "error": "Operator access required."
+2823:             }), 403
+2824: 
+2825:         if not operator_user_id:
+2826:             return jsonify({
+2827:                 "success": False,
+2828:                 "error": "Operator session is missing the user ID."
+2829:             }), 403
+2830: 
+2831:         conn = get_connection()
+2832:         cursor = conn.cursor(dictionary=True)
+2833: 
+2834:         _ensure_operator_completion_log_table(cursor)
+2835:         conn.commit()
+2836: 
+2837:         cursor.execute(
+2838:             """
+2839:             SELECT
+2840:                 ocl.id,
+2841:                 ocl.job_card_no,
+2842:                 ocl.item_name,
+2843:                 ocl.old_stage AS completed_process,
+2844:                 ocl.new_stage AS moved_to,
+2845:                 COALESCE(ji.actual_qty, ocl.submitted_ok_qty) AS ok_qty,
+2846:                 COALESCE(ji.rejected_qty, ocl.submitted_rejected_qty) AS rejected_qty,
+2847:                 COALESCE(ji.hold_qty, ocl.submitted_hold_qty) AS hold_qty,
+2848:                 ocl.submitted_rejection_reason AS rejection_reason,
+2849:                 ocl.submitted_hold_reason AS hold_reason,
+2850:                 ocl.submitted_stage_remark AS stage_remark,
+2851:                 ocl.completed_at
+2852:             FROM operator_completion_log ocl
+2853:             LEFT JOIN job_card_items ji
+2854:               ON (ji.job_card_no COLLATE utf8mb4_unicode_ci) = (ocl.job_card_no COLLATE utf8mb4_unicode_ci)
+2855:               AND (TRIM(ji.item_name) COLLATE utf8mb4_unicode_ci) = (TRIM(ocl.item_name) COLLATE utf8mb4_unicode_ci)
+2856:             WHERE ocl.operator_user_id = %s
+2857:               AND ocl.status = 'active'
+2858:               AND ocl.old_stage != ocl.new_stage
+2859:             ORDER BY ocl.id DESC
+2860:             LIMIT 10
+2861:             """,
+2862:             (operator_user_id,),
+2863:         )
+2864: 
+2865:         rows = cursor.fetchall()
+2866: 
+2867:         for row in rows:
+2868:             row["can_undo"] = True
+2869:             row["undo_validation"] = "server_checked"
+2870: 
+2871:             if (
+2872:                 row.get("completed_at")
+2873:                 and hasattr(row["completed_at"], "strftime")
+2874:             ):
+2875:                 row["completed_at"] = row[
+2876:                     "completed_at"
+2877:                 ].strftime("%Y-%m-%d %H:%M:%S")
+2878: 
+2879:         return jsonify({
+2880:             "success": True,
+2881:             "completed_job_cards": rows,
+2882:             "completions": rows,
+2883:             "total": len(rows),
+2884:         })
+2885: 
+2886:     except Exception as error:
+2887:         return jsonify({
+2888:             "success": False,
+2889:             "error": str(error),
+2890:         }), 500
+2891: 
+2892:     finally:
+2893:         if cursor:
+2894:             cursor.close()
+2895: 
+2896:         if conn:
+2897:             conn.close()
+2898: 
+2899: 
+2900: @quality_check_bp.route(
+2901:     "/api/operator/undo_completion",
+2902:     methods=["POST"]
+2903: )
+2904: def operator_undo_completion():
+2905:     """
+2906:     Reverses only the logged-in Operator's latest valid completion.
+2907: 
+2908:     It does not use or modify the Admin/Supervisor rollback route.
+2909:     """
+2910:     conn = None
+2911:     cursor = None
+2912: 
+2913:     try:
+2914:         role = (session.get("role") or "").strip().lower()
+2915:         operator_user_id = session.get("user_id")
+2916:         operator_name = (
+2917:             session.get("full_name")
+2918:             or session.get("username")
+2919:             or "Operator"
+2920:         )
+2921: 
+2922:         if role != "operator":
+2923:             return jsonify({
+2924:                 "success": False,
+2925:                 "error": "Operator access required."
+2926:             }), 403
+2927: 
+2928:         if not operator_user_id:
+2929:             return jsonify({
+2930:                 "success": False,
+2931:                 "error": "Operator session is missing the user ID."
+2932:             }), 403
+2933: 
+2934:         data = request.json or {}
+2935: 
+2936:         try:
+2937:             completion_id = int(data.get("completion_id"))
+2938:         except (TypeError, ValueError):
+2939:             return jsonify({
+2940:                 "success": False,
+2941:                 "error": "A valid completion ID is required."
+2942:             }), 400
+2943: 
+2944:         undo_reason = (
+2945:             data.get("undo_reason")
+2946:             or ""
+2947:         ).strip()
+2948: 
+2949:         if not undo_reason:
+2950:             return jsonify({
+2951:                 "success": False,
+2952:                 "error": "Undo reason is required."
+2953:             }), 400
+2954: 
+2955:         conn = get_connection()
+2956:         cursor = conn.cursor(dictionary=True)
+2957: 
+2958:         _ensure_operator_completion_log_table(cursor)
+2959:         conn.commit()
+2960:         conn.start_transaction()
+2961: 
+2962:         # Undo is validated per job card and item.
+2963:         # A later completion on another job card does not block this Undo.
+2964:         cursor.execute(
+2965:             """
+2966:             SELECT *
+2967:             FROM operator_completion_log
+2968:             WHERE id = %s
+2969:               AND operator_user_id = %s
+2970:               AND status = 'active'
+2971:             LIMIT 1
+
+===== AROUND LINE 2901 =====
+2866: 
+2867:         for row in rows:
+2868:             row["can_undo"] = True
+2869:             row["undo_validation"] = "server_checked"
+2870: 
+2871:             if (
+2872:                 row.get("completed_at")
+2873:                 and hasattr(row["completed_at"], "strftime")
+2874:             ):
+2875:                 row["completed_at"] = row[
+2876:                     "completed_at"
+2877:                 ].strftime("%Y-%m-%d %H:%M:%S")
+2878: 
+2879:         return jsonify({
+2880:             "success": True,
+2881:             "completed_job_cards": rows,
+2882:             "completions": rows,
+2883:             "total": len(rows),
+2884:         })
+2885: 
+2886:     except Exception as error:
+2887:         return jsonify({
+2888:             "success": False,
+2889:             "error": str(error),
+2890:         }), 500
+2891: 
+2892:     finally:
+2893:         if cursor:
+2894:             cursor.close()
+2895: 
+2896:         if conn:
+2897:             conn.close()
+2898: 
+2899: 
+2900: @quality_check_bp.route(
+2901:     "/api/operator/undo_completion",
+2902:     methods=["POST"]
+2903: )
+2904: def operator_undo_completion():
+2905:     """
+2906:     Reverses only the logged-in Operator's latest valid completion.
+2907: 
+2908:     It does not use or modify the Admin/Supervisor rollback route.
+2909:     """
+2910:     conn = None
+2911:     cursor = None
+2912: 
+2913:     try:
+2914:         role = (session.get("role") or "").strip().lower()
+2915:         operator_user_id = session.get("user_id")
+2916:         operator_name = (
+2917:             session.get("full_name")
+2918:             or session.get("username")
+2919:             or "Operator"
+2920:         )
+2921: 
+2922:         if role != "operator":
+2923:             return jsonify({
+2924:                 "success": False,
+2925:                 "error": "Operator access required."
+2926:             }), 403
+2927: 
+2928:         if not operator_user_id:
+2929:             return jsonify({
+2930:                 "success": False,
+2931:                 "error": "Operator session is missing the user ID."
+2932:             }), 403
+2933: 
+2934:         data = request.json or {}
+2935: 
+2936:         try:
+2937:             completion_id = int(data.get("completion_id"))
+2938:         except (TypeError, ValueError):
+2939:             return jsonify({
+2940:                 "success": False,
+2941:                 "error": "A valid completion ID is required."
+2942:             }), 400
+2943: 
+2944:         undo_reason = (
+2945:             data.get("undo_reason")
+2946:             or ""
+2947:         ).strip()
+2948: 
+2949:         if not undo_reason:
+2950:             return jsonify({
+2951:                 "success": False,
+2952:                 "error": "Undo reason is required."
+2953:             }), 400
+2954: 
+2955:         conn = get_connection()
+2956:         cursor = conn.cursor(dictionary=True)
+2957: 
+2958:         _ensure_operator_completion_log_table(cursor)
+2959:         conn.commit()
+2960:         conn.start_transaction()
+2961: 
+2962:         # Undo is validated per job card and item.
+2963:         # A later completion on another job card does not block this Undo.
+2964:         cursor.execute(
+2965:             """
+2966:             SELECT *
+2967:             FROM operator_completion_log
+2968:             WHERE id = %s
+2969:               AND operator_user_id = %s
+2970:               AND status = 'active'
+2971:             LIMIT 1
+2972:             FOR UPDATE
+2973:             """,
+2974:             (
+2975:                 completion_id,
+2976:                 operator_user_id,
+2977:             ),
+2978:         )
+2979: 
+2980:         log_row = cursor.fetchone()
+2981: 
+2982:         if not log_row:
+2983:             conn.rollback()
+2984: 
+2985:             return jsonify({
+2986:                 "success": False,
+2987:                 "error": (
+2988:                     "This completion is no longer available "
+2989:                     "for Undo."
+2990:                 )
+2991:             }), 404
+2992: 
+2993:         job_card_no = log_row["job_card_no"]
+2994:         item_name = log_row["item_name"]
+2995:         old_stage = log_row["old_stage"]
+2996:         new_stage = log_row["new_stage"]
+2997: 
+2998:         cursor.execute(
+2999:             """
+3000:             SELECT 1
+3001:             FROM supervisor_process_access
+3002:             WHERE user_id = %s
+3003:               AND LOWER(TRIM(process_name))
+3004:                   = LOWER(TRIM(%s))
+3005:             LIMIT 1
+3006:             """,
+3007:             (
+3008:                 operator_user_id,
+3009:                 old_stage,
+3010:             ),
+3011:         )
+3012: 
+3013:         if not cursor.fetchone():
+3014:             conn.rollback()
+3015: 
+3016:             return jsonify({
+3017:                 "success": False,
+3018:                 "error": (
+3019:                     "You are no longer assigned to the "
+3020:                     f"process '{old_stage}'."
+
+===== AROUND LINE 2904 =====
+2869:             row["undo_validation"] = "server_checked"
+2870: 
+2871:             if (
+2872:                 row.get("completed_at")
+2873:                 and hasattr(row["completed_at"], "strftime")
+2874:             ):
+2875:                 row["completed_at"] = row[
+2876:                     "completed_at"
+2877:                 ].strftime("%Y-%m-%d %H:%M:%S")
+2878: 
+2879:         return jsonify({
+2880:             "success": True,
+2881:             "completed_job_cards": rows,
+2882:             "completions": rows,
+2883:             "total": len(rows),
+2884:         })
+2885: 
+2886:     except Exception as error:
+2887:         return jsonify({
+2888:             "success": False,
+2889:             "error": str(error),
+2890:         }), 500
+2891: 
+2892:     finally:
+2893:         if cursor:
+2894:             cursor.close()
+2895: 
+2896:         if conn:
+2897:             conn.close()
+2898: 
+2899: 
+2900: @quality_check_bp.route(
+2901:     "/api/operator/undo_completion",
+2902:     methods=["POST"]
+2903: )
+2904: def operator_undo_completion():
+2905:     """
+2906:     Reverses only the logged-in Operator's latest valid completion.
+2907: 
+2908:     It does not use or modify the Admin/Supervisor rollback route.
+2909:     """
+2910:     conn = None
+2911:     cursor = None
+2912: 
+2913:     try:
+2914:         role = (session.get("role") or "").strip().lower()
+2915:         operator_user_id = session.get("user_id")
+2916:         operator_name = (
+2917:             session.get("full_name")
+2918:             or session.get("username")
+2919:             or "Operator"
+2920:         )
+2921: 
+2922:         if role != "operator":
+2923:             return jsonify({
+2924:                 "success": False,
+2925:                 "error": "Operator access required."
+2926:             }), 403
+2927: 
+2928:         if not operator_user_id:
+2929:             return jsonify({
+2930:                 "success": False,
+2931:                 "error": "Operator session is missing the user ID."
+2932:             }), 403
+2933: 
+2934:         data = request.json or {}
+2935: 
+2936:         try:
+2937:             completion_id = int(data.get("completion_id"))
+2938:         except (TypeError, ValueError):
+2939:             return jsonify({
+2940:                 "success": False,
+2941:                 "error": "A valid completion ID is required."
+2942:             }), 400
+2943: 
+2944:         undo_reason = (
+2945:             data.get("undo_reason")
+2946:             or ""
+2947:         ).strip()
+2948: 
+2949:         if not undo_reason:
+2950:             return jsonify({
+2951:                 "success": False,
+2952:                 "error": "Undo reason is required."
+2953:             }), 400
+2954: 
+2955:         conn = get_connection()
+2956:         cursor = conn.cursor(dictionary=True)
+2957: 
+2958:         _ensure_operator_completion_log_table(cursor)
+2959:         conn.commit()
+2960:         conn.start_transaction()
+2961: 
+2962:         # Undo is validated per job card and item.
+2963:         # A later completion on another job card does not block this Undo.
+2964:         cursor.execute(
+2965:             """
+2966:             SELECT *
+2967:             FROM operator_completion_log
+2968:             WHERE id = %s
+2969:               AND operator_user_id = %s
+2970:               AND status = 'active'
+2971:             LIMIT 1
+2972:             FOR UPDATE
+2973:             """,
+2974:             (
+2975:                 completion_id,
+2976:                 operator_user_id,
+2977:             ),
+2978:         )
+2979: 
+2980:         log_row = cursor.fetchone()
+2981: 
+2982:         if not log_row:
+2983:             conn.rollback()
+2984: 
+2985:             return jsonify({
+2986:                 "success": False,
+2987:                 "error": (
+2988:                     "This completion is no longer available "
+2989:                     "for Undo."
+2990:                 )
+2991:             }), 404
+2992: 
+2993:         job_card_no = log_row["job_card_no"]
+2994:         item_name = log_row["item_name"]
+2995:         old_stage = log_row["old_stage"]
+2996:         new_stage = log_row["new_stage"]
+2997: 
+2998:         cursor.execute(
+2999:             """
+3000:             SELECT 1
+3001:             FROM supervisor_process_access
+3002:             WHERE user_id = %s
+3003:               AND LOWER(TRIM(process_name))
+3004:                   = LOWER(TRIM(%s))
+3005:             LIMIT 1
+3006:             """,
+3007:             (
+3008:                 operator_user_id,
+3009:                 old_stage,
+3010:             ),
+3011:         )
+3012: 
+3013:         if not cursor.fetchone():
+3014:             conn.rollback()
+3015: 
+3016:             return jsonify({
+3017:                 "success": False,
+3018:                 "error": (
+3019:                     "You are no longer assigned to the "
+3020:                     f"process '{old_stage}'."
+3021:                 )
+3022:             }), 403
+3023: 
+
+===== AROUND LINE 2958 =====
+2923:             return jsonify({
+2924:                 "success": False,
+2925:                 "error": "Operator access required."
+2926:             }), 403
+2927: 
+2928:         if not operator_user_id:
+2929:             return jsonify({
+2930:                 "success": False,
+2931:                 "error": "Operator session is missing the user ID."
+2932:             }), 403
+2933: 
+2934:         data = request.json or {}
+2935: 
+2936:         try:
+2937:             completion_id = int(data.get("completion_id"))
+2938:         except (TypeError, ValueError):
+2939:             return jsonify({
+2940:                 "success": False,
+2941:                 "error": "A valid completion ID is required."
+2942:             }), 400
+2943: 
+2944:         undo_reason = (
+2945:             data.get("undo_reason")
+2946:             or ""
+2947:         ).strip()
+2948: 
+2949:         if not undo_reason:
+2950:             return jsonify({
+2951:                 "success": False,
+2952:                 "error": "Undo reason is required."
+2953:             }), 400
+2954: 
+2955:         conn = get_connection()
+2956:         cursor = conn.cursor(dictionary=True)
+2957: 
+2958:         _ensure_operator_completion_log_table(cursor)
+2959:         conn.commit()
+2960:         conn.start_transaction()
+2961: 
+2962:         # Undo is validated per job card and item.
+2963:         # A later completion on another job card does not block this Undo.
+2964:         cursor.execute(
+2965:             """
+2966:             SELECT *
+2967:             FROM operator_completion_log
+2968:             WHERE id = %s
+2969:               AND operator_user_id = %s
+2970:               AND status = 'active'
+2971:             LIMIT 1
+2972:             FOR UPDATE
+2973:             """,
+2974:             (
+2975:                 completion_id,
+2976:                 operator_user_id,
+2977:             ),
+2978:         )
+2979: 
+2980:         log_row = cursor.fetchone()
+2981: 
+2982:         if not log_row:
+2983:             conn.rollback()
+2984: 
+2985:             return jsonify({
+2986:                 "success": False,
+2987:                 "error": (
+2988:                     "This completion is no longer available "
+2989:                     "for Undo."
+2990:                 )
+2991:             }), 404
+2992: 
+2993:         job_card_no = log_row["job_card_no"]
+2994:         item_name = log_row["item_name"]
+2995:         old_stage = log_row["old_stage"]
+2996:         new_stage = log_row["new_stage"]
+2997: 
+2998:         cursor.execute(
+2999:             """
+3000:             SELECT 1
+3001:             FROM supervisor_process_access
+3002:             WHERE user_id = %s
+3003:               AND LOWER(TRIM(process_name))
+3004:                   = LOWER(TRIM(%s))
+3005:             LIMIT 1
+3006:             """,
+3007:             (
+3008:                 operator_user_id,
+3009:                 old_stage,
+3010:             ),
+3011:         )
+3012: 
+3013:         if not cursor.fetchone():
+3014:             conn.rollback()
+3015: 
+3016:             return jsonify({
+3017:                 "success": False,
+3018:                 "error": (
+3019:                     "You are no longer assigned to the "
+3020:                     f"process '{old_stage}'."
+3021:                 )
+3022:             }), 403
+3023: 
+3024:         cursor.execute(
+3025:             """
+3026:             SELECT
+3027:                 jci.wip_status,
+3028:                 jc.final_status,
+3029:                 jc.so_no,
+3030:                 jc.child_code
+3031:             FROM job_card_items jci
+3032:             JOIN job_cards jc
+3033:               ON jc.job_card_no = jci.job_card_no
+3034:             WHERE jci.job_card_no = %s
+3035:               AND TRIM(jci.item_name) = TRIM(%s)
+3036:             LIMIT 1
+3037:             FOR UPDATE
+3038:             """,
+3039:             (
+3040:                 job_card_no,
+3041:                 item_name,
+3042:             ),
+3043:         )
+3044: 
+3045:         current_item = cursor.fetchone()
+3046: 
+3047:         if not current_item:
+3048:             conn.rollback()
+3049: 
+3050:             return jsonify({
+3051:                 "success": False,
+3052:                 "error": "Job-card item was not found."
+3053:             }), 404
+3054: 
+3055:         if (
+3056:             str(current_item.get("wip_status") or "")
+3057:             .strip()
+3058:             .lower()
+3059:             != str(new_stage or "").strip().lower()
+3060:         ):
+3061:             conn.rollback()
+3062: 
+3063:             return jsonify({
+3064:                 "success": False,
+3065:                 "error": (
+3066:                     "Undo is blocked because the job card "
+3067:                     "has already moved again."
+3068:                 )
+3069:             }), 409
+3070: 
+3071:         cursor.execute(
+3072:             """
+3073:             SELECT id
+3074:             FROM audit_trail
+3075:             WHERE job_card_no = %s
+3076:               AND TRIM(item_name) = TRIM(%s)
+3077:             ORDER BY id DESC
+
+===== AROUND LINE 2967 =====
+2932:             }), 403
+2933: 
+2934:         data = request.json or {}
+2935: 
+2936:         try:
+2937:             completion_id = int(data.get("completion_id"))
+2938:         except (TypeError, ValueError):
+2939:             return jsonify({
+2940:                 "success": False,
+2941:                 "error": "A valid completion ID is required."
+2942:             }), 400
+2943: 
+2944:         undo_reason = (
+2945:             data.get("undo_reason")
+2946:             or ""
+2947:         ).strip()
+2948: 
+2949:         if not undo_reason:
+2950:             return jsonify({
+2951:                 "success": False,
+2952:                 "error": "Undo reason is required."
+2953:             }), 400
+2954: 
+2955:         conn = get_connection()
+2956:         cursor = conn.cursor(dictionary=True)
+2957: 
+2958:         _ensure_operator_completion_log_table(cursor)
+2959:         conn.commit()
+2960:         conn.start_transaction()
+2961: 
+2962:         # Undo is validated per job card and item.
+2963:         # A later completion on another job card does not block this Undo.
+2964:         cursor.execute(
+2965:             """
+2966:             SELECT *
+2967:             FROM operator_completion_log
+2968:             WHERE id = %s
+2969:               AND operator_user_id = %s
+2970:               AND status = 'active'
+2971:             LIMIT 1
+2972:             FOR UPDATE
+2973:             """,
+2974:             (
+2975:                 completion_id,
+2976:                 operator_user_id,
+2977:             ),
+2978:         )
+2979: 
+2980:         log_row = cursor.fetchone()
+2981: 
+2982:         if not log_row:
+2983:             conn.rollback()
+2984: 
+2985:             return jsonify({
+2986:                 "success": False,
+2987:                 "error": (
+2988:                     "This completion is no longer available "
+2989:                     "for Undo."
+2990:                 )
+2991:             }), 404
+2992: 
+2993:         job_card_no = log_row["job_card_no"]
+2994:         item_name = log_row["item_name"]
+2995:         old_stage = log_row["old_stage"]
+2996:         new_stage = log_row["new_stage"]
+2997: 
+2998:         cursor.execute(
+2999:             """
+3000:             SELECT 1
+3001:             FROM supervisor_process_access
+3002:             WHERE user_id = %s
+3003:               AND LOWER(TRIM(process_name))
+3004:                   = LOWER(TRIM(%s))
+3005:             LIMIT 1
+3006:             """,
+3007:             (
+3008:                 operator_user_id,
+3009:                 old_stage,
+3010:             ),
+3011:         )
+3012: 
+3013:         if not cursor.fetchone():
+3014:             conn.rollback()
+3015: 
+3016:             return jsonify({
+3017:                 "success": False,
+3018:                 "error": (
+3019:                     "You are no longer assigned to the "
+3020:                     f"process '{old_stage}'."
+3021:                 )
+3022:             }), 403
+3023: 
+3024:         cursor.execute(
+3025:             """
+3026:             SELECT
+3027:                 jci.wip_status,
+3028:                 jc.final_status,
+3029:                 jc.so_no,
+3030:                 jc.child_code
+3031:             FROM job_card_items jci
+3032:             JOIN job_cards jc
+3033:               ON jc.job_card_no = jci.job_card_no
+3034:             WHERE jci.job_card_no = %s
+3035:               AND TRIM(jci.item_name) = TRIM(%s)
+3036:             LIMIT 1
+3037:             FOR UPDATE
+3038:             """,
+3039:             (
+3040:                 job_card_no,
+3041:                 item_name,
+3042:             ),
+3043:         )
+3044: 
+3045:         current_item = cursor.fetchone()
+3046: 
+3047:         if not current_item:
+3048:             conn.rollback()
+3049: 
+3050:             return jsonify({
+3051:                 "success": False,
+3052:                 "error": "Job-card item was not found."
+3053:             }), 404
+3054: 
+3055:         if (
+3056:             str(current_item.get("wip_status") or "")
+3057:             .strip()
+3058:             .lower()
+3059:             != str(new_stage or "").strip().lower()
+3060:         ):
+3061:             conn.rollback()
+3062: 
+3063:             return jsonify({
+3064:                 "success": False,
+3065:                 "error": (
+3066:                     "Undo is blocked because the job card "
+3067:                     "has already moved again."
+3068:                 )
+3069:             }), 409
+3070: 
+3071:         cursor.execute(
+3072:             """
+3073:             SELECT id
+3074:             FROM audit_trail
+3075:             WHERE job_card_no = %s
+3076:               AND TRIM(item_name) = TRIM(%s)
+3077:             ORDER BY id DESC
+3078:             LIMIT 1
+3079:             """,
+3080:             (
+3081:                 job_card_no,
+3082:                 item_name,
+3083:             ),
+3084:         )
+3085: 
+3086:         latest_audit = cursor.fetchone()
+
+===== AROUND LINE 3443 =====
+3408:                     "previous_item_remarks"
+3409:                 ),
+3410:                 log_row.get(
+3411:                     "previous_item_remaining_days"
+3412:                 ),
+3413:                 log_row.get(
+3414:                     "previous_item_wip_stage_days"
+3415:                 ),
+3416:                 job_card_no,
+3417:                 item_name,
+3418:             ),
+3419:         )
+3420: 
+3421:         cursor.execute(
+3422:             """
+3423:             UPDATE job_cards
+3424:             SET final_status = %s
+3425:             WHERE job_card_no = %s
+3426:             """,
+3427:             (
+3428:                 log_row.get(
+3429:                     "previous_job_final_status"
+3430:                 ) or "Pending",
+3431:                 job_card_no,
+3432:             ),
+3433:         )
+3434: 
+3435:         # Cascade: also undo all active partial entries for same JC+item.
+3436:         # Partial entries have old_stage == new_stage (process didn't advance).
+3437:         # Find the earliest partial entry to get the true original state.
+3438:         cursor.execute(
+3439:             """
+3440:             SELECT id, previous_item_actual_qty, previous_item_rejected_qty,
+3441:                    previous_item_hold_qty, previous_item_remarks,
+3442:                    previous_item_remaining_days, previous_item_wip_stage_days
+3443:             FROM operator_completion_log
+3444:             WHERE job_card_no = %s
+3445:               AND TRIM(item_name) = TRIM(%s)
+3446:               AND operator_user_id = %s
+3447:               AND status = 'active'
+3448:               AND old_stage = new_stage
+3449:             ORDER BY id ASC
+3450:             LIMIT 1
+3451:             """,
+3452:             (job_card_no, item_name, operator_user_id),
+3453:         )
+3454:         earliest_partial = cursor.fetchone()
+3455: 
+3456:         if earliest_partial:
+3457:             # Restore to the state BEFORE the first partial entry
+3458:             cursor.execute(
+3459:                 """
+3460:                 UPDATE job_card_items
+3461:                 SET actual_qty = %s,
+3462:                     rejected_qty = %s,
+3463:                     hold_qty = %s,
+3464:                     pending_qty = 0,
+3465:                     remarks = %s,
+3466:                     remaining_days = %s,
+3467:                     wip_stage_days = %s
+3468:                 WHERE job_card_no = %s
+3469:                   AND TRIM(item_name) = TRIM(%s)
+3470:                 """,
+3471:                 (
+3472:                     earliest_partial.get("previous_item_actual_qty") or 0,
+3473:                     earliest_partial.get("previous_item_rejected_qty") or 0,
+3474:                     earliest_partial.get("previous_item_hold_qty") or 0,
+3475:                     earliest_partial.get("previous_item_remarks"),
+3476:                     earliest_partial.get("previous_item_remaining_days"),
+3477:                     earliest_partial.get("previous_item_wip_stage_days"),
+3478:                     job_card_no,
+3479:                     item_name,
+3480:                 ),
+3481:             )
+3482: 
+3483:             # OEE_UNDO_INTEGRATION_V1
+3484:             # Mirror the existing cascade semantics exactly:
+3485:             # active partial completion rows being cascaded below
+3486:             # must have their linked active OEE entries marked undone
+3487:             # inside this same transaction.
+3488:             cursor.execute(
+3489:                 """
+3490:                 UPDATE oee_entries oe
+3491:                 JOIN operator_completion_log ocl
+3492:                   ON ocl.id = oe.operator_completion_id
+3493:                 SET oe.record_status = 'undone',
+3494:                     oe.undone_at = NOW(),
+3495:                     oe.undone_by_user_id = %s,
+3496:                     oe.undo_reason = %s
+3497:                 WHERE ocl.job_card_no = %s
+3498:                   AND TRIM(ocl.item_name) = TRIM(%s)
+3499:                   AND ocl.operator_user_id = %s
+3500:                   AND ocl.status = 'active'
+3501:                   AND ocl.old_stage = ocl.new_stage
+3502:                   AND oe.record_status = 'active'
+3503:                 """,
+3504:                 (
+3505:                     operator_user_id,
+3506:                     'Cascade undo: ' + undo_reason,
+3507:                     job_card_no,
+3508:                     item_name,
+3509:                     operator_user_id,
+3510:                 ),
+3511:             )
+3512: 
+3513:             # Mark all partial entries as undone
+3514:             cursor.execute(
+3515:                 """
+3516:                 UPDATE operator_completion_log
+3517:                 SET status = 'undone',
+3518:                     undone_at = NOW(),
+3519:                     undo_reason = %s
+3520:                 WHERE job_card_no = %s
+3521:                   AND TRIM(item_name) = TRIM(%s)
+3522:                   AND operator_user_id = %s
+3523:                   AND status = 'active'
+3524:                   AND old_stage = new_stage
+3525:                 """,
+3526:                 (
+3527:                     'Cascade undo: ' + undo_reason,
+3528:                     job_card_no,
+3529:                     item_name,
+3530:                     operator_user_id,
+3531:                 ),
+3532:             )
+3533: 
+3534:         cursor.execute(
+3535:             """
+3536:             INSERT INTO audit_trail (
+3537:                 job_card_no,
+3538:                 item_name,
+3539:                 old_stage,
+3540:                 new_stage,
+3541:                 changed_by,
+3542:                 changed_at
+3543:             )
+3544:             VALUES (%s, %s, %s, %s, %s, NOW())
+3545:             """,
+3546:             (
+3547:                 job_card_no,
+3548:                 item_name,
+3549:                 new_stage,
+3550:                 old_stage,
+3551:                 operator_name,
+3552:             ),
+3553:         )
+3554: 
+3555:         reversal_audit_id = cursor.lastrowid
+3556: 
+3557:         cursor.execute(
+3558:             """
+3559:             UPDATE operator_completion_log
+3560:             SET status = 'undone',
+3561:                 undone_at = NOW(),
+3562:                 undo_reason = %s,
+
+===== AROUND LINE 3491 =====
+3456:         if earliest_partial:
+3457:             # Restore to the state BEFORE the first partial entry
+3458:             cursor.execute(
+3459:                 """
+3460:                 UPDATE job_card_items
+3461:                 SET actual_qty = %s,
+3462:                     rejected_qty = %s,
+3463:                     hold_qty = %s,
+3464:                     pending_qty = 0,
+3465:                     remarks = %s,
+3466:                     remaining_days = %s,
+3467:                     wip_stage_days = %s
+3468:                 WHERE job_card_no = %s
+3469:                   AND TRIM(item_name) = TRIM(%s)
+3470:                 """,
+3471:                 (
+3472:                     earliest_partial.get("previous_item_actual_qty") or 0,
+3473:                     earliest_partial.get("previous_item_rejected_qty") or 0,
+3474:                     earliest_partial.get("previous_item_hold_qty") or 0,
+3475:                     earliest_partial.get("previous_item_remarks"),
+3476:                     earliest_partial.get("previous_item_remaining_days"),
+3477:                     earliest_partial.get("previous_item_wip_stage_days"),
+3478:                     job_card_no,
+3479:                     item_name,
+3480:                 ),
+3481:             )
+3482: 
+3483:             # OEE_UNDO_INTEGRATION_V1
+3484:             # Mirror the existing cascade semantics exactly:
+3485:             # active partial completion rows being cascaded below
+3486:             # must have their linked active OEE entries marked undone
+3487:             # inside this same transaction.
+3488:             cursor.execute(
+3489:                 """
+3490:                 UPDATE oee_entries oe
+3491:                 JOIN operator_completion_log ocl
+3492:                   ON ocl.id = oe.operator_completion_id
+3493:                 SET oe.record_status = 'undone',
+3494:                     oe.undone_at = NOW(),
+3495:                     oe.undone_by_user_id = %s,
+3496:                     oe.undo_reason = %s
+3497:                 WHERE ocl.job_card_no = %s
+3498:                   AND TRIM(ocl.item_name) = TRIM(%s)
+3499:                   AND ocl.operator_user_id = %s
+3500:                   AND ocl.status = 'active'
+3501:                   AND ocl.old_stage = ocl.new_stage
+3502:                   AND oe.record_status = 'active'
+3503:                 """,
+3504:                 (
+3505:                     operator_user_id,
+3506:                     'Cascade undo: ' + undo_reason,
+3507:                     job_card_no,
+3508:                     item_name,
+3509:                     operator_user_id,
+3510:                 ),
+3511:             )
+3512: 
+3513:             # Mark all partial entries as undone
+3514:             cursor.execute(
+3515:                 """
+3516:                 UPDATE operator_completion_log
+3517:                 SET status = 'undone',
+3518:                     undone_at = NOW(),
+3519:                     undo_reason = %s
+3520:                 WHERE job_card_no = %s
+3521:                   AND TRIM(item_name) = TRIM(%s)
+3522:                   AND operator_user_id = %s
+3523:                   AND status = 'active'
+3524:                   AND old_stage = new_stage
+3525:                 """,
+3526:                 (
+3527:                     'Cascade undo: ' + undo_reason,
+3528:                     job_card_no,
+3529:                     item_name,
+3530:                     operator_user_id,
+3531:                 ),
+3532:             )
+3533: 
+3534:         cursor.execute(
+3535:             """
+3536:             INSERT INTO audit_trail (
+3537:                 job_card_no,
+3538:                 item_name,
+3539:                 old_stage,
+3540:                 new_stage,
+3541:                 changed_by,
+3542:                 changed_at
+3543:             )
+3544:             VALUES (%s, %s, %s, %s, %s, NOW())
+3545:             """,
+3546:             (
+3547:                 job_card_no,
+3548:                 item_name,
+3549:                 new_stage,
+3550:                 old_stage,
+3551:                 operator_name,
+3552:             ),
+3553:         )
+3554: 
+3555:         reversal_audit_id = cursor.lastrowid
+3556: 
+3557:         cursor.execute(
+3558:             """
+3559:             UPDATE operator_completion_log
+3560:             SET status = 'undone',
+3561:                 undone_at = NOW(),
+3562:                 undo_reason = %s,
+3563:                 reversal_audit_id = %s
+3564:             WHERE id = %s
+3565:               AND operator_user_id = %s
+3566:               AND status = 'active'
+3567:             """,
+3568:             (
+3569:                 undo_reason,
+3570:                 reversal_audit_id,
+3571:                 completion_id,
+3572:                 operator_user_id,
+3573:             ),
+3574:         )
+3575: 
+3576:         if cursor.rowcount != 1:
+3577:             conn.rollback()
+3578: 
+3579:             return jsonify({
+3580:                 "success": False,
+3581:                 "error": (
+3582:                     "Undo could not be completed because "
+3583:                     "the completion status changed."
+3584:                 )
+3585:             }), 409
+3586: 
+3587:         # Mark the OEE entry linked to the selected completion as undone.
+3588:         # Non-OEE completions simply update zero rows, which is valid.
+3589:         cursor.execute(
+3590:             """
+3591:             UPDATE oee_entries
+3592:             SET record_status = 'undone',
+3593:                 undone_at = NOW(),
+3594:                 undone_by_user_id = %s,
+3595:                 undo_reason = %s
+3596:             WHERE operator_completion_id = %s
+3597:               AND record_status = 'active'
+3598:             """,
+3599:             (
+3600:                 operator_user_id,
+3601:                 undo_reason,
+3602:                 completion_id,
+3603:             ),
+3604:         )
+3605: 
+3606:         conn.commit()
+3607: 
+3608:         return jsonify({
+3609:             "success": True,
+3610:             "message": (
+
+===== AROUND LINE 3516 =====
+3481:             )
+3482: 
+3483:             # OEE_UNDO_INTEGRATION_V1
+3484:             # Mirror the existing cascade semantics exactly:
+3485:             # active partial completion rows being cascaded below
+3486:             # must have their linked active OEE entries marked undone
+3487:             # inside this same transaction.
+3488:             cursor.execute(
+3489:                 """
+3490:                 UPDATE oee_entries oe
+3491:                 JOIN operator_completion_log ocl
+3492:                   ON ocl.id = oe.operator_completion_id
+3493:                 SET oe.record_status = 'undone',
+3494:                     oe.undone_at = NOW(),
+3495:                     oe.undone_by_user_id = %s,
+3496:                     oe.undo_reason = %s
+3497:                 WHERE ocl.job_card_no = %s
+3498:                   AND TRIM(ocl.item_name) = TRIM(%s)
+3499:                   AND ocl.operator_user_id = %s
+3500:                   AND ocl.status = 'active'
+3501:                   AND ocl.old_stage = ocl.new_stage
+3502:                   AND oe.record_status = 'active'
+3503:                 """,
+3504:                 (
+3505:                     operator_user_id,
+3506:                     'Cascade undo: ' + undo_reason,
+3507:                     job_card_no,
+3508:                     item_name,
+3509:                     operator_user_id,
+3510:                 ),
+3511:             )
+3512: 
+3513:             # Mark all partial entries as undone
+3514:             cursor.execute(
+3515:                 """
+3516:                 UPDATE operator_completion_log
+3517:                 SET status = 'undone',
+3518:                     undone_at = NOW(),
+3519:                     undo_reason = %s
+3520:                 WHERE job_card_no = %s
+3521:                   AND TRIM(item_name) = TRIM(%s)
+3522:                   AND operator_user_id = %s
+3523:                   AND status = 'active'
+3524:                   AND old_stage = new_stage
+3525:                 """,
+3526:                 (
+3527:                     'Cascade undo: ' + undo_reason,
+3528:                     job_card_no,
+3529:                     item_name,
+3530:                     operator_user_id,
+3531:                 ),
+3532:             )
+3533: 
+3534:         cursor.execute(
+3535:             """
+3536:             INSERT INTO audit_trail (
+3537:                 job_card_no,
+3538:                 item_name,
+3539:                 old_stage,
+3540:                 new_stage,
+3541:                 changed_by,
+3542:                 changed_at
+3543:             )
+3544:             VALUES (%s, %s, %s, %s, %s, NOW())
+3545:             """,
+3546:             (
+3547:                 job_card_no,
+3548:                 item_name,
+3549:                 new_stage,
+3550:                 old_stage,
+3551:                 operator_name,
+3552:             ),
+3553:         )
+3554: 
+3555:         reversal_audit_id = cursor.lastrowid
+3556: 
+3557:         cursor.execute(
+3558:             """
+3559:             UPDATE operator_completion_log
+3560:             SET status = 'undone',
+3561:                 undone_at = NOW(),
+3562:                 undo_reason = %s,
+3563:                 reversal_audit_id = %s
+3564:             WHERE id = %s
+3565:               AND operator_user_id = %s
+3566:               AND status = 'active'
+3567:             """,
+3568:             (
+3569:                 undo_reason,
+3570:                 reversal_audit_id,
+3571:                 completion_id,
+3572:                 operator_user_id,
+3573:             ),
+3574:         )
+3575: 
+3576:         if cursor.rowcount != 1:
+3577:             conn.rollback()
+3578: 
+3579:             return jsonify({
+3580:                 "success": False,
+3581:                 "error": (
+3582:                     "Undo could not be completed because "
+3583:                     "the completion status changed."
+3584:                 )
+3585:             }), 409
+3586: 
+3587:         # Mark the OEE entry linked to the selected completion as undone.
+3588:         # Non-OEE completions simply update zero rows, which is valid.
+3589:         cursor.execute(
+3590:             """
+3591:             UPDATE oee_entries
+3592:             SET record_status = 'undone',
+3593:                 undone_at = NOW(),
+3594:                 undone_by_user_id = %s,
+3595:                 undo_reason = %s
+3596:             WHERE operator_completion_id = %s
+3597:               AND record_status = 'active'
+3598:             """,
+3599:             (
+3600:                 operator_user_id,
+3601:                 undo_reason,
+3602:                 completion_id,
+3603:             ),
+3604:         )
+3605: 
+3606:         conn.commit()
+3607: 
+3608:         return jsonify({
+3609:             "success": True,
+3610:             "message": (
+3611:                 f"Completion undone. Job card returned "
+3612:                 f"to '{old_stage}'."
+3613:             ),
+3614:             "job_card_no": job_card_no,
+3615:             "item_name": item_name,
+3616:             "restored_stage": old_stage,
+3617:             "undo_reason": undo_reason,
+3618:         })
+3619: 
+3620:     except Exception as error:
+3621:         if conn:
+3622:             conn.rollback()
+3623: 
+3624:         return jsonify({
+3625:             "success": False,
+3626:             "error": str(error),
+3627:         }), 500
+3628: 
+3629:     finally:
+3630:         if cursor:
+3631:             cursor.close()
+3632: 
+3633:         if conn:
+3634:             conn.close()
+3635: 
+
+===== AROUND LINE 3559 =====
+3524:                   AND old_stage = new_stage
+3525:                 """,
+3526:                 (
+3527:                     'Cascade undo: ' + undo_reason,
+3528:                     job_card_no,
+3529:                     item_name,
+3530:                     operator_user_id,
+3531:                 ),
+3532:             )
+3533: 
+3534:         cursor.execute(
+3535:             """
+3536:             INSERT INTO audit_trail (
+3537:                 job_card_no,
+3538:                 item_name,
+3539:                 old_stage,
+3540:                 new_stage,
+3541:                 changed_by,
+3542:                 changed_at
+3543:             )
+3544:             VALUES (%s, %s, %s, %s, %s, NOW())
+3545:             """,
+3546:             (
+3547:                 job_card_no,
+3548:                 item_name,
+3549:                 new_stage,
+3550:                 old_stage,
+3551:                 operator_name,
+3552:             ),
+3553:         )
+3554: 
+3555:         reversal_audit_id = cursor.lastrowid
+3556: 
+3557:         cursor.execute(
+3558:             """
+3559:             UPDATE operator_completion_log
+3560:             SET status = 'undone',
+3561:                 undone_at = NOW(),
+3562:                 undo_reason = %s,
+3563:                 reversal_audit_id = %s
+3564:             WHERE id = %s
+3565:               AND operator_user_id = %s
+3566:               AND status = 'active'
+3567:             """,
+3568:             (
+3569:                 undo_reason,
+3570:                 reversal_audit_id,
+3571:                 completion_id,
+3572:                 operator_user_id,
+3573:             ),
+3574:         )
+3575: 
+3576:         if cursor.rowcount != 1:
+3577:             conn.rollback()
+3578: 
+3579:             return jsonify({
+3580:                 "success": False,
+3581:                 "error": (
+3582:                     "Undo could not be completed because "
+3583:                     "the completion status changed."
+3584:                 )
+3585:             }), 409
+3586: 
+3587:         # Mark the OEE entry linked to the selected completion as undone.
+3588:         # Non-OEE completions simply update zero rows, which is valid.
+3589:         cursor.execute(
+3590:             """
+3591:             UPDATE oee_entries
+3592:             SET record_status = 'undone',
+3593:                 undone_at = NOW(),
+3594:                 undone_by_user_id = %s,
+3595:                 undo_reason = %s
+3596:             WHERE operator_completion_id = %s
+3597:               AND record_status = 'active'
+3598:             """,
+3599:             (
+3600:                 operator_user_id,
+3601:                 undo_reason,
+3602:                 completion_id,
+3603:             ),
+3604:         )
+3605: 
+3606:         conn.commit()
+3607: 
+3608:         return jsonify({
+3609:             "success": True,
+3610:             "message": (
+3611:                 f"Completion undone. Job card returned "
+3612:                 f"to '{old_stage}'."
+3613:             ),
+3614:             "job_card_no": job_card_no,
+3615:             "item_name": item_name,
+3616:             "restored_stage": old_stage,
+3617:             "undo_reason": undo_reason,
+3618:         })
+3619: 
+3620:     except Exception as error:
+3621:         if conn:
+3622:             conn.rollback()
+3623: 
+3624:         return jsonify({
+3625:             "success": False,
+3626:             "error": str(error),
+3627:         }), 500
+3628: 
+3629:     finally:
+3630:         if cursor:
+3631:             cursor.close()
+3632: 
+3633:         if conn:
+3634:             conn.close()
+3635: 
+3636: 
+3637: @quality_check_bp.route("/api/quality_check", methods=["POST"])
+3638: def save_quality_check():
+3639:     try:
+3640:         data = request.json
+3641:         role = (session.get("role") or "").strip().lower()
+3642:         if role not in ("admin", "supervisor") and not is_gaurang_special_user():
+3643:             return jsonify({"success": False, "error": "Operator has read-only access"}), 403
+3644: 
+3645:         job_card_no = data.get("job_card_no")
+3646:         details = data.get("details", [])
+3647: 
+3648:         conn = get_connection()
+3649:         cursor = conn.cursor(dictionary=True)
+3650:         ensure_permission_tables(cursor)
+3651:         seed_default_permissions(cursor)
+3652:         conn.commit()
+3653: 
+3654:         if role == "supervisor" and not is_gaurang_special_user():
+3655:             for d in details:
+3656:                 item_name = (d.get("item_name") or "").strip()
+3657:                 cursor.execute("""
+3658:                     SELECT wip_status
+3659:                     FROM job_card_items
+3660:                     WHERE job_card_no = %s
+3661:                       AND TRIM(item_name) = TRIM(%s)
+3662:                     LIMIT 1
+3663:                 """, (job_card_no, item_name))
+3664:                 item_row = cursor.fetchone()
+3665:                 current_process = item_row["wip_status"] if item_row else ""
+3666:                 if not supervisor_has_process_access(
+3667:                     cursor, session.get("user_id"), current_process
+3668:                 ):
+3669:                     cursor.close()
+3670:                     conn.close()
+3671:                     return jsonify({
+3672:                         "success": False,
+3673:                         "error": f"You do not have rights to update process: {current_process}"
+3674:                     }), 403
+3675:                 if not can_user_edit_field(
+3676:                     cursor, role, session.get(
+3677:                         "user_id"), PAGE3_TRACEABILITY, "actual_qty"
+3678:                 ):

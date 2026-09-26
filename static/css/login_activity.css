@@ -1,0 +1,354 @@
+
+.login-activity-page {
+  padding: 24px;
+}
+
+.login-activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.login-activity-header h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #0f2a4d;
+}
+
+.login-activity-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.login-activity-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 14px;
+}
+
+.login-activity-search-wrap {
+  position: relative;
+  width: min(420px, 100%);
+}
+
+.login-activity-search-wrap i {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.login-activity-search-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px 10px 38px;
+  border: 1px solid #d7dee8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.login-activity-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.login-activity-table-wrap {
+  overflow-x: auto;
+}
+
+.login-activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.login-activity-table th {
+  background: #f4f7fb;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  padding: 11px 14px;
+  border-bottom: 1px solid #dce3ec;
+  white-space: nowrap;
+}
+
+.login-activity-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #edf1f5;
+  color: #334155;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.login-activity-user {
+  font-weight: 700;
+  color: #0f2a4d;
+}
+
+.login-activity-role {
+  text-transform: capitalize;
+}
+
+.login-activity-btn {
+  border: 1px solid #1d4ed8;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.login-activity-btn:hover {
+  background: #eff6ff;
+}
+
+.login-activity-loading,
+.login-activity-empty {
+  text-align: center;
+  padding: 30px !important;
+  color: #64748b !important;
+}
+
+.login-activity-account-active {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.login-activity-account-inactive {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.login-status {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.login-status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.login-status-logged-out {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.login-status-session-ended {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.login-activity-modal[hidden] {
+  display: none;
+}
+
+.login-activity-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-activity-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.login-activity-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(1200px, 96vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+}
+
+.login-activity-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.login-activity-modal-header h2 {
+  margin: 0;
+  color: #0f2a4d;
+  font-size: 21px;
+}
+
+.login-activity-modal-subtitle {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.login-activity-modal-close {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.login-activity-modal-body {
+  overflow: auto;
+  padding: 18px;
+}
+
+.detail-table th,
+.detail-table td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+@media (max-width: 768px) {
+  .login-activity-page {
+    padding: 15px;
+  }
+
+  .login-activity-modal {
+    padding: 10px;
+  }
+}
+
+
+/* LOGIN_ACTIVITY_ONLINE_STATUS_V2 */
+
+.login-activity-login-online {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.login-activity-login-offline {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* LOGIN_ACTIVITY_DATE_FILTER_COUNT_V3 */
+
+.login-activity-toolbar {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.login-activity-date-filter {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.login-activity-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.login-activity-date-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.login-activity-date-field input {
+  height: 36px;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid #d7dee8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+}
+
+.login-activity-clear-dates {
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid #d7dee8;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-activity-clear-dates:hover {
+  background: #f8fafc;
+}
+
+.login-activity-count {
+  font-weight: 700;
+  color: #0f2a4d;
+  text-align: center;
+}
+
+
+/* LOGIN_ACTIVITY_EXCEL_STYLE_V4 */
+
+.login-activity-excel-btn {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid #15803d;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.login-activity-excel-btn:hover {
+  background: #f0fdf4;
+}
+
+.login-activity-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

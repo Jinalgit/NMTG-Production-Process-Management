@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% set active_page = "login_activity" %}
+
+{% block title %}
+Login Activity | NMTG
+{% endblock %}
+
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/login_activity.css') }}?v={{ version }}"
+/>
+{% endblock %}
+
+{% block content %}
+
+<div class="login-activity-page">
+
+  <div class="login-activity-header">
+
+    <div>
+      <h1>Login Activity</h1>
+
+      <p>
+        Currently logged-in users and their login activity.
+      </p>
+    </div>
+
+  </div>
+
+
+  <div class="login-activity-toolbar">
+
+    <div class="login-activity-search-wrap">
+
+      <i
+        class="fa fa-search"
+        aria-hidden="true"
+      ></i>
+
+      <input
+        type="text"
+        id="login-activity-search"
+        placeholder="Search user..."
+        autocomplete="off"
+      />
+
+    </div>
+
+
+    <div class="login-activity-date-filter">
+
+      <div class="login-activity-date-field">
+        <label for="login-activity-from-date">
+          From Date
+        </label>
+
+        <input
+          type="date"
+          id="login-activity-from-date"
+        />
+      </div>
+
+
+      <div class="login-activity-date-field">
+        <label for="login-activity-to-date">
+          To Date
+        </label>
+
+        <input
+          type="date"
+          id="login-activity-to-date"
+        />
+      </div>
+
+
+      <button
+        type="button"
+        id="login-activity-clear-dates"
+        class="login-activity-clear-dates"
+      >
+        Clear
+      </button>
+
+
+      <!-- LOGIN_ACTIVITY_EXCEL_UI_V4 -->
+      <button
+        type="button"
+        id="login-activity-export-all"
+        class="login-activity-excel-btn"
+      >
+        <i
+          class="fa fa-file-excel-o"
+          aria-hidden="true"
+        ></i>
+        Excel
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="login-activity-card">
+
+    <div class="login-activity-table-wrap">
+
+      <table class="login-activity-table">
+
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th>Login Count</th>
+            <th>Login Status</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody id="login-activity-users-body">
+
+          <tr>
+            <td
+              colspan="7"
+              class="login-activity-loading"
+            >
+              Loading users...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div
+  id="login-activity-modal"
+  class="login-activity-modal"
+  hidden
+>
+
+  <div
+    class="login-activity-modal-backdrop"
+    data-close-login-activity
+  ></div>
+
+  <div
+    class="login-activity-modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="login-activity-modal-title"
+  >
+
+    <div class="login-activity-modal-header">
+
+      <div>
+
+        <h2 id="login-activity-modal-title">
+          Login Activity
+        </h2>
+
+        <div
+          id="login-activity-modal-subtitle"
+          class="login-activity-modal-subtitle"
+        ></div>
+
+      </div>
+
+      <div class="login-activity-modal-actions">
+
+        <button
+          type="button"
+          id="login-activity-export-user"
+          class="login-activity-excel-btn"
+        >
+          <i
+            class="fa fa-file-excel-o"
+            aria-hidden="true"
+          ></i>
+          Excel
+        </button>
+
+      <button
+        type="button"
+        class="login-activity-modal-close"
+        data-close-login-activity
+        aria-label="Close"
+      >
+        &times;
+      </button>
+
+
+      </div>
+
+    </div>
+
+
+    <div class="login-activity-modal-body">
+
+      <div
+        id="login-activity-detail-loading"
+        class="login-activity-loading"
+      >
+        Loading activity...
+      </div>
+
+
+      <div
+        id="login-activity-detail-wrap"
+        class="login-activity-table-wrap"
+        hidden
+      >
+
+        <table class="login-activity-table detail-table">
+
+          <thead>
+            <tr>
+              <th>Device Name</th>
+              <th>IP Address</th>
+              <th>Login Time</th>
+              <th>Last Activity</th>
+              <th>Logout Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="login-activity-detail-body">
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script
+  src="{{ url_for('static', filename='js/login_activity.js') }}?v={{ version }}"
+></script>
+{% endblock %}

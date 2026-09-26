@@ -2910,3 +2910,446 @@ document.addEventListener(
   'DOMContentLoaded',
   loadAll
 );
+
+
+
+
+
+
+/* ==========================================================
+   OEE_EXACT_CONSOLE_ANIMATION_V2
+
+   IMPORTANT:
+   Animation body below is the exact browser-console
+   animation approved during testing.
+
+   Only difference:
+   JMS waits until the SVG charts are completely rendered
+   before executing it automatically.
+   ========================================================== */
+
+(function () {
+
+  let readyTimer = null;
+  let lastSignature = "";
+  let stableChecks = 0;
+  let animationHasRun = false;
+
+
+  /* ========================================================
+     EXACT APPROVED ANIMATION
+     ======================================================== */
+
+  function runExactOeeChartAnimation() {
+
+    const roots = [...document.querySelectorAll('.od-chart')];
+
+    console.log(`Animating ${roots.length} OEE charts`);
+
+    roots.forEach((root, chartIndex) => {
+
+      const svg = root.querySelector('svg');
+      if (!svg) return;
+
+      const baseDelay = chartIndex * 120;
+
+
+      // ============================
+      // BAR CHARTS - GROW UPWARD
+      // ============================
+
+      const bars = [
+        ...svg.querySelectorAll(
+          'rect.bar, .bar rect, rect[class*="bar"]'
+        )
+      ];
+
+      bars.forEach((bar, i) => {
+
+        bar.style.transformBox = 'fill-box';
+        bar.style.transformOrigin = 'center bottom';
+
+        bar.animate(
+          [
+            {
+              transform: 'scaleY(0)',
+              opacity: 0.25
+            },
+            {
+              transform: 'scaleY(1)',
+              opacity: 1
+            }
+          ],
+          {
+            duration: 700,
+            delay: baseDelay + i * 35,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'both'
+          }
+        );
+
+      });
+
+
+      // ============================
+      // LINE CHARTS - DRAW THE LINE
+      // ============================
+
+      const lines = [
+        ...svg.querySelectorAll(
+          'path.line-graph-path, path[class*="line-graph"]'
+        )
+      ];
+
+      lines.forEach((line, i) => {
+
+        try {
+
+          const length = line.getTotalLength();
+
+          line.animate(
+            [
+              {
+                strokeDasharray: `${length}`,
+                strokeDashoffset: `${length}`,
+                opacity: 0.35
+              },
+              {
+                strokeDasharray: `${length}`,
+                strokeDashoffset: '0',
+                opacity: 1
+              }
+            ],
+            {
+              duration: 1100,
+              delay: baseDelay + 120 + i * 100,
+              easing: 'ease-out',
+              fill: 'both'
+            }
+          );
+
+        } catch (e) {}
+
+      });
+
+
+      // ============================
+      // DATA POINTS - POP IN
+      // ============================
+
+      const points = [
+        ...svg.querySelectorAll(
+          'circle.data-point, circle[class*="data-point"], .data-point circle'
+        )
+      ];
+
+      points.forEach((point, i) => {
+
+        point.style.transformBox = 'fill-box';
+        point.style.transformOrigin = 'center';
+
+        point.animate(
+          [
+            {
+              transform: 'scale(0)',
+              opacity: 0
+            },
+            {
+              transform: 'scale(1.25)',
+              opacity: 1
+            },
+            {
+              transform: 'scale(1)',
+              opacity: 1
+            }
+          ],
+          {
+            duration: 450,
+            delay: baseDelay + 650 + i * 40,
+            easing: 'ease-out',
+            fill: 'both'
+          }
+        );
+
+      });
+
+
+      // ============================
+      // LIGHT CHART FADE
+      // ============================
+
+      svg.animate(
+        [
+          { opacity: 0.55 },
+          { opacity: 1 }
+        ],
+        {
+          duration: 500,
+          delay: baseDelay,
+          easing: 'ease-out',
+          fill: 'both'
+        }
+      );
+
+
+      console.log(
+        root.id,
+        'bars:', bars.length,
+        'lines:', lines.length,
+        'points:', points.length
+      );
+
+    });
+
+  }
+
+
+  /* ========================================================
+     DETECT WHETHER FRAPPE HAS FINISHED BUILDING THE CHARTS
+     ======================================================== */
+
+  function chartRenderSignature() {
+
+    const roots =
+      [...document.querySelectorAll('.od-chart')];
+
+    if (!roots.length) {
+      return "";
+    }
+
+    let drawableCount = 0;
+
+    const parts =
+      roots.map(root => {
+
+        const svg =
+          root.querySelector('svg');
+
+        if (!svg) {
+          return `${root.id}:NO-SVG`;
+        }
+
+        const bars =
+          svg.querySelectorAll(
+            'rect.bar, .bar rect, rect[class*="bar"]'
+          ).length;
+
+        const lines =
+          svg.querySelectorAll(
+            'path.line-graph-path, path[class*="line-graph"]'
+          ).length;
+
+        const points =
+          svg.querySelectorAll(
+            'circle.data-point, circle[class*="data-point"], .data-point circle'
+          ).length;
+
+        drawableCount +=
+          bars + lines + points;
+
+        return (
+          `${root.id}:`
+          + `${bars}:`
+          + `${lines}:`
+          + `${points}`
+        );
+
+      });
+
+
+    /*
+     * At least some real chart elements must exist.
+     * This prevents running while SVG containers
+     * are still empty.
+     */
+    if (drawableCount === 0) {
+      return "";
+    }
+
+    return parts.join("|");
+
+  }
+
+
+  /* ========================================================
+     WAIT UNTIL CHART STRUCTURE STOPS CHANGING
+     ======================================================== */
+
+  function checkChartsReady() {
+
+    if (animationHasRun) {
+      return;
+    }
+
+    const signature =
+      chartRenderSignature();
+
+    if (!signature) {
+
+      stableChecks = 0;
+      lastSignature = "";
+
+      return;
+    }
+
+
+    if (signature === lastSignature) {
+
+      stableChecks += 1;
+
+    } else {
+
+      lastSignature =
+        signature;
+
+      stableChecks =
+        0;
+
+    }
+
+
+    /*
+     * Same chart structure for approximately
+     * 400 ms means Frappe has finished rendering.
+     */
+    if (stableChecks < 4) {
+      return;
+    }
+
+
+    animationHasRun =
+      true;
+
+
+    /*
+     * Two animation frames ensure browser layout /
+     * SVG geometry such as getTotalLength() is ready.
+     */
+    requestAnimationFrame(
+      function () {
+
+        requestAnimationFrame(
+          function () {
+
+            runExactOeeChartAnimation();
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ========================================================
+     AUTOMATIC WATCH
+     ======================================================== */
+
+  function startOeeAnimationWatcher() {
+
+    if (readyTimer) {
+      clearInterval(readyTimer);
+    }
+
+
+    /*
+     * Check continuously while API data and charts load.
+     */
+    readyTimer =
+      setInterval(
+        function () {
+
+          checkChartsReady();
+
+          if (animationHasRun) {
+
+            clearInterval(
+              readyTimer
+            );
+
+            readyTimer =
+              null;
+
+          }
+
+        },
+        100
+      );
+
+
+    /*
+     * Hard safety fallback:
+     * if rendering is unusually slow, still retry
+     * for up to 12 seconds.
+     */
+    setTimeout(
+      function () {
+
+        if (readyTimer) {
+
+          clearInterval(
+            readyTimer
+          );
+
+          readyTimer =
+            null;
+
+        }
+
+
+        if (!animationHasRun) {
+
+          const signature =
+            chartRenderSignature();
+
+          if (signature) {
+
+            animationHasRun =
+              true;
+
+            runExactOeeChartAnimation();
+
+          }
+
+        }
+
+      },
+      12000
+    );
+
+  }
+
+
+  if (
+    document.readyState === "loading"
+  ) {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      startOeeAnimationWatcher,
+      {
+        once: true
+      }
+    );
+
+  } else {
+
+    startOeeAnimationWatcher();
+
+  }
+
+
+  /*
+   * Expose the exact function for testing.
+   *
+   * You can type this in Console anytime:
+   *
+   * runExactOeeChartAnimation()
+   */
+  window.runExactOeeChartAnimation =
+    runExactOeeChartAnimation;
+
+})();
+
+/* OEE_EXACT_CONSOLE_ANIMATION_V2_END */

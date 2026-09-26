@@ -36,6 +36,135 @@ from routes.system_backup import system_backup_bp
 from routes.users import users_bp
 
 app = Flask(__name__)
+
+
+# LOGIN_ACTIVITY_LAST_SEEN_V1
+@app.before_request
+def update_login_activity_last_seen():
+    """
+    Update the current successful login record at most
+    once every 5 minutes while the user is using JMS.
+    """
+
+    from datetime import datetime, timedelta
+
+    from flask import session
+
+    from db import get_connection
+
+    activity_id = session.get(
+        "login_activity_id"
+    )
+
+    user_id = session.get(
+        "user_id"
+    )
+
+    if not activity_id or not user_id:
+        return None
+
+    now = (
+        datetime.utcnow()
+        + timedelta(
+            hours=5,
+            minutes=30,
+        )
+    )
+
+    last_touch_text = session.get(
+        "_login_activity_last_touch"
+    )
+
+    if last_touch_text:
+        try:
+            last_touch = (
+                datetime.fromisoformat(
+                    last_touch_text
+                )
+            )
+
+            if (
+                now - last_touch
+            ).total_seconds() < 300:
+                return None
+
+        except Exception:
+            pass
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            UPDATE user_login_activity
+            SET last_seen_at = %s
+            WHERE id = %s
+              AND user_id = %s
+              AND logout_at IS NULL
+            """,
+            (
+                now,
+                activity_id,
+                user_id,
+            ),
+        )
+
+        conn.commit()
+
+        session[
+            "_login_activity_last_touch"
+        ] = now.isoformat()
+
+    except Exception as exc:
+        if conn:
+            conn.rollback()
+
+        print(
+            "[Login Activity] "
+            "Last-seen update failed:",
+            exc,
+        )
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+    return None
+
+
+# PLANT_HEAD_GLOBAL_READ_ONLY_V1
+@app.before_request
+def enforce_plant_head_global_read_only():
+    """
+    Plant Head is a system-wide read-only role.
+
+    Safe/read requests remain available.
+    Any request capable of changing system data is blocked
+    before it reaches the route handler.
+    """
+    from flask import jsonify, request, session
+
+    role = (session.get("role") or "").strip().lower()
+
+    if role != "plant_head":
+        return None
+
+    if request.method in {"GET", "HEAD", "OPTIONS"}:
+        return None
+
+    return jsonify({
+        "success": False,
+        "error": "Plant Head access is read-only. Changes are not permitted."
+    }), 403
+
+
 app.secret_key = os.environ["FLASK_SECRET_KEY"]
 CORS(app)
 

@@ -9,6 +9,18 @@
   --danger: #dc2626;
   --success: #16a34a;
   --header-bg: #1e3a5f;
+  /* Phase 2 Data View tokens */
+  --dv-blue-tint: #eff6ff;
+  --dv-border-soft: #cbd5e1;
+  --dv-border-lighter: #e5e7eb;
+  --dv-danger-soft: #fef2f2;
+  --dv-surface2-alt: #f8fafc;
+  --dv-danger-border: #fca5a5;
+  --dv-warn-text: #92400e;
+  --dv-urgent: #e67171;
+  --dv-accent-tint: #e8f0fe;
+  --dv-warn: #f59e0b;
+  --dv-radius-xl: 20px;
 }
 
 * {
@@ -99,9 +111,9 @@ body {
   min-width: 220px;
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 0 12px;
   transition: border-color 0.15s;
 }
@@ -122,7 +134,7 @@ body {
   flex: 1;
   border: none;
   outline: none;
-  background: #ffffff;
+  background: var(--surface);
   padding: 10px 0;
   font-size: 14px;
   font-weight: 500;
@@ -133,7 +145,7 @@ body {
 .search-box-wrap input:-webkit-autofill,
 .search-box-wrap input:-webkit-autofill:hover,
 .search-box-wrap input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
   -webkit-text-fill-color: var(--text);
 }
 
@@ -163,7 +175,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 9px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -179,22 +191,22 @@ body {
 .btn-filter-toggle:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
 }
 
 .btn-filter-toggle.active {
   border-color: var(--accent);
   color: var(--accent);
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
 }
 
 .filter-count-badge {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--surface);
   font-size: 11px;
   font-weight: 700;
   padding: 1px 7px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   min-width: 20px;
   text-align: center;
 }
@@ -203,7 +215,7 @@ body {
 .filter-panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 18px 20px;
   margin-bottom: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -247,7 +259,7 @@ body {
 .filter-group input[type="date"] {
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   padding: 8px 10px;
   color: var(--text);
   font-family: 'IBM Plex Sans', sans-serif;
@@ -275,7 +287,7 @@ body {
   border: 1px solid var(--border);
   color: var(--muted);
   padding: 7px 14px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 13px;
@@ -286,7 +298,7 @@ body {
 .btn-clear-filters:hover {
   border-color: var(--danger);
   color: var(--danger);
-  background: #fef2f2;
+  background: var(--dv-danger-soft);
 }
 
 /* ── Export buttons ──────────────────────────────────────────────────────── */
@@ -299,13 +311,13 @@ body {
 
 .btn-export {
   padding: 9px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: none;
   background: var(--header-bg);
-  color: #ffffff;
+  color: var(--surface);
   font-family: 'IBM Plex Sans', sans-serif;
   white-space: nowrap;
   transition: background 0.15s;
@@ -316,13 +328,13 @@ body {
 }
 
 .btn-columns {
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
   color: var(--header-bg);
 }
 
 .btn-columns:hover {
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -331,25 +343,25 @@ body {
   position: absolute;
   width: 280px;
   max-width: calc(100vw - 24px);
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--dv-border-soft);
+  border-radius: var(--radius-md);
   box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22);
-  color: #111827;
+  color: var(--text);
   font-family: 'IBM Plex Sans', sans-serif;
   padding: 10px;
   z-index: 3100;
 }
 
 .column-chooser-title {
-  color: #1e3a5f;
+  color: var(--header-bg);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.4px;
   margin-bottom: 8px;
   padding: 4px 4px 8px;
   text-transform: uppercase;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--dv-border-lighter);
 }
 
 .column-chooser-list {
@@ -363,20 +375,20 @@ body {
   align-items: center;
   gap: 8px;
   padding: 6px 7px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
 }
 
 .column-chooser-row:hover {
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
 }
 
 .column-chooser-row input[type="checkbox"] {
   width: 14px;
   height: 14px;
-  accent-color: #1a56db;
+  accent-color: var(--accent);
 }
 
 .column-chooser-actions {
@@ -384,12 +396,12 @@ body {
   justify-content: flex-end;
   gap: 7px;
   padding-top: 9px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--dv-border-lighter);
   margin-top: 8px;
 }
 
 .column-chooser-actions button {
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px;
@@ -399,21 +411,21 @@ body {
 
 .column-chooser-show-all,
 .column-chooser-cancel {
-  background: #ffffff;
+  background: var(--surface);
   color: #64748b;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--dv-border-soft);
 }
 
 .column-chooser-show-all:hover,
 .column-chooser-cancel:hover {
-  background: #f8fafc;
-  color: #1e3a5f;
+  background: var(--dv-surface2-alt);
+  color: var(--header-bg);
 }
 
 .column-chooser-apply {
-  background: #1a56db;
-  color: #ffffff;
-  border: 1px solid #1a56db;
+  background: var(--accent);
+  color: var(--surface);
+  border: 1px solid var(--accent);
 }
 
 .column-chooser-apply:hover {
@@ -424,7 +436,7 @@ body {
 .table-container {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: auto;
   max-height: 520px;
   margin-top: 4px;
@@ -447,7 +459,7 @@ thead {
 
 thead tr th {
   background: var(--header-bg);
-  color: #ffffff;
+  color: var(--surface);
   padding: 11px 14px;
   font-size: 11px;
   font-weight: 700;
@@ -496,50 +508,50 @@ tbody tr:nth-child(even) td {
 }
 
 tbody tr:not(.row-priority):hover td {
-  background: #e8f0fe !important;
+  background: var(--dv-accent-tint) !important;
   cursor: default;
 }
 
 /* ── WIP Status badges ───────────────────────────────────────────────────── */
 .badge-ok {
   background: #f0fdf4;
-  color: #16a34a;
+  color: var(--success);
   border: 1px solid #bbf7d0;
   padding: 2px 9px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   font-size: 11px;
   font-weight: 700;
   display: inline-block;
 }
 
 .badge-notok {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
+  background: var(--dv-danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--dv-danger-border);
   padding: 2px 9px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   font-size: 11px;
   font-weight: 700;
   display: inline-block;
 }
 
 .badge-wip {
-  background: #eff6ff;
-  color: #1a56db;
+  background: var(--dv-blue-tint);
+  color: var(--accent);
   border: 1px solid #bfdbfe;
   padding: 2px 9px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   font-size: 11px;
   font-weight: 700;
   display: inline-block;
 }
 
 .badge-pending {
-  background: #ffffff;
-  color: #6b7280;
+  background: var(--surface);
+  color: var(--muted);
   border: 1px solid #d1d5db;
   padding: 2px 9px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   font-size: 11px;
   font-weight: 700;
   display: inline-block;
@@ -548,20 +560,20 @@ tbody tr:not(.row-priority):hover td {
 .badge-subcontract {
   background: #fffbeb;
   color: #b45309;
-  border: 1px solid #f59e0b;
+  border: 1px solid var(--dv-warn);
   padding: 2px 9px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   font-size: 11px;
   font-weight: 700;
   display: inline-block;
 }
 
 .badge-overdue {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
+  background: var(--dv-danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--dv-danger-border);
   padding: 2px 9px;
-  border-radius: 20px;
+  border-radius: var(--dv-radius-xl);
   font-size: 11px;
   font-weight: 700;
   display: inline-block;
@@ -579,7 +591,7 @@ tbody tr:not(.row-priority):hover td {
 .pagination-bar button {
   padding: 6px 13px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--surface);
   color: var(--text);
   font-size: 13px;
@@ -590,14 +602,14 @@ tbody tr:not(.row-priority):hover td {
 }
 
 .pagination-bar button:hover {
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
   border-color: var(--accent);
   color: var(--accent);
 }
 
 .pagination-bar button.active {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--surface);
   border-color: var(--accent);
 }
 
@@ -638,7 +650,7 @@ tbody tr:not(.row-priority):hover td {
 .jc-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   margin-bottom: 18px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
   overflow: hidden;
@@ -646,7 +658,7 @@ tbody tr:not(.row-priority):hover td {
 
 .jc-card-header {
   background: var(--header-bg);
-  color: #ffffff;
+  color: var(--surface);
   padding: 12px 18px;
   display: flex;
   flex-direction: column;
@@ -683,7 +695,7 @@ tbody tr:not(.row-priority):hover td {
 }
 
 tbody tr.row-priority .jc-link {
-  color: #ffffff !important;
+  color: var(--surface) !important;
   border-bottom-color: rgba(255, 255, 255, 0.5);
 }
 
@@ -703,7 +715,7 @@ tbody tr.row-priority .jc-link {
 .proc-col {
   min-width: 108px;
   max-width: 130px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   padding: 10px 10px 8px;
   display: flex;
@@ -740,7 +752,7 @@ tbody tr.row-priority .jc-link {
 .proc-badge {
   margin-top: auto;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: 10px;
   font-weight: 700;
   text-align: center;
@@ -764,8 +776,8 @@ tbody tr.row-priority .jc-link {
 }
 
 .proc-delayed {
-  background: #fef2f2;
-  border-color: #fca5a5;
+  background: var(--dv-danger-soft);
+  border-color: var(--dv-danger-border);
 }
 
 .proc-delayed .proc-name,
@@ -779,7 +791,7 @@ tbody tr.row-priority .jc-link {
 }
 
 .proc-inprogress {
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
   border: 2px solid var(--accent);
   animation: proc-pulse 2s ease-in-out infinite;
 }
@@ -795,7 +807,7 @@ tbody tr.row-priority .jc-link {
 }
 
 .proc-pending {
-  background: #ffffff;
+  background: var(--surface);
   border-color: var(--border);
 }
 
@@ -806,22 +818,22 @@ tbody tr.row-priority .jc-link {
 
 .proc-subcontract {
   background: #fffbeb;
-  border: 2px solid #f59e0b;
+  border: 2px solid var(--dv-warn);
 }
 
 .proc-subcontract .proc-name,
 .proc-subcontract .proc-actual {
-  color: #92400e;
+  color: var(--dv-warn-text);
 }
 
 .proc-subcontract .proc-badge {
   background: #fde68a;
-  color: #92400e;
+  color: var(--dv-warn-text);
 }
 
 .proc-vendor {
   font-size: 10px;
-  color: #92400e;
+  color: var(--dv-warn-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -843,7 +855,7 @@ tbody tr.row-priority .jc-link {
 .filter-select-inline {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 9px 14px;
   color: var(--text);
   font-family: 'IBM Plex Sans', sans-serif;
@@ -861,7 +873,7 @@ tbody tr.row-priority .jc-link {
 /* ── Planning Sheet table ────────────────────────────────────────────────── */
 #ps-head th {
   background: var(--header-bg);
-  color: #ffffff;
+  color: var(--surface);
   padding: 10px 14px;
   font-size: 11px;
   font-weight: 700;
@@ -888,13 +900,13 @@ tbody tr.row-priority .jc-link {
 }
 
 #ps-body tr:not(.row-priority):hover td {
-  background: #e8f0fe !important;
+  background: var(--dv-accent-tint) !important;
 }
 
 /* Sticky first 4 columns */
 #ps-head th {
   background: var(--header-bg);
-  color: #ffffff;
+  color: var(--surface);
   padding: 10px 14px;
   font-size: 11px;
   font-weight: 700;
@@ -921,7 +933,7 @@ tbody tr.row-priority .jc-link {
 }
 
 #ps-body tr:not(.row-priority):hover td {
-  background: #e8f0fe !important;
+  background: var(--dv-accent-tint) !important;
 }
 
 /* ── Clean table column borders for ALL tabs ─────────────────────────────── */
@@ -1298,37 +1310,37 @@ thead tr th.th-rotate .col-resize-handle {
 }
 
 .proc-current {
-  background: #eff6ff;
-  border: 2px solid #1a56db;
+  background: var(--dv-blue-tint);
+  border: 2px solid var(--accent);
 }
 
 .proc-current .proc-badge {
-  background: #1a56db;
+  background: var(--accent);
   color: #fff;
 }
 
 .proc-current .proc-name {
-  color: #1a56db;
+  color: var(--accent);
   font-weight: 700;
 }
 
 /* .row-priority {
-  background: #e67171 !important;
-  border-left: 4px solid #dc2626;
+  background: var(--dv-urgent) !important;
+  border-left: 4px solid var(--danger);
 } */
 
 tbody tr.row-priority td {
-  /* background: #e67171 !important; */
+  /* background: var(--dv-urgent) !important; */
   background: #e15543 !important;
-  color: #ffffff !important;
+  color: var(--surface) !important;
 }
 
 /* tbody tr.row-priority:hover td {
-  background: #e67171 !important;
+  background: var(--dv-urgent) !important;
 } */
 
 tbody tr.row-priority td:first-child {
-  border-left: 4px solid #dc2626;
+  border-left: 4px solid var(--danger);
 }
 
 /* ── Shared Stage-Change Modal (added for PPC/Process Report inline actions) ── */
@@ -1348,8 +1360,8 @@ tbody tr.row-priority td:first-child {
 }
 
 .modal-box {
-  background: #ffffff;
-  border-radius: 8px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
   padding: 24px 28px;
   width: 480px;
   max-width: 100%;
@@ -1391,7 +1403,7 @@ tbody tr.row-priority td:first-child {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: 14px;
   font-family: 'IBM Plex Sans', sans-serif;
 }
@@ -1416,7 +1428,7 @@ tbody tr.row-priority td:first-child {
   border: 1px solid var(--border);
   color: var(--muted);
   padding: 9px 20px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   font-size: 14px;
   font-family: 'IBM Plex Sans', sans-serif;
@@ -1427,7 +1439,7 @@ tbody tr.row-priority td:first-child {
   color: #fff;
   border: none;
   padding: 9px 20px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   font-size: 14px;
   font-weight: 700;
@@ -1496,7 +1508,7 @@ body.is-resizing-column * {
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.92);
-  color: #1e3a5f;
+  color: var(--header-bg);
   font-size: 10px;
   cursor: pointer;
   vertical-align: middle;
@@ -1506,14 +1518,14 @@ body.is-resizing-column * {
 }
 
 .excel-filter-btn:hover {
-  background: #ffffff;
-  color: #1a56db;
-  border-color: #ffffff;
+  background: var(--surface);
+  color: var(--accent);
+  border-color: var(--surface);
 }
 
 .excel-filter-btn.active {
   background: #facc15;
-  color: #1e3a5f;
+  color: var(--header-bg);
   border-color: #fde68a;
 }
 
@@ -1524,10 +1536,10 @@ body.is-resizing-column * {
   position: absolute;
   width: 260px;
   max-width: calc(100vw - 24px);
-  background: #ffffff;
-  color: #111827;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--dv-border-soft);
+  border-radius: var(--radius-md);
   box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22);
   z-index: 3000;
   padding: 10px;
@@ -1537,9 +1549,9 @@ body.is-resizing-column * {
 .excel-filter-title {
   font-size: 12px;
   font-weight: 800;
-  color: #1e3a5f;
+  color: var(--header-bg);
   padding: 4px 4px 8px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--dv-border-lighter);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -1548,11 +1560,11 @@ body.is-resizing-column * {
 .excel-filter-sort-btn {
   width: 100%;
   border: 0;
-  background: #ffffff;
-  color: #111827;
+  background: var(--surface);
+  color: var(--text);
   text-align: left;
   padding: 7px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -1560,20 +1572,20 @@ body.is-resizing-column * {
 }
 
 .excel-filter-sort-btn:hover {
-  background: #eff6ff;
-  color: #1a56db;
+  background: var(--dv-blue-tint);
+  color: var(--accent);
 }
 
 .excel-filter-separator {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--dv-border-lighter);
   margin: 7px 0;
 }
 
 .excel-filter-search {
   width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border: 1px solid var(--dv-border-soft);
+  border-radius: var(--radius-xs);
   padding: 7px 8px;
   font-size: 13px;
   outline: none;
@@ -1582,16 +1594,16 @@ body.is-resizing-column * {
 }
 
 .excel-filter-search:focus {
-  border-color: #1a56db;
+  border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.12);
 }
 
 .excel-filter-values {
   max-height: 210px;
   overflow-y: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  background: #f8fafc;
+  border: 1px solid var(--dv-border-lighter);
+  border-radius: var(--radius-xs);
+  background: var(--dv-surface2-alt);
   padding: 4px 0;
 }
 
@@ -1601,7 +1613,7 @@ body.is-resizing-column * {
 }
 
 .excel-filter-check-row:hover {
-  background: #eff6ff;
+  background: var(--dv-blue-tint);
 }
 
 .excel-filter-check-row label {
@@ -1609,7 +1621,7 @@ body.is-resizing-column * {
   align-items: center;
   gap: 7px;
   cursor: pointer;
-  color: #111827;
+  color: var(--text);
   font-weight: 500;
 }
 
@@ -1617,7 +1629,7 @@ body.is-resizing-column * {
   width: 14px;
   height: 14px;
   cursor: pointer;
-  accent-color: #1a56db;
+  accent-color: var(--accent);
 }
 
 .excel-filter-subcontract-label {
@@ -1630,13 +1642,13 @@ body.is-resizing-column * {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: var(--dv-warn);
   border: 1px solid #d97706;
   flex: 0 0 auto;
 }
 
 .excel-filter-select-all-row {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--dv-border-lighter);
   margin-bottom: 6px;
   font-weight: 700;
 }
@@ -1644,7 +1656,7 @@ body.is-resizing-column * {
 .excel-filter-loading,
 .excel-filter-empty {
   padding: 12px;
-  color: #6b7280;
+  color: var(--muted);
   font-size: 13px;
   text-align: center;
 }
@@ -1658,7 +1670,7 @@ body.is-resizing-column * {
 
 .excel-filter-clear,
 .excel-filter-apply {
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   padding: 7px 12px;
   font-size: 13px;
   font-weight: 700;
@@ -1667,21 +1679,21 @@ body.is-resizing-column * {
 }
 
 .excel-filter-clear {
-  background: #ffffff;
-  color: #6b7280;
-  border: 1px solid #cbd5e1;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--dv-border-soft);
 }
 
 .excel-filter-clear:hover {
-  color: #dc2626;
-  border-color: #fca5a5;
-  background: #fef2f2;
+  color: var(--danger);
+  border-color: var(--dv-danger-border);
+  background: var(--dv-danger-soft);
 }
 
 .excel-filter-apply {
-  background: #1a56db;
-  color: #ffffff;
-  border: 1px solid #1a56db;
+  background: var(--accent);
+  color: var(--surface);
+  border: 1px solid var(--accent);
 }
 
 .excel-filter-apply:hover {
@@ -1691,9 +1703,9 @@ body.is-resizing-column * {
 .excel-filter-hide-column {
   width: 100%;
   margin-top: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  background: #ffffff;
+  border: 1px solid var(--dv-border-soft);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
   color: #334155;
   cursor: pointer;
   display: flex;
@@ -1707,9 +1719,9 @@ body.is-resizing-column * {
 }
 
 .excel-filter-hide-column:hover {
-  background: #f8fafc;
+  background: var(--dv-surface2-alt);
   border-color: #94a3b8;
-  color: #1e3a5f;
+  color: var(--header-bg);
 }
 
 /* ── Fix Excel filter button position inside vertical headers ───────────── */
@@ -1836,14 +1848,14 @@ body.is-resizing-column * {
 .excel-filter-actions {
   position: sticky;
   bottom: 0;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  background: var(--surface);
+  border-top: 1px solid var(--dv-border-lighter);
   padding-top: 9px;
 }
 /* ── Professional Last Updated Time Filter UI ───────────────────────────── */
 
 .excel-time-filter-box {
-  background: #f8fafc;
+  background: var(--dv-surface2-alt);
   border: 1px solid #e2e8f0;
   border-radius: 7px;
   padding: 10px;
@@ -1853,7 +1865,7 @@ body.is-resizing-column * {
 .excel-time-filter-title {
   font-size: 11px;
   font-weight: 800;
-  color: #1e3a5f;
+  color: var(--header-bg);
   text-transform: uppercase;
   letter-spacing: 0.45px;
   margin-bottom: 8px;
@@ -1880,10 +1892,10 @@ body.is-resizing-column * {
 .excel-time-filter-label select {
   width: 100%;
   height: 34px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--dv-border-soft);
   border-radius: 5px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--surface);
+  color: var(--text);
   padding: 6px 8px;
   font-size: 13px;
   font-weight: 600;
@@ -1893,7 +1905,7 @@ body.is-resizing-column * {
 
 .excel-time-filter-label input:focus,
 .excel-time-filter-label select:focus {
-  border-color: #1a56db;
+  border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(26, 86, 219, 0.13);
 }
 

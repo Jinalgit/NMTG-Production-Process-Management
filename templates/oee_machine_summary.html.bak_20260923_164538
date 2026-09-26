@@ -1,0 +1,2343 @@
+{% extends "base.html" %} {% block title %}OEE Summary{% endblock %} {% block
+extra_head %}
+<style>
+  :root {
+    --tp: #1f272e;
+    --ts: #6c7680;
+    --tm: #8d97a1;
+    --bd: #e2e6ea;
+    --rl: #f5f7fa;
+    --rh: #fbfcfd;
+    --ac: #2490ef;
+  }
+  .oees-wrap {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 18px 22px;
+    font-family:
+      "IBM Plex Sans",
+      -apple-system,
+      "Segoe UI",
+      Roboto,
+      Arial,
+      sans-serif;
+    color: var(--tp);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .oees-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .oees-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--tp);
+    letter-spacing: -0.01em;
+  }
+  .oees-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ts);
+  }
+  .oees-preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0 10px;
+  }
+  .oees-preset {
+    height: 26px;
+    padding: 0 12px;
+    border: 1px solid var(--bd);
+    background: var(--card);
+    color: var(--tp);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .oees-preset:hover {
+    background: var(--rh);
+  }
+  .oees-preset.active {
+    background: var(--ac);
+    color: var(--card);
+    border-color: var(--ac);
+  }
+  .oees-filters {
+    background: var(--card);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-md);
+    padding: 10px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    align-items: flex-end;
+    margin-bottom: 10px;
+  }
+  .oees-fld {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .oees-fld label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ts);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .oees-fld input,
+  .oees-fld select {
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-xs);
+    font-family: inherit;
+    font-size: 12.5px;
+    color: var(--tp);
+    background: var(--card);
+    min-width: 130px;
+  }
+  .oees-fld input:focus,
+  .oees-fld select:focus {
+    outline: none;
+    border-color: var(--ac);
+    box-shadow: 0 0 0 2px rgba(11, 95, 165, 0.1);
+  }
+  .oees-btn {
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--ac);
+    background: var(--ac);
+    color: var(--card);
+    border-radius: var(--radius-xs);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .oees-btn i {
+    margin-right: 6px;
+  }
+  .oees-btn:hover {
+    filter: brightness(0.95);
+  }
+  .oees-btn.ghost {
+    background: var(--card);
+    color: var(--ac);
+  }
+  .oees-stats {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    background: var(--card);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--ts);
+    font-variant-numeric: tabular-nums;
+  }
+  .oees-stats .k {
+    font-weight: 700;
+    color: var(--tp);
+  }
+  .oees-stats .sep {
+    color: var(--bd);
+    padding: 0 6px;
+  }
+  .oees-stats i {
+    color: var(--tm);
+    margin: 0 4px 0 2px;
+  }
+  .oees-grid-top {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .oees-grid-single {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 1000px) {
+    .oees-grid-top {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .oees-card {
+    background: var(--card);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+  }
+  .oees-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bd);
+  }
+  .oees-card-head .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .oees-card-head .icon {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--rl);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-md);
+    color: var(--ac);
+    font-size: 13px;
+  }
+  .oees-card-head strong {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tp);
+  }
+  .oees-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--tm);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .oees-card-body {
+    max-height: 340px;
+    overflow: auto;
+  }
+  .oees-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12.5px;
+  }
+  .oees-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--rl);
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tm);
+    border-bottom: 1px solid var(--bd);
+    white-space: nowrap;
+    box-shadow: inset 0 -1px 0 var(--bd);
+  }
+  .oees-table thead th.num {
+    text-align: right;
+  }
+  .oees-table tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #eef2f7;
+    color: var(--tp);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .oees-table tbody td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .oees-table tbody tr:hover td {
+    background: var(--rh);
+  }
+  .oees-table tbody tr.click {
+    cursor: pointer;
+  }
+  .oees-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .oees-empty,
+  .oees-loading {
+    padding: 30px;
+    text-align: center;
+    color: var(--tm);
+    font-size: 12px;
+  }
+  .oee-val {
+    font-weight: 700;
+    color: var(--tp);
+  }
+
+  tr.dategrp td {
+    background: #eef3fa !important;
+    padding: 6px 12px !important;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--tp);
+    border-bottom: 1px solid var(--bd);
+  }
+  tr.dategrp td .meta {
+    color: var(--tm);
+    font-weight: 600;
+    margin-left: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .oee-cell {
+    font-weight: 700;
+    color: var(--tp);
+  }
+  .oee-cell::before {
+    content: none;
+  }
+  .pct-cell {
+    color: var(--tp);
+  }
+  .pct-cell::before {
+    content: none;
+  }
+
+  /* --- Top Losses layout fix (Step 1) --- */
+  table.oees-table#tbl-losses {
+    table-layout: fixed;
+    width: 100%;
+  }
+  #tbl-losses th,
+  #tbl-losses td {
+    vertical-align: middle;
+  }
+  #tbl-losses th:nth-child(1),
+  #tbl-losses td:nth-child(1) {
+    width: 56px;
+  }
+  #tbl-losses th:nth-child(3),
+  #tbl-losses td:nth-child(3) {
+    width: 60px;
+  }
+  #tbl-losses th:nth-child(4),
+  #tbl-losses td:nth-child(4) {
+    width: 110px;
+  }
+  #tbl-losses td:nth-child(2) {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.25;
+    padding-right: 6px;
+  }
+  #tbl-losses td.num .loss-bar-wrap {
+    display: block;
+    width: 100%;
+    text-align: right;
+    padding: 2px 6px;
+    font-weight: 600;
+    color: var(--tp);
+    font-variant-numeric: tabular-nums;
+  }
+  #tbl-losses td.num .loss-bar-wrap::before {
+    content: none;
+  }
+
+  .loss-bar-wrap {
+    display: inline-block;
+    min-width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--tp);
+    font-variant-numeric: tabular-nums;
+  }
+  .loss-bar-wrap::before {
+    content: none;
+  }
+
+  .uid-mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--tp);
+  }
+  .shift-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    background: var(--rl);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-xs);
+    color: var(--ts);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .type-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-left: 2px solid var(--tm);
+    color: var(--ts);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .type-tag.t-ml {
+    border-left-color: #a35c68;
+  }
+  .type-tag.t-tr {
+    border-left-color: #4a7ba8;
+  }
+  .type-tag.t-dv {
+    border-left-color: #6b7a90;
+  }
+  .cat-pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-xs);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ts);
+    background: var(--card);
+    letter-spacing: 0.04em;
+  }
+  .loss-code {
+    display: inline-block;
+    padding: 1px 8px;
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-xs);
+    background: var(--card);
+    color: var(--tp);
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 34px;
+    text-align: center;
+  }
+
+  .oee-drill-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 30, 60, 0.35);
+    z-index: 900;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    pointer-events: none;
+  }
+  .oee-drill-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .oee-drill-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 640px;
+    max-width: 100vw;
+    background: var(--card);
+    border-left: 1px solid var(--bd);
+    box-shadow: -12px 0 32px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .oee-drill-panel.open {
+    transform: translateX(0);
+  }
+  .oee-drill-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--bd);
+    background: var(--rl);
+  }
+  .oee-drill-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tm);
+    margin-bottom: 4px;
+  }
+  .oee-drill-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--tp);
+    margin-bottom: 2px;
+  }
+  .oee-drill-sub {
+    font-size: 12px;
+    color: var(--ts);
+  }
+  .oee-drill-close {
+    background: transparent;
+    border: 0;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--tm);
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .oee-drill-close:hover {
+    color: #b42318;
+  }
+  .oee-drill-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+  .oee-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 12px;
+  }
+  .oee-kpi-cell {
+    padding: 8px 10px;
+    background: var(--rl);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-md);
+  }
+  .oee-kpi-cell .k {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tm);
+    margin-bottom: 4px;
+  }
+  .oee-kpi-cell .v {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--tp);
+    font-variant-numeric: tabular-nums;
+  }
+  .oee-drill-kv {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 6px 12px;
+    font-size: 12px;
+    margin: 0;
+  }
+  .oee-drill-kv dt {
+    color: var(--tm);
+    font-weight: 600;
+  }
+  .oee-drill-kv dd {
+    margin: 0;
+    color: var(--tp);
+    font-weight: 500;
+  }
+  .oee-drill-kv dd.mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  .oee-drill-loss {
+    display: grid;
+    grid-template-columns: 46px 1fr 72px 46px;
+    gap: 6px 10px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--oee-border-soft);
+    font-size: 12px;
+    align-items: center;
+  }
+  .oee-drill-loss:last-child {
+    border-bottom: 0;
+  }
+  .oee-drill-loss .mins {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--tp);
+  }
+  .oee-drill-loss .cat {
+    text-align: right;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--tm);
+  }
+  .oee-drill-list-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 130px;
+    gap: 8px 12px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--oee-border-soft);
+    font-size: 12px;
+    align-items: center;
+  }
+  .oee-drill-list-row:last-child {
+    border-bottom: 0;
+  }
+  .oee-drill-list-row .lhs {
+    color: var(--ts);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+  }
+  .oee-drill-list-row .mid {
+    color: var(--tp);
+  }
+  .oee-drill-list-row .rhs {
+    color: var(--ts);
+    text-align: right;
+    font-size: 11px;
+  }
+
+  .uid-hero {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #f7fbff, var(--rl));
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-lg);
+    margin: 14px 18px 4px;
+  }
+  .uid-hero .iconbox {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    border: 1px solid var(--bd);
+    color: var(--ac);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .uid-hero .big {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: "IBM Plex Mono", monospace;
+    color: var(--tp);
+    letter-spacing: 0.02em;
+    word-break: break-all;
+  }
+  .uid-hero .small {
+    font-size: 11px;
+    color: var(--ts);
+    margin-top: 2px;
+  }
+
+  .badge-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: #eaf5ec;
+    color: #2d6a3d;
+    border: 1px solid #c8e0cc;
+  }
+  .badge-status.b-inuse {
+    background: #eaf0fb;
+    color: #1a4380;
+    border-color: #cadaf5;
+  }
+  .badge-status.b-scrap {
+    background: #fce8ea;
+    color: #8f2033;
+    border-color: #f2c5cd;
+  }
+  .badge-status.b-regr {
+    background: #fbf3e0;
+    color: #7a5a10;
+    border-color: #f0dfb6;
+  }
+
+  .mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mini-item {
+    display: grid;
+    grid-template-columns: 110px 1fr 140px;
+    gap: 8px 10px;
+    padding: 8px 10px;
+    background: var(--rl);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    align-items: center;
+  }
+  .mini-item .d {
+    color: var(--tm);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+  }
+  .mini-item .n {
+    color: var(--tp);
+    font-weight: 500;
+  }
+  .mini-item .a {
+    text-align: right;
+    color: var(--ts);
+    font-size: 11px;
+  }
+
+  /* ERPNext .report-summary - compact inline strip (Patch 2b) */
+  .report-summary {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin: 8px 22px 12px;
+    padding: 6px 0;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 22px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--bd);
+  }
+  .report-summary .summary-item {
+    margin: 0;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .report-summary .summary-label {
+    font-size: 10px;
+    color: var(--ts);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    text-align: left;
+  }
+  .report-summary .summary-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--tp);
+    font-feature-settings: "tnum";
+    padding-top: 0;
+    text-align: left;
+    line-height: 1.2;
+  }
+  .report-summary .summary-value .u {
+    font-size: 11px;
+    color: var(--ts);
+    font-weight: 500;
+    margin-left: 1px;
+  }
+  .report-summary .summary-value.green { color: #29cd42; }
+  .report-summary .summary-value.red   { color: #e74c3c; }
+  .report-summary .summary-sep {
+    width: 1px;
+    height: 12px;
+    background: var(--bd);
+    align-self: center;
+  }
+
+  /* ERPNext DataTable style (Patch 4) */
+  .oees-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12.5px;
+  }
+  .oees-table thead th {
+    background: #fbfcfd;
+    color: var(--ts);
+    text-align: left;
+    font-weight: 600;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--bd);
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    white-space: nowrap;
+  }
+  .oees-table thead th.num { text-align: right; }
+  .oees-table tbody td {
+    padding: 6px 10px;
+    height: 30px;
+    border-bottom: 1px solid #f0f2f5;
+    vertical-align: middle;
+    color: var(--tp);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .oees-table tbody td.num {
+    text-align: right;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .oees-table tbody tr { transition: background .08s; }
+  .oees-table tbody tr:hover td { background: #f8fbfe; }
+  .oees-table tbody tr.dategrp td,
+  .oees-table tbody tr.date-group td,
+  .oees-table tbody tr.oees-date-group td {
+    background: #f4f7fb;
+    color: var(--ts);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 5px 10px;
+    text-transform: uppercase;
+  }
+
+  .shift-dist { margin-top: 14px; border-top: 1px solid var(--bd); padding-top: 10px; }
+  .shift-dist-h { font-size: 11px; font-weight: 600; color: var(--tp); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .shift-dist-sub { font-size: 11px; color: var(--ts); margin-bottom: 8px; }
+  .shift-dist-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .shift-dist-tbl td { padding: 5px 8px; border-bottom: 1px solid #f0f2f5; vertical-align: middle; }
+  .shift-dist-tbl td.lbl { color: var(--tp); font-weight: 500; }
+  .shift-dist-tbl td.num { text-align: right; font-family: "IBM Plex Mono", monospace; font-weight: 600; color: var(--tp); font-variant-numeric: tabular-nums; width: 90px; }
+  .shift-dist-tbl td.sub { color: var(--ts); font-size: 11px; }
+  .shift-dist-tbl tr.hi td { background: #eaf4fd; }
+  .shift-dist-tbl tr.hi td.lbl { color: var(--ac); }
+
+    /* shift-dist */
+    .shift-dist-sub {
+      font-size: 11px;
+      color: var(--tm);
+      margin: 0 0 8px 0;
+    }
+    .shift-dist-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .shift-dist-tbl td {
+      padding: 6px 8px;
+      border-bottom: 1px dashed var(--bd);
+      vertical-align: middle;
+    }
+    .shift-dist-tbl tr:last-child td { border-bottom: none; }
+    .shift-dist-tbl td.lbl { color: var(--ts); font-weight: 500; width: 40%; }
+    .shift-dist-tbl td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: var(--tp);
+      width: 20%;
+      white-space: nowrap;
+    }
+    .shift-dist-tbl td.sub {
+      color: var(--tm);
+      font-size: 11px;
+      padding-left: 12px;
+    }
+    .shift-dist-tbl tr.hi td.lbl,
+    .shift-dist-tbl tr.hi td.num { color: var(--ac); }
+    .shift-dist-tbl tr.hi { background: var(--ac-soft); }
+    /* /shift-dist */
+</style>
+{% endblock %} {% block content %}
+<div class="oees-wrap">
+  <div class="oees-header">
+    <div>
+      <h1 class="oees-title">OEE Summary</h1>
+      <div class="oees-sub" id="oees-period-sub">Loading...</div>
+    </div>
+    {% if can_export %}
+    <div>
+      <button class="oees-btn ghost" id="oees-export">
+        <i class="fa fa-download"></i>Export Excel
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="oees-preset-row" id="oees-presets">
+    <button class="oees-preset" data-preset="today">Today</button>
+    <button class="oees-preset" data-preset="yesterday">Yesterday</button>
+    <button class="oees-preset" data-preset="this_week">This Week</button>
+    <button class="oees-preset" data-preset="last_week">Last Week</button>
+    <button class="oees-preset active" data-preset="this_month">
+      This Month
+    </button>
+    <button class="oees-preset" data-preset="last_month">Last Month</button>
+    <button class="oees-preset" data-preset="custom">Custom</button>
+  </div>
+
+  <div class="oees-filters">
+    <div class="oees-fld">
+      <label>From Date</label><input type="date" id="oees-from" />
+    </div>
+    <div class="oees-fld">
+      <label>To Date</label><input type="date" id="oees-to" />
+    </div>
+    <div class="oees-fld">
+      <label>Zone</label
+      ><select id="oees-zone">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="oees-fld">
+      <label>Machine</label
+      ><select id="oees-machine">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="oees-fld">
+      <label>Operator</label
+      ><select id="oees-operator">
+        <option value="">All</option>
+      </select>
+    </div>
+    <button class="oees-btn" id="oees-apply">Apply</button>
+    <button class="oees-btn ghost" id="oees-reset">Reset</button>
+  </div>
+
+  <div class="report-summary" id="oees-stats-strip">Loading...</div>
+
+  <div class="oees-grid-top">
+    <div class="oees-card">
+      <div class="oees-card-head">
+        <div class="left">
+          <div class="icon"><i class="fa fa-list-alt"></i></div>
+          <strong>Sessions</strong>
+        </div>
+        <span class="oees-count" id="c-sessions">0 rows</span>
+      </div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-sessions">
+          <thead>
+            <tr>
+              <th>Shift</th>
+              <th>Machine</th>
+              <th>Operator</th>
+              <th>JC</th>
+              <th class="num">OK</th>
+              <th class="num">Planned</th>
+              <th class="num">Util</th>
+              <th class="num">Run</th>
+              <th class="num">AR %</th>
+              <th class="num">PR %</th>
+              <th class="num">QR %</th>
+              <th class="num">OEE %</th>
+            </tr>
+          </thead>
+          <tbody id="body-sessions">
+            <tr>
+              <td colspan="12" class="oees-loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="oees-card">
+      <div class="oees-card-head">
+        <div class="left">
+          <div class="icon"><i class="fa fa-exclamation-triangle"></i></div>
+          <strong>Top Losses</strong>
+        </div>
+        <span class="oees-count" id="c-losses">0 rows</span>
+      </div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-losses">
+          <thead>
+            <tr>
+              <th style="width: 60px">Code</th>
+              <th>Reason</th>
+              <th style="width: 50px">Cat</th>
+              <th class="num" style="width: 90px">Minutes</th>
+            </tr>
+          </thead>
+          <tbody id="body-losses">
+            <tr>
+              <td colspan="4" class="oees-loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="oees-grid-single">
+    <div class="oees-card">
+      <div class="oees-card-head">
+        <div class="left">
+          <div class="icon"><i class="fa fa-cogs"></i></div>
+          <strong>Activities</strong>
+        </div>
+        <span class="oees-count" id="c-activities">0 rows</span>
+      </div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-activities">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Shift</th>
+              <th>Type</th>
+              <th>Activity</th>
+              <th>Machine</th>
+              <th>Operator</th>
+              <th>Start</th>
+              <th>End</th>
+              <th class="num">Planned</th>
+              <th class="num">Util</th>
+              <th class="num">AR Loss</th>
+              <th class="num">PR Loss</th>
+            </tr>
+          </thead>
+          <tbody id="body-activities">
+            <tr>
+              <td colspan="12" class="oees-loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="oees-grid-single">
+    <div class="oees-card">
+      <div class="oees-card-head">
+        <div class="left">
+          <div class="icon"><i class="fa fa-wrench"></i></div>
+          <strong>Tool Entries</strong>
+        </div>
+        <span class="oees-count" id="c-tools">0 rows</span>
+      </div>
+      <div class="oees-card-body">
+        <table class="oees-table" id="tbl-tools">
+          <thead>
+            <tr>
+              <!-- OEE_SUMMARY_TOOL_CURRENT_MODEL_V132_UI -->
+              <th>Date</th>
+              <th>Shift</th>
+              <th>JC</th>
+              <th>Machine</th>
+              <th>Operator</th>
+              <th class="num">No.</th>
+              <th>Tool UID</th>
+              <th>Position</th>
+              <th>Tool Name</th>
+              <th class="num">Tool Life</th>
+              <th>Remark</th>
+            </tr>
+          </thead>
+          <tbody id="body-tools">
+            <tr>
+              <td colspan="11" class="oees-loading">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="oee-drill-overlay" id="drillOverlay"></div>
+<aside class="oee-drill-panel" id="drillPanel" aria-hidden="true">
+  <div class="oee-drill-head">
+    <div>
+      <div class="oee-drill-eyebrow" id="drillEyebrow">Details</div>
+      <div class="oee-drill-title" id="drillTitle">Select a row</div>
+      <div class="oee-drill-sub" id="drillSub"></div>
+    </div>
+    <button id="drillClose" class="oee-drill-close" aria-label="Close">
+      &times;
+    </button>
+  </div>
+  <div class="oee-drill-body" id="drillBody"></div>
+</aside>
+{% endblock %} {% block extra_scripts %}
+<script>
+  (function () {
+    "use strict";
+    const CAN_EXPORT = "{{ 'true' if can_export else 'false' }}" === "true";
+    const API = "/api/oee-machine-summary";
+    const DAY_NAMES = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    let cache = {};
+    let byId = {};
+
+
+    function fmt(v, d) {
+      if (v === null || v === undefined || v === "") return "\u2013";
+      const n = Number(v);
+      if (isNaN(n)) return "\u2013";
+      if (d === undefined) return n.toLocaleString();
+      return n.toLocaleString(undefined, {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      });
+    }
+    function fmtPct(v) {
+      if (v === null || v === undefined) return "\u2013";
+      return Number(v).toFixed(1) + "%";
+    }
+    function pad(n) {
+      return n < 10 ? "0" + n : "" + n;
+    }
+    function isoDate(d) {
+      return (
+        d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
+      );
+    }
+    function firstOfMonth(d) {
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+    function clamp01(x) {
+      return Math.max(0, Math.min(100, Number(x || 0)));
+    }
+    function dayName(dstr) {
+      if (!dstr) return "";
+      const d = new Date(dstr + "T00:00:00");
+      if (isNaN(d.getTime())) return "";
+      return DAY_NAMES[d.getDay()];
+    }
+
+    function qString() {
+      const p = new URLSearchParams();
+      const fd = ERP.$("#oees-from").value,
+        td = ERP.$("#oees-to").value;
+      if (fd) p.set("from_date", fd);
+      if (td) p.set("to_date", td);
+      const z = ERP.$("#oees-zone").value,
+        m = ERP.$("#oees-machine").value,
+        op = ERP.$("#oees-operator").value;
+      if (z) p.set("zone", z);
+      if (m) p.set("machine_id", m);
+      if (op) p.set("operator_master_id", op);
+      return p.toString();
+    }
+
+    function applyPreset(name) {
+      const t = new Date();
+      let fd, td;
+      if (name === "today") {
+        fd = new Date(t);
+        td = new Date(t);
+      } else if (name === "yesterday") {
+        const y = new Date(t);
+        y.setDate(y.getDate() - 1);
+        fd = y;
+        td = y;
+      } else if (name === "this_week") {
+        const day = (t.getDay() + 6) % 7;
+        fd = new Date(t);
+        fd.setDate(fd.getDate() - day);
+        td = new Date(t);
+      } else if (name === "last_week") {
+        const day = (t.getDay() + 6) % 7;
+        const thisStart = new Date(t);
+        thisStart.setDate(thisStart.getDate() - day);
+        td = new Date(thisStart);
+        td.setDate(td.getDate() - 1);
+        fd = new Date(td);
+        fd.setDate(fd.getDate() - 6);
+      } else if (name === "this_month") {
+        fd = firstOfMonth(t);
+        td = new Date(t);
+      } else if (name === "last_month") {
+        const firstThis = firstOfMonth(t);
+        td = new Date(firstThis);
+        td.setDate(td.getDate() - 1);
+        fd = firstOfMonth(td);
+      } else return;
+      ERP.$("#oees-from").value = isoDate(fd);
+      ERP.$("#oees-to").value = isoDate(td);
+    }
+
+    async function loadFilters() {
+      try {
+        const r = await fetch(API + "/filters");
+        const d = await r.json();
+        if (d.error) return;
+        (d.zones || []).forEach((z) => {
+          const o = document.createElement("option");
+          o.value = z;
+          o.textContent = z;
+          ERP.$("#oees-zone").appendChild(o);
+        });
+        (d.machines || []).forEach((m) => {
+          const o = document.createElement("option");
+          o.value = m.id;
+          o.textContent = m.machine_no + " \u2014 " + m.machine_name;
+          ERP.$("#oees-machine").appendChild(o);
+        });
+        (d.operators || []).forEach((op) => {
+          const o = document.createElement("option");
+          o.value = op.id;
+          o.textContent = op.employee_no + " \u2014 " + op.operator_name;
+          ERP.$("#oees-operator").appendChild(o);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadFlat() {
+      ERP.$("#body-sessions").innerHTML =
+        "<tr><td colspan='12' class='oees-loading'>Loading...</td></tr>";
+      ERP.$("#body-losses").innerHTML =
+        "<tr><td colspan='4'  class='oees-loading'>Loading...</td></tr>";
+      ERP.$("#body-activities").innerHTML =
+        "<tr><td colspan='12' class='oees-loading'>Loading...</td></tr>";
+      ERP.$("#body-tools").innerHTML =
+        "<tr><td colspan='11' class='oees-loading'>Loading...</td></tr>";
+      try {
+        const r = await fetch(API + "/flat?" + qString());
+        const d = await r.json();
+        if (d.error) throw new Error(d.error);
+        cache = d;
+        byId = {};
+        (d.sessions || []).forEach((s) => {
+          byId["session-" + s.entry_id] = s;
+        });
+        (d.activities || []).forEach((a) => {
+          byId["activity-" + a.entry_id] = a;
+        });
+        (d.tool_entries || []).forEach((t) => {
+          byId["tool-" + t.tool_id] = t;
+        });
+        ERP.$("#oees-period-sub").textContent =
+          "Showing " + d.period.from_date + " to " + d.period.to_date;
+        renderStats(d.totals);
+        renderSessions(d.sessions || []);
+        renderTopLosses(d.top_losses || []);
+        renderActivities(d.activities || []);
+        renderToolEntries(d.tool_entries || []);
+      } catch (e) {
+        const msg = "Error: " + ERP.esc(e.message);
+        ERP.$("#body-sessions").innerHTML =
+          "<tr><td colspan='12' class='oees-empty'>" + msg + "</td></tr>";
+        ERP.$("#body-losses").innerHTML =
+          "<tr><td colspan='4'  class='oees-empty'>" + msg + "</td></tr>";
+        ERP.$("#body-activities").innerHTML =
+          "<tr><td colspan='12' class='oees-empty'>" + msg + "</td></tr>";
+        ERP.$("#body-tools").innerHTML =
+          "<tr><td colspan='10' class='oees-empty'>" + msg + "</td></tr>";
+      }
+    }
+
+    function renderStats(t) {      if (!t) {
+        ERP.$("#oees-stats-strip").innerHTML = '<div class="summary-item"><div class="summary-label">No data</div></div>';
+        return;
+      }
+      var items = [
+        { label: "Sessions",     value: fmt(t.session_count) },
+        { label: "Avg OEE",      value: fmtPct(t.avg_oee_pct) },
+        { label: "Planned",      value: fmt(t.total_planned, 0) + '<span class="u"> min</span>' },
+        { label: "Utilised",     value: fmt(t.total_util, 0)    + '<span class="u"> min</span>' },
+        { label: "OK Produced",  value: fmt(t.total_ok != null ? t.total_ok : (t.ok_qty || 0), 0), cls: "green" },
+        { label: "Losses",       value: fmt(t.total_losses_min || 0, 0) + '<span class="u"> min</span>' },
+        { label: "Activities",   value: fmt(t.activity_count || 0) },
+        { label: "Tool Entries", value: fmt(t.tool_entry_count || 0) }
+      ];
+      ERP.$("#oees-stats-strip").innerHTML = items.map(function (it, i) {
+        var sep = i > 0 ? '<div class="summary-sep"></div>' : '';
+        return sep +
+          '<div class="summary-item">' +
+            '<div class="summary-label">' + it.label + '</div>' +
+            '<div class="summary-value' + (it.cls ? ' ' + it.cls : '') + '">' + it.value + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderSessions(rows) {
+      const body = ERP.$("#body-sessions");
+      ERP.$("#c-sessions").textContent = rows.length + " rows";
+      if (!rows.length) {
+        body.innerHTML =
+          "<tr><td colspan='12' class='oees-empty'>No sessions.</td></tr>";
+        return;
+      }
+      // group by entry_date
+      const groups = {};
+      const order = [];
+      rows.forEach((s) => {
+        if (!groups[s.entry_date]) {
+          groups[s.entry_date] = [];
+          order.push(s.entry_date);
+        }
+        groups[s.entry_date].push(s);
+      });
+      let h = "";
+      order.forEach((d) => {
+        const arr = groups[d];
+        const avgOee =
+          arr.reduce((sum, x) => sum + Number(x.oee_pct || 0), 0) / arr.length;
+        const dn = dayName(d);
+        h +=
+          "<tr class='dategrp'><td colspan='12'>" +
+          ERP.esc(d) +
+          (dn ? " \u00b7 " + ERP.esc(dn) : "") +
+          " <span class='meta'>" +
+          arr.length +
+          " sessions \u00b7 avg OEE " +
+          avgOee.toFixed(1) +
+          " %</span></td></tr>";
+        arr.forEach((s) => {
+          h +=
+            "<tr class='click' data-key='session-" +
+            s.entry_id +
+            "'>" +
+            "<td><span class='erp-badge' data-status='muted'>" +
+            ERP.esc(s.shift_name) +
+            "</span></td>" +
+            "<td>" +
+            ERP.esc(((s.machine_no || "") + " " + (s.machine_name || "")).trim()) +
+            "</td>" +
+            "<td>" +
+            ERP.esc(s.operator_name || "") +
+            "</td>" +
+            "<td>" +
+            ERP.esc(s.job_card_no || "") +
+            "</td>" +
+            "<td class='num'>" +
+            fmt(s.ok_qty) +
+            "</td>" +
+            "<td class='num'>" +
+            fmt(s.planned_minutes, 1) +
+            "</td>" +
+            "<td class='num'>" +
+            fmt(s.utilization_minutes, 1) +
+            "</td>" +
+            "<td class='num'>" +
+            fmt(s.run_minutes, 1) +
+            "</td>" +
+            "<td class='num'><span class='pct-cell' style='--w:" +
+            clamp01(s.ar_pct) +
+            "%'>" +
+            fmtPct(s.ar_pct) +
+            "</span></td>" +
+            "<td class='num'><span class='pct-cell' style='--w:" +
+            clamp01(s.pr_pct) +
+            "%'>" +
+            fmtPct(s.pr_pct) +
+            "</span></td>" +
+            "<td class='num'><span class='pct-cell' style='--w:" +
+            clamp01(s.qr_pct) +
+            "%'>" +
+            fmtPct(s.qr_pct) +
+            "</span></td>" +
+            "<td class='num'><span class='oee-cell' style='--w:" +
+            clamp01(s.oee_pct) +
+            "%'>" +
+            fmtPct(s.oee_pct) +
+            "</span></td>" +
+            "</tr>";
+        });
+      });
+      body.innerHTML = h;
+      body
+        .querySelectorAll("tr.click")
+        .forEach((tr) =>
+          tr.addEventListener("click", () => openDrill(tr.dataset.key)),
+        );
+    }
+
+    function renderTopLosses(rows) {
+      const body = ERP.$("#body-losses");
+      ERP.$("#c-losses").textContent = rows.length + " rows";
+      if (!rows.length) {
+        body.innerHTML =
+          "<tr><td colspan='4' class='oees-empty'>No losses.</td></tr>";
+        return;
+      }
+      const maxMin = Math.max.apply(
+        null,
+        rows.map((r) => Number(r.total_min || 0)).concat([1]),
+      );
+      let h = "";
+      rows.forEach((l) => {
+        const w = Math.max(2, (Number(l.total_min || 0) / maxMin) * 100);
+        h +=
+          "<tr>" +
+          "<td><span class='loss-code'>" +
+          ERP.esc(l.code) +
+          "</span></td>" +
+          "<td>" +
+          ERP.esc(l.name || "") +
+          "</td>" +
+          "<td><span class='erp-badge' data-status='muted'>" +
+          ERP.esc(l.category) +
+          "</span></td>" +
+          "<td class='num'><span class='loss-bar-wrap' style='--w:" +
+          w.toFixed(0) +
+          "%'>" +
+          fmt(l.total_min, 1) +
+          "</span></td>" +
+          "</tr>";
+      });
+      body.innerHTML = h;
+    }
+
+    function typeTag(t) {
+      const u = String(t || "").toUpperCase();
+      if (u === "MACHINE_LOSS")
+        return "<span class='erp-badge' data-status='err'>Machine Loss</span>";
+      if (u === "TOOL_ROOM")
+        return "<span class='erp-badge' data-status='info'>Tool Room</span>";
+      if (u === "DEVELOPMENT")
+        return "<span class='erp-badge' data-status='muted'>Development</span>";
+      return "<span class='erp-badge' data-status='muted'>" + ERP.esc(u) + "</span>";
+    }
+    function typeLabel(t) {
+      const u = String(t || "").toUpperCase();
+      if (u === "MACHINE_LOSS") return "Machine Loss";
+      if (u === "TOOL_ROOM") return "Tool Room";
+      if (u === "DEVELOPMENT") return "Development";
+      return u;
+    }
+
+    function renderActivities(rows) {
+      const body = ERP.$("#body-activities");
+      ERP.$("#c-activities").textContent = rows.length + " rows";
+      if (!rows.length) {
+        body.innerHTML =
+          "<tr><td colspan='12' class='oees-empty'>No activities.</td></tr>";
+        return;
+      }
+      let h = "";
+      rows.forEach((a) => {
+        h +=
+          "<tr class='click' data-key='activity-" +
+          a.entry_id +
+          "'>" +
+          "<td>" +
+          ERP.esc(a.entry_date) +
+          "</td>" +
+          "<td><span class='erp-badge' data-status='muted'>" +
+          ERP.esc(a.shift_name) +
+          "</span></td>" +
+          "<td>" +
+          typeTag(a.activity_type) +
+          "</td>" +
+          "<td>" +
+          ERP.esc(a.activity_name || "") +
+          "</td>" +
+          "<td>" +
+          ERP.esc(((a.machine_no || "") + " " + (a.machine_name || "")).trim()) +
+          "</td>" +
+          "<td>" +
+          ERP.esc(a.operator_name || "") +
+          "</td>" +
+          "<td>" +
+          ERP.esc(a.start_time || "") +
+          "</td>" +
+          "<td>" +
+          ERP.esc(a.end_time || "") +
+          "</td>" +
+          "<td class='num'>" +
+          fmt(a.planned_minutes, 1) +
+          "</td>" +
+          "<td class='num'>" +
+          fmt(a.utilization_minutes, 1) +
+          "</td>" +
+          "<td class='num'>" +
+          fmt(a.ar_loss_minutes, 1) +
+          "</td>" +
+          "<td class='num'>" +
+          fmt(a.pr_loss_minutes, 1) +
+          "</td>" +
+          "</tr>";
+      });
+      body.innerHTML = h;
+      body
+        .querySelectorAll("tr.click")
+        .forEach((tr) =>
+          tr.addEventListener("click", () => openDrill(tr.dataset.key)),
+        );
+    }
+
+    function renderToolEntries(rows) {
+      const body = ERP.$("#body-tools");
+
+      ERP.$("#c-tools").textContent =
+        rows.length + " rows";
+
+      if (!rows.length) {
+        body.innerHTML =
+          "<tr><td colspan='11' class='oees-empty'>No tool entries.</td></tr>";
+
+        return;
+      }
+
+      let h = "";
+
+      rows.forEach((t) => {
+
+        const toolLife =
+          t.tool_life === null
+          || t.tool_life === undefined
+          || t.tool_life === ""
+            ? ""
+            : fmt(t.tool_life, 3);
+
+        h +=
+          "<tr class='click' data-key='tool-" +
+          t.tool_id +
+          "'>" +
+
+          "<td>" +
+          ERP.esc(t.entry_date || "") +
+          "</td>" +
+
+          "<td><span class='erp-badge' data-status='muted'>" +
+          ERP.esc(t.shift_name || "") +
+          "</span></td>" +
+
+          "<td>" +
+          ERP.esc(t.job_card_no || "") +
+          "</td>" +
+
+          "<td>" +
+          ERP.esc(
+            (
+              (t.machine_no || "")
+              + " "
+              + (t.machine_name || "")
+            ).trim()
+          ) +
+          "</td>" +
+
+          "<td>" +
+          ERP.esc(t.operator_name || "") +
+          "</td>" +
+
+          "<td class='num'>" +
+          ERP.esc(t.position || "") +
+          "</td>" +
+
+          "<td><span class='uid-mono'>" +
+          ERP.esc(t.uid || "") +
+          "</span></td>" +
+
+          "<td>" +
+          ERP.esc(t.tool_name || "") +
+          "</td>" +
+
+          "<td class='num'>" +
+          ERP.esc(toolLife) +
+          "</td>" +
+
+          "<td>" +
+          ERP.esc(t.remark || "") +
+          "</td>" +
+
+          "</tr>";
+      });
+
+      body.innerHTML = h;
+
+      body
+        .querySelectorAll("tr.click")
+        .forEach((tr) =>
+          tr.addEventListener(
+            "click",
+            () => openDrill(
+              tr.dataset.key
+            )
+          )
+        );
+    }
+
+    function findLinkedEntry(entryId) {
+      if (!entryId) return null;
+      const s = (cache.sessions || []).find((x) => x.entry_id === entryId);
+      if (s) return { kind: "session", data: s };
+      const a = (cache.activities || []).find((x) => x.entry_id === entryId);
+      if (a) return { kind: "activity", data: a };
+      return null;
+    }
+
+    function statusBadge(status) {
+      const s = String(status || "").toUpperCase();
+      if (!s) return "";
+      let ds = "ok";
+      if (s === "AVAILABLE") ds = "ok";
+      else if (s === "IN USE" || s === "IN_USE" || s === "ASSIGNED")
+        ds = "info";
+      else if (s === "SCRAP" || s === "SCRAPPED") ds = "err";
+      else if (s === "REGRIND" || s === "SEND_FOR_REGRIND") ds = "warn";
+      else ds = "info";
+      return "<span class='erp-badge' data-status='" + ds + "'>" + ERP.esc(s) + "</span>";
+    }
+
+    
+    // ============================================================
+    // SHIFT_TIMES_V1 — keep in sync with
+    //   static/js/oee_machine_operator.js  (MACHINE_OEE_SHIFT_TIMES_V11)
+    // ============================================================
+    var SHIFT_TIMES = {
+      "Shift 1": { start: "08:00:00", end: "19:00:00" },
+      "Shift 2": { start: "19:00:00", end: "06:00:00" }
+    };
+    function _timeToMin(t) {
+      if (!t) return null;
+      var p = String(t).split(":");
+      var h = parseInt(p[0], 10), m = parseInt(p[1] || "0", 10);
+      if (isNaN(h) || isNaN(m)) return null;
+      return h * 60 + m;
+    }
+    function _fmtMin(v) {
+      var h = Math.floor(v / 60), m = v % 60;
+      return h > 0 ? (h + "h " + (m ? m + "m" : "")).trim() : (m + " min");
+    }
+    
+    function _normalizeShiftName(name) {
+      if (!name) return null;
+      var s = String(name).trim().toLowerCase();
+      if (s === "shift 1" || s === "shift1" || s === "1st" || s === "1"
+          || s === "day" || s === "day shift" || s === "shift-1") return "Shift 1";
+      if (s === "shift 2" || s === "shift2" || s === "2nd" || s === "2"
+          || s === "night" || s === "night shift" || s === "shift-2") return "Shift 2";
+      // Fall back: try exact match to SHIFT_TIMES keys
+      if (typeof SHIFT_TIMES !== "undefined" && SHIFT_TIMES[name]) return name;
+      return null;
+    }
+    
+    function computeShiftDistribution(rec) {
+      if (!rec) return null;
+      var rawShiftName = rec.shift_name || rec.shift;
+      var shiftName = _normalizeShiftName(rawShiftName);
+      var shift = shiftName ? SHIFT_TIMES[shiftName] : null;
+      if (!shift) return null;
+      var startTime = rec.start_time || rec.session_start_time || rec.entry_start_time;
+      var endTime   = rec.end_time   || rec.session_end_time   || rec.entry_end_time;
+      if (!startTime || !endTime) return null;
+      var entryStart = _timeToMin(startTime);
+      var entryEnd   = _timeToMin(endTime);
+      var shiftStart = _timeToMin(shift.start);
+      var shiftEnd   = _timeToMin(shift.end);
+      if (entryStart == null || entryEnd == null) return null;
+      // Handle Shift 2 crossing midnight
+      if (shiftEnd < shiftStart) {
+        shiftEnd += 1440;
+        if (entryStart < shiftStart - 720) entryStart += 1440; // morning-of-next-day
+        if (entryEnd   < shiftStart - 720) entryEnd   += 1440;
+      }
+      if (entryEnd < entryStart) entryEnd += 1440; // entry crosses midnight
+      var before  = Math.max(0, Math.min(entryEnd, shiftStart) - entryStart);
+      var inShift = Math.max(0, Math.min(entryEnd, shiftEnd) - Math.max(entryStart, shiftStart));
+      var after   = Math.max(0, entryEnd - shiftEnd);
+      return {
+        shiftName: shiftName,
+        shiftWindow: shift.start.slice(0,5) + " - " + shift.end.slice(0,5),
+        entryStart: String(startTime).slice(0,5),
+        entryEnd:   String(endTime).slice(0,5),
+        total: entryEnd - entryStart,
+        before: before, inShift: inShift, after: after
+      };
+    }
+    function renderShiftDistribution(rec) {
+      var d = computeShiftDistribution(rec);
+      if (!d) return "";
+      if (d.before === 0 && d.after === 0) return ""; // fully inside shift
+      var rows = "";
+      if (d.before > 0) {
+        rows += '<tr><td class="lbl">Before ' + d.shiftName + '</td>' +
+                '<td class="num">' + d.before + ' min</td>' +
+                '<td class="sub">outside shift window</td></tr>';
+      }
+      rows += '<tr class="hi"><td class="lbl">In ' + d.shiftName + '</td>' +
+              '<td class="num">' + d.inShift + ' min</td>' +
+              '<td class="sub">counted in shift capacity</td></tr>';
+      if (d.after > 0) {
+        rows += '<tr><td class="lbl">After ' + d.shiftName + '</td>' +
+                '<td class="num">' + d.after + ' min</td>' +
+                '<td class="sub">outside shift window</td></tr>';
+      }
+      return "<div class='erp-section'>" +
+        "<div class='erp-sec-title'><i class='fa fa-clock-o'></i>Shift Distribution</div>" +
+        "<div class='shift-dist-sub'>Entry " + d.entryStart + " – " + d.entryEnd +
+        " (" + d.total + " min) · " + d.shiftName + " window " + d.shiftWindow + "</div>" +
+        "<table class='shift-dist-tbl'><tbody>" + rows + "</tbody></table>" +
+        "</div>";
+    }
+
+    function openDrill(key) {
+      const rec = byId[key];
+      if (!rec) return;
+      const kind = key.split("-")[0];
+      if (kind === "session") renderSessionPanel(rec);
+      if (kind === "activity") renderActivityPanel(rec);
+      if (kind === "tool") renderToolPanel(rec);
+      // Append Shift Distribution for time-bound records
+      if (kind === "session" || kind === "activity") {
+        try {
+          var _sd = renderShiftDistribution(rec);
+          console.log("[shift-dist]", "kind:", kind,
+                      "shift_name:", rec.shift_name,
+                      "start:", rec.start_time,
+                      "end:", rec.end_time,
+                      "html_len:", (_sd || "").length);
+          if (_sd) {
+            var _body = document.getElementById("drillBody");
+            if (_body) _body.insertAdjacentHTML("beforeend", _sd);
+          }
+        } catch (e) { console.error("[shift-dist] error:", e); }
+      }
+      ERP.$("#drillOverlay").classList.add("open");
+      ERP.$("#drillPanel").classList.add("open");
+      ERP.$("#drillPanel").setAttribute("aria-hidden", "false");
+    }
+    function closeDrill() {
+      ERP.$("#drillOverlay").classList.remove("open");
+      ERP.$("#drillPanel").classList.remove("open");
+      ERP.$("#drillPanel").setAttribute("aria-hidden", "true");
+    }
+
+    function cycleDisplay(m, s) {
+      const mm = String(m || 0).padStart(2, "0");
+      const ss = String(s || 0).padStart(2, "0");
+      return mm + ":" + ss;
+    }
+
+    function renderSessionPanel(s) {
+      ERP.$("#drillEyebrow").textContent = "Session";
+      ERP.$("#drillTitle").textContent =
+        "Session \u00b7 " + s.entry_date + " \u00b7 " + s.shift_name;
+      ERP.$("#drillSub").textContent =
+        ((s.machine_no || "") + " " + (s.machine_name || "")).trim() +
+        " \u00b7 " +
+        (s.operator_name || "");
+      let h = "";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-tachometer'></i>Performance</div><div class='oee-kpi-grid'>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>PLANNED</div><div class='v'>" +
+        fmt(s.planned_minutes, 1) +
+        " min</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>UTIL</div><div class='v'>" +
+        fmt(s.utilization_minutes, 1) +
+        " min</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>RUN</div><div class='v'>" +
+        fmt(s.run_minutes, 1) +
+        " min</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>OK QTY</div><div class='v'>" +
+        fmt(s.ok_qty) +
+        "</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>AR %</div><div class='v'>" +
+        fmt(s.ar_pct, 1) +
+        "</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>PR %</div><div class='v'>" +
+        fmt(s.pr_pct, 1) +
+        "</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>QR %</div><div class='v'>" +
+        fmt(s.qr_pct, 1) +
+        "</div></div>";
+      h +=
+        "<div class='oee-kpi-cell'><div class='k'>OEE %</div><div class='v'>" +
+        fmt(s.oee_pct, 1) +
+        "</div></div>";
+      h += "</div></div>";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-file-text-o'></i>Job Card</div><dl class='oee-drill-kv'>";
+      h +=
+        "<dt>JC No</dt><dd class='mono'>" +
+        ERP.esc(s.job_card_no || "\u2013") +
+        "</dd>";
+      h += "<dt>Item</dt><dd>" + ERP.esc(s.item_name || "\u2013") + "</dd>";
+      h += "<dt>Process</dt><dd>" + ERP.esc(s.process_name || "\u2013") + "</dd>";
+      h +=
+        "<dt>Start / End</dt><dd>" +
+        ERP.esc(s.start_time || "\u2013") +
+        " \u2013 " +
+        ERP.esc(s.end_time || "\u2013") +
+        "</dd>";
+      h +=
+        "<dt>Cycle / L\u00b7U</dt><dd>" +
+        cycleDisplay(s.cycle_minutes, s.cycle_seconds) +
+        " min / " +
+        cycleDisplay(s.load_unload_minutes, s.load_unload_seconds) +
+        " sec</dd>";
+      h +=
+        "<dt>OK / Rej / Hold</dt><dd>" +
+        fmt(s.ok_qty) +
+        " / " +
+        fmt(s.rejected_qty) +
+        " / " +
+        fmt(s.hold_qty) +
+        "</dd>";
+      h +=
+        "<dt>Formula profile</dt><dd>" +
+        ERP.esc(s.formula_profile || "\u2013") +
+        "</dd>";
+      h += "</dl></div>";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-exclamation-triangle'></i>Losses (A1 \u2013 A27)</div>";
+      if (!s.losses || !s.losses.length) {
+        h +=
+          "<div style='color:var(--tm);font-size:12px;'>No losses recorded.</div>";
+      } else {
+        let total = 0;
+        s.losses.forEach((l) => {
+          total += Number(l.minutes || 0);
+          h +=
+            "<div class='oee-drill-loss'><div><span class='loss-code'>" +
+            ERP.esc(l.code) +
+            "</span></div>" +
+            "<div style='color:var(--ts);'>" +
+            ERP.esc(l.name || "") +
+            "</div>" +
+            "<div class='mins'>" +
+            fmt(l.minutes, 0) +
+            " min</div>" +
+            "<div class='cat'>" +
+            ERP.esc(l.category) +
+            "</div></div>";
+        });
+        h +=
+          "<div class='oee-drill-loss' style='margin-top:6px;border-top:1px solid var(--bd);padding-top:8px;'>" +
+          "<div><span class='loss-code' style='opacity:0.5;'>\u2014</span></div>" +
+          "<div style='font-weight:600;'>Total loss</div>" +
+          "<div class='mins'>" +
+          fmt(total, 0) +
+          " min</div><div class='cat'></div></div>";
+      }
+      h += "</div>";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-wrench'></i>Tools on this JC</div>";
+
+      if (!s.tools || !s.tools.length) {
+
+        h +=
+          "<div style='color:var(--tm);font-size:12px;'>No tools recorded.</div>";
+
+      } else {
+
+        s.tools.forEach((t) => {
+
+          const life =
+            t.tool_life === null
+            || t.tool_life === undefined
+            ? "-"
+            : fmt(t.tool_life, 3);
+
+          h +=
+            "<div class='oee-drill-list-row'>" +
+
+            "<div class='lhs'>" +
+            ERP.esc(t.uid || "") +
+            "</div>" +
+
+            "<div class='mid'>" +
+            ERP.esc(t.tool_name || "") +
+            "</div>" +
+
+            "<div class='rhs'>" +
+            "Life " +
+            ERP.esc(life) +
+            (
+              t.remark
+                ? " | " + ERP.esc(t.remark)
+                : ""
+            ) +
+            "</div>" +
+
+            "</div>";
+        });
+      }
+
+      h += "</div>";
+
+      ERP.$("#drillBody").innerHTML = h;
+    }
+
+    function renderActivityPanel(a) {
+      ERP.$("#drillEyebrow").textContent = "Activity";
+      ERP.$("#drillTitle").textContent =
+        typeLabel(a.activity_type) + " \u00b7 " + (a.activity_name || "");
+      ERP.$("#drillSub").textContent =
+        a.entry_date +
+        " \u00b7 " +
+        a.shift_name +
+        " \u00b7 " +
+        (a.operator_name || "");
+      let h = "";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-info-circle'></i>Details</div><dl class='oee-drill-kv'>";
+      h += "<dt>Type</dt><dd>" + typeTag(a.activity_type) + "</dd>";
+      h += "<dt>Activity</dt><dd>" + ERP.esc(a.activity_name || "") + "</dd>";
+      h +=
+        "<dt>Machine</dt><dd>" +
+        ERP.esc(((a.machine_no || "") + " " + (a.machine_name || "")).trim()) +
+        "</dd>";
+      h += "<dt>Operator</dt><dd>" + ERP.esc(a.operator_name || "") + "</dd>";
+      h += "<dt>Shift</dt><dd>" + ERP.esc(a.shift_name || "") + "</dd>";
+      h +=
+        "<dt>Start / End</dt><dd>" +
+        ERP.esc(a.start_time || "") +
+        " \u2013 " +
+        ERP.esc(a.end_time || "") +
+        "</dd>";
+      h += "<dt>Planned</dt><dd>" + fmt(a.planned_minutes, 1) + " min</dd>";
+      h +=
+        "<dt>Utilization</dt><dd>" +
+        fmt(a.utilization_minutes, 1) +
+        " min</dd>";
+      h += "<dt>AR Loss</dt><dd>" + fmt(a.ar_loss_minutes, 1) + " min</dd>";
+      h += "<dt>PR Loss</dt><dd>" + fmt(a.pr_loss_minutes, 1) + " min</dd>";
+      if (a.remarks) h += "<dt>Remarks</dt><dd>" + ERP.esc(a.remarks) + "</dd>";
+      h += "</dl></div>";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-exclamation-triangle'></i>Losses on this activity</div>";
+      if (!a.losses || !a.losses.length) {
+        h += "<div style='color:var(--tm);font-size:12px;'>No losses.</div>";
+      } else {
+        let total = 0;
+        a.losses.forEach((l) => {
+          total += Number(l.minutes || 0);
+          h +=
+            "<div class='oee-drill-loss'><div><span class='loss-code'>" +
+            ERP.esc(l.code) +
+            "</span></div>" +
+            "<div style='color:var(--ts);'>" +
+            ERP.esc(l.name || "") +
+            "</div>" +
+            "<div class='mins'>" +
+            fmt(l.minutes, 0) +
+            " min</div>" +
+            "<div class='cat'>" +
+            ERP.esc(l.category) +
+            "</div></div>";
+        });
+        h +=
+          "<div class='oee-drill-loss' style='margin-top:6px;border-top:1px solid var(--bd);padding-top:8px;'>" +
+          "<div><span class='loss-code' style='opacity:0.5;'>\u2014</span></div>" +
+          "<div style='font-weight:600;'>Total loss</div>" +
+          "<div class='mins'>" +
+          fmt(total, 0) +
+          " min</div><div class='cat'></div></div>";
+      }
+      h += "</div>";
+      h +=
+        "<div class='erp-section'><div class='erp-sec-title'><i class='fa fa-wrench'></i>Tools used</div>";
+
+      if (!a.tools || !a.tools.length) {
+
+        h +=
+          "<div style='color:var(--tm);font-size:12px;'>No tools recorded.</div>";
+
+      } else {
+
+        a.tools.forEach((t) => {
+
+          const life =
+            t.tool_life === null
+            || t.tool_life === undefined
+            ? "-"
+            : fmt(t.tool_life, 3);
+
+          h +=
+            "<div class='oee-drill-list-row'>" +
+
+            "<div class='lhs'>" +
+            ERP.esc(t.uid || "") +
+            "</div>" +
+
+            "<div class='mid'>" +
+            ERP.esc(t.tool_name || "") +
+            "</div>" +
+
+            "<div class='rhs'>" +
+            "Life " +
+            ERP.esc(life) +
+            (
+              t.remark
+                ? " | " + ERP.esc(t.remark)
+                : ""
+            ) +
+            "</div>" +
+
+            "</div>";
+        });
+      }
+
+      h += "</div>";
+
+      ERP.$("#drillBody").innerHTML = h;
+    }
+
+    function renderToolPanel(t) {
+
+      ERP.$("#drillEyebrow").textContent =
+        "Tool Entry";
+
+      ERP.$("#drillTitle").textContent =
+        t.uid || "Tool";
+
+      ERP.$("#drillSub").textContent =
+        (t.entry_date || "")
+        + " | "
+        + (
+            (t.machine_no || "")
+            + " "
+            + (t.machine_name || "")
+          ).trim()
+        + (
+            t.operator_name
+              ? " | " + t.operator_name
+              : ""
+          );
+
+      const toolLife =
+        t.tool_life === null
+        || t.tool_life === undefined
+        || t.tool_life === ""
+          ? "-"
+          : fmt(t.tool_life, 3);
+
+      const context =
+        t.is_standalone
+          ? "Standalone"
+          : (
+              t.job_card_no
+              || "-"
+            );
+
+      let h = "";
+
+      h +=
+        "<div class='uid-hero'>" +
+        "<div class='iconbox'><i class='fa fa-wrench'></i></div>" +
+        "<div style='flex:1;min-width:0;'>" +
+
+        "<div class='big'>" +
+        ERP.esc(t.uid || "-") +
+        "</div>" +
+
+        "<div class='small'>" +
+        ERP.esc(t.tool_name || "") +
+        "</div>" +
+
+        "</div>" +
+        "</div>";
+
+      h +=
+        "<div class='erp-section'>" +
+
+        "<div class='erp-sec-title'>" +
+        "<i class='fa fa-file-text-o'></i>" +
+        "Tool Entry" +
+        "</div>" +
+
+        "<dl class='oee-drill-kv'>";
+
+      h +=
+        "<dt>Date</dt><dd>" +
+        ERP.esc(t.entry_date || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>Shift</dt><dd>" +
+        ERP.esc(t.shift_name || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>Context</dt><dd>" +
+        ERP.esc(context) +
+        "</dd>";
+
+      h +=
+        "<dt>Machine</dt><dd>" +
+        ERP.esc(
+          (
+            (t.machine_no || "")
+            + " "
+            + (t.machine_name || "")
+          ).trim()
+          || "-"
+        ) +
+        "</dd>";
+
+      h +=
+        "<dt>Operator</dt><dd>" +
+        ERP.esc(t.operator_name || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>No.</dt><dd>" +
+        ERP.esc(t.position || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>Position</dt><dd>" +
+        ERP.esc(t.position_name || t.position_code || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>Tool UID</dt><dd class='mono'>" +
+        ERP.esc(t.uid || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>Tool Name</dt><dd>" +
+        ERP.esc(t.tool_name || "-") +
+        "</dd>";
+
+      h +=
+        "<dt>Tool Life</dt><dd>" +
+        ERP.esc(toolLife) +
+        "</dd>";
+
+      h +=
+        "<dt>Remark</dt><dd>" +
+        ERP.esc(t.remark || "-") +
+        "</dd>";
+
+      h +=
+        "</dl>" +
+        "</div>";
+
+      ERP.$("#drillBody").innerHTML =
+        h;
+    }
+
+    function refresh() {
+      loadFlat();
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      applyPreset("this_month");
+      await loadFilters();
+      ERP.$$(".oees-preset").forEach((b) => {
+        b.addEventListener("click", () => {
+          ERP.$$(".oees-preset").forEach((x) => x.classList.remove("active"));
+          b.classList.add("active");
+          applyPreset(b.dataset.preset);
+          refresh();
+        });
+      });
+      ERP.$("#oees-apply").addEventListener("click", () => {
+        ERP.$$(".oees-preset").forEach((x) => x.classList.remove("active"));
+        ERP.$$(".oees-preset[data-preset='custom']").forEach((x) =>
+          x.classList.add("active"),
+        );
+        refresh();
+      });
+      ERP.$("#oees-reset").addEventListener("click", () => {
+        ERP.$("#oees-zone").value = "";
+        ERP.$("#oees-machine").value = "";
+        ERP.$("#oees-operator").value = "";
+        ERP.$$(".oees-preset").forEach((x) => x.classList.remove("active"));
+        ERP.$$(".oees-preset[data-preset='this_month']").forEach((x) =>
+          x.classList.add("active"),
+        );
+        applyPreset("this_month");
+        refresh();
+      });
+      ERP.$("#drillClose").addEventListener("click", closeDrill);
+      ERP.$("#drillOverlay").addEventListener("click", closeDrill);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && ERP.$("#drillPanel").classList.contains("open"))
+          closeDrill();
+      });
+      if (CAN_EXPORT) {
+        const btn = document.getElementById("oees-export");
+        if (btn)
+          btn.addEventListener("click", () => {
+            const mid = ERP.$("#oees-machine").value;
+            if (!mid) {
+              ERP.toast(
+                "Select a specific Machine in the filter first, then click Export.",
+                "warn"
+              );
+              return;
+            }
+            const p = new URLSearchParams(qString());
+            window.location.href = API + "/export-excel?" + p.toString();
+          });
+      }
+      refresh();
+    });
+  })();
+</script>
+
+<style>
+  /* Step-2: merged Activities + Tool Entries tab card */
+  .oees-tabbar {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    display: flex;
+    gap: 4px;
+    padding: 0 12px;
+    background: linear-gradient(180deg, #f8fbfe, #f2f7fc);
+    border-bottom: 1px solid var(--bd);
+  }
+  .oees-tab-btn {
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 14px 9px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ts);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .oees-tab-btn:hover {
+    color: var(--tp);
+  }
+  .oees-tab-btn.active {
+    color: var(--ac);
+    border-bottom-color: var(--ac);
+    background: var(--card);
+  }
+  .oees-tab-btn .oees-count {
+    background: var(--rl);
+    border: 1px solid var(--bd);
+    color: var(--ts);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+  }
+  .oees-tab-btn.active .oees-count {
+    background: #eaf1f9;
+    color: var(--ac);
+    border-color: #cfe0f2;
+  }
+  .oees-merged-hide {
+    display: none !important;
+  }
+</style>
+<script>
+  /* OEES_TABS_INJECT_V1 — merges Top Losses + Activities + Tool Entries into one tabbed card */
+(function () {
+  function init() {
+    var lossTbl = document.getElementById("tbl-losses");
+    var actTbl  = document.getElementById("tbl-activities");
+    var tolTbl  = document.getElementById("tbl-tools");
+    if (!actTbl || !tolTbl) return;
+
+    var lossCard = lossTbl ? lossTbl.closest(".oees-card") : null;
+    var actCard  = actTbl.closest(".oees-card");
+    var tolCard  = tolTbl.closest(".oees-card");
+    if (!actCard || !tolCard) return;
+    if (actCard.dataset.tabsInit === "1") return;
+    actCard.dataset.tabsInit = "1";
+
+    // Build 3-tab bar; Top Losses is default active
+    var head = actCard.querySelector(".oees-card-head");
+    var bar = document.createElement("div");
+    bar.className = "oees-tabbar";
+    bar.innerHTML =
+      '<button type="button" class="oees-tab-btn active" data-pane="loss">' +
+        '<i class="fa fa-exclamation-triangle"></i> Top Losses ' +
+        '<span class="oees-count" id="c-losses-tab">0</span>' +
+      '</button>' +
+      '<button type="button" class="oees-tab-btn" data-pane="act">' +
+        '<i class="fa fa-cogs"></i> Activities ' +
+        '<span class="oees-count" id="c-activities-tab">0</span>' +
+      '</button>' +
+      '<button type="button" class="oees-tab-btn" data-pane="tool">' +
+        '<i class="fa fa-wrench"></i> Tool Entries ' +
+        '<span class="oees-count" id="c-tools-tab">0</span>' +
+      '</button>';
+    if (head && head.parentNode) { head.parentNode.insertBefore(bar, head); head.style.display = "none"; }
+
+    // Move Top Losses body in and mark original card hidden
+    var lossBody = lossCard ? lossCard.querySelector(".oees-card-body") : null;
+    if (lossBody) {
+      lossBody.classList.add("oees-loss-pane");
+      actCard.appendChild(lossBody);
+      lossCard.classList.add("oees-merged-hide");
+    }
+
+    // Move Tool Entries body in and hide its old card
+    var tolBody = tolCard.querySelector(".oees-card-body");
+    if (tolBody) {
+      tolBody.classList.add("oees-tool-pane");
+      tolBody.hidden = true;
+      actCard.appendChild(tolBody);
+    }
+    tolCard.classList.add("oees-merged-hide");
+
+    // Activities body already in actCard
+    var actBody = actCard.querySelector(".oees-card-body:not(.oees-tool-pane):not(.oees-loss-pane)");
+    if (actBody) { actBody.classList.add("oees-act-pane"); actBody.hidden = true; }
+
+    // Default active: Top Losses
+    if (lossBody) lossBody.hidden = false;
+
+    // Wire tab clicks
+    bar.querySelectorAll(".oees-tab-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        bar.querySelectorAll(".oees-tab-btn").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        var p = btn.dataset.pane;
+        if (lossBody) lossBody.hidden = (p !== "loss");
+        if (actBody)  actBody.hidden  = (p !== "act");
+        if (tolBody)  tolBody.hidden  = (p !== "tool");
+      });
+    });
+
+    // Sync counts (strip trailing " rows" so tab shows only the number)
+    function stripRows(s) { return String(s || "").replace(/\s*rows?\s*$/i, "").trim(); }
+    function syncCounts() {
+      var lossOld = document.getElementById("c-losses");
+      var actOld  = document.getElementById("c-activities");
+      var tolOld  = document.getElementById("c-tools");
+      var lossTab = document.getElementById("c-losses-tab");
+      var actTab  = document.getElementById("c-activities-tab");
+      var tolTab  = document.getElementById("c-tools-tab");
+      if (lossOld && lossTab) lossTab.textContent = stripRows(lossOld.textContent);
+      if (actOld  && actTab)  actTab.textContent  = stripRows(actOld.textContent);
+      if (tolOld  && tolTab)  tolTab.textContent  = stripRows(tolOld.textContent);
+    }
+    syncCounts();
+    var obs = new MutationObserver(syncCounts);
+    ["c-losses", "c-activities", "c-tools"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) obs.observe(el, { childList: true, characterData: true, subtree: true });
+    });
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.closest && e.target.closest("#oees-apply, .oees-preset")) {
+        setTimeout(syncCounts, 250);
+      }
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+{% endblock %}

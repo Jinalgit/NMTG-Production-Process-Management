@@ -1823,6 +1823,14 @@
 </div>
 
 {% endblock %} {% block extra_scripts %}
+
+<script>
+/* PLANT_HEAD_PROCESS_MASTER_ROLE_V1 */
+window.JMS_USER_ROLE = "{{ session.get('role', '') }}";
+window.JMS_IS_PLANT_HEAD_READ_ONLY =
+  {{ 'true' if session.get('role') == 'plant_head' else 'false' }};
+</script>
+
 <script src="{{ url_for('static', filename='js/page2.js') }}?v={{ version }}"></script>
 <script src="{{ url_for('static', filename='js/upload.js') }}?v={{ version }}"></script>
 {% endblock %}

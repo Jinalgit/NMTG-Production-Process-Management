@@ -1349,3 +1349,237 @@ async function pmOpenFlowDrawer(bomNo) {
 /* Override old hidden-panel function */
 window.loadBomProcessFlow = pmOpenFlowDrawer;
 /* PM_FLOW_DRAWER_FIX_END */
+
+
+/* =========================================================
+   PLANT_HEAD_PROCESS_MASTER_READ_ONLY_V1
+   Plant Head:
+   - may browse/search/filter/view Process Master
+   - may NOT add/edit/update/delete/upload
+   - backend global guard remains final protection
+   ========================================================= */
+
+(function () {
+
+  function pmIsPlantHeadReadOnly() {
+    return (
+      String(window.JMS_USER_ROLE || "")
+        .trim()
+        .toLowerCase() === "plant_head"
+    );
+  }
+
+
+  if (!pmIsPlantHeadReadOnly()) {
+    return;
+  }
+
+
+  function pmReadOnlyMessage() {
+    if (typeof showToast === "function") {
+      showToast(
+        "Plant Head access is read-only.",
+        "error"
+      );
+    }
+  }
+
+
+  /*
+   * Block the actual Process Master edit functions
+   * BEFORE an edit/save workflow can begin.
+   */
+  function protectFunction(name) {
+
+    const original = window[name];
+
+    if (typeof original !== "function") {
+      return;
+    }
+
+    window[name] = function () {
+
+      if (pmIsPlantHeadReadOnly()) {
+        pmReadOnlyMessage();
+        return;
+      }
+
+      return original.apply(
+        this,
+        arguments
+      );
+    };
+  }
+
+
+  [
+    "openEditModal",
+    "updateItem",
+    "saveNewItem",
+    "openAddItemModal",
+    "deleteItem",
+    "confirmDeleteItem"
+  ].forEach(protectFunction);
+
+
+  /*
+   * These onclick operations are modification actions.
+   * Search/filter/view controls are intentionally untouched.
+   */
+  const blockedActions = [
+    "openEditModal",
+    "updateItem",
+    "saveNewItem",
+    "openAddItem",
+    "deleteItem",
+    "confirmDelete",
+    "removeEditProcess",
+    "addEditProcess",
+    "moveEditProcess"
+  ];
+
+
+  function isBlockedAction(element) {
+
+    if (!element) {
+      return false;
+    }
+
+    const code =
+      String(
+        element.getAttribute("onclick")
+        || ""
+      );
+
+    return blockedActions.some(
+      action => code.includes(action)
+    );
+  }
+
+
+  function applyProcessMasterReadOnly() {
+
+    if (!pmIsPlantHeadReadOnly()) {
+      return;
+    }
+
+    /*
+     * Hide dynamically-generated Add/Edit/Delete buttons.
+     */
+    document
+      .querySelectorAll("[onclick]")
+      .forEach(function (element) {
+
+        if (isBlockedAction(element)) {
+          element.style.display = "none";
+          element.setAttribute(
+            "data-plant-head-hidden",
+            "1"
+          );
+        }
+
+      });
+
+
+    /*
+     * Process Master uploads are write operations.
+     */
+    document
+      .querySelectorAll('input[type="file"]')
+      .forEach(function (input) {
+
+        input.disabled = true;
+        input.style.display = "none";
+
+      });
+
+
+    /*
+     * If an edit modal was already open due to browser state,
+     * close it instead of leaving editable controls visible.
+     */
+    const editModal =
+      document.getElementById(
+        "edit-item-modal"
+      );
+
+    if (
+      editModal
+      &&
+      editModal.classList.contains("open")
+    ) {
+      editModal.classList.remove("open");
+    }
+
+
+    const addModal =
+      document.getElementById(
+        "add-item-modal"
+      );
+
+    if (
+      addModal
+      &&
+      addModal.classList.contains("open")
+    ) {
+      addModal.classList.remove("open");
+    }
+  }
+
+
+  /*
+   * Prevent a dynamically-created write button from executing
+   * even before MutationObserver hides it.
+   */
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const actionElement =
+        event.target.closest("[onclick]");
+
+      if (
+        !actionElement
+        ||
+        !isBlockedAction(actionElement)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      pmReadOnlyMessage();
+
+    },
+    true
+  );
+
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+      applyProcessMasterReadOnly();
+    }
+  );
+
+
+  const observer =
+    new MutationObserver(function () {
+      applyProcessMasterReadOnly();
+    });
+
+
+  observer.observe(
+    document.documentElement,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
+
+
+  applyProcessMasterReadOnly();
+
+})();

@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OEE Summary - ERPNext Layout Draft</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+<style>
+  /* ============================================================
+     ERPNext design tokens (extracted from frappe/frappe repo)
+     ============================================================ */
+  :root {
+    --bg-color: #f5f7fa;
+    --fg-color: #ffffff;
+    --text-color: #1f272e;
+    --text-muted: #6c7680;
+    --border-color: #e2e6ea;
+    --dark-border-color: #c8d0d8;
+    --card-bg: #ffffff;
+    --primary: #2490ef;
+    --primary-hover: #1a7fd8;
+    --green-500: #29cd42;
+    --red-500: #e74c3c;
+    --blue-500: #2490ef;
+    --amber-500: #ffa00a;
+    --purple-500: #743ee2;
+
+    --page-head-height: 48px;
+    --list-row-height: 30px;
+    --radius: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --padding-xs: 4px;
+    --padding-sm: 8px;
+    --padding-md: 12px;
+    --padding-lg: 16px;
+    --padding-xl: 20px;
+    --margin-xs: 4px;
+    --margin-sm: 8px;
+    --margin-md: 12px;
+    --margin-lg: 16px;
+
+    --text-xs: 11px;
+    --text-sm: 12px;
+    --text-base: 13px;
+    --text-md: 14px;
+    --text-lg: 16px;
+    --text-xl: 18px;
+    --text-2xl: 20px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-size: var(--text-base);
+    line-height: 1.4;
+  }
+
+  .mock-banner {
+    background: linear-gradient(90deg, #1f272e, #2490ef);
+    color: #fff;
+    padding: 10px 22px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mock-banner .hint {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    opacity: 0.85;
+    font-size: 11px;
+  }
+
+  /* ============================================================
+     Page shell
+     ============================================================ */
+  .shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 40px);
+  }
+  .sidebar {
+    background: var(--fg-color);
+    border-right: 1px solid var(--border-color);
+    padding: 16px 12px;
+  }
+  .sb-brand {
+    font-weight: 700;
+    padding: 4px 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sb-item {
+    padding: 7px 10px;
+    color: var(--text-muted);
+    border-radius: var(--radius);
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 1px;
+    cursor: pointer;
+  }
+  .sb-item:hover { background: var(--bg-color); color: var(--text-color); }
+  .sb-item.active {
+    background: #eaf4fd;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .sb-item .fa { width: 14px; opacity: 0.85; }
+
+  .main { padding: 0; }
+
+  /* ============================================================
+     Page head (48px, ERPNext-style)
+     ============================================================ */
+  .page-head {
+    height: var(--page-head-height);
+    background: var(--fg-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .page-title-wrap { display: flex; align-items: center; gap: 12px; }
+  .page-title { font-size: var(--text-md); font-weight: 600; margin: 0; }
+  .page-status {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    padding-left: 10px;
+    border-left: 1px solid var(--border-color);
+  }
+
+  .btn-group { display: inline-flex; gap: 6px; }
+  .btn {
+    background: var(--fg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .12s;
+  }
+  .btn:hover { background: var(--bg-color); border-color: var(--dark-border-color); }
+  .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+  .btn i { font-size: 11px; }
+
+  /* ============================================================
+     Page form (filter panel) — ERPNext .page-form pattern
+     ============================================================ */
+  .page-form {
+    background: var(--fg-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 22px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0 8px 0 0; }
+  .form-group label {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .form-control {
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-color);
+    background: var(--fg-color);
+    min-width: 140px;
+  }
+  .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(36,144,239,0.12); }
+  .filter-spacer { flex: 1; }
+
+  /* Presets pill row */
+  .presets {
+    background: var(--fg-color);
+    padding: 8px 22px;
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+  }
+  .preset {
+    padding: 4px 12px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .preset:hover { color: var(--text-color); border-color: var(--dark-border-color); }
+  .preset.active {
+    background: var(--text-color);
+    color: #fff;
+    border-color: var(--text-color);
+  }
+
+  /* Filter chips */
+  .filter-chips {
+    background: var(--fg-color);
+    padding: 6px 22px;
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-chips .lbl {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+  .chip {
+    background: #eaf4fd;
+    color: var(--primary);
+    font-size: var(--text-xs);
+    padding: 3px 10px;
+    border-radius: var(--radius);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #cfe0f2;
+  }
+  .chip .x { cursor: pointer; opacity: 0.7; font-weight: 700; }
+  .chip .x:hover { opacity: 1; }
+
+  /* ============================================================
+     Report Summary widget — verbatim ERPNext .report-summary pattern
+     (from frappe/frappe/public/scss/desk/report.scss)
+     ============================================================ */
+  .report-summary {
+    background: var(--fg-color);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin: 14px 22px;
+    padding: 16px 15px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 12px;
+  }
+  .summary-item {
+    margin: 0 12px;
+    min-width: 160px;
+    max-width: 300px;
+    height: 62px;
+    display: flex;
+    flex-direction: column;
+    place-content: center;
+  }
+  .summary-label {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+  .summary-value {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--text-color);
+    font-feature-settings: "tnum";
+    padding-top: 8px;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .summary-value .u { font-size: var(--text-sm); color: var(--text-muted); font-weight: 500; margin-left: 2px; }
+  .summary-value.green { color: var(--green-500); }
+  .summary-value.red { color: var(--red-500); }
+  .summary-value.blue { color: var(--blue-500); }
+  .summary-separator {
+    width: 1px;
+    height: 40px;
+    background: var(--border-color);
+  }
+
+  /* ============================================================
+     Tab bar (matches OEE Dashboard)
+     ============================================================ */
+  .tabs {
+    background: var(--fg-color);
+    padding: 0 22px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 2px;
+  }
+  .tab {
+    padding: 10px 16px 9px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab:hover { color: var(--text-color); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-count {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .tab.active .tab-count { background: #eaf4fd; color: var(--primary); border-color: #cfe0f2; }
+
+  /* ============================================================
+     Report wrapper / DataTable-style
+     ============================================================ */
+  .report-wrapper {
+    padding: 12px 22px 22px;
+  }
+  .dt-wrap {
+    background: var(--fg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius) var(--radius) 0 0;
+    overflow: hidden;
+  }
+  .dt-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fbfcfd;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .dt-scroll {
+    max-height: calc(100vh - 380px);
+    overflow: auto;
+  }
+  table.dt {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--text-sm);
+    table-layout: fixed;
+  }
+  table.dt thead th {
+    background: #fbfcfd;
+    color: var(--text-muted);
+    text-align: left;
+    font-weight: 600;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  table.dt thead th .sort-i {
+    font-size: 9px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-left: 4px;
+  }
+  table.dt thead th.sorted-asc .sort-i,
+  table.dt thead th.sorted-desc .sort-i { opacity: 1; color: var(--primary); }
+  table.dt thead th:hover { background: var(--bg-color); color: var(--text-color); }
+
+  /* Sticky first column (Machine) */
+  table.dt thead th:first-child,
+  table.dt tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--fg-color);
+    border-right: 1px solid var(--border-color);
+  }
+  table.dt thead th:first-child { background: #fbfcfd; z-index: 4; }
+  table.dt tbody tr:hover td:first-child { background: #f8fbfe; }
+
+  /* Inline column-filter row (dt-row-filter) */
+  table.dt thead tr.dt-row-filter th {
+    background: #fff;
+    padding: 4px 6px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    cursor: default;
+    top: 32px;
+    z-index: 3;
+  }
+  table.dt thead tr.dt-row-filter th:hover { background: #fff; color: inherit; }
+  table.dt thead tr.dt-row-filter input {
+    width: 100%;
+    height: 22px;
+    padding: 0 6px;
+    font-size: 11px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    background: #fff;
+    font-family: inherit;
+  }
+  table.dt thead tr.dt-row-filter input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+
+  /* Body rows */
+  table.dt tbody td {
+    padding: 6px 10px;
+    height: var(--list-row-height);
+    border-bottom: 1px solid #f0f2f5;
+    vertical-align: middle;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  table.dt tbody tr { transition: background .1s; cursor: pointer; }
+  table.dt tbody tr:hover td { background: #f8fbfe; }
+  table.dt tbody tr.expanded td { background: #eaf4fd; }
+  table.dt tbody td.num { text-align: right; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-variant-numeric: tabular-nums; }
+  table.dt tbody td.sub { color: var(--text-muted); font-size: 11px; }
+
+  /* Group header rows (like date groupings in Sessions) */
+  table.dt tbody tr.dt-group td {
+    background: #f4f7fb;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    cursor: default;
+  }
+  table.dt tbody tr.dt-group td:first-child {
+    position: sticky;
+    left: 0;
+    background: #f4f7fb;
+    z-index: 2;
+  }
+
+  /* Pills for status/category */
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .pill.shift { background: #f0f4f8; color: var(--text-color); border: 1px solid var(--border-color); }
+  .pill.ar { background: #fef2ec; color: #b7591b; border: 1px solid #f5cca8; }
+  .pill.pr { background: #f0e9f7; color: #6a3fa3; border: 1px solid #dcc9ea; }
+  .pill.qr { background: #fde8ea; color: #a12c39; border: 1px solid #f2c1c7; }
+  .pill.ok { background: #e8f4ec; color: #226a44; border: 1px solid #c5e2d1; }
+  .pill.type-ml { background: #fde8ea; color: #a12c39; border: 1px solid #f2c1c7; }
+  .pill.type-tr { background: #eaf4fd; color: #1a5fb0; border: 1px solid #cfe0f2; }
+  .pill.type-dv { background: #f0e9f7; color: #6a3fa3; border: 1px solid #dcc9ea; }
+  .mono { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--text-color); }
+
+  /* OEE cell coloring */
+  .oee-good { color: var(--green-500); font-weight: 600; }
+  .oee-mid  { color: var(--amber-500); font-weight: 600; }
+  .oee-bad  { color: var(--red-500); font-weight: 600; }
+
+  /* Expand-in-place detail row (no side drawer) */
+  tr.detail-row td {
+    background: #fbfcfd !important;
+    padding: 12px 16px !important;
+    height: auto !important;
+    white-space: normal;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .detail-item .k {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .detail-item .v {
+    font-size: var(--text-sm);
+    color: var(--text-color);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .detail-section-title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 10px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .detail-losses {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .loss-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    font-size: var(--text-xs);
+  }
+  .loss-row .lm { font-family: "IBM Plex Mono", monospace; color: var(--text-color); font-weight: 500; }
+
+  .expand-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+    transition: transform .15s;
+  }
+  tr.expanded .expand-toggle { transform: rotate(90deg); color: var(--primary); }
+
+  /* Footer strip */
+  .report-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #fbfcfd;
+    border: 1px solid var(--border-color);
+    border-top: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  /* Pane switching */
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  @media (max-width: 1100px) {
+    .report-summary { justify-content: flex-start; }
+    .detail-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="mock-banner">
+  <span>OEE Summary - ERPNext Report Layout Draft</span>
+  <span class="hint">click a row to expand-in-place - click column header to sort - use inline row-filter under Sessions header</span>
+</div>
+
+<div class="shell">
+  <div class="sidebar">
+    <div class="sb-brand"><i class="fa fa-industry"></i> NMTG JMS</div>
+    <div class="sb-item"><i class="fa fa-home"></i> Home</div>
+    <div class="sb-item"><i class="fa fa-file-text-o"></i> Job Cards</div>
+    <div class="sb-item"><i class="fa fa-scissors"></i> Cutting Plan</div>
+    <div class="sb-item"><i class="fa fa-cogs"></i> Process Master</div>
+    <div class="sb-item"><i class="fa fa-cube"></i> Traceability</div>
+    <div class="sb-item"><i class="fa fa-tachometer"></i> OEE</div>
+    <div class="sb-item"><i class="fa fa-line-chart"></i> OEE Dashboard</div>
+    <div class="sb-item active"><i class="fa fa-list-alt"></i> OEE Summary</div>
+    <div class="sb-item"><i class="fa fa-wrench"></i> Tool UID Register</div>
+  </div>
+
+  <div class="main">
+
+    <!-- Page head -->
+    <div class="page-head">
+      <div class="page-title-wrap">
+        <h1 class="page-title">OEE Summary</h1>
+        <span class="page-status">2026-09-01 to 2026-09-12</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn"><i class="fa fa-refresh"></i> Refresh</button>
+        <button class="btn"><i class="fa fa-file-excel-o"></i> Export Excel</button>
+        <button class="btn primary"><i class="fa fa-check"></i> Apply</button>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="presets">
+      <span class="preset">Today</span>
+      <span class="preset">Yesterday</span>
+      <span class="preset">This Week</span>
+      <span class="preset">Last Week</span>
+      <span class="preset active">This Month</span>
+      <span class="preset">Last Month</span>
+    </div>
+
+    <!-- Filter panel -->
+    <div class="page-form">
+      <div class="form-group">
+        <label>From Date</label>
+        <input type="date" class="form-control" value="2026-09-01">
+      </div>
+      <div class="form-group">
+        <label>To Date</label>
+        <input type="date" class="form-control" value="2026-09-12">
+      </div>
+      <div class="form-group">
+        <label>Zone</label>
+        <select class="form-control"><option>All</option><option>Turning</option><option>Milling</option></select>
+      </div>
+      <div class="form-group">
+        <label>Machine</label>
+        <select class="form-control"><option>All</option><option>CNC 01 CT-20</option></select>
+      </div>
+      <div class="form-group">
+        <label>Operator</label>
+        <select class="form-control"><option>All</option></select>
+      </div>
+      <div class="form-group">
+        <label>Shift</label>
+        <select class="form-control"><option>All</option><option>1st</option><option>2nd</option></select>
+      </div>
+      <div class="filter-spacer"></div>
+      <button class="btn" style="height: 28px;">Reset</button>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="filter-chips">
+      <span class="lbl">Active filters:</span>
+      <span class="chip">Zone: Turning <span class="x">&times;</span></span>
+      <span class="chip">Machine: CNC 01 CT-20 <span class="x">&times;</span></span>
+    </div>
+
+    <!-- Report Summary (KPI cards) - ERPNext .report-summary widget -->
+    <div class="report-summary">
+      <div class="summary-item">
+        <div class="summary-label">Sessions</div>
+        <div class="summary-value">9</div>
+      </div>
+      <div class="summary-separator"></div>
+      <div class="summary-item">
+        <div class="summary-label">Total Planned</div>
+        <div class="summary-value">1,230<span class="u"> min</span></div>
+      </div>
+      <div class="summary-separator"></div>
+      <div class="summary-item">
+        <div class="summary-label">Total Utilised</div>
+        <div class="summary-value">870<span class="u"> min</span></div>
+      </div>
+      <div class="summary-separator"></div>
+      <div class="summary-item">
+        <div class="summary-label">OK Produced</div>
+        <div class="summary-value green">168</div>
+      </div>
+      <div class="summary-separator"></div>
+      <div class="summary-item">
+        <div class="summary-label">Rejected</div>
+        <div class="summary-value red">0</div>
+      </div>
+      <div class="summary-separator"></div>
+      <div class="summary-item">
+        <div class="summary-label">Losses</div>
+        <div class="summary-value">360<span class="u"> min</span></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-p="sessions"><i class="fa fa-list-alt"></i> Sessions <span class="tab-count">9</span></button>
+      <button class="tab" data-p="losses"><i class="fa fa-exclamation-triangle"></i> Top Losses <span class="tab-count">5</span></button>
+      <button class="tab" data-p="activities"><i class="fa fa-cogs"></i> Activities <span class="tab-count">17</span></button>
+      <button class="tab" data-p="tools"><i class="fa fa-wrench"></i> Tool Entries <span class="tab-count">14</span></button>
+    </div>
+
+    <!-- Sessions pane -->
+    <div class="pane active" data-pane="sessions">
+      <div class="report-wrapper">
+        <div class="dt-wrap">
+          <div class="dt-toolbar">
+            <span>9 rows - Sorted by Date desc, Shift asc</span>
+            <span><i class="fa fa-filter"></i> Type in header row to filter columns</span>
+          </div>
+          <div class="dt-scroll">
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th style="width: 130px;">Machine <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 60px;">Shift <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 190px;">Operator <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 110px;">JC No. <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 60px;" class="num">OK <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 90px;" class="num">Planned <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 90px;" class="num">Util. <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 80px;" class="num">Run <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 80px;" class="num">AR% <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 80px;" class="num">PR% <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 80px;" class="num">QR% <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 90px;" class="num">OEE <span class="sort-i"><i class="fa fa-sort-desc"></i></span></th>
+                </tr>
+                <tr class="dt-row-filter">
+                  <th><input placeholder="filter..."></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder="filter..."></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                  <th><input placeholder=""></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="dt-group"><td colspan="12">Friday, 2026-09-11 &nbsp;·&nbsp; 2 sessions &nbsp;·&nbsp; avg OEE 41.7 %</td></tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>MANGAJI RAMJIBHAI THAKOR</td>
+                  <td class="mono">0000114352</td>
+                  <td class="num">10</td>
+                  <td class="num">60.0</td>
+                  <td class="num">30.0</td>
+                  <td class="num">25.0</td>
+                  <td class="num">50.0%</td>
+                  <td class="num">83.3%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-mid">41.7%</td>
+                </tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>MANGAJI RAMJIBHAI THAKOR</td>
+                  <td class="mono">0000114062</td>
+                  <td class="num">30</td>
+                  <td class="num">180.0</td>
+                  <td class="num">130.0</td>
+                  <td class="num">75.0</td>
+                  <td class="num">72.2%</td>
+                  <td class="num">57.7%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-mid">41.7%</td>
+                </tr>
+                <tr class="dt-group"><td colspan="12">Tuesday, 2026-09-08 &nbsp;·&nbsp; 4 sessions &nbsp;·&nbsp; avg OEE 46.4 %</td></tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>MANGAJI RAMJIBHAI THAKOR</td>
+                  <td class="mono">0000114002</td>
+                  <td class="num">2</td>
+                  <td class="num">60.0</td>
+                  <td class="num">10.0</td>
+                  <td class="num">5.0</td>
+                  <td class="num">16.7%</td>
+                  <td class="num">50.0%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-bad">8.3%</td>
+                </tr>
+                <tr class="expanded">
+                  <td><i class="fa fa-caret-right expand-toggle"></i> CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>ABHISHEK MAGANBHAI GEDIYA</td>
+                  <td class="mono">0000114406</td>
+                  <td class="num">25</td>
+                  <td class="num">360.0</td>
+                  <td class="num">310.0</td>
+                  <td class="num">62.5</td>
+                  <td class="num">86.1%</td>
+                  <td class="num">20.2%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-mid">70.8%</td>
+                </tr>
+                <tr class="detail-row">
+                  <td colspan="12">
+                    <div class="detail-grid">
+                      <div class="detail-item"><div class="k">Item</div><div class="v">SPROCKET 20B-1 Z=25</div></div>
+                      <div class="detail-item"><div class="k">Process</div><div class="v">CNC Machining 1st Side</div></div>
+                      <div class="detail-item"><div class="k">Start / End</div><div class="v">08:00 - 14:00</div></div>
+                      <div class="detail-item"><div class="k">Cycle</div><div class="v">2 min 30 s</div></div>
+                      <div class="detail-item"><div class="k">Target Qty</div><div class="v">120</div></div>
+                      <div class="detail-item"><div class="k">Actual Qty</div><div class="v">25</div></div>
+                      <div class="detail-item"><div class="k">Reject Qty</div><div class="v">0</div></div>
+                      <div class="detail-item"><div class="k">Hold Qty</div><div class="v">0</div></div>
+                    </div>
+                    <div class="detail-section-title"><i class="fa fa-exclamation-triangle"></i> Losses (5)</div>
+                    <div class="detail-losses">
+                      <div class="loss-row"><span><span class="pill ar">A7</span> Setup & alignment</span><span class="lm">140.0 min</span></div>
+                      <div class="loss-row"><span><span class="pill ar">A14</span> Component inspection time</span><span class="lm">90.0 min</span></div>
+                      <div class="loss-row"><span><span class="pill ar">A3</span> Lunch / dinner / tea</span><span class="lm">80.0 min</span></div>
+                      <div class="loss-row"><span><span class="pill ar">A27</span> Machine startup</span><span class="lm">30.0 min</span></div>
+                      <div class="loss-row"><span><span class="pill ar">A5</span> Another program setup</span><span class="lm">20.0 min</span></div>
+                    </div>
+                    <div class="detail-section-title"><i class="fa fa-wrench"></i> Tool Entries (2)</div>
+                    <div class="detail-losses">
+                      <div class="loss-row"><span>T1 &nbsp;·&nbsp; DR 15.5 HSS &nbsp;·&nbsp; UID DR-2609-00002 R0</span><span class="lm">Setup + 8 pcs</span></div>
+                      <div class="loss-row"><span>T2 &nbsp;·&nbsp; TP M8 &nbsp;·&nbsp; UID TP-2609-00001 R0</span><span class="lm">17 pcs</span></div>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>ABHISHEK MAGANBHAI GEDIYA</td>
+                  <td class="mono">0000114406</td>
+                  <td class="num">25</td>
+                  <td class="num">180.0</td>
+                  <td class="num">130.0</td>
+                  <td class="num">62.5</td>
+                  <td class="num">72.2%</td>
+                  <td class="num">48.1%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-mid">34.7%</td>
+                </tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>MANGAJI RAMJIBHAI THAKOR</td>
+                  <td class="mono">0000114002</td>
+                  <td class="num">2</td>
+                  <td class="num">60.0</td>
+                  <td class="num">10.0</td>
+                  <td class="num">5.0</td>
+                  <td class="num">16.7%</td>
+                  <td class="num">50.0%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-bad">8.3%</td>
+                </tr>
+                <tr class="dt-group"><td colspan="12">Monday, 2026-09-07 &nbsp;·&nbsp; 2 sessions &nbsp;·&nbsp; avg OEE 100.0 %</td></tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>ABHISHEK MAGANBHAI GEDIYA</td>
+                  <td class="mono">0000113998</td>
+                  <td class="num">40</td>
+                  <td class="num">120.0</td>
+                  <td class="num">100.0</td>
+                  <td class="num">120.0</td>
+                  <td class="num">83.3%</td>
+                  <td class="num">120.0%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-good">100.0%</td>
+                </tr>
+                <tr>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">2ND</span></td>
+                  <td>MANGAJI RAMJIBHAI THAKOR</td>
+                  <td class="mono">0000113998</td>
+                  <td class="num">34</td>
+                  <td class="num">210.0</td>
+                  <td class="num">180.0</td>
+                  <td class="num">108.0</td>
+                  <td class="num">85.7%</td>
+                  <td class="num">60.0%</td>
+                  <td class="num">100%</td>
+                  <td class="num oee-mid">51.4%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="report-footer">
+          <span>9 records</span>
+          <span>Weighted OEE across period: 45.8%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Losses pane -->
+    <div class="pane" data-pane="losses">
+      <div class="report-wrapper">
+        <div class="dt-wrap">
+          <div class="dt-toolbar">
+            <span>5 rows - Sorted by Minutes desc</span>
+          </div>
+          <div class="dt-scroll">
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Code <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th>Reason <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 80px;">Category <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 100px;" class="num">Minutes <span class="sort-i"><i class="fa fa-sort-desc"></i></span></th>
+                  <th style="width: 120px;" class="num">Share <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                  <th style="width: 100px;" class="num">Events <span class="sort-i"><i class="fa fa-sort"></i></span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">A7</td>
+                  <td>સેટઅપ અને ગોઠવણ</td>
+                  <td><span class="pill ar">AR</span></td>
+                  <td class="num">140.0</td>
+                  <td class="num">38.9%</td>
+                  <td class="num">4</td>
+                </tr>
+                <tr>
+                  <td class="mono">A14</td>
+                  <td>નંગ ચેક કરવામાં લાગતો સમય</td>
+                  <td><span class="pill ar">AR</span></td>
+                  <td class="num">90.0</td>
+                  <td class="num">25.0%</td>
+                  <td class="num">3</td>
+                </tr>
+                <tr>
+                  <td class="mono">A3</td>
+                  <td>લંચ / ડિનર / ચા</td>
+                  <td><span class="pill ar">AR</span></td>
+                  <td class="num">80.0</td>
+                  <td class="num">22.2%</td>
+                  <td class="num">5</td>
+                </tr>
+                <tr>
+                  <td class="mono">A27</td>
+                  <td>મશીન શરૂ કરવું</td>
+                  <td><span class="pill ar">AR</span></td>
+                  <td class="num">30.0</td>
+                  <td class="num">8.3%</td>
+                  <td class="num">2</td>
+                </tr>
+                <tr>
+                  <td class="mono">A5</td>
+                  <td>અન્ય મશીનોમાં પ્રોગ્રામ સેટઅપ કરવા જવું</td>
+                  <td><span class="pill ar">AR</span></td>
+                  <td class="num">20.0</td>
+                  <td class="num">5.6%</td>
+                  <td class="num">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="report-footer">
+          <span>5 records</span>
+          <span>Total lost minutes: 360.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activities pane -->
+    <div class="pane" data-pane="activities">
+      <div class="report-wrapper">
+        <div class="dt-wrap">
+          <div class="dt-toolbar">
+            <span>17 rows - Sorted by Date desc</span>
+          </div>
+          <div class="dt-scroll">
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th style="width: 100px;">Date</th>
+                  <th style="width: 130px;">Machine</th>
+                  <th style="width: 60px;">Shift</th>
+                  <th style="width: 130px;">Type</th>
+                  <th>Description</th>
+                  <th style="width: 90px;" class="num">Duration</th>
+                  <th style="width: 190px;">Operator</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-09-11</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td><span class="pill type-tr">TOOL ROOM</span></td>
+                  <td>Fixture rebuild after crash</td>
+                  <td class="num">180 min</td>
+                  <td>MANGAJI R. THAKOR</td>
+                </tr>
+                <tr>
+                  <td>2026-09-10</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">2ND</span></td>
+                  <td><span class="pill type-dv">DEVELOPMENT</span></td>
+                  <td>Trial - new sprocket profile</td>
+                  <td class="num">145 min</td>
+                  <td>ABHISHEK M. GEDIYA</td>
+                </tr>
+                <tr>
+                  <td>2026-09-08</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td><span class="pill type-ml">MACHINE LOSS</span></td>
+                  <td>Power outage - 45 min</td>
+                  <td class="num">45 min</td>
+                  <td>ALL</td>
+                </tr>
+                <tr>
+                  <td>2026-09-06</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td><span class="pill type-tr">TOOL ROOM</span></td>
+                  <td>Turret indexer service</td>
+                  <td class="num">120 min</td>
+                  <td>ABHISHEK M. GEDIYA</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="report-footer">
+          <span>17 records (showing 4)</span>
+          <span>Total activity time: 1,240 min (20.7 hrs)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tool Entries pane -->
+    <div class="pane" data-pane="tools">
+      <div class="report-wrapper">
+        <div class="dt-wrap">
+          <div class="dt-toolbar">
+            <span>14 rows - Sorted by Date desc</span>
+          </div>
+          <div class="dt-scroll">
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th style="width: 100px;">Date</th>
+                  <th style="width: 130px;">Machine</th>
+                  <th style="width: 60px;">Shift</th>
+                  <th style="width: 50px;">Pos.</th>
+                  <th style="width: 200px;">Tool</th>
+                  <th style="width: 150px;">Tool UID</th>
+                  <th style="width: 60px;">Cycle</th>
+                  <th style="width: 110px;">JC No.</th>
+                  <th style="width: 80px;" class="num">Pcs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2026-09-11</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>T1</td>
+                  <td>DR-0001 Drill 15.5 HSS</td>
+                  <td class="mono">DR-2609-00002</td>
+                  <td>R0</td>
+                  <td class="mono">0000114352</td>
+                  <td class="num">10</td>
+                </tr>
+                <tr>
+                  <td>2026-09-10</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>T2</td>
+                  <td>TP-0002 Tap M8x1.25</td>
+                  <td class="mono">TP-2609-00001</td>
+                  <td>R0</td>
+                  <td class="mono">0000114062</td>
+                  <td class="num">30</td>
+                </tr>
+                <tr>
+                  <td>2026-09-08</td>
+                  <td>CNC 01 CT-20</td>
+                  <td><span class="pill shift">1ST</span></td>
+                  <td>T1</td>
+                  <td>DR-0001 Drill 15.5 HSS</td>
+                  <td class="mono">DR-2609-00002</td>
+                  <td>R0</td>
+                  <td class="mono">0000114002</td>
+                  <td class="num">2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="report-footer">
+          <span>14 records (showing 3)</span>
+          <span>Distinct UIDs used: 5 - Distinct tool masters: 4</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){
+      document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("active");});
+      t.classList.add("active");
+      document.querySelectorAll(".pane").forEach(function(p){p.classList.remove("active");});
+      document.querySelector('.pane[data-pane="'+t.dataset.p+'"]').classList.add("active");
+    });
+  });
+  // Row expand toggle
+  document.querySelectorAll("tbody tr:not(.dt-group):not(.detail-row)").forEach(function(r){
+    r.addEventListener("click", function(){
+      var next = r.nextElementSibling;
+      if (next && next.classList.contains("detail-row")) {
+        r.classList.toggle("expanded");
+        next.style.display = next.style.display === "none" ? "" : "none";
+      }
+    });
+  });
+</script>
+</body>
+</html>

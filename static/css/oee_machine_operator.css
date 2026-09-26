@@ -7183,6 +7183,450 @@ input::-webkit-outer-spin-button {
     }
 }
 
+
+
+/* OEE_TOOL_CHILD_TABLE_V125_CSS */
+
+/*
+ * ERP-style child table for independent Tool Entry.
+ * This overrides only the V125 child-table presentation.
+ */
+
+.machine-oee-tool-child-table-v125 {
+    width: 100%;
+
+    overflow-x: auto;
+
+    border:
+        1px solid
+        #d9e0e8;
+
+    border-radius: 6px;
+
+    background: #ffffff;
+}
+
+
+/* ---------------------------------------------------------
+   TABLE HEADER
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-head-v125 {
+    display: grid;
+
+    grid-template-columns:
+        54px
+        minmax(300px, 2fr)
+        minmax(210px, 1fr)
+        minmax(260px, 1.35fr)
+        46px;
+
+    align-items: center;
+
+    min-width: 900px;
+    min-height: 36px;
+
+    background: #f5f7fa;
+
+    border-bottom:
+        1px solid
+        #d9e0e8;
+
+    color: #6b7280;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+.machine-oee-tool-child-head-v125 > div {
+    display: flex;
+
+    align-items: center;
+
+    min-width: 0;
+    height: 100%;
+
+    padding: 8px 10px;
+
+    border-right:
+        1px solid
+        #e5e9ef;
+}
+
+
+.machine-oee-tool-child-head-v125 > div:last-child {
+    border-right: 0;
+}
+
+
+/* ---------------------------------------------------------
+   ROW CONTAINER
+   --------------------------------------------------------- */
+
+.machine-oee-tool-rows-v1 {
+    display: block !important;
+}
+
+
+.machine-oee-tool-row-v1.machine-oee-tool-child-row-v125 {
+    display: grid !important;
+
+    grid-template-columns:
+        54px
+        minmax(300px, 2fr)
+        minmax(210px, 1fr)
+        minmax(260px, 1.35fr)
+        46px;
+
+    align-items: stretch;
+
+    min-width: 900px;
+    min-height: 48px;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+    border-bottom:
+        1px solid
+        #e7ebf0 !important;
+
+    border-radius: 0 !important;
+
+    background: #ffffff !important;
+}
+
+
+.machine-oee-tool-row-v1.machine-oee-tool-child-row-v125:last-child {
+    border-bottom: 0 !important;
+}
+
+
+/* Every cell */
+.machine-oee-tool-child-no-v125,
+.machine-oee-tool-child-uid-v125,
+.machine-oee-tool-life-wrap-v125,
+.machine-oee-tool-child-remark-v125,
+.machine-oee-tool-child-action-v125 {
+    min-width: 0;
+
+    padding: 7px 10px;
+
+    border-right:
+        1px solid
+        #edf0f4;
+}
+
+
+.machine-oee-tool-child-action-v125 {
+    border-right: 0;
+}
+
+
+/* ---------------------------------------------------------
+   ROW NUMBER
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-no-v125 {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: center;
+}
+
+
+.machine-oee-tool-child-no-v125
+.machine-oee-tool-position-number-v1 {
+    width: auto !important;
+    height: auto !important;
+
+    min-width: 0 !important;
+
+    padding: 3px 5px !important;
+
+    border-radius: 4px !important;
+
+    background: transparent !important;
+
+    color: #475569 !important;
+
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+
+/* ---------------------------------------------------------
+   COMMON INPUTS
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-uid-v125
+.machine-oee-tool-uid-v1,
+
+.machine-oee-tool-life-wrap-v125
+.machine-oee-tool-life-v125,
+
+.machine-oee-tool-child-remark-v125
+.machine-oee-tool-remark-v125 {
+
+    width: 100%;
+
+    min-height: 34px;
+
+    margin: 0;
+
+    box-sizing: border-box;
+
+    padding: 6px 9px;
+
+    border:
+        1px solid
+        #d5dbe3;
+
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    color: #172235;
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    outline: none;
+}
+
+
+.machine-oee-tool-child-uid-v125
+.machine-oee-tool-uid-v1:focus,
+
+.machine-oee-tool-life-wrap-v125
+.machine-oee-tool-life-v125:focus,
+
+.machine-oee-tool-child-remark-v125
+.machine-oee-tool-remark-v125:focus {
+
+    border-color:
+        var(--accent, #2f6397);
+
+    box-shadow:
+        0 0 0 2px
+        rgba(47, 99, 151, .08);
+}
+
+
+/* ---------------------------------------------------------
+   TOOL LIFE + UOM
+   --------------------------------------------------------- */
+
+.machine-oee-tool-life-wrap-v125 {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.machine-oee-tool-uom-v125 {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 42px;
+    min-height: 30px;
+
+    padding: 0 7px;
+
+    border-radius: 4px;
+
+    background: #f3f5f8;
+
+    color: #5f6b7a;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------
+   UID LOOKUP INFO - KEEP COMPACT INSIDE CELL
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-uid-v125
+.machine-oee-tool-uid-info-v117 {
+
+    margin-top: 5px;
+
+    padding: 5px 7px;
+
+    border:
+        1px solid
+        #d9e6f3;
+
+    border-radius: 4px;
+
+    background: #f7fbff;
+
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+
+.machine-oee-tool-child-uid-v125
+.machine-oee-tool-uid-error-v117 {
+
+    margin-top: 4px;
+
+    font-size: 10px;
+}
+
+
+/* ---------------------------------------------------------
+   REMOVE BUTTON
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-action-v125 {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: center;
+}
+
+
+.machine-oee-tool-child-action-v125
+.machine-oee-tool-remove-v1 {
+
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    border:
+        1px solid
+        transparent;
+
+    border-radius: 4px;
+
+    background: transparent;
+
+    color: #64748b;
+
+    cursor: pointer;
+}
+
+
+.machine-oee-tool-child-action-v125
+.machine-oee-tool-remove-v1:hover {
+
+    border-color: #fecaca;
+
+    background: #fff5f5;
+
+    color: #b42318;
+}
+
+
+/* ---------------------------------------------------------
+   CHILD TABLE ACTIONS
+   --------------------------------------------------------- */
+
+.machine-oee-tool-section-v1
+.machine-oee-tool-add-wrap-v1 {
+
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: flex-start !important;
+
+    gap: 8px !important;
+
+    margin-top: 8px !important;
+}
+
+
+.machine-oee-tool-section-v1
+.machine-oee-tool-add-v1 {
+
+    min-height: 31px;
+
+    padding: 5px 10px;
+
+    border:
+        1px solid
+        #d4dae2;
+
+    border-radius: 4px;
+
+    background: #f7f8fa;
+
+    color: #344054;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+.machine-oee-tool-section-v1
+.machine-oee-tool-add-v1:hover:not(:disabled) {
+
+    border-color:
+        #b7c3d0;
+
+    background:
+        #eef1f5;
+}
+
+
+.machine-oee-tool-section-v1
+.machine-oee-tool-add-v1:disabled {
+
+    cursor: not-allowed;
+
+    opacity: .5;
+}
+
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   Preserve child-table layout using horizontal scroll.
+   --------------------------------------------------------- */
+
+@media (max-width: 900px) {
+
+    .machine-oee-tool-child-table-v125 {
+        overflow-x: auto;
+    }
+
+
+    .machine-oee-tool-section-v1
+    .machine-oee-tool-add-wrap-v1 {
+
+        justify-content:
+            flex-start !important;
+    }
+
+
+    .machine-oee-tool-section-v1
+    .machine-oee-tool-add-v1 {
+
+        width:
+            auto !important;
+    }
+}
+
+
+/* OEE_TOOL_CHILD_TABLE_V125_CSS_END */
+
+
 /* MACHINE_OEE_TOOL_ENTRY_V1_CSS_END */
 
 
@@ -8943,3 +9387,842 @@ input::-webkit-outer-spin-button {
 
 
 /* OEE_OPERATOR_TOOL_UID_LOOKUP_V117_END */
+
+
+/* OEE_TOOL_UID_COMPACT_CHILD_V127 */
+
+/*
+ * Compact UID lookup presentation for the V125 child table.
+ * Keep Tool Life and Remark aligned with the UID input.
+ */
+
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-child-uid-v125 {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: flex-start;
+}
+
+
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-life-wrap-v125 {
+
+    align-items: start !important;
+}
+
+
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-child-remark-v125 {
+
+    display: flex;
+
+    align-items: flex-start;
+}
+
+
+/* ---------------------------------------------------------
+   COMPACT UID RESULT
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-uid-info-v117 {
+
+    display: grid;
+
+    grid-template-columns:
+        auto
+        1fr;
+
+    column-gap: 8px;
+    row-gap: 2px;
+
+    align-items: center;
+
+    margin-top: 4px !important;
+
+    padding: 4px 6px !important;
+
+    border: 0 !important;
+
+    border-radius: 3px !important;
+
+    background: #f7f9fc !important;
+
+    line-height: 1.2;
+}
+
+
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-uid-info-v117[hidden] {
+
+    display: none !important;
+}
+
+
+/*
+ * Item code
+ */
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-uid-code-v117 {
+
+    grid-column: 1;
+
+    margin: 0 !important;
+
+    color: #475569 !important;
+
+    font-size: 10px !important;
+
+    font-weight: 700 !important;
+
+    white-space: nowrap;
+}
+
+
+/*
+ * Current UID status displayed on the same top line.
+ */
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-uid-status-v117 {
+
+    grid-column: 2;
+
+    grid-row: 1;
+
+    justify-self: start;
+
+    margin: 0 !important;
+
+    padding: 2px 5px;
+
+    border-radius: 3px;
+
+    background: #eaf6ee;
+
+    color: #21723b !important;
+
+    font-size: 9px !important;
+
+    font-weight: 700 !important;
+
+    line-height: 1.15;
+
+    white-space: nowrap;
+}
+
+
+/*
+ * Tool name uses the full line underneath.
+ */
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-uid-name-v117 {
+
+    grid-column: 1 / -1;
+
+    grid-row: 2;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    color: #173d68 !important;
+
+    font-size: 10px !important;
+
+    font-weight: 600 !important;
+
+    line-height: 1.25 !important;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* Invalid UID message also stays compact. */
+.machine-oee-tool-child-row-v125
+.machine-oee-tool-uid-error-v117 {
+
+    margin-top: 4px !important;
+
+    padding: 3px 5px;
+
+    border-radius: 3px;
+
+    background: #fff5f5;
+
+    font-size: 10px !important;
+
+    line-height: 1.25;
+}
+
+
+/* OEE_TOOL_UID_COMPACT_CHILD_V127_END */
+
+
+
+/* OEE_TOOL_NAME_COLUMN_V128_CSS */
+
+/*
+ * Final Tool Entry child-table layout:
+ *
+ * No. | Tool UID | Tool Name | Tool Life | Remark | Action
+ */
+
+
+/* ---------------------------------------------------------
+   SIX-COLUMN HEADER
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-head-v125 {
+
+    grid-template-columns:
+        52px
+        minmax(220px, 1.25fr)
+        minmax(280px, 1.65fr)
+        minmax(160px, .8fr)
+        minmax(190px, .9fr)
+        minmax(230px, 1.15fr)
+        44px !important;
+
+    min-width: 1240px !important;
+}
+
+
+/* ---------------------------------------------------------
+   SIX-COLUMN ROW
+   --------------------------------------------------------- */
+
+.machine-oee-tool-row-v1.machine-oee-tool-child-row-v125 {
+
+    grid-template-columns:
+        52px
+        minmax(220px, 1.25fr)
+        minmax(280px, 1.65fr)
+        minmax(160px, .8fr)
+        minmax(190px, .9fr)
+        minmax(230px, 1.15fr)
+        44px !important;
+
+    min-width: 1240px !important;
+
+    align-items: stretch !important;
+}
+
+
+/* ---------------------------------------------------------
+   TOOL NAME CELL
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-name-v128 {
+
+    min-width: 0;
+
+    padding: 7px 10px;
+
+    border-right:
+        1px solid
+        #edf0f4;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: center;
+
+    flex-direction: column;
+}
+
+
+/*
+ * Placeholder before UID is resolved.
+ */
+.machine-oee-tool-name-empty-v128 {
+
+    color: #98a2b3;
+
+    font-size: 11px;
+
+    font-weight: 400;
+
+    line-height: 1.3;
+}
+
+
+/*
+ * Once UID lookup succeeds, hide placeholder.
+ */
+.machine-oee-tool-child-name-v128:has(
+    .machine-oee-tool-uid-info-v117:not([hidden])
+)
+.machine-oee-tool-name-empty-v128 {
+
+    display: none;
+}
+
+
+/* ---------------------------------------------------------
+   RESOLVED TOOL DATA
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-uid-info-v117 {
+
+    display: block !important;
+
+    width: 100%;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    background: transparent !important;
+
+    border-radius: 0 !important;
+}
+
+
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-uid-info-v117[hidden] {
+
+    display: none !important;
+}
+
+
+/*
+ * Main Tool Name
+ */
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-uid-name-v117 {
+
+    display: block !important;
+
+    width: 100%;
+
+    margin: 0 0 4px !important;
+
+    overflow: hidden;
+
+    color: #172235 !important;
+
+    font-size: 12px !important;
+
+    font-weight: 600 !important;
+
+    line-height: 1.3 !important;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/*
+ * Item code + status secondary line.
+ */
+.machine-oee-tool-uid-meta-v128 {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    min-width: 0;
+}
+
+
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-uid-code-v117 {
+
+    margin: 0 !important;
+
+    color: #64748b !important;
+
+    font-size: 10px !important;
+
+    font-weight: 600 !important;
+
+    white-space: nowrap;
+}
+
+
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-uid-status-v117 {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 18px;
+
+    margin: 0 !important;
+
+    padding: 2px 6px;
+
+    border-radius: 3px;
+
+    background: #eaf6ee;
+
+    color: #21723b !important;
+
+    font-size: 9px !important;
+
+    font-weight: 700 !important;
+
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------
+   UID COLUMN
+   --------------------------------------------------------- */
+
+.machine-oee-tool-child-uid-v125 {
+
+    justify-content: flex-start !important;
+}
+
+
+.machine-oee-tool-child-uid-v125
+.machine-oee-tool-uid-error-v117 {
+
+    margin-top: 4px !important;
+
+    padding: 3px 5px;
+
+    border-radius: 3px;
+
+    background: #fff5f5;
+
+    color: #b42318;
+
+    font-size: 10px !important;
+}
+
+
+/* ---------------------------------------------------------
+   ALIGN ALL EDITABLE FIELDS AT TOP
+   --------------------------------------------------------- */
+
+.machine-oee-tool-life-wrap-v125,
+.machine-oee-tool-child-remark-v125,
+.machine-oee-tool-child-action-v125 {
+
+    align-self: stretch;
+
+    align-items: flex-start !important;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE / SMALL SCREEN
+   Keep ERP table behavior with horizontal scroll.
+   --------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+
+    .machine-oee-tool-child-table-v125 {
+
+        overflow-x: auto;
+    }
+}
+
+
+/* OEE_TOOL_NAME_COLUMN_V128_CSS_END */
+
+
+
+/* OEE_TOOL_NAME_TEXTBOX_V129_CSS */
+
+/*
+ * Tool Name is a readonly child-table textbox.
+ * Match Tool UID / Tool Life / Remark alignment.
+ */
+
+.machine-oee-tool-child-name-v128 {
+
+    display: flex !important;
+
+    align-items: flex-start !important;
+
+    justify-content: flex-start !important;
+
+    padding: 7px 10px !important;
+}
+
+
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-name-input-v129 {
+
+    display: block !important;
+
+    width: 100% !important;
+
+    min-width: 0 !important;
+
+    height: auto !important;
+
+    min-height: 42px !important;
+
+    margin: 0 !important;
+
+    padding: 8px 10px !important;
+
+    box-sizing: border-box !important;
+
+    border:
+        1px solid
+        #d5dbe3 !important;
+
+    border-radius:
+        4px !important;
+
+    background:
+        #f7f9fb !important;
+
+    color:
+        #172235 !important;
+
+    font-family:
+        inherit !important;
+
+    font-size:
+        12px !important;
+
+    font-weight:
+        500 !important;
+
+    line-height:
+        1.3 !important;
+
+    outline:
+        none !important;
+
+    box-shadow:
+        none !important;
+
+    appearance:
+        none !important;
+}
+
+
+.machine-oee-tool-child-name-v128
+.machine-oee-tool-name-input-v129:focus {
+
+    border-color:
+        #d5dbe3 !important;
+
+    box-shadow:
+        none !important;
+}
+
+
+/*
+ * Keep every control aligned at the same top position.
+ */
+
+.machine-oee-tool-child-uid-v125,
+.machine-oee-tool-child-name-v128,
+.machine-oee-tool-life-wrap-v125,
+.machine-oee-tool-child-remark-v125 {
+
+    align-self:
+        stretch !important;
+
+    align-content:
+        start !important;
+}
+
+
+/* OEE_TOOL_NAME_TEXTBOX_V129_CSS_END */
+
+
+/* OEE_SINGLE_OPERATOR_SEARCH_V130_CSS */
+
+.oee-opshift-card-v60
+.actual-operator-fields-v25 {
+
+    grid-template-columns:
+        minmax(0,1fr) !important;
+
+    grid-template-rows:
+        auto
+        1fr
+        48px !important;
+}
+
+
+.oee-opshift-card-v60
+.actual-operator-search-field-v130 {
+
+    grid-column:
+        1 / -1 !important;
+
+    min-width:
+        0 !important;
+}
+
+
+.actual-operator-typeahead-v130 {
+
+    position:
+        relative;
+
+    width:
+        100%;
+}
+
+
+.actual-operator-typeahead-v130
+#machine-oee-operator-search-v130 {
+
+    width:
+        100%;
+
+    min-height:
+        38px;
+
+    box-sizing:
+        border-box;
+}
+
+
+.oee-operator-suggestions-v130 {
+
+    position:
+        absolute;
+
+    left:
+        0;
+
+    right:
+        0;
+
+    top:
+        calc(100% + 4px);
+
+    z-index:
+        1600;
+
+    max-height:
+        230px;
+
+    overflow-y:
+        auto;
+
+    border:
+        1px solid #cbd5e1;
+
+    border-radius:
+        6px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 8px 24px
+        rgba(15,42,77,.18);
+}
+
+
+.oee-operator-suggestions-v130[hidden] {
+
+    display:
+        none !important;
+}
+
+
+.oee-operator-suggestion-v130 {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+    width:
+        100%;
+
+    min-height:
+        36px;
+
+    padding:
+        7px 10px;
+
+    border:
+        0;
+
+    border-bottom:
+        1px solid #edf1f5;
+
+    background:
+        #ffffff;
+
+    color:
+        #172235;
+
+    font-family:
+        inherit;
+
+    font-size:
+        11px;
+
+    text-align:
+        left;
+
+    cursor:
+        pointer;
+}
+
+
+.oee-operator-suggestion-v130:last-child {
+
+    border-bottom:
+        0;
+}
+
+
+.oee-operator-suggestion-v130:hover,
+.oee-operator-suggestion-v130.active {
+
+    background:
+        #eef4fb;
+}
+
+
+.oee-operator-code-v130 {
+
+    flex:
+        0 0 auto;
+
+    min-width:
+        38px;
+
+    color:
+        #173d68;
+
+    font-weight:
+        800;
+}
+
+
+.oee-operator-name-v130 {
+
+    min-width:
+        0;
+
+    color:
+        #475569;
+
+    font-weight:
+        700;
+}
+
+
+.oee-opshift-card-v60
+.oee-zone-supervisor-line-v100 {
+
+    grid-column:
+        1 / -1 !important;
+
+    grid-row:
+        3 !important;
+}
+
+
+/* OEE_SINGLE_OPERATOR_SEARCH_V130_CSS_END */
+
+
+
+/* ===== TOOL_POSITION_AUTOCOMPLETE_V2 ===== */
+.machine-oee-tool-position-wrap-v134 {
+    position: relative;
+    width: 100%;
+    padding: 6px 8px;
+}
+.machine-oee-tool-position-search-v134 {
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 28px 6px 10px;
+    border: 1px solid #d8e0e8;
+    border-radius: 6px;
+    background: #fff;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%236b7280' d='M0 0l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    font-family: inherit;
+    font-size: 13px;
+    color: #172b3f;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+.machine-oee-tool-position-search-v134:focus {
+    outline: none;
+    border-color: #0b5fa5;
+    box-shadow: 0 0 0 2px rgba(11,95,165,0.10);
+}
+.machine-oee-tool-position-suggestions-v134 {
+    position: fixed;
+    z-index: 100000;
+    max-height: 240px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #d8e0e8;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(15,30,60,0.12);
+}
+.machine-oee-tool-position-suggestions-v134[hidden] { display: none !important; }
+.machine-oee-tool-position-suggestion-v134 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    border: 0;
+    border-bottom: 1px solid #eef1f5;
+    background: #fff;
+    font: inherit;
+    text-align: left;
+    color: #172b3f;
+    cursor: pointer;
+}
+.machine-oee-tool-position-suggestion-v134:last-child { border-bottom: 0; }
+.machine-oee-tool-position-suggestion-v134:hover,
+.machine-oee-tool-position-suggestion-v134.active {
+    background: #f2f7fc;
+}
+.machine-oee-tool-position-suggestion-v134 .n {
+    font-size: 13px;
+    color: #172b3f;
+    flex: 1;
+}
+/* ===== END TOOL_POSITION_AUTOCOMPLETE_V2 ===== */
+
+/* AUTO_OEE_START_BTN_HOVER_V1 */
+.machine-start-btn-v1 {
+    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+.machine-start-btn-v1:hover:not(:disabled) {
+    background: #1e5493 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(23,61,104,0.28);
+}
+.machine-start-btn-v1:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(23,61,104,0.22);
+}
+.machine-start-btn-v1:disabled {
+    opacity: 0.72;
+    cursor: wait !important;
+}

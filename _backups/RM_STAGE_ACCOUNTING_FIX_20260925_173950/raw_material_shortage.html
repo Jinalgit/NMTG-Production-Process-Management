@@ -1,0 +1,1737 @@
+{% extends "base.html" %}
+
+{% block title %}Raw Material Shortage{% endblock %}
+
+{% block content %}
+
+<style>
+.raw-shortage-page {
+    padding: 22px;
+}
+
+.raw-shortage-header {
+    margin-bottom: 18px;
+}
+
+.raw-shortage-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.raw-shortage-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.raw-stock-upload-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.raw-stock-file {
+    max-width: 255px;
+    font-size: 13px;
+}
+
+.raw-stock-upload-btn {
+    border: 0;
+    border-radius: 6px;
+    padding: 9px 16px;
+    background: #198754;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.raw-stock-upload-btn:hover {
+    opacity: 0.92;
+}
+
+.raw-stock-info {
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    background: #eef4fa;
+    color: #334155;
+    font-size: 13px;
+}
+
+.raw-stock-message-success {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.raw-stock-message-error {
+    background: #fdecec;
+    color: #8b1e1e;
+}
+.raw-shortage-excel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    background: #173f6b;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.raw-shortage-excel-btn:hover {
+    color: #ffffff;
+    text-decoration: none;
+    opacity: 0.92;
+}
+
+.raw-shortage-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.raw-shortage-subtitle {
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.raw-shortage-card {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.raw-shortage-table-wrap {
+    overflow-x: auto;
+}
+
+.raw-shortage-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.raw-shortage-table th,
+.raw-shortage-table td {
+    border: 1px solid #b8b8b8;
+    padding: 5px 12px;
+    vertical-align: middle;
+    font-size: 12px;
+}
+
+.raw-shortage-table th {
+    background: #f2f2f2;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.raw-shortage-table td:first-child {
+    font-weight: 500;
+}
+
+.raw-shortage-uom,
+.raw-shortage-qty,
+.raw-shortage-days {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.raw-shortage-qty {
+    font-weight: 700;
+}
+
+.raw-shortage-empty {
+    padding: 35px;
+    text-align: center;
+    color: #6c757d;
+}
+
+/* CUTTING_PENDING_UI_LOCAL_MERGE_V1 */
+
+.material-planning-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #d9d9d9;
+}
+
+.material-planning-tab {
+    border: 0;
+    background: transparent;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #555555;
+    border-bottom: 3px solid transparent;
+}
+
+.material-planning-tab:hover {
+    color: #173f6b;
+}
+
+.material-planning-tab.active {
+    color: #173f6b;
+    border-bottom-color: #173f6b;
+}
+
+.material-planning-panel {
+    display: none;
+}
+
+.material-planning-panel.active {
+    display: block;
+}
+
+.cutting-pending-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.cutting-pending-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.cutting-pending-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.cutting-pending-search input {
+    width: 320px;
+    max-width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.cutting-pending-clear {
+    padding: 9px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.cutting-pending-no-result {
+    display: none;
+    padding: 25px;
+    text-align: center;
+    color: #6c757d;
+}
+
+/* ==========================================================
+   RM_PLANNING_FINAL_UI_V1
+   ========================================================== */
+
+.raw-shortage-table-wrap {
+    max-height: calc(100vh - 365px);
+    overflow: auto;
+    position: relative;
+}
+
+.raw-shortage-table {
+    min-width: 1180px;
+}
+
+.raw-shortage-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f2f2f2;
+    white-space: normal;
+    line-height: 1.2;
+    box-shadow: 0 1px 0 #b8b8b8;
+}
+
+.raw-shortage-table th small {
+    display: block;
+    margin-top: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.raw-shortage-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.raw-shortage-table td:first-child {
+    font-weight: 400;
+}
+
+.raw-shortage-table .col-material {
+    font-weight: 500;
+    white-space: normal;
+}
+
+.col-sr {
+    width: 46px;
+    min-width: 46px;
+    text-align: center;
+}
+
+.col-material {
+    width: 285px;
+    min-width: 285px;
+}
+
+.col-days {
+    width: 82px;
+    min-width: 82px;
+}
+
+.col-uom {
+    width: 70px;
+    min-width: 70px;
+}
+
+.col-required {
+    width: 125px;
+    min-width: 125px;
+}
+
+.col-stock {
+    width: 130px;
+    min-width: 130px;
+}
+
+.col-shortage {
+    width: 135px;
+    min-width: 135px;
+}
+
+.col-items {
+    width: 70px;
+    min-width: 70px;
+}
+
+.col-qty {
+    width: 80px;
+    min-width: 80px;
+}
+
+.col-remark {
+    width: 270px;
+    min-width: 270px;
+}
+
+.raw-material-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.raw-material-search-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.raw-material-search-input {
+    width: 330px;
+    max-width: 60vw;
+    padding: 8px 11px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.raw-material-search-input:focus {
+    outline: none;
+    border-color: #173f6b;
+}
+
+.raw-material-clear-btn {
+    padding: 8px 13px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.raw-material-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+}
+
+.raw-material-shortage-only {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.raw-material-count {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.raw-material-no-result {
+    display: none;
+    padding: 24px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.erp-stock-edit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.erp-stock-input {
+    width: 105px;
+    padding: 6px 7px;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.erp-stock-input:focus {
+    outline: none;
+    border-color: #173f6b;
+}
+
+.stock-match-note {
+    font-size: 9px;
+    color: #b45309;
+    white-space: normal;
+    text-align: center;
+}
+
+.planning-remark-editor {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.planning-remark-input {
+    width: 195px;
+    padding: 6px 7px;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.planning-remark-input:focus {
+    outline: none;
+    border-color: #173f6b;
+}
+
+.planning-save-btn {
+    border: 0;
+    border-radius: 5px;
+    padding: 6px 9px;
+    background: #173f6b;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.planning-save-btn:hover {
+    opacity: 0.9;
+}
+
+.planning-save-btn:disabled,
+.erp-stock-input:disabled,
+.planning-remark-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.purchase-shortage-cell.has-shortage {
+    background: #fff3cd;
+    color: #8a5200;
+}
+
+.purchase-shortage-cell.no-shortage {
+    color: #198754;
+}
+
+/* ==========================================================
+   RM_PLANNING_UI_REPAIR_V2
+   ========================================================== */
+
+#rawMaterialTable {
+    width: 100%;
+    min-width: 1180px;
+    table-layout: fixed;
+}
+
+.raw-shortage-table th,
+.raw-shortage-table td {
+    padding: 5px 7px;
+}
+
+.raw-shortage-table-wrap {
+    max-height: calc(100vh - 395px);
+    overflow: auto;
+    position: relative;
+}
+
+#rawMaterialTable thead th,
+#cuttingPendingTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f2f2f2;
+    white-space: normal;
+    line-height: 1.15;
+    box-shadow: 0 1px 0 #b8b8b8;
+}
+
+#rawMaterialTable th small {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    color: #64748b;
+}
+
+#rawMaterialTable .col-sr {
+    width: 42px;
+    min-width: 42px;
+    text-align: center;
+}
+
+#rawMaterialTable .col-material {
+    width: 265px;
+}
+
+#rawMaterialTable .col-days {
+    width: 72px;
+}
+
+#rawMaterialTable .col-uom {
+    width: 58px;
+}
+
+#rawMaterialTable .col-required {
+    width: 120px;
+}
+
+#rawMaterialTable .col-stock {
+    width: 135px;
+}
+
+#rawMaterialTable .col-shortage {
+    width: 125px;
+    min-width: 125px;
+    max-width: 125px;
+    white-space: normal;
+}
+
+#rawMaterialTable .col-items {
+    width: 60px;
+}
+
+#rawMaterialTable .col-qty {
+    width: 70px;
+}
+
+#rawMaterialTable .col-remark {
+    width: 235px;
+}
+
+.erp-stock-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.erp-stock-input {
+    width: 82px;
+    padding: 4px 5px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    text-align: right;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.planning-stock-save-btn {
+    border: 0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    background: #198754;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.planning-remark-editor {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.planning-remark-input {
+    width: 165px;
+    min-width: 0;
+    padding: 4px 5px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.planning-save-btn {
+    border: 0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    background: #173f6b;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.stock-match-note {
+    width: 100%;
+    font-size: 9px;
+    font-weight: 500;
+    color: #b45309;
+}
+
+.purchase-shortage-cell.has-shortage {
+    background: #fff3cd;
+    color: #7c4a00;
+}
+
+.purchase-shortage-cell.no-shortage {
+    color: #198754;
+}
+
+
+/* ==========================================================
+   RM_PLANNING_UI_FIXED_V3
+   ========================================================== */
+
+.raw-shortage-table th,
+.raw-shortage-table td {
+    padding: 5px 7px;
+}
+
+.raw-shortage-table-wrap {
+    max-height: calc(100vh - 390px);
+    overflow: auto;
+    position: relative;
+}
+
+#rawMaterialTable {
+    width: 100%;
+    min-width: 1120px;
+    table-layout: fixed;
+}
+
+#rawMaterialTable thead th,
+#cuttingPendingTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f2f2f2;
+    white-space: normal;
+    line-height: 1.15;
+    box-shadow: 0 1px 0 #b8b8b8;
+}
+
+#rawMaterialTable th small {
+    display: block;
+    margin-top: 2px;
+    color: #64748b;
+    font-size: 9px;
+}
+
+#rawMaterialTable .col-sr {
+    width: 42px;
+    text-align: center;
+}
+
+#rawMaterialTable .col-material {
+    width: 250px;
+    white-space: normal;
+    font-weight: 500;
+}
+
+#rawMaterialTable .col-days {
+    width: 65px;
+}
+
+#rawMaterialTable .col-uom {
+    width: 55px;
+}
+
+#rawMaterialTable .col-required {
+    width: 112px;
+}
+
+#rawMaterialTable .col-stock {
+    width: 122px;
+}
+
+#rawMaterialTable .col-shortage {
+    width: 115px;
+}
+
+#rawMaterialTable .col-items {
+    width: 55px;
+}
+
+#rawMaterialTable .col-qty {
+    width: 65px;
+}
+
+#rawMaterialTable .col-remark {
+    width: 230px;
+}
+
+.planning-total-row {
+    font-weight: 700;
+    background: #f3f4f6;
+}
+
+.raw-material-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.raw-material-search-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.raw-material-search-input {
+    width: 355px;
+    max-width: 55vw;
+    padding: 8px 11px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.raw-material-search-input:focus {
+    outline: none;
+    border-color: #173f6b;
+}
+
+.raw-material-clear-btn {
+    padding: 8px 13px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.raw-material-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.raw-material-no-result {
+    display: none;
+    padding: 24px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.erp-stock-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.erp-stock-input {
+    width: 75px;
+    padding: 4px 5px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    text-align: right;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.erp-stock-input:focus,
+.planning-remark-input:focus {
+    outline: none;
+    border-color: #173f6b;
+}
+
+.planning-stock-save-btn {
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: #198754;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.stock-match-note {
+    width: 100%;
+    color: #b45309;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.planning-remark-editor {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.planning-remark-input {
+    width: 165px;
+    min-width: 0;
+    padding: 4px 5px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.planning-save-btn {
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 4px;
+    background: #173f6b;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.erp-stock-input:disabled,
+.planning-remark-input:disabled,
+.planning-save-btn:disabled,
+.planning-stock-save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.purchase-shortage-cell.has-shortage {
+    background: #fff3cd;
+    color: #7c4a00;
+}
+
+.purchase-shortage-cell.no-shortage {
+    color: #198754;
+}
+
+</style>
+
+
+<div class="raw-shortage-page">
+    <!-- CUTTING_PENDING_UI_LOCAL_MERGE_V1 -->
+    <div class="material-planning-tabs">
+
+        <button
+            type="button"
+            class="material-planning-tab active"
+            data-panel="rawMaterialPanel"
+        >
+            Raw Material Shortage
+        </button>
+
+        <button
+            type="button"
+            class="material-planning-tab"
+            data-panel="cuttingPendingPanel"
+        >
+            Cutting Pending
+        </button>
+
+    </div>
+
+    <div
+        id="rawMaterialPanel"
+        class="material-planning-panel active"
+    >
+
+
+    <!-- RAW_MATERIAL_SHORTAGE_EXCEL_BUTTON_V1 -->
+    <div class="raw-shortage-header">
+
+        <div class="raw-shortage-header-row">
+
+            <div>
+                <h2 class="raw-shortage-title">
+                    <i class="fa fa-cubes" aria-hidden="true"></i>
+                    Raw Material Shortage
+                </h2>
+
+                <div class="raw-shortage-subtitle">
+                    Combined raw material requirement for Job Cards currently at Raw Material and Cutting stages.
+                </div>
+            </div>
+
+            <div class="raw-shortage-actions">
+
+                <!-- RAW_MATERIAL_STOCK_UPLOAD_UI_V1 -->
+                <form
+                    action="{{ url_for('raw_material_shortage.upload_stock') }}"
+                    method="post"
+                    enctype="multipart/form-data"
+                    class="raw-stock-upload-form"
+                >
+                    <input
+                        type="file"
+                        name="stock_file"
+                        accept=".xls"
+                        required
+                        class="raw-stock-file"
+                    >
+
+                    <button
+                        type="submit"
+                        class="raw-stock-upload-btn"
+                    >
+                        <i class="fa fa-upload" aria-hidden="true"></i>
+                        Upload ERP Stock
+                    </button>
+                </form>
+
+                <a
+                    href="{{ url_for('raw_material_shortage.export_excel') }}"
+                    class="raw-shortage-excel-btn"
+                >
+                    <i class="fa fa-download" aria-hidden="true"></i>
+                    Excel
+                </a>
+
+            </div>
+
+        </div>
+
+        {% if stock_upload_status == "success" %}
+        <div class="raw-stock-info raw-stock-message-success">
+            ERP stock uploaded successfully.
+            {{ stock_upload_rows }} stock rows are now active.
+        </div>
+        {% elif stock_upload_status == "error" %}
+        <div class="raw-stock-info raw-stock-message-error">
+            ERP stock upload failed:
+            {{ stock_upload_message }}
+        </div>
+        {% endif %}
+
+        {% if active_stock_upload %}
+        <div class="raw-stock-info">
+            <strong>Active ERP Stock:</strong>
+            {{ active_stock_upload.original_filename }}
+            |
+            {{ active_stock_upload.row_count }} rows
+            |
+            Uploaded
+            {% if active_stock_upload.uploaded_at %}
+                {{ active_stock_upload.uploaded_at.strftime('%d-%m-%Y %I:%M %p') }}
+            {% endif %}
+            {% if active_stock_upload.uploaded_by_name %}
+                by {{ active_stock_upload.uploaded_by_name }}
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="raw-stock-info">
+            No ERP stock snapshot has been uploaded yet.
+        </div>
+        {% endif %}
+
+        {% if planning_update_status == "success" %}
+        <div class="raw-stock-info raw-stock-message-success">
+            {{ planning_update_message }}
+        </div>
+        {% elif planning_update_status == "error" %}
+        <div class="raw-stock-info raw-stock-message-error">
+            {{ planning_update_message }}
+        </div>
+        {% endif %}
+
+    </div>
+
+
+    
+    <!-- RM_PLANNING_UI_FIXED_V3 -->
+    <div class="raw-material-tools">
+
+        <div class="raw-material-search-group">
+
+            <input
+                type="text"
+                id="rawMaterialSearch"
+                class="raw-material-search-input"
+                placeholder="Search Raw Material..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                id="rawMaterialSearchClear"
+                class="raw-material-clear-btn"
+            >
+                Clear
+            </button>
+
+        </div>
+
+        <span
+            id="rawMaterialVisibleCount"
+            class="raw-material-count"
+        ></span>
+
+    </div>
+
+<div class="raw-shortage-card">
+
+        {% if shortage_rows %}
+
+        <div class="raw-shortage-table-wrap">
+
+            
+<table
+    class="raw-shortage-table"
+    id="rawMaterialTable"
+>
+    <thead>
+        <tr>
+
+            <th class="col-sr">
+                Sr.
+            </th>
+
+            <th class="col-material">
+                Raw Material
+            </th>
+
+            <th class="col-days">
+                Days
+            </th>
+
+            <th class="col-uom">
+                UOM
+            </th>
+
+            <th class="col-required">
+                Total Requirement
+                <small>RM + Cutting</small>
+            </th>
+
+            <th class="col-stock">
+                ERP Stock
+                <small>Editable</small>
+            </th>
+
+            <th class="col-shortage">
+                Purchase Shortage
+                <small>{{ shortage_date }}</small>
+            </th>
+
+            <th class="col-items">
+                Items
+            </th>
+
+            <th class="col-qty">
+                Qty
+            </th>
+
+            <th class="col-remark">
+                Remark
+            </th>
+
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for row in shortage_rows %}
+
+        <tr
+            data-total="{{ '1' if row.is_total else '0' }}"
+            {% if row.is_total %}
+            class="planning-total-row"
+            {% endif %}
+        >
+
+            <td class="col-sr">
+
+                {% if not row.is_total %}
+                    {{ loop.index - 1 }}
+                {% endif %}
+
+            </td>
+
+
+            <td class="col-material">
+
+                {{ row.material }}
+
+                {% if not row.is_total %}
+
+                <form
+                    id="planningRowForm{{ loop.index }}"
+                    action="{{ url_for('raw_material_shortage.update_planning_row') }}"
+                    method="post"
+                >
+                    <input
+                        type="hidden"
+                        name="material"
+                        value="{{ row.material }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="uom"
+                        value="{{ row.uom }}"
+                    >
+                </form>
+
+                {% endif %}
+
+            </td>
+
+
+            <td class="raw-shortage-days col-days">
+
+                {% if not row.is_total %}
+                    {{ row.days_in_stage }}
+                {% endif %}
+
+            </td>
+
+
+            <td class="raw-shortage-uom col-uom">
+                {{ row.uom }}
+            </td>
+
+
+            <td class="raw-shortage-qty col-required">
+                {{ row.required_display }}
+            </td>
+
+
+            <td class="raw-shortage-qty col-stock">
+
+                {% if not row.is_total %}
+
+                <div class="erp-stock-edit">
+
+                    <input
+                        type="number"
+                        step="0.0001"
+                        name="erp_stock"
+                        value="{{ row.erp_stock if row.erp_stock is not none else 0 }}"
+                        class="erp-stock-input"
+                        form="planningRowForm{{ loop.index }}"
+                        {% if not row.stock_editable %}
+                        disabled
+                        {% endif %}
+                    >
+
+                    <button
+                        type="submit"
+                        class="planning-stock-save-btn"
+                        form="planningRowForm{{ loop.index }}"
+                        {% if not row.stock_editable %}
+                        disabled
+                        {% endif %}
+                    >
+                        Save
+                    </button>
+
+                    {% if not row.stock_matched %}
+                    <span class="stock-match-note">
+                        Manual
+                    </span>
+                    {% endif %}
+
+                </div>
+
+                {% endif %}
+
+            </td>
+
+
+            <td
+                class="
+                    raw-shortage-qty
+                    col-shortage
+                    purchase-shortage-cell
+                    {% if not row.is_total and row.shortage_qty and row.shortage_qty > 0 %}
+                    has-shortage
+                    {% elif not row.is_total %}
+                    no-shortage
+                    {% endif %}
+                "
+            >
+                {{ row.shortage_display }}
+            </td>
+
+
+            <td class="raw-shortage-qty col-items">
+                {{ row.item_count_display }}
+            </td>
+
+
+            <td class="raw-shortage-qty col-qty">
+                {{ row.input_qty_display }}
+            </td>
+
+
+            <td class="col-remark">
+
+                {% if not row.is_total %}
+
+                <div class="planning-remark-editor">
+
+                    <input
+                        type="text"
+                        name="planning_remark"
+                        value="{{ row.planning_remark or '' }}"
+                        maxlength="1000"
+                        placeholder="Remark..."
+                        class="planning-remark-input"
+                        autocomplete="off"
+                        form="planningRowForm{{ loop.index }}"
+                        {% if not row.stock_editable %}
+                        disabled
+                        {% endif %}
+                    >
+
+                    <button
+                        type="submit"
+                        class="planning-save-btn"
+                        form="planningRowForm{{ loop.index }}"
+                        {% if not row.stock_editable %}
+                        disabled
+                        {% endif %}
+                    >
+                        Save
+                    </button>
+
+                </div>
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+<div
+    id="rawMaterialNoResult"
+    class="raw-material-no-result"
+>
+    No matching Raw Material found.
+</div>
+
+
+        </div>
+
+        {% else %}
+
+        <div class="raw-shortage-empty">
+            No Raw Material pending Job Cards found.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    </div>
+
+
+    <!-- ================================================== -->
+    <!-- CUTTING PENDING -->
+    <!-- ================================================== -->
+
+    <div
+        id="cuttingPendingPanel"
+        class="material-planning-panel"
+    >
+
+        <div class="cutting-pending-header">
+
+            <h3 class="cutting-pending-title">
+                Cutting Pending
+            </h3>
+
+            <a
+                href="{{ url_for('raw_material_shortage.export_cutting_pending_excel') }}"
+                class="raw-shortage-excel-btn"
+            >
+                <i class="fa fa-download" aria-hidden="true"></i>
+                Excel
+            </a>
+
+        </div>
+
+
+        <div class="cutting-pending-search">
+
+            <input
+                type="text"
+                id="cuttingPendingSearch"
+                placeholder="Search Raw Material..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                id="cuttingPendingSearchClear"
+                class="cutting-pending-clear"
+            >
+                Clear
+            </button>
+
+        </div>
+
+
+        <div class="raw-shortage-card">
+
+            {% if cutting_rows %}
+
+            <div class="raw-shortage-table-wrap">
+
+                <table
+                    class="raw-shortage-table"
+                    id="cuttingPendingTable"
+                >
+
+                    <thead>
+                        <tr>
+                            <th>Cutting-Pending</th>
+                            <th>UOM</th>
+
+                            <th>
+                                Cutting Required
+                                {{ cutting_date }}
+                            </th>
+                            <th>Days in Stage</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in cutting_rows %}
+
+                        <tr
+                            {% if row.is_total %}
+                            style="font-weight:700;background:#f3f4f6;"
+                            {% endif %}
+                        >
+
+                            <td>
+                                {{ row.material }}
+                            </td>
+
+                            <td class="raw-shortage-uom">
+                                {{ row.uom }}
+                            </td>
+
+                            <td class="raw-shortage-qty">
+                                {{ row.cutting_required_display }}
+                            </td>
+
+                            <td class="raw-shortage-days">
+                                {{ row.days_in_stage }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div
+                id="cuttingPendingNoResult"
+                class="cutting-pending-no-result"
+            >
+                No matching Cutting material found.
+            </div>
+
+            {% else %}
+
+            <div class="raw-shortage-empty">
+                No Cutting pending Job Cards found.
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        // =====================================================
+        // Cutting Pending tabs
+        // =====================================================
+
+        const tabs = document.querySelectorAll(
+            ".material-planning-tab"
+        );
+
+        const panels = document.querySelectorAll(
+            ".material-planning-panel"
+        );
+
+        tabs.forEach(function (tab) {
+
+            tab.addEventListener(
+                "click",
+                function () {
+
+                    const targetId =
+                        tab.dataset.panel;
+
+                    tabs.forEach(function (item) {
+                        item.classList.remove(
+                            "active"
+                        );
+                    });
+
+                    panels.forEach(function (panel) {
+                        panel.classList.remove(
+                            "active"
+                        );
+                    });
+
+                    tab.classList.add(
+                        "active"
+                    );
+
+                    const target =
+                        document.getElementById(
+                            targetId
+                        );
+
+                    if (target) {
+                        target.classList.add(
+                            "active"
+                        );
+                    }
+                }
+            );
+
+        });
+
+
+        // =====================================================
+        // Cutting Pending search
+        // =====================================================
+
+        const input =
+            document.getElementById(
+                "cuttingPendingSearch"
+            );
+
+        const clearButton =
+            document.getElementById(
+                "cuttingPendingSearchClear"
+            );
+
+        const table =
+            document.getElementById(
+                "cuttingPendingTable"
+            );
+
+        const noResult =
+            document.getElementById(
+                "cuttingPendingNoResult"
+            );
+
+        if (
+            input
+            && clearButton
+            && table
+        ) {
+
+            const rows = Array.from(
+                table.querySelectorAll(
+                    "tbody tr"
+                )
+            );
+
+            function applySearch() {
+
+                const query =
+                    input.value
+                    .trim()
+                    .toLowerCase();
+
+                let visible = 0;
+
+                rows.forEach(
+                    function (row) {
+
+                        const firstCell =
+                            row.cells[0];
+
+                        const material =
+                            firstCell
+                            ? firstCell.textContent
+                                .trim()
+                                .toLowerCase()
+                            : "";
+
+                        const matched =
+                            !query
+                            || material.includes(
+                                query
+                            );
+
+                        row.style.display =
+                            matched
+                            ? ""
+                            : "none";
+
+                        if (matched) {
+                            visible += 1;
+                        }
+
+                    }
+                );
+
+                if (noResult) {
+                    noResult.style.display =
+                        visible === 0
+                        ? "block"
+                        : "none";
+                }
+            }
+
+            input.addEventListener(
+                "input",
+                applySearch
+            );
+
+            clearButton.addEventListener(
+                "click",
+                function () {
+
+                    input.value = "";
+                    applySearch();
+                    input.focus();
+
+                }
+            );
+        }
+
+    }
+);
+
+</script>
+
+</div>
+
+
+
+
+
+
+<script>
+
+/* RM_PLANNING_SEARCH_FIXED_V3 */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const input =
+            document.getElementById(
+                "rawMaterialSearch"
+            );
+
+        const clear =
+            document.getElementById(
+                "rawMaterialSearchClear"
+            );
+
+        const table =
+            document.getElementById(
+                "rawMaterialTable"
+            );
+
+        const noResult =
+            document.getElementById(
+                "rawMaterialNoResult"
+            );
+
+        const countLabel =
+            document.getElementById(
+                "rawMaterialVisibleCount"
+            );
+
+        if (
+            !input
+            || !clear
+            || !table
+        ) {
+            return;
+        }
+
+        const rows = Array.from(
+            table.querySelectorAll(
+                "tbody tr"
+            )
+        );
+
+        function applyFilter() {
+
+            const query =
+                input.value
+                .trim()
+                .toLowerCase();
+
+            let visible = 0;
+
+            rows.forEach(
+                function (row) {
+
+                    const isTotal =
+                        row.dataset.total === "1";
+
+                    if (isTotal) {
+
+                        row.style.display =
+                            query
+                            ? "none"
+                            : "";
+
+                        return;
+                    }
+
+                    const materialCell =
+                        row.querySelector(
+                            ".col-material"
+                        );
+
+                    const material =
+                        materialCell
+                        ? materialCell
+                            .textContent
+                            .trim()
+                            .toLowerCase()
+                        : "";
+
+                    const matched =
+                        !query
+                        || material.includes(
+                            query
+                        );
+
+                    row.style.display =
+                        matched
+                        ? ""
+                        : "none";
+
+                    if (matched) {
+                        visible += 1;
+                    }
+
+                }
+            );
+
+            if (countLabel) {
+
+                countLabel.textContent =
+                    visible
+                    + (
+                        visible === 1
+                        ? " material"
+                        : " materials"
+                    );
+
+            }
+
+            if (noResult) {
+
+                noResult.style.display =
+                    visible === 0
+                    ? "block"
+                    : "none";
+
+            }
+
+        }
+
+        input.addEventListener(
+            "input",
+            applyFilter
+        );
+
+        clear.addEventListener(
+            "click",
+            function () {
+
+                input.value = "";
+
+                applyFilter();
+
+                input.focus();
+
+            }
+        );
+
+        applyFilter();
+
+    }
+);
+
+</script>
+
+{% endblock %}

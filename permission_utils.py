@@ -136,7 +136,7 @@ def has_field_view_access(cursor, user_id, page_name, field_name):
 
 def can_user_view_field(cursor, role, user_id, page_name, field_name):
     role = (role or "").strip().lower()
-    if role == "admin" or is_gaurang_special_identity(user_id):
+    if role in {"admin", "plant_head"} or is_gaurang_special_identity(user_id):
         return True
     if role == "operator":
         return False
@@ -149,6 +149,8 @@ def can_user_edit_field(cursor, role, user_id, page_name, field_name):
     role = (role or "").strip().lower()
     if role == "admin" or is_gaurang_special_identity(user_id):
         return True
+    if role == "plant_head":
+        return False
     if role == "operator":
         return False
     if role == "supervisor":

@@ -637,6 +637,7 @@ Card Entry | NMTG{% endblock %} {% block extra_head %}
     <button class="btn-reset" onclick="resetForm()">
       <i class="fa fa-refresh" aria-hidden="true"></i>&nbsp;Reset
     </button>
+    {% if session.get('role') != 'plant_head' %} <!-- PLANT_HEAD_PPC_CREATE_UI_BLOCK_V1 -->
     <button class="btn-upload" onclick="openUploadModal('jc')">
       <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;Upload Excel
     </button>
@@ -646,6 +647,7 @@ Card Entry | NMTG{% endblock %} {% block extra_head %}
         >Save Job Card</span
       >
     </button>
+    {% endif %}
   </div>
 </div>
 
@@ -687,6 +689,7 @@ Card Entry | NMTG{% endblock %} {% block extra_head %}
       <button class="btn-preview-cancel" onclick="closePreviewModal()">
         Back to Edit
       </button>
+      {% if session.get('role') != 'plant_head' %}
       <button
         class="btn-preview-confirm"
         id="preview-confirm-btn"
@@ -694,6 +697,7 @@ Card Entry | NMTG{% endblock %} {% block extra_head %}
       >
         <i class="fa fa-check"></i>&nbsp;Confirm & Create
       </button>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -843,6 +847,11 @@ How to upload:
 </div>
 
 {% endblock %} {% block extra_scripts %}
+<!-- PLANT_HEAD_JC_UPLOAD_GATE_V2 -->
+<script>
+  window.JMS_USER_ROLE = "{{ (session.get('role') or '')|lower }}";
+</script>
+
 <script src="{{ url_for('static', filename='js/page1.js') }}?v={{ version }}"></script>
 <script src="{{ url_for('static', filename='js/upload.js') }}?v={{ version }}"></script>
 

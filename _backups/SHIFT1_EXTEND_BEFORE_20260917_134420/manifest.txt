@@ -1,0 +1,9 @@
+SHIFT1_EXTEND pre-change backup
+Created: 20260917_134420
+
+COPIED   static\js\oee_machine_operator.js  sha256=a9f097b0517d3c94c47643c648787b6b0ec0cf279b7ad5f5b872e9c8f21ae593
+COPIED   templates\oee_machine_operator.html  sha256=3f5fa1a5a00da8fd05bfd2e035608ac9fed402da74bca8ea05148ae6fd5ce50f
+COPIED   templates\oee_machine_summary.html  sha256=f7b9576409539973d04099c26c11dbf601ab88442765fa1c265c6dc0a6ff86ad
+MISSING  routes\oee_machine_operator.py
+COPIED   routes\oee_dashboard.py  sha256=77c5fecbb4f4b2575ca562cb0f1f37feff070b33f23f908d98838196830c8a1a
+COPIED   routes\oee_machine_summary.py  sha256=8d1e3844ea43de0719c833ff4ffe94d5a397c53011eaa0e1079e989f5bd8e641

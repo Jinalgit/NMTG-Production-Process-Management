@@ -1,10 +1,14 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from io import BytesIO
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, send_file, session
 
 _IST = timedelta(hours=5, minutes=30)
 def _to_ist(dt): return dt + _IST if dt else dt
 from werkzeug.security import generate_password_hash
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font
 
 from db import get_connection
 from permission_utils import (
@@ -19,7 +23,7 @@ from permission_utils import (
 
 users_bp = Blueprint("users", __name__)
 
-ALLOWED_ROLES = {"admin", "supervisor", "operator"}
+ALLOWED_ROLES = {"admin", "plant_head", "supervisor", "operator"}
 PAGE_PERMISSION_MASTER = [
     {"page_name": PAGE3_TRACEABILITY, "label": "Traceability"},
     {"page_name": PAGE5_PPC, "label": "Page 5 PPC"},
@@ -39,6 +43,895 @@ FIELD_PERMISSION_MASTER = [
 def has_user_management_access():
     # Special operational access for gaurang user_id=5; excludes user management.
     return session.get("role") == "admin" and not is_gaurang_special_user()
+
+
+
+# LOGIN_ACTIVITY_API_V1
+
+def _login_activity_now_ist():
+    return (
+        datetime.utcnow()
+        + timedelta(
+            hours=5,
+            minutes=30,
+        )
+    )
+
+
+def _activity_datetime_display(value):
+    if not value:
+        return "-"
+
+    return value.strftime(
+        "%d-%m-%Y %I:%M:%S %p"
+    )
+
+
+# LOGIN_ACTIVITY_DATE_FILTER_COUNT_V3
+def _login_activity_date_filters():
+    from_date = (
+        request.args.get(
+            "from_date",
+            "",
+        )
+        or ""
+    ).strip()
+
+    to_date = (
+        request.args.get(
+            "to_date",
+            "",
+        )
+        or ""
+    ).strip()
+
+    for value in (
+        from_date,
+        to_date,
+    ):
+        if value:
+            datetime.strptime(
+                value,
+                "%Y-%m-%d",
+            )
+
+    if (
+        from_date
+        and to_date
+        and from_date > to_date
+    ):
+        raise ValueError(
+            "From Date cannot be after To Date."
+        )
+
+    return from_date, to_date
+
+
+@users_bp.route(
+    "/api/login-activity/users",
+    methods=["GET"],
+)
+def login_activity_users():
+
+    if not has_user_management_access():
+        return jsonify({
+            "success": False,
+            "error": "Admin access required",
+        }), 403
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+        cursor.execute("""
+            SELECT
+                id,
+                username,
+                full_name,
+                role,
+                is_active,
+                last_login
+            FROM users
+            ORDER BY
+                LOWER(username),
+                id
+        """)
+
+        rows = cursor.fetchall()
+
+        # LOGIN_ACTIVITY_ONLINE_STATUS_V2
+        # A user is considered Online only when an open
+        # login session has recent activity.
+        online_cutoff = (
+            _login_activity_now_ist()
+            - timedelta(minutes=10)
+        )
+
+        cursor.execute("""
+            SELECT
+                user_id,
+                MAX(last_seen_at) AS last_seen_at
+            FROM user_login_activity
+            WHERE logout_at IS NULL
+              AND last_seen_at >= %s
+            GROUP BY user_id
+        """, (
+            online_cutoff,
+        ))
+
+        online_user_ids = {
+            row["user_id"]
+            for row in cursor.fetchall()
+        }
+
+        # LOGIN_ACTIVITY_ONLINE_USERS_ONLY_V5
+        # Main page shows only users with a currently
+        # active login session.
+        rows = [
+            row
+            for row in rows
+            if row["id"] in online_user_ids
+        ]
+
+        # Login count follows the selected activity date range.
+        try:
+            from_date, to_date = (
+                _login_activity_date_filters()
+            )
+        except ValueError as exc:
+            return jsonify({
+                "success": False,
+                "error": str(exc),
+            }), 400
+
+        count_conditions = []
+        count_params = []
+
+        if from_date:
+            count_conditions.append(
+                "login_at >= %s"
+            )
+            count_params.append(
+                from_date
+            )
+
+        if to_date:
+            count_conditions.append(
+                "login_at < DATE_ADD(%s, INTERVAL 1 DAY)"
+            )
+            count_params.append(
+                to_date
+            )
+
+        count_where = ""
+
+        if count_conditions:
+            count_where = (
+                "WHERE "
+                + " AND ".join(
+                    count_conditions
+                )
+            )
+
+        cursor.execute(
+            f"""
+            SELECT
+                user_id,
+                COUNT(*) AS login_count
+            FROM user_login_activity
+            {count_where}
+            GROUP BY user_id
+            """,
+            tuple(count_params),
+        )
+
+        login_counts = {
+            row["user_id"]:
+                int(
+                    row["login_count"]
+                    or 0
+                )
+            for row in cursor.fetchall()
+        }
+
+        users = []
+
+        for row in rows:
+
+            login_status = (
+                "Online"
+                if row["id"] in online_user_ids
+                else "Offline"
+            )
+
+            users.append({
+                "id": row["id"],
+                "username": row["username"],
+                "full_name": (
+                    row["full_name"]
+                    or ""
+                ),
+                "role": row["role"],
+                "is_active": bool(
+                    row["is_active"]
+                ),
+                "login_status": login_status,
+                "login_count": login_counts.get(
+                    row["id"],
+                    0,
+                ),
+                "last_login": (
+                    row["last_login"].isoformat()
+                    if row["last_login"]
+                    else None
+                ),
+                "last_login_display":
+                    _activity_datetime_display(
+                        row["last_login"]
+                    ),
+            })
+
+        return jsonify({
+            "success": True,
+            "users": users,
+        })
+
+    except Exception as exc:
+        return jsonify({
+            "success": False,
+            "error": str(exc),
+        }), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+@users_bp.route(
+    "/api/login-activity/users/<int:user_id>",
+    methods=["GET"],
+)
+def login_activity_user_detail(user_id):
+
+    if not has_user_management_access():
+        return jsonify({
+            "success": False,
+            "error": "Admin access required",
+        }), 403
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+        cursor.execute("""
+            SELECT
+                id,
+                username,
+                full_name,
+                role,
+                is_active,
+                last_login
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+        """, (
+            user_id,
+        ))
+
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({
+                "success": False,
+                "error": "User not found",
+            }), 404
+
+        try:
+            from_date, to_date = (
+                _login_activity_date_filters()
+            )
+        except ValueError as exc:
+            return jsonify({
+                "success": False,
+                "error": str(exc),
+            }), 400
+
+        detail_conditions = [
+            "user_id = %s"
+        ]
+
+        detail_params = [
+            user_id
+        ]
+
+        if from_date:
+            detail_conditions.append(
+                "login_at >= %s"
+            )
+            detail_params.append(
+                from_date
+            )
+
+        if to_date:
+            detail_conditions.append(
+                "login_at < DATE_ADD(%s, INTERVAL 1 DAY)"
+            )
+            detail_params.append(
+                to_date
+            )
+
+        detail_where = (
+            " AND ".join(
+                detail_conditions
+            )
+        )
+
+        cursor.execute(
+            f"""
+            SELECT
+                id,
+                device_name,
+                ip_address,
+                login_at,
+                last_seen_at,
+                logout_at
+            FROM user_login_activity
+            WHERE {detail_where}
+            ORDER BY
+                login_at DESC,
+                id DESC
+            LIMIT 500
+            """,
+            tuple(detail_params),
+        )
+
+        rows = cursor.fetchall()
+
+        now = _login_activity_now_ist()
+
+        activity = []
+
+        for row in rows:
+
+            logout_at = row[
+                "logout_at"
+            ]
+
+            last_seen_at = row[
+                "last_seen_at"
+            ]
+
+            if logout_at:
+                status = "Logged Out"
+
+            elif last_seen_at:
+                age_seconds = (
+                    now
+                    - last_seen_at
+                ).total_seconds()
+
+                if age_seconds <= 600:
+                    status = "Active"
+                else:
+                    status = "Session Ended"
+
+            else:
+                status = "Session Ended"
+
+            activity.append({
+                "id": row["id"],
+
+                "device_name": (
+                    row["device_name"]
+                    or "Unknown Device"
+                ),
+
+                "ip_address": (
+                    row["ip_address"]
+                    or "-"
+                ),
+
+                "login_at_display":
+                    _activity_datetime_display(
+                        row["login_at"]
+                    ),
+
+                "last_seen_at_display":
+                    _activity_datetime_display(
+                        row["last_seen_at"]
+                    ),
+
+                "logout_at_display":
+                    _activity_datetime_display(
+                        row["logout_at"]
+                    ),
+
+                "status": status,
+            })
+
+        return jsonify({
+            "success": True,
+
+            "user": {
+                "id": user["id"],
+                "username":
+                    user["username"],
+                "full_name":
+                    user["full_name"]
+                    or "",
+                "role":
+                    user["role"],
+                "is_active":
+                    bool(
+                        user["is_active"]
+                    ),
+                "last_login_display":
+                    _activity_datetime_display(
+                        user["last_login"]
+                    ),
+            },
+
+            "activity": activity,
+        })
+
+    except Exception as exc:
+        return jsonify({
+            "success": False,
+            "error": str(exc),
+        }), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+
+# LOGIN_ACTIVITY_EXCEL_EXPORT_V4
+@users_bp.route(
+    "/api/login-activity/export-excel",
+    methods=["GET"],
+)
+def export_login_activity_excel():
+
+    if not has_user_management_access():
+        return jsonify({
+            "success": False,
+            "error": "Admin access required",
+        }), 403
+
+    conn = None
+    cursor = None
+
+    try:
+        try:
+            from_date, to_date = (
+                _login_activity_date_filters()
+            )
+        except ValueError as exc:
+            return jsonify({
+                "success": False,
+                "error": str(exc),
+            }), 400
+
+
+        user_id = request.args.get(
+            "user_id",
+            type=int,
+        )
+
+        search = (
+            request.args.get(
+                "search",
+                "",
+            )
+            or ""
+        ).strip()
+
+
+        conn = get_connection()
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+
+        selected_username = None
+
+        if user_id:
+
+            cursor.execute("""
+                SELECT
+                    id,
+                    username
+                FROM users
+                WHERE id = %s
+                LIMIT 1
+            """, (
+                user_id,
+            ))
+
+            selected_user = (
+                cursor.fetchone()
+            )
+
+            if not selected_user:
+                return jsonify({
+                    "success": False,
+                    "error": "User not found",
+                }), 404
+
+            selected_username = (
+                selected_user[
+                    "username"
+                ]
+            )
+
+
+        conditions = []
+        params = []
+
+
+        if user_id:
+            conditions.append(
+                "ula.user_id = %s"
+            )
+
+            params.append(
+                user_id
+            )
+
+
+        if from_date:
+            conditions.append(
+                "ula.login_at >= %s"
+            )
+
+            params.append(
+                from_date
+            )
+
+
+        if to_date:
+            conditions.append(
+                "ula.login_at < "
+                "DATE_ADD(%s, INTERVAL 1 DAY)"
+            )
+
+            params.append(
+                to_date
+            )
+
+
+        if search and not user_id:
+
+            search_value = (
+                "%"
+                + search
+                + "%"
+            )
+
+            conditions.append("""
+                (
+                    u.username LIKE %s
+                    OR
+                    COALESCE(
+                        u.full_name,
+                        ''
+                    ) LIKE %s
+                    OR
+                    u.role LIKE %s
+                )
+            """)
+
+            params.extend([
+                search_value,
+                search_value,
+                search_value,
+            ])
+
+
+        where_sql = ""
+
+        if conditions:
+            where_sql = (
+                "WHERE "
+                + " AND ".join(
+                    conditions
+                )
+            )
+
+
+        cursor.execute(
+            f"""
+            SELECT
+                ula.id,
+                u.username,
+                u.full_name,
+                u.role,
+
+                ula.device_name,
+                ula.ip_address,
+
+                ula.login_at,
+                ula.last_seen_at,
+                ula.logout_at
+
+            FROM user_login_activity ula
+
+            INNER JOIN users u
+                ON u.id = ula.user_id
+
+            {where_sql}
+
+            ORDER BY
+                ula.login_at DESC,
+                ula.id DESC
+            """,
+            tuple(params),
+        )
+
+        rows = cursor.fetchall()
+
+
+        now = (
+            _login_activity_now_ist()
+        )
+
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Login Activity"
+
+
+        headers = [
+            "User",
+            "Full Name",
+            "Role",
+            "Device Name",
+            "IP Address",
+            "Login Time",
+            "Last Activity",
+            "Logout Time",
+            "Status",
+        ]
+
+        ws.append(headers)
+
+
+        for cell in ws[1]:
+
+            cell.font = Font(
+                bold=True
+            )
+
+            cell.alignment = Alignment(
+                horizontal="center",
+                vertical="center",
+            )
+
+
+        for row in rows:
+
+            logout_at = row[
+                "logout_at"
+            ]
+
+            last_seen_at = row[
+                "last_seen_at"
+            ]
+
+
+            if logout_at:
+
+                status = (
+                    "Logged Out"
+                )
+
+            elif last_seen_at:
+
+                age_seconds = (
+                    now
+                    - last_seen_at
+                ).total_seconds()
+
+                if age_seconds <= 600:
+                    status = "Active"
+                else:
+                    status = (
+                        "Session Ended"
+                    )
+
+            else:
+
+                status = (
+                    "Session Ended"
+                )
+
+
+            role = (
+                row["role"]
+                or ""
+            )
+
+            if role == "plant_head":
+                role_display = (
+                    "Plant Head"
+                )
+            else:
+                role_display = (
+                    role.replace(
+                        "_",
+                        " ",
+                    ).title()
+                )
+
+
+            ws.append([
+                row["username"]
+                or "",
+
+                row["full_name"]
+                or "",
+
+                role_display,
+
+                row["device_name"]
+                or "Unknown Device",
+
+                row["ip_address"]
+                or "",
+
+                row["login_at"],
+
+                row["last_seen_at"],
+
+                row["logout_at"],
+
+                status,
+            ])
+
+
+        # Excel date formatting
+        for row in ws.iter_rows(
+            min_row=2,
+            min_col=6,
+            max_col=8,
+        ):
+
+            for cell in row:
+
+                if cell.value:
+                    cell.number_format = (
+                        "dd-mm-yyyy "
+                        "hh:mm:ss AM/PM"
+                    )
+
+
+        ws.freeze_panes = "A2"
+
+        if ws.max_row >= 1:
+            ws.auto_filter.ref = (
+                ws.dimensions
+            )
+
+
+        widths = {
+            "A": 20,
+            "B": 28,
+            "C": 18,
+            "D": 28,
+            "E": 18,
+            "F": 24,
+            "G": 24,
+            "H": 24,
+            "I": 18,
+        }
+
+        for column, width in (
+            widths.items()
+        ):
+
+            ws.column_dimensions[
+                column
+            ].width = width
+
+
+        output = BytesIO()
+
+        wb.save(
+            output
+        )
+
+        output.seek(0)
+
+
+        if selected_username:
+
+            safe_name = "".join(
+                ch
+                if (
+                    ch.isalnum()
+                    or ch in "-_"
+                )
+                else "_"
+                for ch in selected_username
+            )
+
+            filename = (
+                "Login_Activity_"
+                + safe_name
+            )
+
+        else:
+
+            filename = (
+                "Login_Activity_All_Users"
+            )
+
+
+        if from_date or to_date:
+
+            filename += "_"
+
+            filename += (
+                from_date
+                or "Start"
+            )
+
+            filename += "_to_"
+
+            filename += (
+                to_date
+                or "Today"
+            )
+
+
+        filename += ".xlsx"
+
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype=(
+                "application/"
+                "vnd.openxmlformats-"
+                "officedocument."
+                "spreadsheetml.sheet"
+            ),
+        )
+
+
+    except Exception as exc:
+
+        return jsonify({
+            "success": False,
+            "error": str(exc),
+        }), 500
+
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
 
 
 @users_bp.route("/api/users/create", methods=["POST"])

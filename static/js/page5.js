@@ -144,7 +144,7 @@ function hideColumn(key) {
   if (!key) return false;
   const visibleCount = getVisibleColumns(TAB.jc?.cols || []).length;
   if (visibleCount <= 1 && !hiddenColumns[key]) {
-    showToast("At least one PPC column must remain visible", "error");
+    ERP.toast("At least one PPC column must remain visible", "error");
     return false;
   }
   hiddenColumns[key] = true;
@@ -239,7 +239,7 @@ function applyColumnChooser() {
   });
 
   if (!checkedCount) {
-    showToast("At least one PPC column must remain visible", "error");
+    ERP.toast("At least one PPC column must remain visible", "error");
     return;
   }
 
@@ -302,7 +302,7 @@ function renderSupervisorFilterSummary() {
 
   summary.style.display = "flex";
   summary.innerHTML = `
-    <span style="display:inline-flex;align-items:center;gap:8px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;">
+    <span style="display:inline-flex;align-items:center;gap:8px;border:1px solid #bfdbfe;background:var(--dv-blue-tint);color:#1d4ed8;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;">
       <i class="fa fa-user" aria-hidden="true"></i>
       Viewing supervisor: ${escapeHtml(supervisorName)}
       <button type="button" onclick="clearSupervisorFilter()" title="Clear supervisor filter" style="border:0;background:transparent;color:#1d4ed8;cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 2px;">
@@ -625,6 +625,12 @@ function buildParams() {
     }
   }
 
+  // AUTO_OEE_ONLY_FILTER_V1
+  const _autoOeeChk = document.getElementById("filter-auto-oee-only");
+  if (_autoOeeChk && _autoOeeChk.checked) {
+    p.set("auto_oee_only", "1");
+  }
+
   return p.toString();
 }
 
@@ -664,7 +670,7 @@ async function fetchExcelFilterOptions(columnKey) {
   const data = await res.json();
 
   if (!data.success) {
-    showToast(data.error || "Could not load filter values", "error");
+    ERP.toast(data.error || "Could not load filter values", "error");
     return [];
   }
 
@@ -970,7 +976,7 @@ async function loadData() {
   try {
     const res = await fetch(`${cfg.api}?${buildParams()}`);
     const data = await res.json();
-    if (!data.success) { showToast(data.error, "error"); return; }
+    if (!data.success) { ERP.toast(data.error, "error"); return; }
 
     allData = data.data;
     totalRows = data.total || data.data.length;
@@ -991,7 +997,7 @@ async function loadData() {
     renderSupervisorAwareRowCount();
     renderSupervisorFilterSummary();
 
-  } catch (e) { console.error("LOADDATA ERROR:", e); showToast("Error: " + e.message, "error"); }
+  } catch (e) { console.error("LOADDATA ERROR:", e); ERP.toast("Error: " + e.message, "error"); }
 }
 
 // ── Render head ───────────────────────────────────────────────────────────────
@@ -1240,21 +1246,21 @@ function renderBody(cols, rows) {
       }
       if (c.key === "is_priority") {
         const canEditPriority = hasPage5Field(row, "is_priority");
-        v = `<input type="checkbox" ${row.is_priority ? "checked" : ""} ${canEditPriority ? "" : "disabled"} onchange="togglePriorityImmediate(${Number(row.item_id) || 0}, '${row.job_card_no}', '${encodeURIComponent(row.item_name)}', this.checked, this)" style="width:16px;height:16px;cursor:${canEditPriority ? "pointer" : "not-allowed"};accent-color:#dc2626;" />`;
+        v = `<input type="checkbox" ${row.is_priority ? "checked" : ""} ${canEditPriority ? "" : "disabled"} onchange="togglePriorityImmediate(${Number(row.item_id) || 0}, '${row.job_card_no}', '${encodeURIComponent(row.item_name)}', this.checked, this)" style="width:16px;height:16px;cursor:${canEditPriority ? "pointer" : "not-allowed"};accent-color:var(--danger);" />`;
       }
       if (c.key === "quality_result") {
-        v = v === "OK" ? `<span class="badge-ok">OK</span>`
-          : v === "NOT OK" ? `<span class="badge-notok">Not OK</span>` : v;
+        v = v === "OK" ? `<span class="erp-badge" data-status="ok">OK</span>`
+          : v === "NOT OK" ? `<span class="erp-badge" data-status="err">Not OK</span>` : v;
       }
       if (c.key === "days_overdue" && v > 0) {
-        v = `<span class="badge-overdue">${v}d overdue</span>`;
+        v = `<span class="erp-badge" data-status="err">${v}d overdue</span>`;
       }
       if (c.key === "wip_status" && v) {
         const cls = getWipBadgeClass(row, v);
         const vendor = isSubcontracted(row) && row.vendor_name ? ` title="Subcontracting: ${row.vendor_name}"` : "";
         const isStoreOrPending = ["store", "pending"].includes(String(rawValue || "").trim().toLowerCase());
         const clickAttr = (isStoreOrPending || !canEditRowProcess(row)) ? "" : ` style="cursor:pointer;" onclick='openSharedStageModal(${JSON.stringify(row.job_card_no)}, ${JSON.stringify(row.item_name)})'`;
-        const rmBadge = (window._canSeeRmStatus && row.rm_hold_reason) ? ` <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:4px;${row.rm_hold_reason === 'testing' ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' : 'background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;'}">${row.rm_hold_reason === 'testing' ? '<i class=\"fa fa-flask\"></i> Testing' : '<i class=\"fa fa-exclamation-triangle\"></i> Shortage'}</span>` : "";
+        const rmBadge = (window._canSeeRmStatus && row.rm_hold_reason) ? ` <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:4px;${row.rm_hold_reason === 'testing' ? 'background:var(--dv-blue-tint);color:#1d4ed8;border:1px solid #bfdbfe;' : 'background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;'}">${row.rm_hold_reason === 'testing' ? '<i class=\"fa fa-flask\"></i> Testing' : '<i class=\"fa fa-exclamation-triangle\"></i> Shortage'}</span>` : "";
         v = `<span class="${cls}"${vendor}${clickAttr}>${v}</span>${rmBadge}`;
       }
       if (c.key === "final_status" && v) {
@@ -1269,7 +1275,7 @@ function renderBody(cols, rows) {
     }).join("");
     const actionCell = showDeleteAction
       ? `<td style="text-align:center;min-width:58px;max-width:58px;">
-          <button type="button" title="Delete item" onclick="softDeletePpcItem(${index})" style="width:28px;height:28px;border:1px solid #fecaca;border-radius:4px;background:#fef2f2;color:#dc2626;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+          <button type="button" title="Delete item" onclick="softDeletePpcItem(${index})" style="width:28px;height:28px;border:1px solid #fecaca;border-radius:4px;background:var(--dv-danger-soft);color:var(--danger);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </button>
         </td>`
@@ -1291,14 +1297,14 @@ async function togglePriorityImmediate(itemId, jobCardNo, encodedItemName, isChe
     });
     const data = await res.json();
     if (data.success) {
-      showToast(isChecked ? "Marked as Urgent" : "Marked as Regular", "success");
+      ERP.toast(isChecked ? "Marked as Urgent" : "Marked as Regular", "success");
       loadData();
     } else {
-      showToast(data.error || "Failed to update priority", "error");
+      ERP.toast(data.error || "Failed to update priority", "error");
       if (checkboxEl) checkboxEl.checked = !isChecked;
     }
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
     if (checkboxEl) checkboxEl.checked = !isChecked;
   }
 }
@@ -1307,14 +1313,14 @@ let pendingDeleteRow = null;
 
 function softDeletePpcItem(rowIndex) {
   if (!canDeletePpcItems()) {
-    showToast("You do not have permission to delete job cards.", "error");
+    ERP.toast("You do not have permission to delete job cards.", "error");
     return;
   }
 
   const row = (allData || [])[rowIndex];
 
   if (!row || !row.job_card_no) {
-    showToast("Could not find the Job Card number.", "error");
+    ERP.toast("Could not find the Job Card number.", "error");
     return;
   }
 
@@ -1333,7 +1339,7 @@ function openPermanentDeleteModal(row) {
       <div style="
         width:92%;
         max-width:460px;
-        background:#ffffff;
+        background:var(--surface);
         border-radius:10px;
         box-shadow:0 18px 50px rgba(0,0,0,0.25);
         overflow:hidden;
@@ -1341,7 +1347,7 @@ function openPermanentDeleteModal(row) {
         <div style="
           padding:18px 22px;
           background:#b91c1c;
-          color:#ffffff;
+          color:var(--surface);
           display:flex;
           align-items:center;
           justify-content:space-between;
@@ -1357,7 +1363,7 @@ function openPermanentDeleteModal(row) {
             style="
               border:none;
               background:transparent;
-              color:#ffffff;
+              color:var(--surface);
               font-size:20px;
               cursor:pointer;
             "
@@ -1378,7 +1384,7 @@ function openPermanentDeleteModal(row) {
 
           <div style="
             padding:12px 14px;
-            background:#fef2f2;
+            background:var(--dv-danger-soft);
             border:1px solid #fecaca;
             border-radius:6px;
             margin-bottom:14px;
@@ -1420,7 +1426,7 @@ function openPermanentDeleteModal(row) {
             style="
               padding:9px 18px;
               border:1px solid #d1d5db;
-              background:#ffffff;
+              background:var(--surface);
               border-radius:6px;
               cursor:pointer;
               font-size:13px;
@@ -1436,8 +1442,8 @@ function openPermanentDeleteModal(row) {
             style="
               padding:9px 18px;
               border:none;
-              background:#dc2626;
-              color:#ffffff;
+              background:var(--danger);
+              color:var(--surface);
               border-radius:6px;
               cursor:pointer;
               font-size:13px;
@@ -1508,14 +1514,14 @@ async function confirmDeleteItem() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(data.message || "Item deleted successfully", "success");
+      ERP.toast(data.message || "Item deleted successfully", "success");
       closeDeleteItemModal();
       loadData();
     } else {
-      showToast(data.error || "Delete failed", "error");
+      ERP.toast(data.error || "Delete failed", "error");
     }
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
   } finally {
     if (confirmBtn) {
       confirmBtn.disabled = false;
@@ -1548,14 +1554,14 @@ async function togglePriorityWithConfirm(jobCardNo, encodedItemName, isChecked, 
     });
     const data = await res.json();
     if (data.success) {
-      showToast(isChecked ? "Marked as Urgent" : "Marked as Regular", "success");
+      ERP.toast(isChecked ? "Marked as Urgent" : "Marked as Regular", "success");
       loadData();
     } else {
-      showToast(data.error || "Failed to update priority", "error");
+      ERP.toast(data.error || "Failed to update priority", "error");
       checkboxEl.checked = !isChecked;
     }
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
     checkboxEl.checked = !isChecked;
   }
 }
@@ -1630,7 +1636,7 @@ async function _loadProcessReport_disabled() {
     if (_prOverdue) prParams.append("overdue", _prOverdue);
     if (_prUrgent) prParams.append("urgent_only", _prUrgent);
     const res = await fetch(`/api/data/process_report?${prParams.toString()}`); const data = await res.json();
-    if (!data.success) { showToast(data.error, "error"); return; }
+    if (!data.success) { ERP.toast(data.error, "error"); return; }
     prData = data.data || [];
     if (data.wip_options) prWipOptions = data.wip_options;
     prTotalRows = data.total || prData.length;
@@ -1671,7 +1677,7 @@ async function _loadProcessReport_disabled() {
       document.getElementById("pr-row-count").textContent =
         prTotalRows ? `Showing ${start}–${end} of ${prTotalRows} job card(s)` : "No records";
     }
-  } catch (e) { showToast("Error: " + (e.message || e), "error"); }
+  } catch (e) { ERP.toast("Error: " + (e.message || e), "error"); }
 }
 function goPRPage(p) {
   const totalPages = Math.ceil(prTotalRows / prPerPage);
@@ -1745,8 +1751,8 @@ function renderPRCards(items) {
       ? Math.ceil((new Date(jc.delivery_date + "T00:00:00") - new Date().setHours(0, 0, 0, 0)) / 86400000)
       : (jc.remaining_days ?? 0);
     const remStyle = rem <= 0
-      ? "background:#f0fdf4;border:1px solid #86efac;color:#16a34a;"
-      : "background:#fffbeb;border:1px solid #fde68a;color:#92400e;";
+      ? "background:#f0fdf4;border:1px solid #86efac;color:var(--success);"
+      : "background:#fffbeb;border:1px solid #fde68a;color:var(--dv-warn-text);";
 
     return `<div class="jc-card">
       <div class="jc-card-header">
@@ -1757,7 +1763,7 @@ function renderPRCards(items) {
           ${jc.delivery_date ? `<span><span class="jc-hl">Delivery</span>${formatDateForDisplay(jc.delivery_date)}</span>` : ""}
         </div>
         <div class="jc-hrow">
-          <span class="jc-item-name">${jc.item_name}${window._canSeePriorityColumn !== false && jc.is_priority ? ' <span style="background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;vertical-align:middle;">URGENT</span>' : ''}</span>
+          <span class="jc-item-name">${jc.item_name}${window._canSeePriorityColumn !== false && jc.is_priority ? ' <span style="background:var(--danger);color:var(--surface);font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;vertical-align:middle;">URGENT</span>' : ''}</span>
           <span><span class="jc-hl">WIP</span>${jc.wip_status || "—"}</span>
           <span style="${remStyle};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">Remaining: ${rem}d</span>
         </div>
@@ -1782,7 +1788,7 @@ function getExportData() {
   };
 }
 async function exportExcel() {
-  showToast("Preparing export...", "success");
+  ERP.toast("Preparing export...", "success");
   try {
     const cfg = TAB[activeTab];
     if (!cfg) return;
@@ -1824,7 +1830,7 @@ async function exportExcel() {
 
     const res = await fetch(`${cfg.api}?${p.toString()}`);
     const data = await res.json();
-    if (!data.success) { showToast("Export failed: " + data.error, "error"); return; }
+    if (!data.success) { ERP.toast("Export failed: " + data.error, "error"); return; }
 
     const cols = getVisibleColumns(cfg.cols || []);
 
@@ -1850,9 +1856,9 @@ async function exportExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data");
     XLSX.writeFile(wb, "export.xlsx");
-    showToast(`Exported ${rows.length} records.`, "success");
+    ERP.toast(`Exported ${rows.length} records.`, "success");
   } catch (e) {
-    showToast("Export failed: " + e.message, "error");
+    ERP.toast("Export failed: " + e.message, "error");
   }
 }
 
@@ -1930,7 +1936,7 @@ async function _loadPlanningSheet_disabled() {
     if (_psUrgent) psParams.append("urgent_only", _psUrgent);
     const res = await fetch(`/api/data/planning_sheet?${psParams.toString()}`);
     const data = await res.json();
-    if (!data.success) { showToast(data.error, "error"); return; }
+    if (!data.success) { ERP.toast(data.error, "error"); return; }
 
     psData = data.data;
     renderPSTable(data.data);
@@ -1945,7 +1951,7 @@ async function _loadPlanningSheet_disabled() {
       });
     }
     document.getElementById("ps-row-count").textContent = `${data.data.length} record(s)`;
-  } catch (e) { showToast("Error: " + (e.message || e), "error"); }
+  } catch (e) { ERP.toast("Error: " + (e.message || e), "error"); }
 }
 
 function renderPSTable(rows) {
@@ -1985,8 +1991,8 @@ function renderPSTable(rows) {
       // Days in stage — colored by urgency
       if (c.key === "live_stage_days") {
         const days = parseInt(v) || 0;
-        const color = days > 10 ? "#dc2626" : days > 5 ? "#d97706" : "#16a34a";
-        const bg = days > 10 ? "#fef2f2" : days > 5 ? "#fffbeb" : "#f0fdf4";
+        const color = days > 10 ? "var(--danger)" : days > 5 ? "#d97706" : "var(--success)";
+        const bg = days > 10 ? "var(--dv-danger-soft)" : days > 5 ? "#fffbeb" : "#f0fdf4";
         const border = days > 10 ? "#fca5a5" : days > 5 ? "#fde68a" : "#86efac";
         v = `<span style="font-weight:700;color:${color};background:${bg};border:1px solid ${border};padding:2px 10px;border-radius:20px;">${days}d</span>`;
       }
@@ -1994,7 +2000,7 @@ function renderPSTable(rows) {
       // Next stage badge
       if (c.key === "next_process") {
         if (!v || v === "") v = `<span style="color:var(--muted);font-size:12px">—</span>`;
-        else v = `<span style="background:#eff6ff;border:1px solid #bfdbfe;color:#1a56db;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">${v}</span>`;
+        else v = `<span style="background:var(--dv-blue-tint);border:1px solid #bfdbfe;color:#1a56db;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">${v}</span>`;
       }
 
       // Pend days — colored
@@ -2002,8 +2008,8 @@ function renderPSTable(rows) {
         if (v === null || v === "") { v = "—"; }
         else {
           const days = parseInt(v);
-          const color = days < 0 ? "#dc2626" : days <= 7 ? "#d97706" : "#16a34a";
-          const bg = days < 0 ? "#fef2f2" : days <= 7 ? "#fffbeb" : "#f0fdf4";
+          const color = days < 0 ? "var(--danger)" : days <= 7 ? "#d97706" : "var(--success)";
+          const bg = days < 0 ? "var(--dv-danger-soft)" : days <= 7 ? "#fffbeb" : "#f0fdf4";
           const border = days < 0 ? "#fca5a5" : days <= 7 ? "#fde68a" : "#86efac";
           const label = days < 0 ? `${Math.abs(days)}d overdue` : `${days}d left`;
           v = `<span style="font-weight:700;color:${color};background:${bg};border:1px solid ${border};padding:2px 10px;border-radius:20px;">${label}</span>`;
@@ -2026,7 +2032,7 @@ function _clearPSSearch_disabled() {
 
 function exportPSExcel() {
   if (!psData.length) {
-    showToast("No data to export", "error");
+    ERP.toast("No data to export", "error");
     return;
   }
 
@@ -2122,18 +2128,18 @@ function selectRmReason(reason) {
 
   if (input.value === reason) {
     input.value = "";
-    if (testBtn) { testBtn.style.background = "#eff6ff"; testBtn.style.borderColor = "#bfdbfe"; }
+    if (testBtn) { testBtn.style.background = "var(--dv-blue-tint)"; testBtn.style.borderColor = "#bfdbfe"; }
     if (shortBtn) { shortBtn.style.background = "#fffbeb"; shortBtn.style.borderColor = "#fde68a"; }
     return;
   }
 
   input.value = reason;
   if (reason === "testing") {
-    if (testBtn) { testBtn.style.background = "#1d4ed8"; testBtn.style.borderColor = "#1d4ed8"; testBtn.style.color = "#fff"; }
-    if (shortBtn) { shortBtn.style.background = "#fffbeb"; shortBtn.style.borderColor = "#fde68a"; shortBtn.style.color = "#92400e"; }
+    if (testBtn) { testBtn.style.background = "#1d4ed8"; testBtn.style.borderColor = "#1d4ed8"; testBtn.style.color = "var(--surface)"; }
+    if (shortBtn) { shortBtn.style.background = "#fffbeb"; shortBtn.style.borderColor = "#fde68a"; shortBtn.style.color = "var(--dv-warn-text)"; }
   } else {
-    if (shortBtn) { shortBtn.style.background = "#92400e"; shortBtn.style.borderColor = "#92400e"; shortBtn.style.color = "#fff"; }
-    if (testBtn) { testBtn.style.background = "#eff6ff"; testBtn.style.borderColor = "#bfdbfe"; testBtn.style.color = "#1d4ed8"; }
+    if (shortBtn) { shortBtn.style.background = "var(--dv-warn-text)"; shortBtn.style.borderColor = "var(--dv-warn-text)"; shortBtn.style.color = "var(--surface)"; }
+    if (testBtn) { testBtn.style.background = "var(--dv-blue-tint)"; testBtn.style.borderColor = "#bfdbfe"; testBtn.style.color = "#1d4ed8"; }
   }
 }
 
@@ -2151,29 +2157,29 @@ async function openSharedStageModal(jcNo, itemName) {
   try {
     const res = await fetch(`/api/quality_check/fetch/${encodeURIComponent(jcNo)}`);
     const data = await res.json();
-    if (!data.success) { showToast(data.error || "Could not load job card", "error"); return; }
+    if (!data.success) { ERP.toast(data.error || "Could not load job card", "error"); return; }
 
     sharedModalData = data;
     const item = (data.items || []).find(it => it.item_name === itemName);
-    if (!item) { showToast("Item not found on this job card", "error"); return; }
+    if (!item) { ERP.toast("Item not found on this job card", "error"); return; }
 
     // Supervisor process-access pre-check (same rule as Page 3)
     if (!isGaurangSpecialUser() && Array.isArray(data.my_accessible_processes)) {
       const currentWip = (item.wip_status || "").trim().toLowerCase();
       const hasAccess = data.my_accessible_processes.some(p => p.trim().toLowerCase() === currentWip);
       if (!hasAccess) {
-        showToast(`You do not have permission to move items out of '${item.wip_status}'.`, "error");
+        ERP.toast(`You do not have permission to move items out of '${item.wip_status}'.`, "error");
         return;
       }
     }
 
     if ((item.wip_status || "").trim().toLowerCase() === "store") {
-      showToast("This item is in Store.", "info");
+      ERP.toast("This item is in Store.", "info");
       return;
     }
 
     const wipIdx = item.wip_process_index ?? -1;
-    if (wipIdx === -1) { showToast("All stages completed for this item.", "info"); return; }
+    if (wipIdx === -1) { ERP.toast("All stages completed for this item.", "info"); return; }
 
     const processes = item.processes || [];
     const nextStageName = wipIdx + 1 < processes.length ? processes[wipIdx + 1] : "Store";
@@ -2217,7 +2223,7 @@ async function openSharedStageModal(jcNo, itemName) {
     showRmReasonIfNeeded(nextStageName);
     document.getElementById("stage-modal").classList.add("open");
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
   }
 }
 
@@ -2277,12 +2283,12 @@ async function proceedSharedStageChange() {
 
     if (sendToSubcontract) {
       if (!vendorName) {
-        showToast("Please enter vendor name for subcontracting", "error");
+        ERP.toast("Please enter vendor name for subcontracting", "error");
         return;
       }
 
       if (!leadDays || leadDays < 1) {
-        showToast("Please enter lead days for subcontracting", "error");
+        ERP.toast("Please enter lead days for subcontracting", "error");
         return;
       }
 
@@ -2322,7 +2328,7 @@ async function proceedSharedStageChange() {
 
     if (data.success) {
       closeSharedStageModal();
-      showToast(data.message || "Stage updated", "success");
+      ERP.toast(data.message || "Stage updated", "success");
 
       if (activeTab === "pr") {
         loadProcessReport();
@@ -2330,10 +2336,10 @@ async function proceedSharedStageChange() {
         loadData();
       }
     } else {
-      showToast(data.error || "Update failed", "error");
+      ERP.toast(data.error || "Update failed", "error");
     }
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
   }
 }
 function validateSharedStageActualQty() {
@@ -2343,19 +2349,19 @@ function validateSharedStageActualQty() {
 
   const actualQty = parseSharedStageQty(actualRaw);
   if (actualQty == null) {
-    showToast("Please enter a valid Actual Qty", "error");
+    ERP.toast("Please enter a valid Actual Qty", "error");
     document.getElementById("modal-actual-qty")?.focus();
     return false;
   }
 
   if (actualQty < 0) {
-    showToast("Actual Qty cannot be negative", "error");
+    ERP.toast("Actual Qty cannot be negative", "error");
     document.getElementById("modal-actual-qty")?.focus();
     return false;
   }
 
   if (plannedQty != null && actualQty > plannedQty) {
-    showToast("Actual Qty cannot be more than Planned Qty", "error");
+    ERP.toast("Actual Qty cannot be more than Planned Qty", "error");
     document.getElementById("modal-actual-qty")?.focus();
     return false;
   }
@@ -2438,7 +2444,7 @@ function setEditInputState(id, enabled) {
   const el = document.getElementById(id);
   if (!el) return;
   el.disabled = !enabled;
-  el.style.background = enabled ? "" : "#f8fafc";
+  el.style.background = enabled ? "" : "var(--dv-surface2-alt)";
   el.style.color = enabled ? "" : "var(--muted)";
   el.style.cursor = enabled ? "" : "not-allowed";
 }
@@ -2464,7 +2470,7 @@ function applyEditFieldPermissions() {
 function openEditJobCardModalById(jcNo, itemName) {
   if (!isEditableUser()) return;
   const row = (allData || []).find(r => String(r.job_card_no) === String(jcNo) && r.item_name === itemName);
-  if (!row) { showToast("Could not find this record in the current view", "error"); return; }
+  if (!row) { ERP.toast("Could not find this record in the current view", "error"); return; }
   openEditJobCardModal(row);
 }
 
@@ -2490,7 +2496,7 @@ function openEditJobCardModal(row) {
       const el = document.getElementById(id);
       if (el) {
         el.readOnly = true;
-        el.style.background = "#f8fafc";
+        el.style.background = "var(--dv-surface2-alt)";
         el.closest("div").style.display = "";
       }
     });
@@ -2508,7 +2514,7 @@ function openEditJobCardModal(row) {
   }
 
   if (!canEditRowFields(row)) {
-    showToast("You do not have rights to update this process.", "error");
+    ERP.toast("You do not have rights to update this process.", "error");
     return;
   }
 
@@ -2666,7 +2672,7 @@ async function saveEditJobCard() {
     const origVendor = orig.vendor_name || "";
     if (isSubcontract !== origSubcontract || vendorName !== origVendor) {
       if (isSubcontract && !vendorName) {
-        showToast("Please enter vendor name for subcontracting", "error");
+        ERP.toast("Please enter vendor name for subcontracting", "error");
         vendorInput?.focus();
         return;
       }
@@ -2683,14 +2689,14 @@ async function saveEditJobCard() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(data.message || "Updated", "success");
+      ERP.toast(data.message || "Updated", "success");
       closeEditJobCardModal();
       loadData();
     } else {
-      showToast(data.error || "Update failed", "error");
+      ERP.toast(data.error || "Update failed", "error");
     }
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
   }
 }
 // ── Assembly Readiness ────────────────────────────────────────────────────────
@@ -2725,7 +2731,7 @@ function _loadAssemblyReadiness_disabled() {
             <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Ready</div>
           </div>
           <div class="card" style="padding:14px 20px;min-width:120px;text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:#f59e0b">${s.in_progress}</div>
+            <div style="font-size:22px;font-weight:700;color:var(--dv-warn)">${s.in_progress}</div>
             <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">In Progress</div>
           </div>
           <div class="card" style="padding:14px 20px;min-width:120px;text-align:center;">
@@ -2769,7 +2775,7 @@ function renderAssemblyReadiness(rows) {
     const pct = node.process_pct || 0;
     const isReady = node.is_completed;
     const hasChildren = node.children && node.children.length > 0;
-    const statusColor = isReady ? "#22c55e" : pct > 0 ? "#f59e0b" : "#ef4444";
+    const statusColor = isReady ? "#22c55e" : pct > 0 ? "var(--dv-warn)" : "#ef4444";
     const wipBg = node.wip_status && node.wip_status.toLowerCase() === "store" ? "#dcfce7" : "#fef9c3";
     const wipColor = node.wip_status && node.wip_status.toLowerCase() === "store" ? "#15803d" : "#854d0e";
     const indent = depth * 24;
@@ -2782,7 +2788,7 @@ function renderAssemblyReadiness(rows) {
 
     let html = "<div style=\"border-top:1px solid var(--border);\">";
     html += "<div style=\"display:flex;align-items:center;gap:10px;padding:9px 16px;padding-left:" + (16 + indent) + "px;";
-    html += "background:" + (depth === 0 ? "var(--surface)" : depth === 1 ? "#f8fafc" : "#f1f5f9") + ";";
+    html += "background:" + (depth === 0 ? "var(--surface)" : depth === 1 ? "var(--dv-surface2-alt)" : "#f1f5f9") + ";";
     if (hasChildren) html += "cursor:pointer;\" onclick=\"toggleArNode('" + nodeId + "')\">";
     else html += "\">";
 
@@ -2827,7 +2833,7 @@ function renderAssemblyReadiness(rows) {
   rows.forEach(function(row, idx) {
     const pct = row.overall_pct || 0;
     const isReady = row.is_ready;
-    const statusColor = isReady ? "#22c55e" : pct > 0 ? "#f59e0b" : "#ef4444";
+    const statusColor = isReady ? "#22c55e" : pct > 0 ? "var(--dv-warn)" : "#ef4444";
     const statusLabel = isReady ? "Ready for Assembly" : pct > 0 ? "In Progress" : "Not Started";
     const statusIcon = isReady ? "&#10003;" : pct > 0 ? "&#8987;" : "&#128997;";
     const assemblyId = "ar-assembly-" + idx;
@@ -2949,7 +2955,7 @@ async function loadWipSummary() {
 
     // Build body
     tbody.innerHTML = data.rows.map((row, idx) => `
-      <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f1f5f9'};">
+      <tr style="background:${idx % 2 === 0 ? 'var(--surface)' : '#f1f5f9'};">
         <td style="padding:9px 14px; font-weight:600; white-space:nowrap; border-right:1px solid var(--border); color:var(--text);">${row.date}</td>
         ${processes.map(p => {
       const val = row[p] || 0;
@@ -2962,7 +2968,11 @@ async function loadWipSummary() {
     table.style.display = "table";
 
   } catch (e) {
-    loading.textContent = "Failed to load WIP Summary. Please try again.";
+    loading.style.display = "none";
+    ERP.toast(
+      "Failed to load WIP Summary. Please try again.",
+      "error"
+    );
   }
 }
 
@@ -2984,14 +2994,14 @@ async function openWipDetailModal(date, process) {
   overlay.innerHTML = `
     <div style="background:var(--card-bg); border-radius:10px; width:90vw; max-width:860px;
                 max-height:85vh; display:flex; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,0.18);">
-      <div style="background:white; color:#fff; padding:16px 20px; border-radius:10px 10px 0 0;
+      <div style="background:white; color:var(--surface); padding:16px 20px; border-radius:10px 10px 0 0;
                   display:flex; align-items:center; justify-content:space-between;">
         <div>
           <div style="font-size:16px; font-weight:700;">${escapeHtml(process)} — Completed on ${date}</div>
           <div style="font-size:12px; opacity:0.75; margin-top:3px;">Job cards that advanced out of this stage</div>
         </div>
         <button onclick="closeWipDetailModal()"
-          style="background:rgba(255,255,255,0.15); border:none; color:#fff; border-radius:6px;
+          style="background:rgba(255,255,255,0.15); border:none; color:var(--surface); border-radius:6px;
                  padding:6px 12px; cursor:pointer; font-size:18px; line-height:1;">✕</button>
       </div>
 
@@ -3021,7 +3031,7 @@ async function openWipDetailModal(date, process) {
     });
 
     const summaryHtml = Object.entries(byUser).map(([user, count]) => `
-      <span style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff;
+      <span style="display:inline-flex; align-items:center; gap:6px; background:var(--dv-blue-tint);
                    border:1px solid #bfdbfe; border-radius:20px; padding:4px 12px;
                    font-size:12px; font-weight:600; color:#1d4ed8; margin:3px;">
         <i class="fa fa-user"></i> ${escapeHtml(user)} &nbsp;·&nbsp; ${count} job card${count > 1 ? 's' : ''}
@@ -3030,7 +3040,7 @@ async function openWipDetailModal(date, process) {
 
     body.innerHTML = `
       <!-- Summary chips -->
-      <div style="margin-bottom:16px; padding:12px 14px; background:#f8fafc;
+      <div style="margin-bottom:16px; padding:12px 14px; background:var(--dv-surface2-alt);
                   border:1px solid var(--border); border-radius:8px;">
         <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;
                     letter-spacing:0.5px; margin-bottom:8px;">Completed By</div>
@@ -3046,7 +3056,7 @@ async function openWipDetailModal(date, process) {
       <div style="border:1px solid var(--border); border-radius:6px; overflow:hidden;">
         <table style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead>
-            <tr style="background:var(--header-bg); color:#fff;">
+            <tr style="background:var(--header-bg); color:var(--surface);">
               <th style="padding:10px 14px; text-align:left; font-size:11px; letter-spacing:0.5px;">#</th>
               <th style="padding:10px 14px; text-align:left; font-size:11px; letter-spacing:0.5px;">JC No</th>
               <th style="padding:10px 14px; text-align:left; font-size:11px; letter-spacing:0.5px;">Item Name</th>
@@ -3057,12 +3067,12 @@ async function openWipDetailModal(date, process) {
           </thead>
           <tbody>
             ${data.rows.map((r, i) => `
-              <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f9f1f1'}; border-top:1px solid var(--border);">
+              <tr style="background:${i % 2 === 0 ? 'var(--surface)' : '#f9f1f1'}; border-top:1px solid var(--border);">
                 <td style="padding:9px 14px; color:var(--muted); font-size:12px;">${i + 1}</td>
                 <td style="padding:9px 14px; font-weight:700; color:var(--accent);">${escapeHtml(r.job_card_no)}</td>
                 <td style="padding:9px 14px; color:var(--text);">${escapeHtml(r.item_name || '—')}</td>
                 <td style="padding:9px 14px;">
-<span style="background:${r.advanced_to && r.advanced_to.includes('Rolled Back') ? '#fef2f2' : '#dcfce7'}; 
+<span style="background:${r.advanced_to && r.advanced_to.includes('Rolled Back') ? 'var(--dv-danger-soft)' : '#dcfce7'}; 
                                color:${r.advanced_to && r.advanced_to.includes('Rolled Back') ? '#b91c1c' : '#15803d'}; 
                                border-radius:12px; padding:3px 10px; font-size:11px; font-weight:600;">
                     ${r.advanced_to && r.advanced_to.includes('Rolled Back') ? '↩' : '→'} ${escapeHtml(r.advanced_to || '—')}
@@ -3115,14 +3125,14 @@ async function confirmDdReasonAndSave() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(data.message || "Delivery date updated.", "success");
+      ERP.toast(data.message || "Delivery date updated.", "success");
       closeEditJobCardModal();
       loadData();
     } else {
-      showToast(data.error || "Update failed", "error");
+      ERP.toast(data.error || "Update failed", "error");
     }
   } catch (e) {
-    showToast("Error: " + (e.message || e), "error");
+    ERP.toast("Error: " + (e.message || e), "error");
   }
 }
 function getSubcontractVendorControls(source) {

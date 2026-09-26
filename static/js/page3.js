@@ -2,7 +2,16 @@ let currentData = null;
 let pendingChange = null;
 
 const IS_GAURANG_SPECIAL = window.JMS_IS_GAURANG_SPECIAL === true || window.JMS_IS_GAURANG_SPECIAL === "true";
-const IS_OPERATOR_READ_ONLY = window.JMS_USER_ROLE === "operator" && !IS_GAURANG_SPECIAL;
+const JMS_ROLE = String(window.JMS_USER_ROLE || "").trim().toLowerCase();
+
+const IS_OPERATOR_MODE =
+  JMS_ROLE === "operator" && !IS_GAURANG_SPECIAL;
+
+const IS_PLANT_HEAD_READ_ONLY =
+  JMS_ROLE === "plant_head" && !IS_GAURANG_SPECIAL;
+
+const IS_OPERATOR_READ_ONLY =
+  IS_OPERATOR_MODE || IS_PLANT_HEAD_READ_ONLY;
 
 function canEditProcess(processName) {
   if (IS_GAURANG_SPECIAL) return true;
@@ -39,7 +48,7 @@ async function fetchJobCard() {
     currentData = data;
 
     // OPERATOR_SEARCH_RECEIPT_MODAL_V3
-    if (IS_OPERATOR_READ_ONLY) {
+    if (IS_OPERATOR_MODE) {
 
       /*
        * Search is the ONLY time we ask backend
@@ -391,6 +400,23 @@ function renderResults(data) {
       const actualDays = tl ? tl.actual_days : null;
       const inTime = tl ? tl.in_time : null;
 
+      // SPLIT_QTY_PROCESS_PILL_V1
+      const hasStageQty =
+        tl &&
+        tl.stage_qty !== null &&
+        tl.stage_qty !== undefined;
+
+      const qtyBadge = hasStageQty
+        ? `<span class="pill-stage-qty"
+             style="display:inline-flex;align-items:center;
+                    margin-top:4px;padding:2px 7px;
+                    border-radius:10px;font-size:11px;
+                    font-weight:700;background:#eef2ff;
+                    color:#3730a3;">
+             Qty: ${Number(tl.stage_qty)}
+           </span>`
+        : "";
+
       let daysSoFar = 0;
       if (inTime) {
         const inDate = new Date(inTime);
@@ -464,6 +490,7 @@ function renderResults(data) {
           </div>
           <div class="pill-body">
             <span class="pill-name">${proc}</span>
+            ${qtyBadge}
             ${daysBadge}
           </div>
           ${IS_GAURANG_SPECIAL ? `
@@ -735,7 +762,12 @@ function toggleQtySummary(iIdx) {
 
 async function renderQtySummary(iIdx, jcNo, itemName) {
   const role = window.JMS_USER_ROLE;
-  if (!IS_GAURANG_SPECIAL && role !== "admin" && role !== "supervisor") return;
+  if (
+    !IS_GAURANG_SPECIAL &&
+    !["admin", "supervisor", "plant_head"].includes(
+      String(role || "").trim().toLowerCase()
+    )
+  ) return;
   try {
     const res = await fetch(`/api/stage-qty-log/${encodeURIComponent(jcNo)}?item=${encodeURIComponent(itemName)}`);
     const result = await res.json();
@@ -1034,7 +1066,12 @@ document.addEventListener("click", function (event) {
 
 // ── Open stage modal ──────────────────────────────────────────────────────────
 function openStageModal(pillEl) {
-  if (IS_OPERATOR_READ_ONLY) {
+  if (IS_PLANT_HEAD_READ_ONLY) {
+    showToast("Plant Head access is read-only", "error");
+    return;
+  }
+
+  if (IS_OPERATOR_MODE) {
     // OPERATOR_SEARCH_ACTION_FIX_V1
     // Operator queue is already filtered by assigned process.
     // Search results therefore resolve back to that queue instead
@@ -1464,7 +1501,7 @@ function showRmReasonIfNeeded(nextStage) {
 }
 
 function confirmStageChange() {
-  if (IS_OPERATOR_READ_ONLY) { showToast("Operator has read-only access", "error"); return; }
+  if (IS_OPERATOR_READ_ONLY) { showToast("This login has read-only access", "error"); return; }
   if (!pendingChange) return;
   if (!pendingChange) return;
   // Show confirmation modal instead of proceeding directly
@@ -1689,7 +1726,7 @@ document.addEventListener("keydown", function (e) {
 
 // ── Submit quality check ──────────────────────────────────────────────────────
 async function submitQualityCheck() {
-  if (IS_OPERATOR_READ_ONLY) { showToast("Operator has read-only access", "error"); return; }
+  if (IS_OPERATOR_READ_ONLY) { showToast("This login has read-only access", "error"); return; }
   if (!currentData) return;
   const supervisor = document.getElementById("bottom-supervisor").value;
   if (!supervisor) { showToast("Select supervisor before submitting", "error"); return; }
@@ -3027,7 +3064,7 @@ function operatorAvailableQty(card) {
 
 
 async function loadOperatorView() {
-  if (!IS_OPERATOR_READ_ONLY) return;
+  if (!IS_OPERATOR_MODE) return;
 
   operatorEnsureUxStyles();
 
@@ -4989,7 +5026,7 @@ function operatorNextPage() {
 }
 
 // Auto-load operator view on page load
-if (IS_OPERATOR_READ_ONLY) {
+if (IS_OPERATOR_MODE) {
   document.addEventListener("DOMContentLoaded", function () {
     const placeholder = document.getElementById("placeholder");
     if (placeholder) placeholder.style.display = "none";
@@ -6463,7 +6500,7 @@ const _loadOperatorViewBeforeDatabaseV2 =
 
 loadOperatorView =
   async function loadOperatorDatabaseWorkspaceV2() {
-    if (!IS_OPERATOR_READ_ONLY) {
+    if (!IS_OPERATOR_MODE) {
       return _loadOperatorViewBeforeDatabaseV2();
     }
 
@@ -6487,7 +6524,7 @@ confirmOperatorComplete =
   };
 
 
-if (IS_OPERATOR_READ_ONLY) {
+if (IS_OPERATOR_MODE) {
   setTimeout(function () {
     operatorRefreshWorkspaceV2(true);
   }, 0);

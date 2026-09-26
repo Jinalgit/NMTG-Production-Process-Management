@@ -6,12 +6,14 @@ Includes WIP status tracking, in/out time recording, and audit trail.
 import re
 from datetime import date as date_cls
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, jsonify, request, session
 from mysql.connector import Error
 
 from db import get_connection
 from .oee_persistence import save_oee_entry
+from .wip_split_qty import move_stage_quantity
 from permission_utils import (
     PAGE3_TRACEABILITY,
     can_user_edit_field,
@@ -26,6 +28,38 @@ def _to_ist(dt): return dt + _IST if dt else dt
 
 
 quality_check_bp = Blueprint("quality_check", __name__)
+
+
+# ---- Tool UID Register access control (added by patch) ----
+def _can_access_tool_uid_register():
+    """Admin -> always; Supervisor -> only if any assigned process contains CNC or VMC."""
+    try:
+        role = (session.get("role") or "").strip().lower()
+        if role == "admin":
+            return True
+        if role != "supervisor":
+            return False
+        uid = session.get("user_id") or session.get("id")
+        if not uid:
+            return False
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM supervisor_process_access "
+            "WHERE user_id=%s AND (process_name LIKE %s OR process_name LIKE %s)",
+            (uid, "%CNC%", "%VMC%"),
+        )
+        n = cur.fetchone()[0]
+        cur.close(); conn.close()
+        return int(n) > 0
+    except Exception:
+        return False
+
+
+@quality_check_bp.app_context_processor
+def _inject_can_tool_uid():
+    return {"can_tool_uid": _can_access_tool_uid_register()}
+# ---- end Tool UID Register access control ----
 
 PROCESS_COUNT = 25
 PROCESS_COLUMNS = [f"p{i}" for i in range(1, PROCESS_COUNT + 1)]
@@ -174,7 +208,7 @@ def _fetch_process_master_row(cursor, job_card_no, item_name):
     if pm_row:
         return pm_row
 
-    # NOTE: the previous fuzzy LIKE fallback here was removed — it matched
+    # NOTE: the previous fuzzy LIKE fallback here was removed â€” it matched
     # on a generic prefix shared by hundreds of unrelated rows (e.g. every
     # "Freewheel Oneway Clutch Model: ..." variant), causing MySQL to return
     # an arbitrary, wrong process_master record for items with no exact
@@ -922,6 +956,28 @@ def fetch_for_quality_check(job_card_no):
             wip_status = ei.get("wip_status") or "Pending"
             ei["wip_process_index"] = _wip_process_index(wip_status, processes)
 
+            # TRACEABILITY_STAGE_QTY_V1
+            # Quantity currently available at each process for this JC item.
+            cursor.execute(
+                """
+                SELECT
+                    process_name,
+                    qty_available,
+                    qty_hold,
+                    qty_rejected,
+                    qty_moved_out
+                FROM job_card_stage_qty
+                WHERE job_card_item_id = %s
+                ORDER BY id
+                """,
+                (ei["id"],),
+            )
+
+            stage_qty_map = {
+                _norm_process_name(row.get("process_name")): row
+                for row in cursor.fetchall()
+            }
+
             item_timeline = []
 
             for proc in processes:
@@ -958,6 +1014,15 @@ def fetch_for_quality_check(job_card_no):
                 item_timeline.append(
                     {
                         "process_name": proc,
+                        "stage_qty": (
+                            int(
+                                stage_qty_map[
+                                    _norm_process_name(proc)
+                                ].get("qty_available") or 0
+                            )
+                            if _norm_process_name(proc) in stage_qty_map
+                            else None
+                        ),
                         "in_time": _fmt(in_time),
                         "out_time": _fmt(out_time),
                         "actual_days": act_days,
@@ -976,7 +1041,7 @@ def fetch_for_quality_check(job_card_no):
             "SELECT full_name AS name FROM users WHERE role = 'supervisor' ORDER BY full_name")
         supervisors = [r["name"] for r in cursor.fetchall()]
 
-        # ── Current logged-in user's process access (supervisors only) ─────────
+        # â”€â”€ Current logged-in user's process access (supervisors only) â”€â”€â”€â”€â”€â”€â”€â”€â”€
         # Used by the frontend to block the stage-change modal entirely before
         # it opens, instead of letting the user click through and only failing
         # at the final confirm step.
@@ -1734,6 +1799,232 @@ def _update_wip_from_saved_timeline():
                 "error": f"Item not found in job card {job_card_no}"
             }), 404
 
+        # SPLIT_QTY_COMPLETION_ENGINE_V1
+        legacy_item_stage = str(
+            item_row.get("wip_status")
+            or "Pending"
+        ).strip()
+
+        split_oee_run_process = None
+        split_oee_stage_available_qty = None
+        split_oee_secondary_stage = False
+
+        if (
+            role == "operator"
+            and bool(
+                data.get("machine_oee_completion")
+            )
+        ):
+            try:
+                split_run_id = int(
+                    data.get("machine_run_id")
+                    or 0
+                )
+            except (TypeError, ValueError):
+                split_run_id = 0
+
+            if split_run_id > 0:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        id,
+                        job_card_no,
+                        job_card_item_id,
+                        process_name,
+                        entry_state
+                    FROM oee_entries
+                    WHERE id = %s
+                      AND activity_type IS NULL
+                    LIMIT 1
+                    FOR UPDATE
+                    """,
+                    (split_run_id,),
+                )
+
+                split_run = (
+                    cursor.fetchone()
+                    or {}
+                )
+
+                if (
+                    str(
+                        split_run.get("entry_state")
+                        or ""
+                    ).strip().upper()
+                    == "RUNNING"
+                    and
+                    str(
+                        split_run.get("job_card_no")
+                        or ""
+                    ).strip()
+                    ==
+                    str(job_card_no).strip()
+                    and
+                    (
+                        not split_run.get(
+                            "job_card_item_id"
+                        )
+                        or int(
+                            split_run.get(
+                                "job_card_item_id"
+                            )
+                        )
+                        ==
+                        int(
+                            item_row.get(
+                                "job_card_item_id"
+                            )
+                        )
+                    )
+                ):
+
+                    run_process = str(
+                        split_run.get(
+                            "process_name"
+                        )
+                        or ""
+                    ).strip()
+
+                    cursor.execute(
+                        """
+                        SELECT
+                            qty_available,
+                            qty_hold
+                        FROM job_card_stage_qty
+                        WHERE job_card_item_id = %s
+                          AND LOWER(TRIM(process_name))
+                              = LOWER(TRIM(%s))
+                        LIMIT 1
+                        FOR UPDATE
+                        """,
+                        (
+                            item_row.get(
+                                "job_card_item_id"
+                            ),
+                            run_process,
+                        ),
+                    )
+
+                    split_stage = (
+                        cursor.fetchone()
+                    )
+
+                    if split_stage is not None:
+
+                        split_oee_stage_available_qty = (
+                            int(
+                                split_stage.get(
+                                    "qty_available"
+                                )
+                                or 0
+                            )
+                            +
+                            int(
+                                split_stage.get(
+                                    "qty_hold"
+                                )
+                                or 0
+                            )
+                        )
+
+                        if (
+                            split_oee_stage_available_qty
+                            <= 0
+                        ):
+                            return jsonify({
+                                "success": False,
+                                "error": (
+                                    f"No quantity is available at "
+                                    f"{run_process}."
+                                )
+                            }), 409
+
+                        split_oee_run_process = (
+                            run_process
+                        )
+
+                        split_oee_secondary_stage = (
+                            not _match_processes(
+                                legacy_item_stage,
+                                run_process,
+                            )
+                        )
+
+        # COMBINED_SETUP_COMPLETION_RESOLVE_V1_START
+        # A Combined Setup run covers several route stages in ONE
+        # machine setup. oee_run_processes is the authority.
+        #
+        # NOTHING IS SKIPPED. Every stage from the run's start
+        # process through its END process is closed on completion.
+        combined_run_names = []
+        combined_run_end_name = ""
+        is_combined_run_completion = False
+        combined_span_ids = []
+
+        if (
+            role == "operator"
+            and bool(
+                data.get("machine_oee_completion")
+            )
+        ):
+            try:
+                combined_lookup_run_id = int(
+                    data.get("machine_run_id")
+                    or 0
+                )
+            except (TypeError, ValueError):
+                combined_lookup_run_id = 0
+
+            if combined_lookup_run_id > 0:
+
+                cursor.execute(
+                    """
+                    SELECT
+                        process_name,
+                        is_end_process
+                    FROM oee_run_processes
+                    WHERE oee_entry_id = %s
+                    ORDER BY route_sequence
+                    """,
+                    (combined_lookup_run_id,),
+                )
+
+                combined_run_rows = (
+                    cursor.fetchall()
+                    or []
+                )
+
+                if len(combined_run_rows) >= 2:
+
+                    is_combined_run_completion = True
+
+                    for combined_row in combined_run_rows:
+
+                        combined_run_names.append(
+                            str(
+                                combined_row.get(
+                                    "process_name"
+                                )
+                                or ""
+                            ).strip()
+                        )
+
+                        if int(
+                            combined_row.get(
+                                "is_end_process"
+                            )
+                            or 0
+                        ) == 1:
+
+                            combined_run_end_name = str(
+                                combined_row.get(
+                                    "process_name"
+                                )
+                                or ""
+                            ).strip()
+        # COMBINED_SETUP_COMPLETION_RESOLVE_V1_END
+
         available_qty = int(item_row.get("job_card_qty") or 0)
 
         if available_qty <= 0:
@@ -1750,7 +2041,21 @@ def _update_wip_from_saved_timeline():
                 prev_pending > 0 or prev_hold > 0
             )
 
-            if current_stage_is_partial:
+            if (
+                split_oee_stage_available_qty
+                is not None
+            ):
+                stage_available_qty = int(
+                    split_oee_stage_available_qty
+                )
+
+                # Stage ledger is quantity authority here.
+                # Do not inherit cumulative outcome values
+                # from another process.
+                base_actual = 0
+                base_rejected = 0
+
+            elif current_stage_is_partial:
                 stage_available_qty = (
                     prev_actual
                     + prev_rejected
@@ -1759,6 +2064,7 @@ def _update_wip_from_saved_timeline():
                 )
                 base_actual = prev_actual
                 base_rejected = prev_rejected
+
             else:
                 prior_outcome_exists = (
                     prev_actual > 0 or prev_rejected > 0
@@ -1822,7 +2128,10 @@ def _update_wip_from_saved_timeline():
 
             actual_qty = ok_qty
 
-        old_stage = item_row.get("wip_status") or "Pending"
+        old_stage = (
+            split_oee_run_process
+            or legacy_item_stage
+        )
         if _is_store_stage(old_stage):
             return jsonify({
                 "success": False,
@@ -1895,6 +2204,98 @@ def _update_wip_from_saved_timeline():
                 "error": f"Current stage '{old_stage}' is not defined for this job card."
             }), 400
 
+        # COMBINED_SETUP_MOVEMENT_ANCHOR_V1_START
+        # Sequence checks anchor on the combined run's END
+        # process, not on the JC's current stage.
+        combined_end_idx = None
+
+        if (
+            is_combined_run_completion
+            and combined_run_end_name
+        ):
+            for scan_idx in range(
+                old_idx,
+                len(process_rows),
+            ):
+                if _match_processes(
+                    process_rows[scan_idx].get(
+                        "process_name"
+                    ),
+                    combined_run_end_name,
+                ):
+                    combined_end_idx = scan_idx
+                    break
+
+            if combined_end_idx is None:
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Combined Setup end process "
+                        f"'{combined_run_end_name}' was not "
+                        "found in this job card's timeline."
+                    )
+                }), 409
+
+        sequence_anchor_idx = (
+            combined_end_idx
+            if combined_end_idx is not None
+            else old_idx
+        )
+        # COMBINED_SETUP_MOVEMENT_ANCHOR_V1_END
+
+        # REJECT_AT_PROCESS_V1_VALIDATE
+        # In a Combined Setup the operator states at which
+        # operation of the setup the pieces were scrapped.
+        # Single setups are unaffected.
+        combined_reject_process = None
+
+        if (
+            is_combined_run_completion
+            and combined_end_idx is not None
+            and outcome_keys_present
+            and int(submitted_rej or 0) > 0
+        ):
+            requested_reject_at = str(
+                data.get("reject_at")
+                or ""
+            ).strip()
+
+            if not requested_reject_at:
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Select the operation where the pieces "
+                        "were rejected."
+                    )
+                }), 400
+
+            for reject_idx in range(
+                old_idx,
+                combined_end_idx + 1,
+            ):
+                if _match_processes(
+                    process_rows[reject_idx].get(
+                        "process_name"
+                    ),
+                    requested_reject_at,
+                ):
+                    combined_reject_process = str(
+                        process_rows[reject_idx].get(
+                            "process_name"
+                        )
+                        or ""
+                    ).strip()
+                    break
+
+            if not combined_reject_process:
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        f"'{requested_reject_at}' is not part of "
+                        "this combined setup."
+                    )
+                }), 400
+
         # TERMINAL_C_COMPLETION_START
         compact_item_name = "".join(
             str(item_name or "").upper().split()
@@ -1906,7 +2307,7 @@ def _update_wip_from_saved_timeline():
         )
 
         is_last_defined_process = (
-            old_idx == len(process_rows) - 1
+            sequence_anchor_idx == len(process_rows) - 1
         )
 
         # Existing -C explicit completion rule.
@@ -1943,11 +2344,11 @@ def _update_wip_from_saved_timeline():
                     "error": f"Process '{requested_stage}' is not defined for this job card."
                 }), 400
 
-            if new_idx != old_idx + 1:
+            if new_idx != sequence_anchor_idx + 1:
                 return jsonify({
                     "success": False,
                     "error": (
-                        f"Stage skip not allowed. Complete '{process_rows[old_idx]['process_name']}' "
+                        f"Stage skip not allowed. Complete '{process_rows[sequence_anchor_idx]['process_name']}' "
                         f"before moving to '{requested_stage}'."
                     )
                 }), 400
@@ -2817,6 +3218,41 @@ def _update_wip_from_saved_timeline():
             (old_process["id"],),
         )
 
+        # COMBINED_SETUP_SPAN_COMPLETION_V1_START
+        # Nothing is skipped. Every route stage between the run's
+        # start process and its END process is closed by this run.
+        #
+        # oee_run_processes records which of them the operator
+        # ticked, so the two remain distinguishable afterwards.
+        if (
+            is_combined_run_completion
+            and combined_end_idx is not None
+            and combined_end_idx > old_idx
+        ):
+            for span_idx in range(
+                old_idx + 1,
+                combined_end_idx + 1,
+            ):
+                span_row = process_rows[span_idx]
+
+                combined_span_ids.append(
+                    span_row["id"]
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE job_card_process_days
+                    SET in_time = COALESCE(in_time, NOW()),
+                        out_time = NOW(),
+                        is_completed = 1,
+                        end_date = CURDATE(),
+                        actual_days = 0
+                    WHERE id = %s
+                    """,
+                    (span_row["id"],),
+                )
+        # COMBINED_SETUP_SPAN_COMPLETION_V1_END
+
         # A terminal -C completion OR a missing-store terminal
         # completion has no next process row (new_process is None).
         # Guard against both, not just -C.
@@ -2917,6 +3353,214 @@ def _update_wip_from_saved_timeline():
             ),
         )
 
+        # SPLIT_QTY_WIP_V1_START
+        # Keep quantity-level WIP beside the legacy JC-level wip_status.
+        #
+        # Example:
+        #   CNC 1st Side available = 50
+        #   submitted OK           = 25
+        #
+        # Result:
+        #   CNC 1st Side available = 25
+        #   CNC 2nd Side available = 25
+        #
+        if outcome_keys_present:
+            split_to_process = (
+                None
+                if is_terminal_without_next_process
+                else new_stage
+            )
+
+            move_stage_quantity(
+                cursor,
+                job_card_item_id=int(
+                    item_row.get("job_card_item_id")
+                ),
+                job_card_no=job_card_no,
+                from_process=old_stage,
+                to_process=split_to_process,
+                ok_qty=submitted_ok,
+                rejected_qty=submitted_rej,
+                hold_qty=submitted_hold,
+                reject_process=combined_reject_process,
+                initial_available_qty=available_qty,
+                source_type=(
+                    "OEE"
+                    if machine_oee_completion
+                    else "WIP"
+                ),
+                source_id=(
+                    machine_oee_run_id
+                    if machine_oee_completion
+                    else operator_completion_log_id
+                ),
+                changed_by_user_id=session.get("user_id"),
+                changed_by=changed_by,
+                remarks=stage_remark or None,
+            )
+
+            # A downstream split-stage completion must not
+            # overwrite the legacy quantity snapshot belonging
+            # to the upstream stage.
+            if split_oee_secondary_stage:
+
+                cursor.execute(
+                    """
+                    UPDATE job_card_items
+                    SET actual_qty = %s,
+                        rejected_qty = %s,
+                        hold_qty = %s,
+                        pending_qty = %s,
+                        rejection_reason = %s,
+                        hold_reason = %s
+                    WHERE job_card_no = %s
+                      AND TRIM(item_name) = TRIM(%s)
+                    """,
+                    (
+                        item_row.get("actual_qty"),
+                        item_row.get("rejected_qty"),
+                        item_row.get("hold_qty"),
+                        item_row.get("pending_qty"),
+                        item_row.get("rejection_reason"),
+                        item_row.get("hold_reason"),
+                        job_card_no,
+                        item_name,
+                    ),
+                )
+
+            # Legacy wip_status represents the earliest process
+            # that still owns quantity. The stage ledger remains
+            # the real split-WIP authority.
+            cursor.execute(
+                """
+                SELECT
+                    sq.process_name,
+                    jpd.id AS process_day_id
+                FROM job_card_stage_qty sq
+                LEFT JOIN job_card_process_days jpd
+                  ON CONVERT(jpd.job_card_no USING utf8mb4)
+                        COLLATE utf8mb4_unicode_ci
+                     =
+                     CONVERT(sq.job_card_no USING utf8mb4)
+                        COLLATE utf8mb4_unicode_ci
+                 AND CONVERT(
+                        LOWER(TRIM(jpd.process_name))
+                        USING utf8mb4
+                     ) COLLATE utf8mb4_unicode_ci
+                     =
+                     CONVERT(
+                        LOWER(TRIM(sq.process_name))
+                        USING utf8mb4
+                     ) COLLATE utf8mb4_unicode_ci
+                WHERE sq.job_card_item_id = %s
+                  AND (
+                        COALESCE(sq.qty_available, 0)
+                        + COALESCE(sq.qty_hold, 0)
+                      ) > 0
+                ORDER BY
+                    CASE
+                        WHEN jpd.id IS NULL THEN 1
+                        ELSE 0
+                    END,
+                    jpd.id,
+                    sq.id
+                LIMIT 1
+                """,
+                (
+                    item_row.get(
+                        "job_card_item_id"
+                    ),
+                ),
+            )
+
+            earliest_active_stage = (
+                cursor.fetchone()
+            )
+
+            if earliest_active_stage:
+
+                effective_stage = str(
+                    earliest_active_stage.get(
+                        "process_name"
+                    )
+                    or effective_stage
+                ).strip()
+
+                cursor.execute(
+                    """
+                    UPDATE job_card_items
+                    SET wip_status = %s
+                    WHERE job_card_no = %s
+                      AND TRIM(item_name) = TRIM(%s)
+                    """,
+                    (
+                        effective_stage,
+                        job_card_no,
+                        item_name,
+                    ),
+                )
+
+                earliest_idx = None
+
+                for split_idx, split_proc in enumerate(
+                    process_rows
+                ):
+                    if _match_processes(
+                        split_proc.get(
+                            "process_name"
+                        ),
+                        effective_stage,
+                    ):
+                        earliest_idx = split_idx
+                        break
+
+                # If quantity still exists at this process
+                # or any earlier process, this process is not
+                # globally finished yet because more qty can arrive.
+                if (
+                    earliest_idx is not None
+                    and earliest_idx <= old_idx
+                ):
+                    # COMBINED_SETUP_PARTIAL_REOPEN_V1_START
+                    # A partial Combined Setup run must reopen
+                    # EVERY stage the run closed, not only the
+                    # start process. The remaining quantity still
+                    # has to pass through all of them.
+                    combined_reopen_ids = [
+                        old_process["id"]
+                    ]
+
+                    for combined_span_id in combined_span_ids:
+
+                        if (
+                            combined_span_id
+                            not in combined_reopen_ids
+                        ):
+                            combined_reopen_ids.append(
+                                combined_span_id
+                            )
+
+                    for combined_reopen_id in (
+                        combined_reopen_ids
+                    ):
+
+                        cursor.execute(
+                            """
+                            UPDATE job_card_process_days
+                            SET out_time = NULL,
+                                is_completed = 0,
+                                end_date = NULL,
+                                actual_days = NULL
+                            WHERE id = %s
+                            """,
+                            (
+                                combined_reopen_id,
+                            ),
+                        )
+                    # COMBINED_SETUP_PARTIAL_REOPEN_V1_END
+
+        # SPLIT_QTY_WIP_V1_END
+
         # Undo the process_days advancement if partial submission.
         # Fix completion log: store effective_stage, not requested stage
         if operator_completion_log_id is not None and effective_stage != new_stage:
@@ -2930,7 +3574,7 @@ def _update_wip_from_saved_timeline():
             )
 
         if outcome_keys_present and (pending_qty > 0 or hold_qty > 0):
-            # Revert old process — mark it back as not completed.
+            # Revert old process â€” mark it back as not completed.
             cursor.execute(
                 """
                 UPDATE job_card_process_days
@@ -3237,11 +3881,65 @@ def _update_wip_from_saved_timeline():
             #
 
 
+        # SPLIT_QTY_TOAST_V1_START
+        #
+        # For machine split-qty completion, effective_stage may be reset
+        # to the earliest remaining JC stage for legacy compatibility.
+        # The operator message must instead describe the quantity's
+        # real movement destination.
+        if machine_oee_completion and split_oee_run_process:
+
+            split_message_parts = []
+
+            if int(submitted_ok or 0) > 0:
+                split_message_parts.append(
+                    f"{int(submitted_ok or 0)} qty moved from "
+                    f"'{old_stage}' to '{new_stage}'."
+                )
+
+            if int(submitted_rej or 0) > 0:
+                split_message_parts.append(
+                    f"{int(submitted_rej or 0)} qty rejected at "
+                    f"'{old_stage}'."
+                )
+
+            if int(submitted_hold or 0) > 0:
+                split_message_parts.append(
+                    f"{int(submitted_hold or 0)} qty on hold at "
+                    f"'{old_stage}'."
+                )
+
+            if int(pending_qty or 0) > 0:
+                split_message_parts.append(
+                    f"{int(pending_qty or 0)} qty remaining at "
+                    f"'{old_stage}'."
+                )
+
+            response_message = (
+                " ".join(split_message_parts)
+                or f"No quantity movement recorded at '{old_stage}'."
+            )
+
+        else:
+            response_message = (
+                f"WIP updated from '{old_stage}' to '{effective_stage}'"
+                if (
+                    pending_qty == 0
+                    and int(hold_qty or 0) == 0
+                )
+                else (
+                    f"Partial entry saved. {pending_qty} pending + "
+                    f"{int(hold_qty or 0)} on hold on '{old_stage}'."
+                )
+            )
+
+        # SPLIT_QTY_TOAST_V1_END
+
         conn.commit()
 
         return jsonify({
             "success": True,
-            "message": f"WIP updated from '{old_stage}' to '{effective_stage}'" if (pending_qty == 0 and int(hold_qty or 0) == 0) else f"Partial entry saved. {pending_qty} pending + {int(hold_qty or 0)} on hold on '{old_stage}'.",
+            "message": response_message,
             "old_stage": old_stage,
             "new_stage": effective_stage,
             "stage_days": stage_days,
@@ -4637,8 +5335,8 @@ def set_subcontract():
             }), 400
 
         # Rule:
-        # Pending → only first process can start
-        # Any current process → only immediate next process can go subcontract
+        # Pending â†’ only first process can start
+        # Any current process â†’ only immediate next process can go subcontract
         if current_wip.lower() == "pending":
             if next_idx != 0:
                 return jsonify({
@@ -4809,7 +5507,7 @@ def complete_subcontract():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # ── Supervisor process-access check ────────────────────────────────────
+        # â”€â”€ Supervisor process-access check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if role == "supervisor" and not is_gaurang_special_user() and not supervisor_has_process_access(
             cursor, session.get("user_id"), process
         ):
@@ -5034,7 +5732,7 @@ def rollback_wip_stage():
                 "error": "Rollback target must be before current stage"
             }), 400
 
-        # Reset stages strictly AFTER the target stage — these genuinely
+        # Reset stages strictly AFTER the target stage â€” these genuinely
         # haven't started yet, so a full reset is correct for them.
         rollback_ids = [r["id"] for r in rows[target_idx + 1:]]
 
@@ -5050,7 +5748,7 @@ def rollback_wip_stage():
                 WHERE id IN ({placeholders})
             """, rollback_ids)
 
-        # Re-open the target stage WITHOUT touching its original in_time —
+        # Re-open the target stage WITHOUT touching its original in_time â€”
         # this preserves the real duration it had been running before it
         # was first completed (e.g. the original 8 days), instead of
         # restarting the clock at "now".
@@ -5184,14 +5882,14 @@ def advance_rework_stage():
                 SET in_time = NOW()
                 WHERE id = %s
             """, (next_stage["id"],))
-            msg += f" → moved to '{next_stage['process_name']}'"
+            msg += f" â†’ moved to '{next_stage['process_name']}'"
         else:
             cursor.execute("""
                 UPDATE revoke_process_days
                 SET merged_to_main = 1
                 WHERE revoke_id = %s
             """, (revoke_id,))
-            msg += " — rework complete, ready to merge into main flow"
+            msg += " â€” rework complete, ready to merge into main flow"
 
         conn.commit()
         cursor.close()
@@ -5513,7 +6211,7 @@ def remove_process():
             WHERE id = %s
         """, (target["id"],))
 
-        # If removed process was current WIP → move to next process
+        # If removed process was current WIP â†’ move to next process
         if is_current_wip:
             remaining = [
                 p for p in all_processes if p["id"] != target["id"]
@@ -5531,7 +6229,7 @@ def remove_process():
             if next_process:
                 new_wip = next_process["process_name"]
 
-                # Open next process — set in_time if not set
+                # Open next process â€” set in_time if not set
                 cursor.execute("""
                     UPDATE job_card_process_days
                     SET in_time = COALESCE(in_time, NOW()),
@@ -5550,7 +6248,7 @@ def remove_process():
                 """, (new_wip, job_card_no, item_name))
 
         # If removed process was first (Drawing) and had in_time set
-        # → pass in_time to next process
+        # â†’ pass in_time to next process
         elif target_idx == 0 and target.get("in_time"):
             remaining = [
                 p for p in all_processes if p["id"] != target["id"]
@@ -5589,7 +6287,7 @@ def remove_process():
             conn.close()
 
 
-# ── Dashboard API: Overdue -C Parent Status ────────────────────────────────
+# â”€â”€ Dashboard API: Overdue -C Parent Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @quality_check_bp.route("/api/dashboard/overdue-c-parent-status", methods=["GET"])
 def overdue_c_parent_status_api():
     """
@@ -6403,6 +7101,7 @@ def operator_job_cards():
                     jc.parent_code,
                     jc.child_code,
 
+                    jci.id AS job_card_item_id,
                     jci.item_name,
                     jci.wip_status,
                     jci.so_qty,
@@ -6484,6 +7183,7 @@ def operator_job_cards():
                     jc.parent_code,
                     jc.child_code,
 
+                    jci.id AS job_card_item_id,
                     jci.item_name,
                     jci.wip_status,
                     jci.so_qty,
@@ -6511,11 +7211,25 @@ def operator_job_cards():
                      jc.job_card_no
 
                 WHERE
-                    LOWER(
-                        TRIM(
-                            jci.wip_status
+                    (
+                        LOWER(
+                            TRIM(
+                                jci.wip_status
+                            )
+                        ) IN ({fmt})
+
+                        OR EXISTS (
+                            SELECT 1
+                            FROM job_card_stage_qty sq
+                            WHERE sq.job_card_item_id = jci.id
+                              AND sq.qty_available > 0
+                              AND LOWER(
+                                    TRIM(
+                                        sq.process_name
+                                    )
+                                  ) IN ({fmt})
                         )
-                    ) IN ({fmt})
+                    )
 
                   AND COALESCE(
                         jci.is_deleted,
@@ -6543,6 +7257,7 @@ def operator_job_cards():
                     jci.delivery_date,
                     jc.job_card_no
             """, (
+                *assigned_norm,
                 *assigned_norm,
                 requested_job_card_no,
                 requested_job_card_no,
@@ -6631,14 +7346,136 @@ def operator_job_cards():
             )
 
 
+            # SPLIT_QTY_OPERATOR_QUEUE_V1
+            #
+            # One JC may now have quantity available at more than
+            # one process simultaneously.
+            #
+            # Legacy job_card_items.wip_status remains unchanged,
+            # but this queue resolves the process that THIS operator
+            # can actually work based on job_card_stage_qty.
+            cursor.execute(
+                """
+                SELECT
+                    process_name,
+                    qty_available,
+                    qty_hold,
+                    qty_rejected,
+                    qty_moved_out
+                FROM job_card_stage_qty
+                WHERE job_card_item_id = %s
+                  AND qty_available > 0
+                ORDER BY id
+                """,
+                (
+                    item.get("job_card_item_id"),
+                ),
+            )
+
+            split_stage_rows = (
+                cursor.fetchall()
+                or []
+            )
+
+            split_stage_map = {
+                str(
+                    row.get("process_name")
+                    or ""
+                ).strip().lower(): row
+                for row in split_stage_rows
+            }
+
+            legacy_wip = str(
+                item.get("wip_status")
+                or ""
+            ).strip()
+
+            legacy_wip_norm = (
+                legacy_wip.lower()
+            )
+
+            queue_process = legacy_wip
+            queue_stage_qty = None
+            is_split_qty_stage = False
+
+            # Prefer the legacy current process when this operator
+            # is assigned to it. Otherwise use the earliest assigned
+            # process that currently owns split quantity.
+            if legacy_wip_norm in assigned_norm:
+                legacy_split = split_stage_map.get(
+                    legacy_wip_norm
+                )
+
+                if legacy_split is not None:
+                    queue_stage_qty = int(
+                        legacy_split.get(
+                            "qty_available"
+                        )
+                        or 0
+                    )
+
+            else:
+                process_order = {
+                    str(
+                        proc.get("process_name")
+                        or ""
+                    ).strip().lower(): idx
+                    for idx, proc in enumerate(processes)
+                }
+
+                assigned_split_rows = [
+                    row
+                    for row in split_stage_rows
+                    if (
+                        str(
+                            row.get("process_name")
+                            or ""
+                        ).strip().lower()
+                        in assigned_norm
+                    )
+                ]
+
+                assigned_split_rows.sort(
+                    key=lambda row: process_order.get(
+                        str(
+                            row.get("process_name")
+                            or ""
+                        ).strip().lower(),
+                        999999,
+                    )
+                )
+
+                if assigned_split_rows:
+                    selected_split = (
+                        assigned_split_rows[0]
+                    )
+
+                    queue_process = str(
+                        selected_split.get(
+                            "process_name"
+                        )
+                        or ""
+                    ).strip()
+
+                    queue_stage_qty = int(
+                        selected_split.get(
+                            "qty_available"
+                        )
+                        or 0
+                    )
+
+                    is_split_qty_stage = (
+                        queue_process.lower()
+                        != legacy_wip_norm
+                    )
+
             current_idx = None
             prev_process = None
             next_process = None
 
-            current_wip_norm = str(
-                item.get("wip_status")
-                or ""
-            ).strip().lower()
+            current_wip_norm = (
+                queue_process.lower()
+            )
 
 
             for idx, proc in enumerate(
@@ -6805,11 +7642,27 @@ def operator_job_cards():
             )
 
 
-            if is_partial:
+            if queue_stage_qty is not None:
+                available_qty = int(
+                    queue_stage_qty
+                )
+
+                is_partial = (
+                    available_qty
+                    <
+                    int(
+                        item.get("job_card_qty")
+                        or item.get("so_qty")
+                        or 0
+                    )
+                )
+
+            elif is_partial:
                 available_qty = (
                     pending_qty
                     + hold_qty_val
                 )
+
             else:
                 available_qty = int(
                     item.get("job_card_qty")
@@ -6907,7 +7760,22 @@ def operator_job_cards():
                     or "Pending",
 
                 "current_process":
+                    queue_process,
+
+                "legacy_wip_status":
                     item["wip_status"],
+
+                "is_split_qty_stage":
+                    bool(
+                        is_split_qty_stage
+                    ),
+
+                "stage_qty_available":
+                    (
+                        int(queue_stage_qty)
+                        if queue_stage_qty is not None
+                        else None
+                    ),
 
                 "prev_process":
                     prev_process,
@@ -6962,6 +7830,206 @@ def operator_job_cards():
                         or 0
                     ),
             })
+
+
+            # JC_MOVES_WITH_SPLIT_QTY_V1
+            #
+            # A single JC can simultaneously exist at more than
+            # one active process when its quantity has been split.
+            #
+            # The row above represents the selected/base stage.
+            # Add one extra queue row for every OTHER assigned
+            # process that currently owns qty_available > 0.
+            base_stage_norm = str(
+                queue_process
+                or ""
+            ).strip().lower()
+
+            process_index_by_name = {
+                str(
+                    proc.get("process_name")
+                    or ""
+                ).strip().lower(): idx
+                for idx, proc in enumerate(processes)
+            }
+
+            total_jc_qty = int(
+                item.get("job_card_qty")
+                or item.get("so_qty")
+                or 0
+            )
+
+            for split_row in split_stage_rows:
+
+                split_process = str(
+                    split_row.get("process_name")
+                    or ""
+                ).strip()
+
+                split_process_norm = (
+                    split_process.lower()
+                )
+
+                split_qty = int(
+                    split_row.get(
+                        "qty_available"
+                    )
+                    or 0
+                )
+
+                if split_qty <= 0:
+                    continue
+
+                if not split_process_norm:
+                    continue
+
+                if (
+                    split_process_norm
+                    == base_stage_norm
+                ):
+                    continue
+
+                if (
+                    split_process_norm
+                    not in assigned_norm
+                ):
+                    continue
+
+                split_idx = (
+                    process_index_by_name.get(
+                        split_process_norm
+                    )
+                )
+
+                if split_idx is None:
+                    continue
+
+                split_prev_process = (
+                    processes[
+                        split_idx - 1
+                    ]["process_name"]
+                    if split_idx > 0
+                    else None
+                )
+
+                split_next_process = (
+                    processes[
+                        split_idx + 1
+                    ]["process_name"]
+                    if (
+                        split_idx + 1
+                        < len(processes)
+                    )
+                    else "Store"
+                )
+
+                split_proc_row = (
+                    processes[split_idx]
+                )
+
+                split_lead_days = int(
+                    split_proc_row.get(
+                        "lead_days"
+                    )
+                    or 0
+                )
+
+                split_days_in_stage = 0
+
+                if split_proc_row.get(
+                    "in_time"
+                ):
+                    from datetime import datetime
+
+                    split_in_time = (
+                        split_proc_row[
+                            "in_time"
+                        ]
+                    )
+
+                    if hasattr(
+                        split_in_time,
+                        "date"
+                    ):
+                        split_days_in_stage = (
+                            datetime.now()
+                            - split_in_time
+                        ).days
+
+                    split_days_in_stage = max(
+                        0,
+                        split_days_in_stage
+                    )
+
+                split_status = "On Time"
+
+                if (
+                    split_days_in_stage
+                    > split_lead_days
+                    > 0
+                ):
+                    split_status = "Overdue"
+
+                # Clone the already-built JC row so all normal
+                # metadata stays identical, then replace only the
+                # stage-specific fields.
+                split_queue_row = dict(
+                    result[-1]
+                )
+
+                split_queue_row.update({
+
+                    "current_process":
+                        split_process,
+
+                    "available_qty":
+                        split_qty,
+
+                    "stage_qty_available":
+                        split_qty,
+
+                    "is_split_qty_stage":
+                        True,
+
+                    "prev_process":
+                        split_prev_process,
+
+                    "next_process":
+                        split_next_process,
+
+                    "days_in_stage":
+                        split_days_in_stage,
+
+                    "lead_days":
+                        split_lead_days,
+
+                    "status":
+                        split_status,
+
+                    "is_partial":
+                        (
+                            split_qty
+                            < total_jc_qty
+                        ),
+
+                    "queue_type":
+                        "current",
+
+                    "is_incoming":
+                        False,
+
+                    "incoming_for_process":
+                        "",
+
+                    "previous_process_to_complete":
+                        "",
+                })
+
+                result.append(
+                    split_queue_row
+                )
+
+                current_total += 1
 
 
         return jsonify({
@@ -8162,6 +9230,14 @@ def machine_oee_start_run_v1():
         ).strip()
 
 
+        # SPLIT_QTY_START_PROCESS_V1
+        requested_process = str(
+            data.get("process_name")
+            or data.get("selected_process")
+            or ""
+        ).strip()
+
+
         shift_name = str(
             data.get("shift_name")
             or ""
@@ -8662,10 +9738,103 @@ def machine_oee_start_run_v1():
             }), 404
 
 
-        current_process = str(
+        legacy_process = str(
             jc_row.get("wip_status")
             or ""
         ).strip()
+
+
+        current_process = (
+            legacy_process
+        )
+
+
+        split_stage_available_qty = None
+
+
+        if requested_process:
+
+            cursor.execute(
+                """
+                SELECT
+                    process_name,
+                    qty_available
+                FROM job_card_stage_qty
+                WHERE job_card_item_id = %s
+                  AND LOWER(TRIM(process_name))
+                      = LOWER(TRIM(%s))
+                LIMIT 1
+                FOR UPDATE
+                """,
+                (
+                    jc_row.get(
+                        "job_card_item_id"
+                    ),
+                    requested_process,
+                ),
+            )
+
+
+            selected_stage = (
+                cursor.fetchone()
+            )
+
+
+            if selected_stage:
+
+                split_stage_available_qty = int(
+                    selected_stage.get(
+                        "qty_available"
+                    )
+                    or 0
+                )
+
+
+                if split_stage_available_qty <= 0:
+
+                    conn.rollback()
+
+                    return jsonify({
+                        "success": False,
+                        "error": (
+                            f"No quantity is available at "
+                            f"{requested_process}."
+                        )
+                    }), 409
+
+
+                current_process = str(
+                    selected_stage.get(
+                        "process_name"
+                    )
+                    or requested_process
+                ).strip()
+
+
+            elif (
+                requested_process.lower()
+                ==
+                legacy_process.lower()
+            ):
+
+                # Backward compatibility for older JCs that
+                # have not yet entered the split-qty ledger.
+                current_process = (
+                    legacy_process
+                )
+
+
+            else:
+
+                conn.rollback()
+
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        f"{job_card_no} has no available "
+                        f"quantity at {requested_process}."
+                    )
+                }), 409
 
 
         current_process_lower = (
@@ -8743,6 +9912,285 @@ def machine_oee_start_run_v1():
             }), 403
 
 
+        # COMBINED_SETUP_START_V1
+        #
+        # Optional list sent only when operator chooses
+        # Combine Setups.
+        #
+        # Example:
+        # [
+        #   "CNC Machining 1st Side",
+        #   "CNC Machining 2nd Side",
+        #   "Drilling",
+        #   "Tapping"
+        # ]
+        #
+        combined_processes_raw = data.get(
+            "combined_processes"
+        )
+
+        combined_processes = []
+        combined_route_rows = []
+
+        if combined_processes_raw is not None:
+
+            if not isinstance(
+                combined_processes_raw,
+                list
+            ):
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Combined Setup process list "
+                        "must be an array."
+                    )
+                }), 400
+
+            for value in combined_processes_raw:
+
+                process_value = str(
+                    value or ""
+                ).strip()
+
+                if process_value:
+                    combined_processes.append(
+                        process_value
+                    )
+
+            if len(combined_processes) < 2:
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Combined Setup requires at least "
+                        "2 consecutive processes."
+                    )
+                }), 400
+
+
+        if combined_processes:
+
+            # COMBINED_SETUP_FREE_SELECTION_BACKEND_V1
+            #
+            # Selected processes do NOT need to be consecutive.
+            #
+            # Rules:
+            # - first selected process = current process
+            # - every later selected process must exist later
+            #   in the saved JC route
+            # - intermediate route stages may be skipped
+            # - selected sequence can never move backwards
+            # - subcontract / Quality Check / Store remain blocked
+
+            cursor.execute("""
+                SELECT
+                    id,
+                    process_name,
+                    COALESCE(
+                        is_subcontract,
+                        0
+                    ) AS is_subcontract
+
+                FROM job_card_process_days
+
+                WHERE job_card_no = %s
+                  AND process_name IS NOT NULL
+                  AND TRIM(process_name) <> ''
+
+                ORDER BY id
+            """, (
+                job_card_no,
+            ))
+
+            combined_saved_route = (
+                cursor.fetchall()
+                or []
+            )
+
+
+            combined_start_idx = None
+
+            for idx, route_row in enumerate(
+                combined_saved_route
+            ):
+
+                if _match_processes(
+                    route_row.get(
+                        "process_name"
+                    ),
+                    current_process,
+                ):
+                    combined_start_idx = idx
+                    break
+
+
+            if combined_start_idx is None:
+
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Current process "
+                        f"'{current_process}' was not found "
+                        "in the saved JC route."
+                    )
+                }), 409
+
+
+            if not _match_processes(
+                combined_processes[0],
+                current_process,
+            ):
+
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Combined Setup must begin with "
+                        f"the current process "
+                        f"'{current_process}'."
+                    )
+                }), 400
+
+
+            last_selected_route_idx = (
+                combined_start_idx - 1
+            )
+
+
+            for selected_position, selected_name in enumerate(
+                combined_processes
+            ):
+
+                selected_route_idx = None
+                selected_route_row = None
+
+
+                search_start_idx = (
+                    combined_start_idx
+                    if selected_position == 0
+                    else last_selected_route_idx + 1
+                )
+
+
+                for route_idx in range(
+                    search_start_idx,
+                    len(combined_saved_route),
+                ):
+
+                    route_row = (
+                        combined_saved_route[
+                            route_idx
+                        ]
+                    )
+
+                    if _match_processes(
+                        route_row.get(
+                            "process_name"
+                        ),
+                        selected_name,
+                    ):
+
+                        selected_route_idx = (
+                            route_idx
+                        )
+
+                        selected_route_row = (
+                            route_row
+                        )
+
+                        break
+
+
+                if (
+                    selected_route_idx is None
+                    or selected_route_row is None
+                ):
+
+                    return jsonify({
+                        "success": False,
+                        "error": (
+                            f"Selected process "
+                            f"'{selected_name}' is not "
+                            "available after the previously "
+                            "selected process in the saved "
+                            "JC route."
+                        )
+                    }), 400
+
+
+                route_name = str(
+                    selected_route_row.get(
+                        "process_name"
+                    )
+                    or ""
+                ).strip()
+
+
+                if int(
+                    selected_route_row.get(
+                        "is_subcontract"
+                    )
+                    or 0
+                ) == 1:
+
+                    return jsonify({
+                        "success": False,
+                        "error": (
+                            "Subcontract process "
+                            f"'{route_name}' cannot be included "
+                            "in Combined Setup."
+                        )
+                    }), 400
+
+
+                if (
+                    _match_processes(
+                        route_name,
+                        "Quality Check",
+                    )
+                    or
+                    _is_store_stage(
+                        route_name
+                    )
+                ):
+
+                    return jsonify({
+                        "success": False,
+                        "error": (
+                            f"'{route_name}' cannot be included "
+                            "in Combined Setup."
+                        )
+                    }), 400
+
+
+                combined_route_rows.append({
+                    "process_day_id":
+                        selected_route_row.get(
+                            "id"
+                        ),
+
+                    "process_name":
+                        route_name,
+
+                    # Keep the ORIGINAL saved-route
+                    # sequence number.
+                    #
+                    # Example:
+                    # CNC1 = 1
+                    # CNC2 = 2  <- skipped
+                    # CNC3 = 3
+                    #
+                    # Stored selected rows become
+                    # sequence 1 and sequence 3.
+                    "route_sequence":
+                        selected_route_idx + 1,
+                })
+
+
+                last_selected_route_idx = (
+                    selected_route_idx
+                )
+
+
+
         # ----------------------------------------------------
         # SAME JC MUST NOT BE ACTIVE ON ANOTHER MACHINE
         # ----------------------------------------------------
@@ -8800,7 +10248,7 @@ def machine_oee_start_run_v1():
 
 
         # ----------------------------------------------------
-        # START JC — write directly into oee_entries
+        # START JC â€” write directly into oee_entries
         # (2-table consolidation: no session, no middleware run)
         # ----------------------------------------------------
 
@@ -8863,6 +10311,69 @@ def machine_oee_start_run_v1():
 
         run_id = cursor.lastrowid
         machine_session_id = run_id   # kept as an alias so downstream code doesn't break
+
+
+        # COMBINED_SETUP_START_V1_PERSIST
+        #
+        # oee_entries.process_name remains the first/current
+        # process for backward compatibility.
+        #
+        # The child table records every process physically
+        # covered by this one machine run.
+        if combined_route_rows:
+
+            combined_insert_values = []
+
+            last_combined_index = (
+                len(combined_route_rows)
+                - 1
+            )
+
+            for index, route_row in enumerate(
+                combined_route_rows
+            ):
+
+                combined_insert_values.append((
+                    run_id,
+                    job_card_no,
+                    jc_row.get(
+                        "job_card_item_id"
+                    ),
+                    route_row.get(
+                        "process_day_id"
+                    ),
+                    route_row.get(
+                        "process_name"
+                    ),
+                    route_row.get(
+                        "route_sequence"
+                    ),
+                    1 if index == 0 else 0,
+                    (
+                        1
+                        if index
+                        == last_combined_index
+                        else 0
+                    ),
+                ))
+
+
+            cursor.executemany("""
+                INSERT INTO oee_run_processes (
+                    oee_entry_id,
+                    job_card_no,
+                    job_card_item_id,
+                    process_day_id,
+                    process_name,
+                    route_sequence,
+                    is_start_process,
+                    is_end_process
+                )
+                VALUES (
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s
+                )
+            """, combined_insert_values)
 
 
         # ----------------------------------------------------
@@ -9530,7 +11041,7 @@ def machine_oee_run_production_v1(run_id):
 
         # ----------------------------------------------------
         # Per-entry planned_minutes from operator-entered start/end
-        # (2-table consolidation — no session aggregate anymore).
+        # (2-table consolidation â€” no session aggregate anymore).
         # ----------------------------------------------------
         if (
             oee_start_time
@@ -10568,6 +12079,12 @@ def machine_oee_activity_run_start_v85():
         _payload = request.get_json(silent=True) or {}
         entry_date_val = _payload.get("entry_date") or _payload.get("session_date")
         shift_name_val = str(_payload.get("shift_name") or "").strip() or "Shift 1"
+        item_name_val = str(_payload.get("item_name") or "").strip() or None
+        operation_val = str(_payload.get("operation_name") or "").strip() or None
+        try:
+            item_qty_val = int(_payload.get("item_qty")) if _payload.get("item_qty") not in (None, "") else None
+        except Exception:
+            item_qty_val = None
 
         cursor.execute("""
             SELECT machine_no, machine_name, machine_category, zone
@@ -10597,6 +12114,7 @@ def machine_oee_activity_run_start_v85():
 
                 job_card_no,
                 item_name,
+                item_qty,
                 process_name,
 
                 machine_no,
@@ -10622,7 +12140,7 @@ def machine_oee_activity_run_start_v85():
                 COALESCE(%s, CURDATE()),
                 %s,
                 '',
-                %s, %s,
+                %s, %s, %s,
                 %s, %s, %s, %s,
                 %s,
                 0, 0, 0, 0,
@@ -10641,8 +12159,9 @@ def machine_oee_activity_run_start_v85():
                 operator_name,
                 entry_date_val,
                 shift_name_val,
-                activity.get("activity_name"),
-                "Activity",
+                item_name_val or activity.get("activity_name"),
+                item_qty_val,
+                operation_val or "Activity",
                 m_info.get("machine_no"),
                 m_info.get("machine_name"),
                 m_info.get("machine_category"),
@@ -10921,6 +12440,7 @@ def machine_oee_tooling_master_v3():
 
 
 # OEE_TOOL_ENTRY_PERSISTENCE_V4
+# OEE_TOOL_INDEPENDENT_SCHEMA_CODE_V124A
 
 def _ensure_oee_tool_entries_v4(cursor):
     """
@@ -10933,23 +12453,30 @@ def _ensure_oee_tool_entries_v4(cursor):
         CREATE TABLE IF NOT EXISTS oee_tool_entries (
             id BIGINT NOT NULL AUTO_INCREMENT,
 
-            session_id BIGINT NOT NULL,
+            session_id BIGINT NULL,
             machine_id INT NOT NULL,
 
             run_id BIGINT NULL,
             activity_run_id BIGINT NULL,
+            machine_loss_entry_id BIGINT NULL,
+            tool_entry_batch_id VARCHAR(64) NULL,
 
             operator_user_id INT NULL,
             operator_master_id INT NULL,
             operator_employee_no VARCHAR(50) NULL,
             operator_name VARCHAR(255) NULL,
 
+            entry_date DATE NULL,
+            shift_name VARCHAR(30) NULL,
+
             tool_position INT NOT NULL,
             tool_uid VARCHAR(100) NOT NULL,
+            tool_life DECIMAL(14,3) NULL,
+            remark VARCHAR(500) NULL,
 
-            tool_action_master_id INT NOT NULL,
-            tool_action_code VARCHAR(50) NOT NULL,
-            tool_action_name VARCHAR(100) NOT NULL,
+            tool_action_master_id INT NULL,
+            tool_action_code VARCHAR(50) NULL,
+            tool_action_name VARCHAR(100) NULL,
 
             corner_master_id INT NULL,
             corner_code VARCHAR(20) NULL,
@@ -10979,6 +12506,22 @@ def _ensure_oee_tool_entries_v4(cursor):
                 tool_position
             ),
 
+            UNIQUE KEY uq_oee_tool_batch_position (
+                tool_entry_batch_id,
+                tool_position
+            ),
+
+            INDEX ix_ote_machine_loss_entry (
+                machine_loss_entry_id
+            ),
+
+            INDEX idx_oee_tool_independent_lookup (
+                machine_id,
+                entry_date,
+                shift_name,
+                tool_entry_batch_id
+            ),
+
             INDEX idx_oee_tool_session (
                 session_id,
                 machine_id
@@ -11006,171 +12549,115 @@ def _ensure_oee_tool_entries_v4(cursor):
     """)
 
 
-def _oee_tool_entry_rows_v4(cursor, run_id=0, activity_run_id=0, machine_loss_entry_id=0):
+def _oee_tool_entry_rows_v4(
+    cursor,
+    run_id=0,
+    activity_run_id=0,
+    machine_loss_entry_id=0,
+    tool_entry_batch_id="",
+):
+    tool_entry_batch_id = str(
+        tool_entry_batch_id
+        or ""
+    ).strip()
+
     if run_id > 0:
-        cursor.execute("""
-            SELECT
-                id,
-                session_id,
-                machine_id,
-                run_id,
-                activity_run_id,
-                machine_loss_entry_id,
-
-                operator_user_id,
-                operator_master_id,
-                operator_employee_no,
-                operator_name,
-
-                tool_position,
-                tool_uid,
-
-                tool_action_master_id,
-                tool_action_code,
-                tool_action_name,
-
-                corner_master_id,
-                corner_code,
-                corner_name,
-
-                change_reason_master_id,
-                reason_group,
-                change_reason_code,
-                change_reason_name,
-
-                usage_per_part,
-
-                created_at,
-                updated_at
-
-            FROM oee_tool_entries
-
-            WHERE run_id = %s
-
-            ORDER BY
-                tool_position,
-                id
-        """, (
-            run_id,
-        ))
+        where_sql = "run_id = %s"
+        where_value = run_id
 
     elif activity_run_id > 0:
-        cursor.execute("""
-            SELECT
-                id,
-                session_id,
-                machine_id,
-                run_id,
-                activity_run_id,
-                machine_loss_entry_id,
-
-                operator_user_id,
-                operator_master_id,
-                operator_employee_no,
-                operator_name,
-
-                tool_position,
-                tool_uid,
-
-                tool_action_master_id,
-                tool_action_code,
-                tool_action_name,
-
-                corner_master_id,
-                corner_code,
-                corner_name,
-
-                change_reason_master_id,
-                reason_group,
-                change_reason_code,
-                change_reason_name,
-
-                usage_per_part,
-
-                created_at,
-                updated_at
-
-            FROM oee_tool_entries
-
-            WHERE activity_run_id = %s
-
-            ORDER BY
-                tool_position,
-                id
-        """, (
-            activity_run_id,
-        ))
+        where_sql = "activity_run_id = %s"
+        where_value = activity_run_id
 
     elif machine_loss_entry_id > 0:
-        cursor.execute("""
-            SELECT
-                id,
-                session_id,
-                machine_id,
-                run_id,
-                activity_run_id,
-                machine_loss_entry_id,
+        where_sql = "machine_loss_entry_id = %s"
+        where_value = machine_loss_entry_id
 
-                operator_user_id,
-                operator_master_id,
-                operator_employee_no,
-                operator_name,
-
-                tool_position,
-                tool_uid,
-
-                tool_action_master_id,
-                tool_action_code,
-                tool_action_name,
-
-                corner_master_id,
-                corner_code,
-                corner_name,
-
-                change_reason_master_id,
-                reason_group,
-                change_reason_code,
-                change_reason_name,
-
-                usage_per_part,
-
-                created_at,
-                updated_at
-
-            FROM oee_tool_entries
-
-            WHERE machine_loss_entry_id = %s
-
-            ORDER BY
-                tool_position,
-                id
-        """, (
-            machine_loss_entry_id,
-        ))
+    elif tool_entry_batch_id:
+        where_sql = "tool_entry_batch_id = %s"
+        where_value = tool_entry_batch_id
 
     else:
         return []
 
+    cursor.execute(
+        """
+        SELECT
+            id,
+            session_id,
+            machine_id,
+            run_id,
+            activity_run_id,
+            machine_loss_entry_id,
+            tool_entry_batch_id,
+
+            operator_user_id,
+            operator_master_id,
+            operator_employee_no,
+            operator_name,
+
+            entry_date,
+            shift_name,
+
+            tool_position,
+            tool_uid,
+            tool_life,
+            remark,
+
+            tool_action_master_id,
+            tool_action_code,
+            tool_action_name,
+
+            corner_master_id,
+            corner_code,
+            corner_name,
+
+            change_reason_master_id,
+            reason_group,
+            change_reason_code,
+            change_reason_name,
+
+            usage_per_part,
+
+            created_at,
+            updated_at
+
+        FROM oee_tool_entries
+        WHERE """ + where_sql + """
+        ORDER BY
+            tool_position,
+            id
+        """,
+        (where_value,),
+    )
+
     rows = cursor.fetchall() or []
 
     for row in rows:
+
+        if row.get("tool_life") is not None:
+            row["tool_life"] = str(
+                row["tool_life"]
+            )
+
         for field in (
+            "entry_date",
             "created_at",
             "updated_at",
         ):
+
             value = row.get(field)
 
             if (
                 value is not None
                 and hasattr(value, "isoformat")
             ):
-                row[field] = value.isoformat(
-                    sep=" "
-                )
+                row[field] = value.isoformat()
 
     return rows
 
 
+# OEE_TOOL_INDEPENDENT_API_V124B
 @quality_check_bp.route(
     "/api/oee-machine/tooling-entries",
     methods=["GET", "POST"]
@@ -11239,6 +12726,26 @@ def machine_oee_tooling_entries_v4():
             data.get("machine_loss_entry_id")
         )
 
+        tool_entry_batch_id = str(
+            data.get("tool_entry_batch_id")
+            or ""
+        ).strip()
+
+        if len(tool_entry_batch_id) > 64:
+            return jsonify({
+                "success": False,
+                "error": "Invalid Tool Entry batch ID."
+            }), 400
+
+        standalone_tool_entry = str(
+            data.get("standalone_tool_entry")
+            or ""
+        ).strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+
         provided_contexts = sum(
             1
             for value in (
@@ -11249,13 +12756,30 @@ def machine_oee_tooling_entries_v4():
             if value > 0
         )
 
+        if tool_entry_batch_id:
+            provided_contexts += 1
+
         if provided_contexts > 1:
             return jsonify({
                 "success": False,
                 "error": (
-                    "Use exactly one of run_id, "
-                    "activity_run_id or "
-                    "machine_loss_entry_id."
+                    "Use exactly one Tool Entry context."
+                )
+            }), 400
+
+        if (
+            standalone_tool_entry
+            and (
+                run_id > 0
+                or activity_run_id > 0
+                or machine_loss_entry_id > 0
+            )
+        ):
+            return jsonify({
+                "success": False,
+                "error": (
+                    "Standalone Tool Entry cannot be mixed "
+                    "with an OEE transaction context."
                 )
             }), 400
 
@@ -11275,6 +12799,7 @@ def machine_oee_tooling_entries_v4():
             and run_id <= 0
             and activity_run_id <= 0
             and machine_loss_entry_id <= 0
+            and not tool_entry_batch_id
         ):
             conn.commit()
 
@@ -11292,12 +12817,16 @@ def machine_oee_tooling_entries_v4():
             run_id <= 0
             and activity_run_id <= 0
             and machine_loss_entry_id <= 0
+            and not tool_entry_batch_id
+            and not (
+                request.method == "POST"
+                and standalone_tool_entry
+            )
         ):
             return jsonify({
                 "success": False,
                 "error": (
-                    "run_id, activity_run_id or "
-                    "machine_loss_entry_id is required."
+                    "A valid Tool Entry context is required."
                 )
             }), 400
 
@@ -11364,7 +12893,7 @@ def machine_oee_tooling_entries_v4():
 
             context_type = "ACTIVITY"
 
-        else:
+        elif machine_loss_entry_id > 0:
             cursor.execute("""
                 SELECT
                     id,
@@ -11393,6 +12922,191 @@ def machine_oee_tooling_entries_v4():
             )
 
             context_type = "MACHINE_LOSS"
+
+        elif tool_entry_batch_id:
+            cursor.execute("""
+                SELECT
+                    NULL AS session_id,
+                    machine_id,
+                    'OPEN' AS context_status,
+
+                    operator_user_id,
+                    operator_master_id,
+                    operator_employee_no,
+                    operator_name,
+
+                    entry_date,
+                    shift_name
+
+                FROM oee_tool_entries
+
+                WHERE tool_entry_batch_id = %s
+
+                ORDER BY id
+                LIMIT 1
+            """, (
+                tool_entry_batch_id,
+            ))
+
+            context = (
+                cursor.fetchone()
+                or None
+            )
+
+            context_type = "TOOL_ENTRY"
+
+        elif (
+            request.method == "POST"
+            and standalone_tool_entry
+        ):
+            import uuid
+
+            standalone_machine_id = positive_int(
+                data.get("machine_id")
+            )
+
+            if standalone_machine_id <= 0:
+                return jsonify({
+                    "success": False,
+                    "error": "Select a valid machine."
+                }), 400
+
+            standalone_entry_date = (
+                _oee_v15_parse_entry_date(
+                    data.get("entry_date")
+                    or data.get("session_date")
+                )
+            )
+
+            standalone_shift_name = str(
+                data.get("shift_name")
+                or ""
+            ).strip()
+
+            if standalone_shift_name not in (
+                "Shift 1",
+                "Shift 2",
+            ):
+                return jsonify({
+                    "success": False,
+                    "error": "Please select a valid Shift."
+                }), 400
+
+            machine, _formula_profile, zone_login = (
+                _oee_v13_machine_access(
+                    cursor,
+                    standalone_machine_id,
+                )
+            )
+
+            operator_master_id = None
+            operator_employee_no = None
+
+            requested_master_id = (
+                data.get("operator_master_id")
+                or data.get(
+                    "actual_operator_master_id"
+                )
+            )
+
+            requested_employee_no = str(
+                data.get("operator_employee_no")
+                or data.get("employee_no")
+                or ""
+            ).strip()
+
+            if zone_login:
+                if (
+                    not requested_master_id
+                    and not requested_employee_no
+                ):
+                    return jsonify({
+                        "success": False,
+                        "error": (
+                            "Please select the Actual Operator "
+                            "before saving Tool Entry."
+                        )
+                    }), 400
+
+                master_operator = (
+                    _oee_operator_master_resolve_v24(
+                        cursor,
+                        requested_master_id,
+                        requested_employee_no,
+                    )
+                )
+
+                operator_user_id = (
+                    session.get("user_id")
+                    or session.get("id")
+                )
+
+                operator_master_id = (
+                    master_operator.get("id")
+                )
+
+                operator_employee_no = (
+                    master_operator.get("employee_no")
+                )
+
+                operator_name = (
+                    master_operator.get("operator_name")
+                    or "Operator"
+                )
+
+            else:
+                (
+                    operator_user_id,
+                    operator_name,
+                ) = _oee_v13_operator_identity(
+                    cursor,
+                    zone_login,
+                    data.get(
+                        "actual_operator_user_id"
+                    ),
+                )
+
+            tool_entry_batch_id = (
+                "TE-"
+                + standalone_entry_date.strftime(
+                    "%Y%m%d"
+                )
+                + "-"
+                + datetime.now().strftime(
+                    "%H%M%S"
+                )
+                + "-"
+                + uuid.uuid4().hex[:8].upper()
+            )
+
+            context = {
+                "session_id": None,
+                "machine_id":
+                    machine.get("id"),
+
+                "context_status":
+                    "OPEN",
+
+                "operator_user_id":
+                    operator_user_id,
+
+                "operator_master_id":
+                    operator_master_id,
+
+                "operator_employee_no":
+                    operator_employee_no,
+
+                "operator_name":
+                    operator_name,
+
+                "entry_date":
+                    standalone_entry_date,
+
+                "shift_name":
+                    standalone_shift_name,
+            }
+
+            context_type = "TOOL_ENTRY"
 
         if not context:
             return jsonify({
@@ -11433,6 +13147,8 @@ def machine_oee_tooling_entries_v4():
                 run_id=run_id,
                 activity_run_id=activity_run_id,
                 machine_loss_entry_id=machine_loss_entry_id,
+                tool_entry_batch_id=
+                    tool_entry_batch_id,
             )
 
             return jsonify({
@@ -11443,6 +13159,8 @@ def machine_oee_tooling_entries_v4():
                     activity_run_id or None,
                 "machine_loss_entry_id":
                     machine_loss_entry_id or None,
+                "tool_entry_batch_id":
+                    tool_entry_batch_id or None,
                 "entries": rows,
                 "count": len(rows),
             })
@@ -11467,10 +13185,16 @@ def machine_oee_tooling_entries_v4():
                 "COMPLETED",   # last-mile tool save right after activity completion
             }
 
-        else:
+        elif context_type == "MACHINE_LOSS":
             # MACHINE_LOSS rows are inserted already COMPLETED.
             allowed_statuses = {
                 "COMPLETED",
+            }
+
+        else:
+            # Independent Tool Entry is not an OEE run.
+            allowed_statuses = {
+                "OPEN",
             }
 
         if context_status not in allowed_statuses:
@@ -11511,96 +13235,15 @@ def machine_oee_tooling_entries_v4():
                 )
             }), 400
 
-        # DB master remains the authority.
-        cursor.execute("""
-            SELECT
-                reference_id
-                    AS id,
-
-                reference_code
-                    AS action_code,
-
-                reference_name
-                    AS action_name,
-
-                COALESCE(
-                    enables_corner,
-                    0
-                ) AS enables_corner,
-
-                reference_group
-                    AS reason_group
-
-            FROM oee_reference_master
-
-            WHERE reference_type = 'TOOL_ACTION'
-              AND is_active = 1
-        """)
-
-        action_master = {
-            int(row["id"]): row
-            for row in (
-                cursor.fetchall()
-                or []
-            )
-        }
-
-        cursor.execute("""
-            SELECT
-                reference_id
-                    AS id,
-
-                reference_code
-                    AS corner_code,
-
-                reference_name
-                    AS corner_name
-
-            FROM oee_reference_master
-
-            WHERE reference_type = 'TOOL_CORNER'
-              AND is_active = 1
-        """)
-
-        corner_master = {
-            int(row["id"]): row
-            for row in (
-                cursor.fetchall()
-                or []
-            )
-        }
-
-        cursor.execute("""
-            SELECT
-                reference_id
-                    AS id,
-
-                reference_group
-                    AS reason_group,
-
-                reference_code
-                    AS reason_code,
-
-                reference_name
-                    AS reason_name,
-
-                parent_reference_id
-                    AS tool_action_parent_id
-
-            FROM oee_reference_master
-
-            WHERE reference_type = 'TOOL_REASON'
-              AND is_active = 1
-        """)
-
-        reason_master = {
-            int(row["id"]): row
-            for row in (
-                cursor.fetchall()
-                or []
-            )
-        }
-
+        # OEE_TOOL_CHILD_TABLE_BACKEND_V125
+        #
+        # New Tool Entry rows contain:
+        #   Tool UID
+        #   Tool Life
+        #   Optional Remark
+        #
+        # Legacy Action / Corner / Reason columns remain
+        # untouched in the table for historical records.
         prepared = []
         seen_positions = set()
 
@@ -11608,54 +13251,55 @@ def machine_oee_tooling_entries_v4():
             tool_rows,
             start=1
         ):
+
             if not isinstance(
                 item,
                 dict
             ):
                 return jsonify({
                     "success": False,
-                    "error": (
-                        "Invalid Tool Position row."
-                    )
+                    "error": "Invalid Tool Entry row."
                 }), 400
+
 
             tool_uid = str(
                 item.get("tool_uid")
                 or ""
             ).strip()
 
-            usage_per_part = str(
-                item.get("usage_per_part")
+
+            raw_tool_life = item.get(
+                "tool_life"
+            )
+
+
+            raw_tool_life_text = str(
+                raw_tool_life
+                if raw_tool_life is not None
+                else ""
+            ).strip()
+
+
+            remark = str(
+                item.get("remark")
                 or ""
             ).strip()
 
-            action_master_id = positive_int(
-                item.get(
-                    "tool_action_master_id"
-                )
-            )
 
-            corner_master_id = positive_int(
-                item.get(
-                    "corner_master_id"
-                )
-            )
+            tool_position_code = str(
+                item.get("tool_position_code")
+                or ""
+            ).strip() or None
 
-            reason_master_id = positive_int(
-                item.get(
-                    "change_reason_master_id"
-                )
-            )
 
-            # Completely blank UI rows are ignored.
+            # Completely blank child-table rows are ignored.
             if not any((
                 tool_uid,
-                usage_per_part,
-                action_master_id,
-                corner_master_id,
-                reason_master_id,
+                raw_tool_life_text,
+                remark,
             )):
                 continue
+
 
             try:
                 tool_position = int(
@@ -11664,11 +13308,13 @@ def machine_oee_tooling_entries_v4():
                     )
                     or index
                 )
+
             except (
                 TypeError,
                 ValueError
             ):
                 tool_position = 0
+
 
             if tool_position <= 0:
                 return jsonify({
@@ -11679,6 +13325,7 @@ def machine_oee_tooling_entries_v4():
                     )
                 }), 400
 
+
             if tool_position in seen_positions:
                 return jsonify({
                     "success": False,
@@ -11688,127 +13335,81 @@ def machine_oee_tooling_entries_v4():
                     )
                 }), 400
 
+
             seen_positions.add(
                 tool_position
             )
+
 
             if not tool_uid:
                 return jsonify({
                     "success": False,
                     "error": (
-                        "Tool UID is required for "
-                        "Tool Position "
+                        "Tool UID is required for row "
                         + str(tool_position)
                         + "."
                     )
                 }), 400
 
-            action = action_master.get(
-                action_master_id
-            )
 
-            if not action:
+            if not raw_tool_life_text:
                 return jsonify({
                     "success": False,
                     "error": (
-                        "Select a valid Tool Action for "
-                        "Tool Position "
+                        "Tool Life is required for row "
                         + str(tool_position)
                         + "."
                     )
                 }), 400
 
-            action_code = str(
-                action.get(
-                    "action_code"
-                )
-                or ""
-            ).strip().upper()
 
-            enables_corner = bool(
-                action.get(
-                    "enables_corner"
-                )
-            )
-
-            reason_group = str(
-                action.get(
-                    "reason_group"
-                )
-                or ""
-            ).strip().upper()
-
-            corner = None
-            reason = None
-
-            if enables_corner:
-                corner = corner_master.get(
-                    corner_master_id
+            try:
+                tool_life = Decimal(
+                    raw_tool_life_text
                 )
 
-                if not corner:
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "Select Corner for Tool Position "
-                            + str(tool_position)
-                            + "."
-                        )
-                    }), 400
-
-            elif corner_master_id > 0:
+            except (
+                InvalidOperation,
+                ValueError
+            ):
                 return jsonify({
                     "success": False,
                     "error": (
-                        "Corner can be selected only when "
-                        "Tool Action allows Corner Change."
+                        "Enter a valid Tool Life for row "
+                        + str(tool_position)
+                        + "."
                     )
                 }), 400
 
-            if reason_group:
-                reason = reason_master.get(
-                    reason_master_id
-                )
 
-                if not reason:
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "Select Change Reason for "
-                            "Tool Position "
-                            + str(tool_position)
-                            + "."
-                        )
-                    }), 400
-
-                selected_group = str(
-                    reason.get(
-                        "reason_group"
-                    )
-                    or ""
-                ).strip().upper()
-
-                if selected_group != reason_group:
-                    return jsonify({
-                        "success": False,
-                        "error": (
-                            "Selected Change Reason does not "
-                            "match Tool Action for Tool Position "
-                            + str(tool_position)
-                            + "."
-                        )
-                    }), 400
-
-            elif reason_master_id > 0:
+            if (
+                not tool_life.is_finite()
+                or tool_life < 0
+            ):
                 return jsonify({
                     "success": False,
                     "error": (
-                        "Change Reason is not allowed for "
-                        "the selected Tool Action."
+                        "Tool Life cannot be negative for row "
+                        + str(tool_position)
+                        + "."
                     )
                 }), 400
+
+
+            if len(remark) > 500:
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Remark cannot exceed 500 characters "
+                        "for row "
+                        + str(tool_position)
+                        + "."
+                    )
+                }), 400
+
 
             prepared.append({
+
                 "session_id":
                     context.get(
                         "session_id"
@@ -11827,6 +13428,9 @@ def machine_oee_tooling_entries_v4():
 
                 "machine_loss_entry_id":
                     machine_loss_entry_id or None,
+
+                "tool_entry_batch_id":
+                    tool_entry_batch_id or None,
 
                 "operator_user_id":
                     context.get(
@@ -11848,93 +13452,30 @@ def machine_oee_tooling_entries_v4():
                         "operator_name"
                     ),
 
+                "entry_date":
+                    context.get(
+                        "entry_date"
+                    ),
+
+                "shift_name":
+                    context.get(
+                        "shift_name"
+                    ),
+
                 "tool_position":
                     tool_position,
+
+                "tool_position_code":
+                    tool_position_code,
 
                 "tool_uid":
                     tool_uid,
 
-                "tool_action_master_id":
-                    action_master_id,
+                "tool_life":
+                    tool_life,
 
-                "tool_action_code":
-                    action_code,
-
-                "tool_action_name":
-                    str(
-                        action.get(
-                            "action_name"
-                        )
-                        or ""
-                    ).strip(),
-
-                "corner_master_id":
-                    (
-                        corner_master_id
-                        if corner
-                        else None
-                    ),
-
-                "corner_code":
-                    (
-                        str(
-                            corner.get(
-                                "corner_code"
-                            )
-                            or ""
-                        ).strip()
-                        if corner
-                        else None
-                    ),
-
-                "corner_name":
-                    (
-                        str(
-                            corner.get(
-                                "corner_name"
-                            )
-                            or ""
-                        ).strip()
-                        if corner
-                        else None
-                    ),
-
-                "change_reason_master_id":
-                    (
-                        reason_master_id
-                        if reason
-                        else None
-                    ),
-
-                "reason_group":
-                    reason_group or None,
-
-                "change_reason_code":
-                    (
-                        str(
-                            reason.get(
-                                "reason_code"
-                            )
-                            or ""
-                        ).strip()
-                        if reason
-                        else None
-                    ),
-
-                "change_reason_name":
-                    (
-                        str(
-                            reason.get(
-                                "reason_name"
-                            )
-                            or ""
-                        ).strip()
-                        if reason
-                        else None
-                    ),
-
-                "usage_per_part":
-                    usage_per_part or None,
+                "remark":
+                    remark or None,
             })
 
 
@@ -12009,7 +13550,7 @@ def machine_oee_tooling_entries_v4():
                 activity_run_id,
             ))
 
-        else:
+        elif machine_loss_entry_id > 0:
             cursor.execute("""
                 DELETE FROM oee_tool_entries
                 WHERE machine_loss_entry_id = %s
@@ -12017,82 +13558,80 @@ def machine_oee_tooling_entries_v4():
                 machine_loss_entry_id,
             ))
 
+        else:
+            cursor.execute("""
+                DELETE FROM oee_tool_entries
+                WHERE tool_entry_batch_id = %s
+            """, (
+                tool_entry_batch_id,
+            ))
+
         if prepared:
             values = []
 
             for row in prepared:
+
                 values.append((
+
                     row["session_id"],
                     row["machine_id"],
                     row["run_id"],
                     row["activity_run_id"],
                     row["machine_loss_entry_id"],
+                    row["tool_entry_batch_id"],
 
                     row["operator_user_id"],
                     row["operator_master_id"],
                     row["operator_employee_no"],
                     row["operator_name"],
 
+                    row["entry_date"],
+                    row["shift_name"],
+
                     row["tool_position"],
+                    row.get("tool_position_code"),
                     row["tool_uid"],
-
-                    row["tool_action_master_id"],
-                    row["tool_action_code"],
-                    row["tool_action_name"],
-
-                    row["corner_master_id"],
-                    row["corner_code"],
-                    row["corner_name"],
-
-                    row["change_reason_master_id"],
-                    row["reason_group"],
-                    row["change_reason_code"],
-                    row["change_reason_name"],
-
-                    row["usage_per_part"],
+                    row["tool_life"],
+                    row["remark"],
                 ))
+
 
             cursor.executemany("""
                 INSERT INTO oee_tool_entries (
+
                     session_id,
                     machine_id,
+
                     run_id,
                     activity_run_id,
                     machine_loss_entry_id,
+                    tool_entry_batch_id,
 
                     operator_user_id,
                     operator_master_id,
                     operator_employee_no,
                     operator_name,
 
+                    entry_date,
+                    shift_name,
+
                     tool_position,
+                    tool_position_code,
                     tool_uid,
-
-                    tool_action_master_id,
-                    tool_action_code,
-                    tool_action_name,
-
-                    corner_master_id,
-                    corner_code,
-                    corner_name,
-
-                    change_reason_master_id,
-                    reason_group,
-                    change_reason_code,
-                    change_reason_name,
-
-                    usage_per_part
+                    tool_life,
+                    remark
                 )
+
                 VALUES (
-                    %s, %s, %s, %s, %s,
+                    %s, %s,
+                    %s, %s, %s, %s,
                     %s, %s, %s, %s,
                     %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s, %s,
-                    %s
+                    %s, %s, %s, %s, %s
                 )
+
             """, values)
+
 
         conn.commit()
 
@@ -12101,6 +13640,8 @@ def machine_oee_tooling_entries_v4():
             run_id=run_id,
             activity_run_id=activity_run_id,
             machine_loss_entry_id=machine_loss_entry_id,
+            tool_entry_batch_id=
+                tool_entry_batch_id,
         )
 
         return jsonify({
@@ -12111,10 +13652,24 @@ def machine_oee_tooling_entries_v4():
                 activity_run_id or None,
             "machine_loss_entry_id":
                 machine_loss_entry_id or None,
+            "tool_entry_batch_id":
+                tool_entry_batch_id or None,
+            "entry_date":
+                (
+                    context.get("entry_date").isoformat()
+                    if context.get("entry_date")
+                    and hasattr(
+                        context.get("entry_date"),
+                        "isoformat"
+                    )
+                    else context.get("entry_date")
+                ),
+            "shift_name":
+                context.get("shift_name"),
             "saved_count": len(rows),
             "entries": rows,
             "message": (
-                "Tool Position entries saved successfully."
+                "Tool entries saved successfully."
             )
         })
 
@@ -12146,6 +13701,599 @@ def machine_oee_tooling_entries_v4():
 
 # OEE_TOOL_ENTRY_PERSISTENCE_V4_END
 
+
+# ============================================================
+# OEE_TOOL_STANDALONE_HISTORY_API_V124E
+#
+# Read-only history of independent Tool Entry batches.
+#
+# Scope:
+#   Machine + Date + Shift + current operator
+#
+# Does NOT read or modify OEE production/activity/loss records.
+# ============================================================
+
+@quality_check_bp.route(
+    "/api/oee-machine/tooling-history",
+    methods=["GET"],
+)
+def machine_oee_tooling_history_v124e():
+
+    conn = None
+    cursor = None
+
+    try:
+
+        role = str(
+            session.get("role")
+            or ""
+        ).strip().lower()
+
+        if role != "operator":
+
+            return jsonify({
+                "success": False,
+                "error": "Operator access required.",
+            }), 403
+
+
+        def positive_int(value):
+
+            try:
+
+                parsed = int(
+                    value
+                    or 0
+                )
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                parsed = 0
+
+            return (
+                parsed
+                if parsed > 0
+                else 0
+            )
+
+
+        machine_id = positive_int(
+            request.args.get(
+                "machine_id"
+            )
+        )
+
+
+        entry_date = str(
+            request.args.get(
+                "entry_date"
+            )
+            or ""
+        ).strip()
+
+
+        shift_name = str(
+            request.args.get(
+                "shift_name"
+            )
+            or ""
+        ).strip()
+
+
+        operator_master_id = positive_int(
+            request.args.get(
+                "operator_master_id"
+            )
+        )
+
+
+        if machine_id <= 0:
+
+            return jsonify({
+                "success": False,
+                "error": "Select a valid machine.",
+            }), 400
+
+
+        if not entry_date:
+
+            return jsonify({
+                "success": False,
+                "error": "Tool Entry Date is required.",
+            }), 400
+
+
+        try:
+
+            datetime.strptime(
+                entry_date,
+                "%Y-%m-%d",
+            )
+
+        except ValueError:
+
+            return jsonify({
+                "success": False,
+                "error": "Invalid Tool Entry Date.",
+            }), 400
+
+
+        if shift_name not in (
+            "Shift 1",
+            "Shift 2",
+        ):
+
+            return jsonify({
+                "success": False,
+                "error": "Please select a valid Shift.",
+            }), 400
+
+
+        conn = get_connection()
+
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+
+        machine, _profile, zone_login = (
+            _oee_v13_machine_access(
+                cursor,
+                machine_id,
+            )
+        )
+
+
+        login_user_id = positive_int(
+            session.get("user_id")
+            or session.get("id")
+        )
+
+
+        where_sql = [
+            "te.machine_id = %s",
+            "te.entry_date = %s",
+            "te.shift_name = %s",
+            "te.tool_entry_batch_id IS NOT NULL",
+            "TRIM(te.tool_entry_batch_id) <> ''",
+        ]
+
+
+        params = [
+            machine_id,
+            entry_date,
+            shift_name,
+        ]
+
+
+        if zone_login:
+
+            if operator_master_id <= 0:
+
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Please select the Actual Operator "
+                        "to view Tool Entry history."
+                    ),
+                }), 400
+
+
+            where_sql.append(
+                "te.operator_master_id = %s"
+            )
+
+            params.append(
+                operator_master_id
+            )
+
+        else:
+
+            if login_user_id <= 0:
+
+                return jsonify({
+                    "success": False,
+                    "error": "Operator login was not found.",
+                }), 403
+
+
+            where_sql.append(
+                "te.operator_user_id = %s"
+            )
+
+            params.append(
+                login_user_id
+            )
+
+
+        sql = """
+            SELECT
+                te.id,
+                te.tool_entry_batch_id,
+
+                te.machine_id,
+                te.entry_date,
+                te.shift_name,
+
+                te.operator_user_id,
+                te.operator_master_id,
+                te.operator_employee_no,
+                te.operator_name,
+
+                te.tool_position,
+                te.tool_uid,
+
+                te.tool_action_master_id,
+                te.tool_action_code,
+                te.tool_action_name,
+
+                te.corner_master_id,
+                te.corner_code,
+                te.corner_name,
+
+                te.change_reason_master_id,
+                te.reason_group,
+                te.change_reason_code,
+                te.change_reason_name,
+
+                te.usage_per_part,
+
+                te.created_at,
+                te.updated_at,
+
+                m.tool_item_code,
+                m.tool_item_name
+
+            FROM oee_tool_entries te
+
+            LEFT JOIN oee_tool_uid u
+              ON UPPER(TRIM(u.tool_uid))
+               = UPPER(TRIM(te.tool_uid))
+
+            LEFT JOIN oee_tool_master m
+              ON m.id = u.tool_master_id
+
+            WHERE """ + " AND ".join(
+                where_sql
+            ) + """
+
+            ORDER BY
+                te.created_at DESC,
+                te.tool_entry_batch_id DESC,
+                te.tool_position ASC,
+                te.id ASC
+
+            LIMIT 500
+        """
+
+
+        cursor.execute(
+            sql,
+            tuple(params),
+        )
+
+
+        rows = (
+            cursor.fetchall()
+            or []
+        )
+
+
+        batches = []
+        batch_map = {}
+
+
+        for row in rows:
+
+            batch_id = str(
+                row.get(
+                    "tool_entry_batch_id"
+                )
+                or ""
+            ).strip()
+
+
+            if not batch_id:
+
+                continue
+
+
+            created_at = row.get(
+                "created_at"
+            )
+
+            updated_at = row.get(
+                "updated_at"
+            )
+
+            row_date = row.get(
+                "entry_date"
+            )
+
+
+            if (
+                created_at is not None
+                and hasattr(
+                    created_at,
+                    "isoformat"
+                )
+            ):
+
+                created_at = (
+                    created_at.isoformat()
+                )
+
+
+            if (
+                updated_at is not None
+                and hasattr(
+                    updated_at,
+                    "isoformat"
+                )
+            ):
+
+                updated_at = (
+                    updated_at.isoformat()
+                )
+
+
+            if (
+                row_date is not None
+                and hasattr(
+                    row_date,
+                    "isoformat"
+                )
+            ):
+
+                row_date = (
+                    row_date.isoformat()
+                )
+
+
+            if batch_id not in batch_map:
+
+                batch = {
+                    "tool_entry_batch_id":
+                        batch_id,
+
+                    "machine_id":
+                        row.get(
+                            "machine_id"
+                        ),
+
+                    "machine_no":
+                        machine.get(
+                            "machine_no"
+                        ),
+
+                    "machine_name":
+                        machine.get(
+                            "machine_name"
+                        ),
+
+                    "entry_date":
+                        row_date,
+
+                    "shift_name":
+                        row.get(
+                            "shift_name"
+                        ),
+
+                    "operator_user_id":
+                        row.get(
+                            "operator_user_id"
+                        ),
+
+                    "operator_master_id":
+                        row.get(
+                            "operator_master_id"
+                        ),
+
+                    "operator_employee_no":
+                        row.get(
+                            "operator_employee_no"
+                        ),
+
+                    "operator_name":
+                        row.get(
+                            "operator_name"
+                        ),
+
+                    "created_at":
+                        created_at,
+
+                    "tool_rows":
+                        [],
+                }
+
+
+                batch_map[
+                    batch_id
+                ] = batch
+
+
+                batches.append(
+                    batch
+                )
+
+
+            batch_map[
+                batch_id
+            ]["tool_rows"].append({
+
+                "id":
+                    row.get("id"),
+
+                "tool_position":
+                    row.get(
+                        "tool_position"
+                    ),
+
+                "tool_uid":
+                    row.get(
+                        "tool_uid"
+                    ),
+
+                "tool_item_code":
+                    row.get(
+                        "tool_item_code"
+                    ),
+
+                "tool_item_name":
+                    row.get(
+                        "tool_item_name"
+                    ),
+
+                "tool_action_master_id":
+                    row.get(
+                        "tool_action_master_id"
+                    ),
+
+                "tool_action_code":
+                    row.get(
+                        "tool_action_code"
+                    ),
+
+                "tool_action_name":
+                    row.get(
+                        "tool_action_name"
+                    ),
+
+                "corner_master_id":
+                    row.get(
+                        "corner_master_id"
+                    ),
+
+                "corner_code":
+                    row.get(
+                        "corner_code"
+                    ),
+
+                "corner_name":
+                    row.get(
+                        "corner_name"
+                    ),
+
+                "change_reason_master_id":
+                    row.get(
+                        "change_reason_master_id"
+                    ),
+
+                "reason_group":
+                    row.get(
+                        "reason_group"
+                    ),
+
+                "change_reason_code":
+                    row.get(
+                        "change_reason_code"
+                    ),
+
+                "change_reason_name":
+                    row.get(
+                        "change_reason_name"
+                    ),
+
+                "usage_per_part":
+                    row.get(
+                        "usage_per_part"
+                    ),
+
+                "created_at":
+                    created_at,
+
+                "updated_at":
+                    updated_at,
+            })
+
+
+        for batch in batches:
+
+            batch["tool_count"] = len(
+                batch["tool_rows"]
+            )
+
+
+        return jsonify({
+            "success": True,
+
+            "machine_id":
+                machine_id,
+
+            "machine_no":
+                machine.get(
+                    "machine_no"
+                ),
+
+            "machine_name":
+                machine.get(
+                    "machine_name"
+                ),
+
+            "entry_date":
+                entry_date,
+
+            "shift_name":
+                shift_name,
+
+            "batch_count":
+                len(batches),
+
+            "row_count":
+                len(rows),
+
+            "batches":
+                batches,
+        })
+
+
+    except PermissionError as e:
+
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 403
+
+
+    except LookupError as e:
+
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 404
+
+
+    except ValueError as e:
+
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 400
+
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# OEE_TOOL_STANDALONE_HISTORY_API_V124E_END
+
+
 # OEE_ACTIVITY_MASTER_API_V84
 
 # =========================================================
@@ -12161,6 +14309,8 @@ def machine_oee_tooling_entries_v4():
 )
 def machine_oee_tool_master_lookup_v112():
 
+    if not _can_access_tool_uid_register():
+        return ('{"success": false, "error": "Access denied"}', 403, {"Content-Type": "application/json; charset=utf-8"})
     from flask import (
         jsonify,
         request,
@@ -12185,6 +14335,7 @@ def machine_oee_tool_master_lookup_v112():
             role not in (
                 "admin",
                 "supervisor",
+        "plant_head",
             )
             or not user_id
         ):
@@ -12310,56 +14461,29 @@ def machine_oee_tool_master_lookup_v112():
 # =========================================================
 
 @quality_check_bp.route(
-    "/oee-tool-uid-register",
+    "/oee-tool-list",
     methods=["GET"]
 )
-def machine_oee_tool_uid_register_page_v115():
-
+def machine_oee_tool_list_page_v1():
+    if not _can_access_tool_uid_register():
+        return ("Access denied: Tool List is only available to CNC/VMC supervisors.", 403)
     from flask import render_template
+    return render_template("oee_tool_list.html")
 
-    role = str(
-        session.get("role")
-        or ""
-    ).strip().lower()
-
-
-    if role not in (
-        "admin",
-        "supervisor",
-    ):
-
-        return (
-            "This page is available only "
-            "for Admin and Supervisor.",
-            403
-        )
-
-
-    return render_template(
-        "oee_tool_uid_register.html",
-        active_page="oee_tool_uid_register",
-    )
-
-
-# OEE_TOOL_UID_REGISTER_PAGE_V115_END
-
-
-# =========================================================
-# OEE_TOOL_MASTER_LIST_API_V126
-# Read-only listing of oee_tool_master rows for Admin/Supervisor.
-# =========================================================
 
 @quality_check_bp.route(
     "/api/oee-machine/tool-master/list",
     methods=["GET"]
 )
 def machine_oee_tool_master_list_v126():
+    if not _can_access_tool_uid_register():
+        return ('{"success": false, "error": "Access denied"}', 403, {"Content-Type": "application/json; charset=utf-8"})
     from flask import jsonify, session as flask_session
 
     role = str(flask_session.get("role") or "").strip().lower()
     user_id = flask_session.get("user_id")
 
-    if role not in ("admin", "supervisor") or not user_id:
+    if role not in ("admin", "supervisor", "plant_head") or not user_id:
         return jsonify({
             "success": False,
             "error": "Admin or Supervisor access required."
@@ -12419,6 +14543,8 @@ def machine_oee_tool_master_list_v126():
     methods=["POST"]
 )
 def machine_oee_tool_master_create_v127():
+    if not _can_access_tool_uid_register():
+        return ('{"success": false, "error": "Access denied"}', 403, {"Content-Type": "application/json; charset=utf-8"})
     from flask import jsonify, request, session as flask_session
 
     role = str(flask_session.get("role") or "").strip().lower()
@@ -12574,6 +14700,8 @@ def machine_oee_tool_master_create_v127():
 )
 def machine_oee_tool_uid_generate_v113():
 
+    if not _can_access_tool_uid_register():
+        return ('{"success": false, "error": "Access denied"}', 403, {"Content-Type": "application/json; charset=utf-8"})
     from datetime import date, datetime
 
     from flask import (
@@ -12685,6 +14813,20 @@ def machine_oee_tool_uid_generate_v113():
                 "error":
                     "Remark cannot exceed 500 characters."
             }), 400
+
+
+        # ---------------------------------------------
+        # TOOL ISSUE V1: machine + operator codes
+        # ---------------------------------------------
+        machine_code_in = str(
+            payload.get("machine_code")
+            or ""
+        ).strip()
+
+        operator_code_in = str(
+            payload.get("operator_code")
+            or ""
+        ).strip()
 
 
         # ---------------------------------------------
@@ -12926,6 +15068,92 @@ def machine_oee_tool_uid_generate_v113():
             )
 
 
+        # ---------------------------------------------
+        # TOOL ISSUE V1: resolve machine + operator, insert movement
+        # ---------------------------------------------
+        issued_status = "AVAILABLE"
+        issued_movement_id = None
+        machine_row = None
+        operator_row = None
+
+        if machine_code_in and operator_code_in:
+            cursor.execute(
+                "SELECT id, machine_no, machine_name, machine_category, zone "
+                "FROM oee_machines "
+                "WHERE UPPER(TRIM(machine_no)) = UPPER(TRIM(%s)) "
+                "LIMIT 1",
+                (machine_code_in,)
+            )
+            machine_row = cursor.fetchone()
+            if not machine_row:
+                raise RuntimeError(
+                    "Machine Code not found: " + machine_code_in
+                )
+
+            cursor.execute(
+                "SELECT id, employee_no, operator_name "
+                "FROM oee_operator_master "
+                "WHERE UPPER(TRIM(employee_no)) = UPPER(TRIM(%s)) "
+                "LIMIT 1",
+                (operator_code_in,)
+            )
+            operator_row = cursor.fetchone()
+            if not operator_row:
+                raise RuntimeError(
+                    "Operator Code not found: " + operator_code_in
+                )
+
+            # Determine shift from current time (Shift 1: 08:00-19:00)
+            from datetime import datetime as _dt, time as _time
+            _now_t = _dt.now().time()
+            if _time(8, 0, 0) <= _now_t < _time(19, 0, 0):
+                shift_name_val = "1st"
+            else:
+                shift_name_val = "2nd"
+
+            cursor.execute(
+                """
+                INSERT INTO oee_tool_movements (
+                    tool_uid, movement_type,
+                    machine_id, machine_code, machine_name,
+                    operator_user_id, operator_master_id,
+                    operator_employee_no, operator_name,
+                    movement_date, movement_time, shift_name,
+                    remarks, created_by
+                ) VALUES (
+                    %s, 'ISSUE',
+                    %s, %s, %s,
+                    %s, %s,
+                    %s, %s,
+                    %s, CURTIME(), %s,
+                    %s, %s
+                )
+                """,
+                (
+                    tool_uid,
+                    int(machine_row["id"]),
+                    machine_row.get("machine_no"),
+                    machine_row.get("machine_name"),
+                    user_id,
+                    int(operator_row["id"]),
+                    operator_row.get("employee_no"),
+                    operator_row.get("operator_name"),
+                    created_date,
+                    shift_name_val,
+                    (remark if remark else None),
+                    user_id,
+                )
+            )
+            issued_movement_id = cursor.lastrowid
+
+            cursor.execute(
+                "UPDATE oee_tool_uid SET status = 'IN_USE' "
+                "WHERE uid_serial = %s",
+                (uid_serial,)
+            )
+            issued_status = "IN_USE"
+
+
         conn.commit()
 
 
@@ -12950,7 +15178,7 @@ def machine_oee_tool_uid_generate_v113():
                     "R0",
 
                 "status":
-                    "AVAILABLE",
+                    issued_status,
 
                 "created_regrind_date":
                     created_date.isoformat(),
@@ -13039,6 +15267,7 @@ def machine_oee_tool_uid_lookup_v116():
             "admin",
             "supervisor",
             "operator",
+        "plant_head",
         ):
 
             return jsonify({
@@ -14720,6 +16949,7 @@ def oee_operator_master_lookup_v23():
         if role not in (
             "operator",
             "admin",
+        "plant_head",
         ):
 
             return jsonify({
@@ -15426,26 +17656,99 @@ def machine_oee_run_completion_context_v2(run_id):
             }), 404
 
 
-        current_process = str(
+        # SPLIT_QTY_COMPLETION_CONTEXT_V1
+        legacy_process = str(
             item.get("wip_status")
             or ""
         ).strip()
 
 
-        if not _match_processes(
-            current_process,
-            run.get("process_name"),
-        ):
+        run_process = str(
+            run.get("process_name")
+            or ""
+        ).strip()
 
-            return jsonify({
-                "success": False,
-                "error": (
-                    f"Traceability is currently at "
-                    f"{current_process or 'Unknown'}, while "
-                    f"this machine run is for "
-                    f"{run.get('process_name') or 'Unknown'}."
+
+        current_process = (
+            legacy_process
+        )
+
+
+        split_stage_available_qty = None
+
+
+        if run_process:
+
+            cursor.execute(
+                """
+                SELECT
+                    qty_available
+                FROM job_card_stage_qty
+                WHERE job_card_item_id = %s
+                  AND LOWER(TRIM(process_name))
+                      = LOWER(TRIM(%s))
+                LIMIT 1
+                """,
+                (
+                    item.get("id"),
+                    run_process,
+                ),
+            )
+
+
+            split_stage = (
+                cursor.fetchone()
+            )
+
+
+            if split_stage is not None:
+
+                split_stage_available_qty = int(
+                    split_stage.get(
+                        "qty_available"
+                    )
+                    or 0
                 )
-            }), 409
+
+
+                if split_stage_available_qty > 0:
+
+                    # The JC has genuinely moved together with
+                    # this split quantity, so the machine run
+                    # process is the active completion context.
+                    current_process = (
+                        run_process
+                    )
+
+
+                elif not _match_processes(
+                    legacy_process,
+                    run_process,
+                ):
+
+                    return jsonify({
+                        "success": False,
+                        "error": (
+                            f"No quantity is available at "
+                            f"{run_process} for this Job Card."
+                        )
+                    }), 409
+
+
+            elif not _match_processes(
+                legacy_process,
+                run_process,
+            ):
+
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        f"Traceability is currently at "
+                        f"{legacy_process or 'Unknown'}, while "
+                        f"this machine run is for "
+                        f"{run_process or 'Unknown'}."
+                    )
+                }), 409
 
 
         # ----------------------------------------------------
@@ -15503,14 +17806,169 @@ def machine_oee_run_completion_context_v2(run_id):
             }), 409
 
 
+        # COMBINED_SETUP_COMPLETION_CONTEXT_V1_START
+        #
+        # A Combined Setup run physically covers several route
+        # stages in ONE machine setup. oee_run_processes is the
+        # authority for such a run.
+        #
+        # NOTHING IS SKIPPED.
+        #
+        # Every route stage between the run's START process and
+        # its END process is closed by this run:
+        #
+        #   - processes the operator selected  -> real run times
+        #   - processes in between not selected -> auto-completed
+        #
+        # Movement target is therefore the stage AFTER the END
+        # process, not the stage after the current process.
+        cursor.execute("""
+            SELECT
+                process_name,
+                route_sequence,
+                is_start_process,
+                is_end_process
+
+            FROM oee_run_processes
+
+            WHERE oee_entry_id = %s
+
+            ORDER BY route_sequence
+        """, (
+            run_id,
+        ))
+
+        combined_rows = (
+            cursor.fetchall()
+            or []
+        )
+
+        is_combined_run = (
+            len(combined_rows) >= 2
+        )
+
+        combined_process_names = []
+        combined_auto_names = []
+        combined_span_names = []
+        combined_end_process = ""
+
+        movement_idx = current_idx
+
+        if is_combined_run:
+
+            for combined_row in combined_rows:
+
+                combined_process_names.append(
+                    str(
+                        combined_row.get("process_name")
+                        or ""
+                    ).strip()
+                )
+
+
+            for combined_row in combined_rows:
+
+                if int(
+                    combined_row.get("is_end_process")
+                    or 0
+                ) == 1:
+
+                    combined_end_process = str(
+                        combined_row.get("process_name")
+                        or ""
+                    ).strip()
+
+
+            end_idx = None
+
+            if combined_end_process:
+
+                for idx in range(
+                    current_idx,
+                    len(process_rows),
+                ):
+
+                    if _match_processes(
+                        process_rows[idx].get(
+                            "process_name"
+                        ),
+                        combined_end_process,
+                    ):
+                        end_idx = idx
+                        break
+
+
+            if end_idx is None:
+
+                return jsonify({
+                    "success": False,
+                    "error": (
+                        "Combined Setup end process "
+                        f"'{combined_end_process or '-'}' was "
+                        "not found in the saved JC timeline."
+                    )
+                }), 409
+
+
+            movement_idx = end_idx
+
+
+            # Every operation the setup physically covers.
+            # The Reject At dropdown is built from this.
+            for idx in range(
+                current_idx,
+                end_idx + 1,
+            ):
+                combined_span_names.append(
+                    str(
+                        process_rows[idx].get(
+                            "process_name"
+                        )
+                        or ""
+                    ).strip()
+                )
+
+
+            # Route stages inside the combined span that the
+            # operator did NOT tick are auto-completed by this
+            # run. They are never left open and never skipped.
+            for idx in range(
+                current_idx + 1,
+                end_idx,
+            ):
+
+                span_name = str(
+                    process_rows[idx].get(
+                        "process_name"
+                    )
+                    or ""
+                ).strip()
+
+                span_selected = False
+
+                for picked_name in combined_process_names:
+
+                    if _match_processes(
+                        span_name,
+                        picked_name,
+                    ):
+                        span_selected = True
+                        break
+
+                if not span_selected:
+                    combined_auto_names.append(
+                        span_name
+                    )
+
+
         if (
-            current_idx + 1
+            movement_idx + 1
             < len(process_rows)
         ):
 
             next_process = str(
                 process_rows[
-                    current_idx + 1
+                    movement_idx + 1
                 ].get("process_name")
                 or ""
             ).strip()
@@ -15518,8 +17976,24 @@ def machine_oee_run_completion_context_v2(run_id):
         else:
 
             next_process = "Store"
+        # COMBINED_SETUP_COMPLETION_CONTEXT_V1_END
 
 
+        # OEE_DOWNSTREAM_AVAILABLE_QTY_V125
+        #
+        # Available quantity for the current downstream process
+        # must follow the previous process outcome:
+        #
+        # Previous process:
+        #   OK       -> moves forward
+        #   Rejected -> does NOT move forward
+        #
+        # Example:
+        #   JC Qty 50
+        #   OK 49
+        #   Reject 1
+        #   Next process Available Qty = 49
+        #
         pending_qty = int(
             item.get("pending_qty")
             or 0
@@ -15530,12 +18004,41 @@ def machine_oee_run_completion_context_v2(run_id):
             or 0
         )
 
-        if pending_qty > 0 or hold_qty > 0:
+        actual_qty = int(
+            item.get("actual_qty")
+            or 0
+        )
+
+        rejected_qty = int(
+            item.get("rejected_qty")
+            or 0
+        )
+
+
+        if split_stage_available_qty is not None:
+
+            required_qty = int(
+                split_stage_available_qty
+            )
+
+        elif pending_qty > 0 or hold_qty > 0:
+
             required_qty = (
                 pending_qty
                 + hold_qty
             )
+
+        elif (
+            actual_qty > 0
+            or rejected_qty > 0
+        ):
+
+            required_qty = (
+                actual_qty
+            )
+
         else:
+
             required_qty = int(
                 item.get("job_card_qty")
                 or item.get("so_qty")
@@ -15562,6 +18065,22 @@ def machine_oee_run_completion_context_v2(run_id):
 
                 "next_process":
                     next_process,
+
+                # COMBINED_SETUP_CONTEXT_FIELDS_V1
+                "is_combined_run":
+                    is_combined_run,
+
+                "combined_processes":
+                    combined_process_names,
+
+                "combined_auto_processes":
+                    combined_auto_names,
+
+                "combined_span_processes":
+                    combined_span_names,
+
+                "combined_end_process":
+                    combined_end_process,
 
                 "job_card_qty":
                     item.get("job_card_qty")
@@ -16019,7 +18538,7 @@ def machine_oee_machine_losses_v13(machine_id):
     cursor = None
     try:
         role = str(session.get("role") or "").strip().lower()
-        if role not in ("operator", "admin"):
+        if role not in ("operator", "admin", "plant_head"):
             return jsonify({"success": False, "error": "Machine OEE access is not allowed."}), 403
 
         conn = get_connection()
@@ -16401,7 +18920,7 @@ def oee_machine_summary_page_v1():
     role    = str(flask_session.get("role")    or "").strip().lower()
     user_id = flask_session.get("user_id")
 
-    if role not in ("admin", "supervisor") or not user_id:
+    if role not in ("admin", "supervisor", "plant_head") or not user_id:
         return ("OEE Summary access denied.", 403)
 
     if role == "supervisor":
@@ -16438,6 +18957,798 @@ def oee_machine_summary_page_v1():
 
 
 # MACHINE_SHIFT_CAPACITY_V1
+# ==========================================================================
+# SHIFT 1 EXTEND V1: shift_end_override read/write endpoints
+# ==========================================================================
+
+@quality_check_bp.route(
+    "/api/oee-machine/shift-1-override",
+    methods=["GET"]
+)
+def machine_oee_shift1_override_get_v1():
+    """
+    Read the current Shift 1 end-time override for (machine, date).
+    Returns MAX(shift_end_override) across all Shift 1 entries for that
+    machine+date. Null means no override -> default 19:00 applies.
+    """
+    conn = None
+    cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
+            return jsonify({"success": False, "error": "OEE access denied."}), 403
+
+        try:
+            machine_id = int(str(request.args.get("machine_id") or "").strip())
+        except Exception:
+            return jsonify({"success": False, "error": "machine_id required."}), 400
+        entry_date = str(request.args.get("entry_date") or "").strip()
+        if not entry_date:
+            return jsonify({"success": False, "error": "entry_date required."}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            """
+            SELECT MAX(shift_end_override) AS override
+            FROM oee_entries
+            WHERE machine_id = %s
+              AND entry_date = %s
+              AND LOWER(TRIM(shift_name)) IN ('shift 1','1st','1','day')
+              AND shift_end_override IS NOT NULL
+            """,
+            (machine_id, entry_date)
+        )
+        row = cursor.fetchone() or {}
+        val = row.get("override")
+        override_str = None
+        if val is not None:
+            try:
+                if hasattr(val, "total_seconds"):
+                    total_sec = int(val.total_seconds())
+                    hh = total_sec // 3600
+                    mm = (total_sec % 3600) // 60
+                    ss = total_sec % 60
+                    override_str = "%02d:%02d:%02d" % (hh, mm, ss)
+                else:
+                    s2 = str(val)
+                    if len(s2) == 7:
+                        s2 = "0" + s2
+                    override_str = s2
+            except Exception:
+                override_str = str(val)
+
+        return jsonify({
+            "success": True,
+            "shift_end_override": override_str
+        })
+    except Exception as ex:
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception:
+            pass
+        try:
+            if conn: conn.close()
+        except Exception:
+            pass
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/shift-1-override",
+    methods=["POST"]
+)
+def machine_oee_shift1_override_set_v1():
+    """
+    Set the Shift 1 end-time override for (machine, date).
+    Updates ALL Shift 1 entries for that machine+date to have this override.
+    Value must be > 19:00 and < 24:00 (HH:MM or HH:MM:SS).
+    Sending null / '' / a value <= 19:00 clears the override.
+    """
+    conn = None
+    cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
+            return jsonify({"success": False, "error": "OEE access denied."}), 403
+
+        payload = request.get_json(silent=True) or {}
+        try:
+            machine_id = int(str(payload.get("machine_id") or "").strip())
+        except Exception:
+            return jsonify({"success": False, "error": "machine_id required."}), 400
+        entry_date = str(payload.get("entry_date") or "").strip()
+        if not entry_date:
+            return jsonify({"success": False, "error": "entry_date required."}), 400
+
+        raw_ovr = payload.get("shift_end_override")
+        override_normalized = None
+        clear_flag = False
+
+        if raw_ovr is None or str(raw_ovr).strip() == "":
+            clear_flag = True
+        else:
+            s = str(raw_ovr).strip()
+            parts = s.split(":")
+            if len(parts) not in (2, 3):
+                return jsonify({"success": False, "error": "Time must be HH:MM or HH:MM:SS."}), 400
+            try:
+                hh = int(parts[0]); mm = int(parts[1])
+                ss = int(parts[2]) if len(parts) == 3 else 0
+            except Exception:
+                return jsonify({"success": False, "error": "Invalid shift time."}), 400
+            if hh < 0 or hh > 23 or mm < 0 or mm > 59 or ss < 0 or ss > 59:
+                return jsonify({"success": False, "error": "Invalid shift time."}), 400
+            total_sec = hh * 3600 + mm * 60 + ss
+            if total_sec <= 19 * 3600:
+                clear_flag = True
+            else:
+                override_normalized = "%02d:%02d:%02d" % (hh, mm, ss)
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        if clear_flag:
+            cursor.execute(
+                """
+                UPDATE oee_entries
+                SET shift_end_override = NULL
+                WHERE machine_id = %s
+                  AND entry_date = %s
+                  AND LOWER(TRIM(shift_name)) IN ('shift 1','1st','1','day')
+                """,
+                (machine_id, entry_date)
+            )
+        else:
+            cursor.execute(
+                """
+                UPDATE oee_entries
+                SET shift_end_override = %s
+                WHERE machine_id = %s
+                  AND entry_date = %s
+                  AND LOWER(TRIM(shift_name)) IN ('shift 1','1st','1','day')
+                """,
+                (override_normalized, machine_id, entry_date)
+            )
+        rows_affected = cursor.rowcount
+        conn.commit()
+        return jsonify({
+            "success": True,
+            "shift_end_override": override_normalized,
+            "rows_updated": rows_affected
+        })
+    except Exception as ex:
+        try:
+            if conn: conn.rollback()
+        except Exception:
+            pass
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception:
+            pass
+        try:
+            if conn: conn.close()
+        except Exception:
+            pass
+
+
+# ==========================================================================
+# /SHIFT 1 EXTEND V1
+# ==========================================================================
+
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/machine/lookup",
+    methods=["GET"]
+)
+def machine_oee_machine_lookup_v1():
+    conn = None; cursor = None
+    try:
+        code = str(request.args.get("code") or "").strip()
+        if not code:
+            return jsonify({"success": False, "error": "Machine Code required."}), 400
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id, machine_no, machine_name FROM oee_machines "
+            "WHERE UPPER(TRIM(machine_no)) = UPPER(TRIM(%s)) LIMIT 1",
+            (code,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"success": False, "error": "Machine Code not found."}), 404
+        return jsonify({"success": True, "machine": row})
+    except Exception as ex:
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/operator/lookup",
+    methods=["GET"]
+)
+def machine_oee_operator_lookup_v1():
+    conn = None; cursor = None
+    try:
+        code = str(request.args.get("code") or "").strip()
+        if not code:
+            return jsonify({"success": False, "error": "Operator Code required."}), 400
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id, employee_no, operator_name FROM oee_operator_master "
+            "WHERE UPPER(TRIM(employee_no)) = UPPER(TRIM(%s)) LIMIT 1",
+            (code,)
+        )
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"success": False, "error": "Operator Code not found."}), 404
+        return jsonify({"success": True, "operator": row})
+    except Exception as ex:
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+
+
+# TOOL_ISSUE_DROPDOWN_OPTIONS_V1
+@quality_check_bp.route(
+    "/api/oee-machine/tool-issue/options",
+    methods=["GET"]
+)
+def machine_oee_tool_issue_options_v1():
+
+    conn = None
+    cursor = None
+
+    try:
+
+        if not _can_access_tool_uid_register():
+
+            return jsonify({
+                "success": False,
+                "error": "Access denied."
+            }), 403
+
+
+        conn = get_connection()
+
+        cursor = conn.cursor(
+            dictionary=True
+        )
+
+
+        # -------------------------------------------------
+        # ACTIVE MACHINE MASTER
+        # -------------------------------------------------
+        cursor.execute("""
+            SELECT
+                id,
+                machine_no,
+                machine_name
+            FROM oee_machines
+            WHERE is_active = 1
+            ORDER BY machine_no
+        """)
+
+        machines = (
+            cursor.fetchall()
+            or []
+        )
+
+
+        # -------------------------------------------------
+        # ACTIVE OPERATOR MASTER
+        # -------------------------------------------------
+        cursor.execute("""
+            SELECT
+                id,
+                employee_no,
+                operator_name
+            FROM oee_operator_master
+            WHERE is_active = 1
+            ORDER BY
+                CAST(employee_no AS UNSIGNED),
+                employee_no
+        """)
+
+        operators = (
+            cursor.fetchall()
+            or []
+        )
+
+
+        return jsonify({
+            "success": True,
+            "machines": machines,
+            "operators": operators,
+        })
+
+
+    except Exception as error:
+
+        return jsonify({
+            "success": False,
+            "error": str(error),
+        }), 500
+
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+
+# TOOL_ISSUE_DROPDOWN_OPTIONS_V1_END
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/tool-uid/return",
+    methods=["POST"]
+)
+def machine_oee_tool_uid_return_v1():
+    """
+    Log a RETURN movement for a tool UID.
+    Body: tool_uid, machine_code, operator_code, condition_code,
+          breakage_reason_code (optional), breakage_reason_text (optional), remarks.
+    Condition -> UID status:
+      LIFE_COMPLETE    -> SCRAPPED
+      JOB_COMPLETE     -> AVAILABLE
+      SEND_FOR_REGRIND -> PENDING_REGRIND
+      BREAKAGE         -> BROKEN
+    """
+    from datetime import datetime as _dt, time as _time
+    conn = None; cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
+            return jsonify({"success": False, "error": "OEE access denied."}), 403
+
+        user_id = session.get("user_id")
+        p = request.get_json(silent=True) or {}
+        tool_uid = str(p.get("tool_uid") or "").strip()
+        machine_code = str(p.get("machine_code") or "").strip()
+        operator_code = str(p.get("operator_code") or "").strip()
+        condition_code = str(p.get("condition_code") or "").strip().upper()
+        breakage_reason_code = str(p.get("breakage_reason_code") or "").strip()
+        breakage_reason_text = str(p.get("breakage_reason_text") or "").strip()
+        remarks = str(p.get("remarks") or "").strip()
+
+        VALID_CONDS = {
+            "LIFE_COMPLETE":    "SCRAPPED",
+            "JOB_COMPLETE":     "AVAILABLE",
+            "SEND_FOR_REGRIND": "PENDING_REGRIND",
+            "BREAKAGE":         "BROKEN",
+        }
+        if not tool_uid:
+            return jsonify({"success": False, "error": "Tool UID required."}), 400
+        if not machine_code:
+            return jsonify({"success": False, "error": "Machine Code required."}), 400
+        if not operator_code:
+            return jsonify({"success": False, "error": "Operator Code required."}), 400
+        if condition_code not in VALID_CONDS:
+            return jsonify({"success": False, "error": "Invalid condition_code."}), 400
+        if condition_code == "BREAKAGE" and not breakage_reason_code:
+            return jsonify({"success": False, "error": "Breakage reason required."}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            "SELECT uid_serial, tool_uid FROM oee_tool_uid "
+            "WHERE tool_uid = %s LIMIT 1",
+            (tool_uid,)
+        )
+        uid_row = cursor.fetchone()
+        if not uid_row:
+            return jsonify({"success": False, "error": "Tool UID not found: " + tool_uid}), 404
+
+        cursor.execute(
+            "SELECT id, machine_no, machine_name FROM oee_machines "
+            "WHERE UPPER(TRIM(machine_no)) = UPPER(TRIM(%s)) LIMIT 1",
+            (machine_code,)
+        )
+        m = cursor.fetchone()
+        if not m:
+            return jsonify({"success": False, "error": "Machine Code not found: " + machine_code}), 404
+
+        cursor.execute(
+            "SELECT id, employee_no, operator_name FROM oee_operator_master "
+            "WHERE UPPER(TRIM(employee_no)) = UPPER(TRIM(%s)) LIMIT 1",
+            (operator_code,)
+        )
+        o = cursor.fetchone()
+        if not o:
+            return jsonify({"success": False, "error": "Operator Code not found: " + operator_code}), 404
+
+        _now = _dt.now()
+        shift_name_val = "1st" if _time(8,0,0) <= _now.time() < _time(19,0,0) else "2nd"
+
+        cursor2 = conn.cursor()
+        cursor2.execute(
+            """
+            INSERT INTO oee_tool_movements (
+                tool_uid, movement_type,
+                machine_id, machine_code, machine_name,
+                operator_user_id, operator_master_id,
+                operator_employee_no, operator_name,
+                movement_date, movement_time, shift_name,
+                condition_code, breakage_reason_code, breakage_reason_text,
+                remarks, created_by
+            ) VALUES (
+                %s, 'RETURN',
+                %s, %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, CURTIME(), %s,
+                %s, %s, %s,
+                %s, %s
+            )
+            """,
+            (
+                tool_uid,
+                int(m["id"]), m.get("machine_no"), m.get("machine_name"),
+                user_id, int(o["id"]),
+                o.get("employee_no"), o.get("operator_name"),
+                _now.date(), shift_name_val,
+                condition_code,
+                (breakage_reason_code if condition_code == "BREAKAGE" else None),
+                (breakage_reason_text if condition_code == "BREAKAGE" else None),
+                (remarks if remarks else None),
+                user_id,
+            )
+        )
+        movement_id = cursor2.lastrowid
+
+        new_status = VALID_CONDS[condition_code]
+        cursor2.execute(
+            "UPDATE oee_tool_uid SET status = %s WHERE uid_serial = %s",
+            (new_status, uid_row["uid_serial"])
+        )
+        conn.commit()
+        cursor2.close()
+
+        return jsonify({
+            "success": True,
+            "movement_id": movement_id,
+            "tool_uid": tool_uid,
+            "new_status": new_status,
+        })
+    except Exception as ex:
+        try:
+            if conn: conn.rollback()
+        except Exception: pass
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+
+
+# ==========================================================================
+# TOOL LIST + RE-ISSUE + MASTER UPDATE/DELETE (feature v1)
+# ==========================================================================
+
+@quality_check_bp.route(
+    "/api/oee-machine/tool-uid/list",
+    methods=["GET"]
+)
+def machine_oee_tool_uid_list_v1():
+    """All UIDs with status + last movement info."""
+    conn = None; cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
+            return jsonify({"success": False, "error": "Access denied."}), 403
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT
+                u.uid_serial, u.tool_uid, u.base_uid, u.regrind_cycle,
+                u.status, u.created_regrind_date, u.tool_master_id,
+                m.tool_item_code, m.tool_item_name,
+                (SELECT mv.machine_code FROM oee_tool_movements mv
+                    WHERE mv.tool_uid = u.tool_uid AND mv.movement_type = 'ISSUE'
+                    ORDER BY mv.id DESC LIMIT 1) AS last_machine_code,
+                (SELECT mv.machine_name FROM oee_tool_movements mv
+                    WHERE mv.tool_uid = u.tool_uid AND mv.movement_type = 'ISSUE'
+                    ORDER BY mv.id DESC LIMIT 1) AS last_machine_name,
+                (SELECT mv.operator_employee_no FROM oee_tool_movements mv
+                    WHERE mv.tool_uid = u.tool_uid AND mv.movement_type = 'ISSUE'
+                    ORDER BY mv.id DESC LIMIT 1) AS last_employee_no,
+                (SELECT mv.operator_name FROM oee_tool_movements mv
+                    WHERE mv.tool_uid = u.tool_uid AND mv.movement_type = 'ISSUE'
+                    ORDER BY mv.id DESC LIMIT 1) AS last_operator_name,
+                (SELECT mv.movement_date FROM oee_tool_movements mv
+                    WHERE mv.tool_uid = u.tool_uid
+                    ORDER BY mv.id DESC LIMIT 1) AS last_movement_date
+            FROM oee_tool_uid u
+            LEFT JOIN oee_tool_master m ON m.id = u.tool_master_id
+            WHERE u.tool_uid IS NOT NULL
+            ORDER BY u.uid_serial DESC
+        """)
+        rows = cursor.fetchall() or []
+        return jsonify({"success": True, "uids": rows})
+    except Exception as ex:
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/tool-uid/reissue",
+    methods=["POST"]
+)
+def machine_oee_tool_uid_reissue_v1():
+    """Re-issue an AVAILABLE UID: creates ISSUE movement, sets status IN_USE."""
+    from datetime import datetime as _dt, time as _time
+    conn = None; cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
+            return jsonify({"success": False, "error": "Access denied."}), 403
+
+        user_id = session.get("user_id")
+        p = request.get_json(silent=True) or {}
+        tool_uid = str(p.get("tool_uid") or "").strip()
+        machine_code = str(p.get("machine_code") or "").strip()
+        operator_code = str(p.get("operator_code") or "").strip()
+        remarks = str(p.get("remarks") or "").strip()
+
+        if not tool_uid or not machine_code or not operator_code:
+            return jsonify({"success": False, "error": "tool_uid, machine_code, operator_code required."}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT uid_serial, status FROM oee_tool_uid WHERE tool_uid = %s LIMIT 1", (tool_uid,))
+        uid_row = cursor.fetchone()
+        if not uid_row:
+            return jsonify({"success": False, "error": "Tool UID not found."}), 404
+        if uid_row["status"] != "AVAILABLE":
+            return jsonify({"success": False, "error": "Only AVAILABLE UIDs can be re-issued. Current status: " + str(uid_row["status"])}), 400
+
+        cursor.execute(
+            "SELECT id, machine_no, machine_name FROM oee_machines "
+            "WHERE UPPER(TRIM(machine_no)) = UPPER(TRIM(%s)) LIMIT 1",
+            (machine_code,)
+        )
+        m = cursor.fetchone()
+        if not m:
+            return jsonify({"success": False, "error": "Machine Code not found."}), 404
+
+        cursor.execute(
+            "SELECT id, employee_no, operator_name FROM oee_operator_master "
+            "WHERE UPPER(TRIM(employee_no)) = UPPER(TRIM(%s)) LIMIT 1",
+            (operator_code,)
+        )
+        o = cursor.fetchone()
+        if not o:
+            return jsonify({"success": False, "error": "Operator Code not found."}), 404
+
+        _now = _dt.now()
+        shift_name_val = "1st" if _time(8,0,0) <= _now.time() < _time(19,0,0) else "2nd"
+
+        cursor2 = conn.cursor()
+        cursor2.execute(
+            """
+            INSERT INTO oee_tool_movements (
+                tool_uid, movement_type,
+                machine_id, machine_code, machine_name,
+                operator_user_id, operator_master_id,
+                operator_employee_no, operator_name,
+                movement_date, movement_time, shift_name,
+                remarks, created_by
+            ) VALUES (
+                %s, 'ISSUE',
+                %s, %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, CURTIME(), %s,
+                %s, %s
+            )
+            """,
+            (
+                tool_uid,
+                int(m["id"]), m.get("machine_no"), m.get("machine_name"),
+                user_id, int(o["id"]),
+                o.get("employee_no"), o.get("operator_name"),
+                _now.date(), shift_name_val,
+                (remarks if remarks else None),
+                user_id,
+            )
+        )
+        movement_id = cursor2.lastrowid
+        cursor2.execute(
+            "UPDATE oee_tool_uid SET status = 'IN_USE' WHERE uid_serial = %s",
+            (uid_row["uid_serial"],)
+        )
+        conn.commit()
+        cursor2.close()
+
+        return jsonify({
+            "success": True,
+            "movement_id": movement_id,
+            "tool_uid": tool_uid,
+            "new_status": "IN_USE",
+        })
+    except Exception as ex:
+        try:
+            if conn: conn.rollback()
+        except Exception: pass
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/tool-master/update",
+    methods=["POST"]
+)
+def machine_oee_tool_master_update_v1():
+    """Update a tool master row."""
+    conn = None; cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("admin", "supervisor"):
+            return jsonify({"success": False, "error": "Admin or Supervisor required."}), 403
+
+        p = request.get_json(silent=True) or {}
+        try:
+            tid = int(p.get("id") or 0)
+        except Exception:
+            tid = 0
+        code = str(p.get("tool_item_code") or "").strip()
+        name = str(p.get("tool_item_name") or "").strip()
+        prefix = str(p.get("uid_prefix") or "").strip()
+        is_active = 1 if p.get("is_active") else 0
+
+        if tid <= 0:  return jsonify({"success": False, "error": "id required."}), 400
+        if not code:  return jsonify({"success": False, "error": "tool_item_code required."}), 400
+        if not name:  return jsonify({"success": False, "error": "tool_item_name required."}), 400
+        if not prefix: return jsonify({"success": False, "error": "uid_prefix required."}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE oee_tool_master SET tool_item_code = %s, tool_item_name = %s, "
+            "uid_prefix = %s, is_active = %s WHERE id = %s",
+            (code, name, prefix, is_active, tid)
+        )
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "Tool Item not found."}), 404
+        conn.commit()
+        return jsonify({"success": True, "id": tid})
+    except Exception as ex:
+        try:
+            if conn: conn.rollback()
+        except Exception: pass
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/tool-master/delete",
+    methods=["POST"]
+)
+def machine_oee_tool_master_delete_v1():
+    """Soft delete (is_active=0). Rejects if any UIDs reference this tool."""
+    conn = None; cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("admin",):
+            return jsonify({"success": False, "error": "Admin required."}), 403
+
+        p = request.get_json(silent=True) or {}
+        try:
+            tid = int(p.get("id") or 0)
+        except Exception:
+            tid = 0
+        if tid <= 0:
+            return jsonify({"success": False, "error": "id required."}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT COUNT(*) AS c FROM oee_tool_uid WHERE tool_master_id = %s", (tid,))
+        row = cursor.fetchone() or {}
+        if int(row.get("c") or 0) > 0:
+            return jsonify({"success": False, "error": "Cannot delete: UIDs already generated for this tool. Deactivate via Edit instead."}), 400
+
+        cursor2 = conn.cursor()
+        cursor2.execute("UPDATE oee_tool_master SET is_active = 0 WHERE id = %s", (tid,))
+        if cursor2.rowcount == 0:
+            return jsonify({"success": False, "error": "Tool Item not found."}), 404
+        conn.commit()
+        cursor2.close()
+        return jsonify({"success": True, "id": tid})
+    except Exception as ex:
+        try:
+            if conn: conn.rollback()
+        except Exception: pass
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
+
+@quality_check_bp.route(
+    "/api/oee-machine/tool-position/list",
+    methods=["GET"]
+)
+def machine_oee_tool_position_list_v1():
+    """List active Tool Positions from oee_reference_master."""
+    conn = None; cursor = None
+    try:
+        role = str(session.get("role") or "").strip().lower()
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
+            return jsonify({"success": False, "error": "Access denied."}), 403
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT reference_id, reference_code, reference_name, sort_order
+            FROM oee_reference_master
+            WHERE reference_type = 'TOOL_POSITION'
+              AND is_active = 1
+            ORDER BY sort_order, reference_name
+        """)
+        rows = cursor.fetchall() or []
+        return jsonify({"success": True, "positions": rows})
+    except Exception as ex:
+        return jsonify({"success": False, "error": str(ex)}), 500
+    finally:
+        try:
+            if cursor: cursor.close()
+        except Exception: pass
+        try:
+            if conn: conn.close()
+        except Exception: pass
+
+
 @quality_check_bp.route(
     "/api/oee-machine/shift-capacity/<int:machine_id>",
     methods=["GET"]
@@ -16455,7 +19766,7 @@ def machine_oee_shift_capacity_v1(machine_id):
 
     try:
         role = str(session.get("role") or "").strip().lower()
-        if role not in ("operator", "supervisor", "admin"):
+        if role not in ("operator", "supervisor", "admin", "plant_head"):
             return jsonify({"success": False, "error": "OEE access denied."}), 403
 
         session_date = str(request.args.get("date") or "").strip()
@@ -16597,5 +19908,6 @@ def machine_oee_shift_capacity_v1(machine_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 

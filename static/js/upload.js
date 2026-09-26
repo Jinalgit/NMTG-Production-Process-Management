@@ -1,5 +1,14 @@
 // Upload logic shared by Page 1 (Job Cards) and Page 2 (Process Master).
 let uploadMode = ""; // "jc" or "pm"
+
+// PLANT_HEAD_JC_UPLOAD_GATE_V2
+function isPlantHeadJcReadOnly() {
+  return (
+    String(window.JMS_USER_ROLE || "")
+      .trim()
+      .toLowerCase() === "plant_head"
+  );
+}
 let previewRows = [];
 let jcReviewToken = null; // review token from upload_preview; null for PM uploads
 let uploadFakeProgressTimer = null;
@@ -40,6 +49,11 @@ const UPLOAD_COLS = {
 };
 
 function openUploadModal(mode) {
+  // PLANT_HEAD_JC_UPLOAD_GATE_V2
+  if (mode === "jc" && isPlantHeadJcReadOnly()) {
+    return;
+  }
+
   uploadMode = mode;
   document.getElementById("upload-modal-title").textContent =
     mode === "jc" ? "Upload Job Cards (Excel)" : "Upload Process Master (Excel)";
@@ -172,6 +186,23 @@ function hideUploadLoading() {
 }
 
 async function handleFileSelect(event) {
+  // PLANT_HEAD_JC_UPLOAD_GATE_V2
+  if (
+    uploadMode === "jc" &&
+    isPlantHeadJcReadOnly()
+  ) {
+    if (event && event.target) {
+      event.target.value = "";
+    }
+
+    const modal = document.getElementById("upload-modal");
+    if (modal) {
+      modal.classList.remove("open");
+    }
+
+    return;
+  }
+
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
 
@@ -484,6 +515,11 @@ function showSoMappingSuccessPopup(count, message) {
 }
 
 function triggerJobCardFileSelect() {
+  // PLANT_HEAD_JC_UPLOAD_GATE_V2
+  if (isPlantHeadJcReadOnly()) {
+    return;
+  }
+
   const input = document.getElementById("upload-file-input");
   if (input) {
     input.value = "";
@@ -504,3 +540,19 @@ window.startFakeUploadProgress = startFakeUploadProgress;
 window.stopFakeUploadProgress = stopFakeUploadProgress;
 window.showSoMappingSuccessPopup = showSoMappingSuccessPopup;
 window.triggerJobCardFileSelect = triggerJobCardFileSelect;
+
+// PLANT_HEAD_JC_UPLOAD_GATE_V2
+document.addEventListener("DOMContentLoaded", function () {
+  if (!isPlantHeadJcReadOnly()) return;
+
+  const modal = document.getElementById("upload-modal");
+  if (modal) {
+    modal.classList.remove("open");
+  }
+
+  const input = document.getElementById("upload-file-input");
+  if (input) {
+    input.value = "";
+    input.disabled = true;
+  }
+});

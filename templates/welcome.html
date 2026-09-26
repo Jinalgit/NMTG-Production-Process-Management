@@ -243,26 +243,6 @@
         </a>
 
 
-        <!-- OEE -->
-        <a
-            class="module"
-            href="{{ url_for('pages.oee_page') }}"
-            data-search="OEE Overall Equipment Effectiveness CNC VMC Machine Performance Availability Quality"
-        >
-            <div class="module-icon">
-                <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="8"></circle>
-                    <path d="M12 12l4-4"></path>
-                    <path d="M12 6v2"></path>
-                    <path d="M18 12h-2"></path>
-                    <path d="M6 12h2"></path>
-                </svg>
-            </div>
-
-            <div class="module-name">OEE</div>
-        </a>
-
-
         <!-- Analytics -->
         <a
             class="module"
@@ -283,7 +263,10 @@
 
 
         <!-- User Management -->
-        <a
+        
+{% if session.get("role") == "admin" %}
+{# PLANT_HEAD_HIDE_USER_MANAGEMENT_V1 #}
+<a
             class="module"
             href="{{ url_for('pages.user_management') }}"
             data-search="User Management Users Permission Permissions Roles Administration"
@@ -299,6 +282,8 @@
 
             <div class="module-name">User Management</div>
         </a>
+{% endif %}
+
 
     </div>
 

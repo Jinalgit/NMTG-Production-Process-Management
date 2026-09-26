@@ -1,0 +1,3748 @@
+NMTG JMS - OEE + TOOL MODULE SOURCE AUDIT
+Generated: 2026-09-18 11:42:32
+Project Root: D:\Het\demo2
+Audit Mode: READ ONLY
+Database Access: NONE
+Application Changes: NONE
+
+==============================================================================
+1. IMPORTANT OEE / TOOL FILE CHECK
+==============================================================================
+[EXISTS] routes\quality_check.py
+[EXISTS] routes\oee_dashboard.py
+[EXISTS] routes\oee_machine_summary.py
+[ABSENT] templates\operator_quality_check.html
+[ABSENT] templates\quality_check.html
+[EXISTS] templates\oee_dashboard.html
+[EXISTS] templates\oee_machine_summary.html
+[ABSENT] static\js\quality_check.js
+[EXISTS] static\js\oee.js
+[ABSENT] static\js\oee_machine.js
+[ABSENT] static\css\quality_check.css
+[ABSENT] static\css\oee.css
+[EXISTS] app.py
+
+==============================================================================
+2. ACTUAL FILES CONTAINING OEE / TOOL LOGIC
+==============================================================================
+
+FILE: static\js\oee_machine_operator.js
+TOTAL SIGNAL HITS: 866
+MATCHED AREAS: OEE_MACHINE_API=38, OEE_MACHINES=1, MACHINE_OEE_FRONTEND=747, TOOL_MASTER=1, TOOL_UID=1, TOOLING_ENTRIES_API=2, TOOL_ENTRY_BATCH=1, TOOL_USAGE=4, RECEIVE_MATERIAL=11, RUN_ID=40, ACTIVITY_RUN_ID=5, SESSION_ID=8, MACHINE_LOSS_ENTRY_ID=2, TOOL_ENTRY_TEXT=5
+
+FILE: _to_delete\oee_operator_for_claude\oee_machine_operator.js
+TOTAL SIGNAL HITS: 694
+MATCHED AREAS: OEE_MACHINE_API=27, MACHINE_OEE_FRONTEND=614, TOOL_USAGE=2, RECEIVE_MATERIAL=9, RUN_ID=35, SESSION_ID=7
+
+FILE: routes\quality_check.py
+TOTAL SIGNAL HITS: 440
+MATCHED AREAS: OEE_MACHINE_API=39, OEE_ENTRIES=51, OEE_MACHINES=21, OEE_MACHINE_SUMMARY=2, TOOL_MASTER=14, TOOL_UID=14, TOOL_ENTRIES=10, TOOLING_ENTRIES_API=1, TOOL_ENTRY_BATCH=40, TOOL_ISSUE=2, UID_PREFIX=28, RUN_ID=77, ACTIVITY_RUN_ID=55, SESSION_ID=45, MACHINE_LOSS_ENTRY_ID=30, STANDALONE=1, TOOL_ENTRY_TEXT=10
+
+FILE: _to_delete\oee_operator_for_claude\quality_check_oee_extract.py
+TOTAL SIGNAL HITS: 184
+MATCHED AREAS: OEE_MACHINE_API=19, OEE_ENTRIES=1, OEE_MACHINES=20, RUN_ID=59, SESSION_ID=85
+
+FILE: routes\oee_machine_summary.py
+TOTAL SIGNAL HITS: 88
+MATCHED AREAS: OEE_MACHINE_API=13, OEE_ENTRIES=21, OEE_MACHINES=9, OEE_MACHINE_SUMMARY=4, TOOL_MASTER=1, TOOL_UID=1, TOOL_ENTRIES=3, TOOL_ENTRY_BATCH=7, UID_PREFIX=4, RUN_ID=7, ACTIVITY_RUN_ID=6, MACHINE_LOSS_ENTRY_ID=6, STANDALONE=3, TOOL_ENTRY_TEXT=3
+
+FILE: patch_tooling_frontend_persistence_v5.py
+TOTAL SIGNAL HITS: 68
+MATCHED AREAS: OEE_MACHINE_API=3, MACHINE_OEE_FRONTEND=48, TOOLING_ENTRIES_API=3, TOOL_USAGE=1, RUN_ID=8, ACTIVITY_RUN_ID=4, TOOL_ENTRY_TEXT=1
+
+FILE: Claude outputs\oee_state_audit.py
+TOTAL SIGNAL HITS: 29
+MATCHED AREAS: OEE_MACHINE_API=2, OEE_ENTRIES=8, OEE_MACHINES=1, OEE_MACHINE_SUMMARY=9, RUN_ID=3, ACTIVITY_RUN_ID=5, SESSION_ID=1
+
+FILE: static\js\page3.js
+TOTAL SIGNAL HITS: 24
+MATCHED AREAS: OEE_MACHINE_API=2, OEE_MACHINES=1, RECEIVE_MATERIAL=21
+
+FILE: templates\oee_tool_list.html
+TOTAL SIGNAL HITS: 20
+MATCHED AREAS: OEE_MACHINE_API=11, TOOL_ISSUE=2, TOOL_RETURN=2, UID_PREFIX=5
+
+FILE: apply_live_oee_fix.py
+TOTAL SIGNAL HITS: 13
+MATCHED AREAS: OEE_MACHINE_API=1, OEE_ENTRIES=4, RUN_ID=1, SESSION_ID=7
+
+FILE: routes\oee.py
+TOTAL SIGNAL HITS: 12
+MATCHED AREAS: OEE_ENTRIES=8, OEE_MACHINES=4
+
+FILE: routes\oee_dashboard.py
+TOTAL SIGNAL HITS: 11
+MATCHED AREAS: OEE_ENTRIES=8, OEE_DASHBOARD=2, STANDALONE=1
+
+FILE: patch_tooling_save_message_v6.py
+TOTAL SIGNAL HITS: 10
+MATCHED AREAS: MACHINE_OEE_FRONTEND=10
+
+FILE: apply_step9.py
+TOTAL SIGNAL HITS: 5
+MATCHED AREAS: OEE_ENTRIES=3, OEE_MACHINE_SUMMARY=2
+
+FILE: routes\oee_persistence.py
+TOTAL SIGNAL HITS: 4
+MATCHED AREAS: OEE_ENTRIES=4
+
+FILE: templates\base.html
+TOTAL SIGNAL HITS: 4
+MATCHED AREAS: OEE_DASHBOARD=2, OEE_MACHINE_SUMMARY=2
+
+FILE: _backup\traceability_oee_20260821_124913\routes\quality_check.py
+TOTAL SIGNAL HITS: 3
+MATCHED AREAS: OEE_ENTRIES=2, OEE_MACHINES=1
+
+FILE: _to_delete\templates\oee_machine_summary.bak.20260912_094405.html
+TOTAL SIGNAL HITS: 3
+MATCHED AREAS: OEE_MACHINE_API=1, UID_PREFIX=1, TOOL_ENTRY_TEXT=1
+
+FILE: _to_delete\templates\oee_machine_summary.bak.20260912_094707.html
+TOTAL SIGNAL HITS: 3
+MATCHED AREAS: OEE_MACHINE_API=1, UID_PREFIX=1, TOOL_ENTRY_TEXT=1
+
+FILE: Claude outputs\oee_summary_draft-1.html
+TOTAL SIGNAL HITS: 3
+MATCHED AREAS: TOOL_ENTRY_TEXT=3
+
+FILE: templates\oee_machine_summary.html
+TOTAL SIGNAL HITS: 3
+MATCHED AREAS: OEE_MACHINE_API=1, UID_PREFIX=1, TOOL_ENTRY_TEXT=1
+
+FILE: app.py
+TOTAL SIGNAL HITS: 2
+MATCHED AREAS: OEE_DASHBOARD=1, OEE_MACHINE_SUMMARY=1
+
+FILE: Claude outputs\apply_dashboard_empty_states.py
+TOTAL SIGNAL HITS: 2
+MATCHED AREAS: OEE_DASHBOARD=2
+
+FILE: apply_step7.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_MACHINE_SUMMARY=1
+
+FILE: backup_pre_migration.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_ENTRIES=1
+
+FILE: Claude outputs\apply_dashboard_animejs.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_DASHBOARD=1
+
+FILE: Claude outputs\apply_dashboard_erpnext.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_DASHBOARD=1
+
+FILE: Claude outputs\apply_dashboard_frappe.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_DASHBOARD=1
+
+FILE: Claude outputs\apply_dashboard_option3.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_DASHBOARD=1
+
+FILE: Claude outputs\apply_dashboard_polish.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_DASHBOARD=1
+
+FILE: Claude outputs\oee_summary_draft.html
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: TOOL_ENTRY_TEXT=1
+
+FILE: Claude outputs\revert_dashboard_baseline.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_DASHBOARD=1
+
+FILE: oee_excel_bulk_test_runner.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: STANDALONE=1
+
+FILE: restore_pre_migration.py
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_ENTRIES=1
+
+FILE: static\css\oee_machine_operator.css
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: TOOL_ENTRY_TEXT=1
+
+FILE: static\js\jc_review.js
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: STANDALONE=1
+
+FILE: static\js\oee_machine_summary.js
+TOTAL SIGNAL HITS: 1
+MATCHED AREAS: OEE_MACHINE_API=1
+
+==============================================================================
+3. FILE ROLE MAP
+==============================================================================
+static\js\oee_machine_operator.js -> FRONTEND JAVASCRIPT - UI workflow and API calls
+_to_delete\oee_operator_for_claude\oee_machine_operator.js -> SUPPORTING SOURCE
+routes\quality_check.py -> BACKEND - Flask routes, API logic, validation and database access
+_to_delete\oee_operator_for_claude\quality_check_oee_extract.py -> SUPPORTING SOURCE
+routes\oee_machine_summary.py -> BACKEND - Flask routes, API logic, validation and database access
+patch_tooling_frontend_persistence_v5.py -> SUPPORTING SOURCE
+Claude outputs\oee_state_audit.py -> SUPPORTING SOURCE
+static\js\page3.js -> FRONTEND JAVASCRIPT - UI workflow and API calls
+templates\oee_tool_list.html -> FRONTEND PAGE - Jinja/HTML and possibly embedded JavaScript
+apply_live_oee_fix.py -> SUPPORTING SOURCE
+routes\oee.py -> BACKEND - Flask routes, API logic, validation and database access
+routes\oee_dashboard.py -> BACKEND - Flask routes, API logic, validation and database access
+patch_tooling_save_message_v6.py -> SUPPORTING SOURCE
+apply_step9.py -> SUPPORTING SOURCE
+routes\oee_persistence.py -> BACKEND - Flask routes, API logic, validation and database access
+templates\base.html -> FRONTEND PAGE - Jinja/HTML and possibly embedded JavaScript
+_backup\traceability_oee_20260821_124913\routes\quality_check.py -> SUPPORTING SOURCE
+_to_delete\templates\oee_machine_summary.bak.20260912_094405.html -> SUPPORTING SOURCE
+_to_delete\templates\oee_machine_summary.bak.20260912_094707.html -> SUPPORTING SOURCE
+Claude outputs\oee_summary_draft-1.html -> SUPPORTING SOURCE
+templates\oee_machine_summary.html -> FRONTEND PAGE - Jinja/HTML and possibly embedded JavaScript
+app.py -> FLASK APPLICATION / BLUEPRINT REGISTRATION
+Claude outputs\apply_dashboard_empty_states.py -> SUPPORTING SOURCE
+apply_step7.py -> SUPPORTING SOURCE
+backup_pre_migration.py -> SUPPORTING SOURCE
+Claude outputs\apply_dashboard_animejs.py -> SUPPORTING SOURCE
+Claude outputs\apply_dashboard_erpnext.py -> SUPPORTING SOURCE
+Claude outputs\apply_dashboard_frappe.py -> SUPPORTING SOURCE
+Claude outputs\apply_dashboard_option3.py -> SUPPORTING SOURCE
+Claude outputs\apply_dashboard_polish.py -> SUPPORTING SOURCE
+Claude outputs\oee_summary_draft.html -> SUPPORTING SOURCE
+Claude outputs\revert_dashboard_baseline.py -> SUPPORTING SOURCE
+oee_excel_bulk_test_runner.py -> SUPPORTING SOURCE
+restore_pre_migration.py -> SUPPORTING SOURCE
+static\css\oee_machine_operator.css -> FRONTEND CSS - page styling
+static\js\jc_review.js -> FRONTEND JAVASCRIPT - UI workflow and API calls
+static\js\oee_machine_summary.js -> FRONTEND JAVASCRIPT - UI workflow and API calls
+
+==============================================================================
+4. TOOL WORKFLOW RESPONSIBILITY MAP
+==============================================================================
+
+[TOOL MASTER]
+static\js\oee_machine_operator.js
+routes\quality_check.py
+routes\oee_machine_summary.py
+templates\oee_tool_list.html
+_to_delete\templates\oee_machine_summary.bak.20260912_094405.html
+_to_delete\templates\oee_machine_summary.bak.20260912_094707.html
+Claude outputs\oee_summary_draft-1.html
+templates\oee_machine_summary.html
+Claude outputs\oee_summary_draft.html
+
+[TOOL UID]
+static\js\oee_machine_operator.js
+_to_delete\oee_operator_for_claude\oee_machine_operator.js
+routes\quality_check.py
+routes\oee_machine_summary.py
+templates\oee_tool_list.html
+templates\base.html
+_to_delete\templates\oee_machine_summary.bak.20260912_094405.html
+_to_delete\templates\oee_machine_summary.bak.20260912_094707.html
+Claude outputs\oee_summary_draft-1.html
+templates\oee_machine_summary.html
+Claude outputs\oee_summary_draft.html
+
+[TOOL ENTRY]
+static\js\oee_machine_operator.js
+routes\quality_check.py
+routes\oee_machine_summary.py
+patch_tooling_frontend_persistence_v5.py
+_to_delete\templates\oee_machine_summary.bak.20260912_094405.html
+_to_delete\templates\oee_machine_summary.bak.20260912_094707.html
+Claude outputs\oee_summary_draft-1.html
+templates\oee_machine_summary.html
+Claude outputs\oee_summary_draft.html
+static\css\oee_machine_operator.css
+
+[TOOL ISSUE]
+routes\quality_check.py
+templates\oee_tool_list.html
+
+[TOOL USAGE]
+static\js\oee_machine_operator.js
+_to_delete\oee_operator_for_claude\oee_machine_operator.js
+patch_tooling_frontend_persistence_v5.py
+
+[TOOL RETURN]
+templates\oee_tool_list.html
+
+[RECEIVE MATERIAL]
+static\js\oee_machine_operator.js
+_to_delete\oee_operator_for_claude\oee_machine_operator.js
+static\js\page3.js
+
+==============================================================================
+5. ROUTES, FUNCTIONS AND VERSION MARKERS
+==============================================================================
+
+------------------------------------------------------------------------------
+FILE: static\js\oee_machine_operator.js
+------------------------------------------------------------------------------
+    21: /* MACHINE_OEE_JC_FETCH_V1_START */
+    34: function machineOeeEscapeV1(value) {
+    50: function machineOeeProcessCategoryV1(
+    83: function machineOeeRequiredQtyV1(
+   120: function machineOeeSetSearchEnabledV1(
+   168:                  * OEE_FOCUS_STEAL_FIX_V107
+   256:  * MACHINE_OEE_SHARED_PENDING_READ_V1
+   261: const machineOeePendingReadCacheV1 =
+   265: async function machineOeeGetPendingSharedV1(
+   373: window.machineOeeGetPendingSharedV1 =
+   377: async function machineOeeCheckPendingV1() {
+   550:             /* MACHINE_OEE_VOID_BUTTON_V1 */
+   647: async function machineOeeFetchJcV1() {
+   729:          * OEE_UI_CLEANUP_V57
+   734:         window.machineOeeUiFetchedDetailsV57 =
+  1062:                             Receive Material Required
+  1154:                             Receive Material
+  1175:                         machineOeeReceiveMaterialV1();
+  1202: /* MACHINE_OEE_JC_FETCH_V1_END */
+  1207: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_START */
+  1208: /* OEE_TOOL_RECEIVE_FIX_V124D */
+  1210: async function machineOeeReceiveMaterialV1() {
+  1358:                 || "Receive Material failed."
+  1378:             || "Receive Material failed.",
+  1385: window.machineOeeReceiveMaterialV1 =
+  1386:     machineOeeReceiveMaterialV1;
+  1393: const machineOeeFetchButtonV1 =
+  1399: const machineOeeJcInputV1 =
+  1481: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_END */
+  1486: /* MACHINE_OEE_START_RUN_V1_START */
+  1488: const MACHINE_OEE_SHIFT_STORAGE_V1 =
+  1489:     "jms_machine_oee_shift_v1";
+  1500: /* MACHINE_OEE_TWO_SHIFT_V21 */
+  1502: const MACHINE_OEE_SHIFT_TIMES_V11 = {
+  1516: /* MACHINE_OEE_HMS_INPUT_V18 */
+  1518: function machineOeeNormalizeHmsV18(
+  1610: function machineOeeShiftTimeStorageKeyV11(
+  1633: function machineOeeShiftDurationMinutesV11(
+  1755: function machineOeeUpdateShiftDurationV11() {
+  1848: function machineOeeApplyShiftTimesV11(
+  1874:         MACHINE_OEE_SHIFT_TIMES_V11[
+  1903:     /* MACHINE_OEE_SHIFT_DEFAULT_REFRESH_V22 */
+  1937: async function machineOeeLoadShift1OverrideV2() {
+  2050:                 || MACHINE_OEE_SHIFT_TIMES_V11[
+  2104: window.machineOeeLoadShift1OverrideV2 =
+  2137: async function machineOeePersistShift1OverrideV4() {
+  2367: window.machineOeePersistShift1OverrideV4 =
+  2371: function machineOeeSaveShiftTimeV11(
+  2486: function machineOeeInitShiftV1() {
+  2542:             MACHINE_OEE_SHIFT_STORAGE_V1
+  2588:                     MACHINE_OEE_SHIFT_STORAGE_V1,
+  2595:                     MACHINE_OEE_SHIFT_STORAGE_V1
+  2611:             if (typeof window.machineOeeEnsureSessionV1 === "function") {
+  2612:                 window.machineOeeEnsureSessionV1();
+  2653: window.machineOeeGetShiftTimingV11 =
+  2700: function machineOeeRenderRunningRunV1(
+  3020: async function machineOeeStartRunV1() {
+  3092:         MACHINE_OEE_SHIFT_STORAGE_V1,
+  3204:          * MACHINE_OEE_START_PERSISTENCE_GUARD_V37
+  3313: const machineOeeFetchJcBaseStartV1 =
+  3318:     async function machineOeeFetchJcStartEnhancedV1() {
+  3384: /* MACHINE_OEE_ENSURE_SESSION_V1 */
+  3385: async function machineOeeEnsureSessionV1() {
+  3400: window.machineOeeEnsureSessionV1 = machineOeeEnsureSessionV1;
+  3406: /* MACHINE_OEE_START_RUN_V1_END */
+  3411: /* MACHINE_OEE_PRODUCTION_ENTRY_V1_START */
+  3418: function machineOeeRenderProductionEntryV1(
+  3442:      * MACHINE_OEE_JMS_UI_CONSISTENCY_V33
+  3615: async function machineOeeSaveProductionV1() {
+  3779: const machineOeeRenderRunningRunBaseProdV1 =
+  3784:     function machineOeeRenderRunningWithProductionV1(
+  3806: const machineOeeCheckPendingBaseProdV1 =
+  3811:     async function machineOeeCheckPendingProductionV1() {
+  3831: /* MACHINE_OEE_PRODUCTION_ENTRY_V1_END */
+  3836: /* MACHINE_OEE_LOSS_ENTRY_V1_START */
+  3853: async function machineOeeLoadLossMasterV1() {
+  3901: async function machineOeeRenderLossEntryV1(
+  3928: async function machineOeeRefreshLossListV1() {
+  3933: async function machineOeeAddLossV1() {
+  3938: async function machineOeeRemoveLossV1(
+  3952: async function machineOeeDeleteLossV1(
+  3962: /* MACHINE_OEE_LOSS_ENTRY_V1_END */
+  3967: /* MACHINE_OEE_RESUME_RUNNING_UI_V1_START */
+  3977: async function machineOeeResumeRunningUiV1() {
+  4079: /* MACHINE_OEE_RESUME_RUNNING_UI_V1_END */
+  4084: /* MACHINE_OEE_LIVE_PANEL_V1_START */
+  4087: function machineOeePctV1(
+  4110: function machineOeeNumV1(
+  4134: async function machineOeeRefreshLiveCalcV1() {
+  4380: const machineOeeSaveProductionBaseCalcV1 =
+  4385:     async function machineOeeSaveProductionCalcV1() {
+  4397: const machineOeeAddLossBaseCalcV1 =
+  4402:     async function machineOeeAddLossCalcV1() {
+  4414: const machineOeeRemoveLossBaseCalcV1 =
+  4419:     async function machineOeeRemoveLossCalcV1(
+  4441: const machineOeeRenderRunningBaseCalcV1 =
+  4446:     function machineOeeRenderRunningCalcV1(
+  4462: /* MACHINE_OEE_LIVE_PANEL_V1_END */
+  4467: /* OEE_OPERATOR_TEXTBOX_AND_LIVE_KPI_V25 */
+  4474:     return "jms_oee_actual_operator_v1_m" + _mid;
+  4490: function machineOeeActualOperatorIdV1() {
+  4513: function machineOeeActualOperatorEmployeeNoV25() {
+  4523: function machineOeeNormalizeOperatorNameV25(
+  4540: function machineOeeSaveActualOperatorV25(
+  4567: function machineOeeFillOperatorFieldsV25(
+  4609: function machineOeeResolveCodeV25() {
+  4687: function machineOeeResolveNameV25() {
+  4763: async function machineOeeInitActualOperatorV1() {
+  5067: /* MACHINE_OEE_OPERATION_COMPLETE_V1_START */
+  5074: function machineOeeFinalProductionV1() {
+  5163: function machineOeeRenderCompleteActionV1(
+  5181: async function machineOeeCompletionContextV1(
+  5254: async function machineOeeCompleteOperationV1() {
+  5293:      * OEE_CORE_REASON_RUN_STORAGE_V50
+  5358:     /* OEE_CORE_REMOVE_HOLD_ZERO_BLOCK_V51 */
+  5618:          * MACHINE_OEE_STAY_AFTER_COMPLETE_V12
+  5661: const machineOeeRenderLossBaseCompleteV1 =
+  5666:     async function machineOeeRenderLossCompleteV1(
+  5681: /* MACHINE_OEE_OPERATION_COMPLETE_V1_END */
+  5686: /* MACHINE_OEE_SAFE_JSON_V2_START */
+  5697: async function machineOeeReadApiResponseV2(
+  5765: /* MACHINE_OEE_SAFE_JSON_V2_END */
+  5770: /* MACHINE_OEE_RUN_COMPLETION_CONTEXT_V2_START */
+  5783:     async function machineOeeCompletionContextRunV2(
+  5840: /* MACHINE_OEE_RUN_COMPLETION_CONTEXT_V2_END */
+  5845: /* MACHINE_OEE_READY_BUTTON_FIX_V3 */
+  5856: function machineOeeWireReadyStartV3() {
+  6087: const machineOeeReadyObserverV3 =
+  6114: /* OEE_CORE_FLOW_CLEANUP_V1 - DUPLICATE_SMART_ACTION_REMOVED */
+  6117:    MACHINE_OEE_JOBCARD_NATIVE_V1
+  7017:    MACHINE_OEE_JOBCARD_NATIVE_V1_END
+  7034:    MACHINE_OEE_DIRECT_ENTRY_V3
+  7425:                         <!-- MACHINE_OEE_QTY_COUNTERS_V8 -->
+  8331:      * MACHINE_OEE_COMPLETION_CONTEXT_SHARED_V1
+  8339:     const machineOeeCompletionContextCacheSharedV1 =
+  8343:     async function machineOeeGetCompletionContextSharedV1(
+  8436:     window.machineOeeGetCompletionContextSharedV1 =
+  8452:          * MACHINE_OEE_CONTEXT_CACHE_V35
+  9010:     /* MACHINE_OEE_COMMON_LOSS_UI_V16 */
+  9620:                     /* MACHINE_OEE_LOSS_RENDER_MINUTES_V41 */
+ 10202:     window.machineOeeDirectLoadMachineLossesV13 =
+ 10206:     /* OEE_ACTIVITY_SHARED_NO_JC_SAVE_V91 */
+ 10654:         /* OEE_ACTIVITY_OPERATOR_PAYLOAD_V92 */
+ 11056:     window.machineOeeDirectSaveMachineLossesV13 =
+ 11060:     window.machineOeeDirectResetMachineLossesV13 =
+ 11069:      * OEE_CORE_COMPLETE_SAVE_V44
+ 11076:     window.machineOeeSaveCurrentRunLossesCoreV44 =
+ 11099:              * OEE_COMPLETE_LOSSES_GUARD_V44
+ 12027:        MACHINE_OEE_REASON_AND_ACTIVE_LOCK_V9
+ 12031:     function machineOeeReasonOptionsV9(
+ 12066:     function machineOeeBuildReasonControlV9(
+ 12248:     function machineOeeEnsureReasonFieldsV9() {
+ 12439:     function machineOeeToggleReasonOtherV9(
+ 12492:     function machineOeeReasonValueV9(
+ 12545:     function machineOeeResetReasonV9(
+ 12589:     function machineOeeUpdateReasonRowsV9() {
+ 12713:     const machineOeeQtyUpdateBaseV9 =
+ 12747:     function machineOeeApplyActiveMachineLockV9() {
+ 12999:     const machineOeeLockHostV9 =
+ 13007:         const machineOeeLockObserverV9 =
+ 13282:     /* MACHINE_OEE_DIRECT_RUN_BRIDGE_V38 */
+ 13420:     window.machineOeeBuildReasonControlV9 =
+ 13423:     window.machineOeeReasonValueV9 =
+ 13426:     window.machineOeeResetReasonV9 =
+ 13434:    MACHINE_OEE_DIRECT_ENTRY_V3_END
+ 13451: /* MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13 */
+ 13879:             /* OEE_NO_JC_LOSS_TOAST_V52 */
+ 14099: /* MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13_END */
+ 14103: /* MACHINE_OEE_HMS_CUSTOM_V20 */
+ 14107:     function machineOeeHmsPrefixValidV20(
+ 14160:     function machineOeeHmsFormatDigitsV20(
+ 14222:     function machineOeeHmsDigitsV20(
+ 14234:     function machineOeeMoveCaretEndV20(
+ 14261:     function machineOeeWireHmsV20(
+ 14534:     function machineOeeApplyHmsV20(
+ 14651: /* MACHINE_OEE_JC_FETCH_MODE_LOCK_V26 */
+ 14659:     function machineOeeNoJcStartV26() {
+ 14667:     function machineOeeNoJcEndV26() {
+ 14675:     function machineOeeJcInputV26() {
+ 14683:     function machineOeeFetchButtonV26() {
+ 14691:     function machineOeeHasNoJcTimeV26() {
+ 14717:     function machineOeeHasJcModeV26() {
+ 14762:     function machineOeeSetLossTimeDisabledV26(
+ 14799:     function machineOeeSetJcDisabledV26(
+ 14866:     function machineOeeApplyEntryModeV26() {
+ 15140:     window.machineOeeApplyEntryModeV26 =
+ 15147: /* MACHINE_OEE_INLINE_MACHINE_SWITCH_V27 */
+ 15151:     function machineOeeEscapeMachineV27(
+ 15185:     function machineOeeMachineHostV27() {
+ 15235:     function machineOeeSwitchV27(
+ 15307:     async function machineOeeLoadMachinesV27() {
+ 15603:     window.machineOeeSwitchV27 =
+ 15616: /* MACHINE_OEE_RUNNING_UI_REPAIR_V29 */
+ 15620:     function machineOeeRunningRunV29() {
+ 15639:     function machineOeeRepairRunningUiV29() {
+ 15808:     window.machineOeeRepairRunningUiV29 =
+ 15825: /* MACHINE_OEE_MODE_VISIBILITY_AND_LIVE_RIGHT_V31 */
+ 15885:          * MACHINE_OEE_START_PERSISTENCE_GUARD_V37
+ 16123:         typeof window.machineOeeApplyEntryModeV26
+ 16128:             window.machineOeeApplyEntryModeV26;
+ 16131:         window.machineOeeApplyEntryModeV26 =
+ 16165:     window.machineOeeSyncModeVisibilityV31 =
+ 16190: /* MACHINE_OEE_SAVE_CONFIRM_AND_KPI_V32 */
+ 16198:     function machineOeePctV32(
+ 16238:     function machineOeeShowDbToastV32(
+ 16317:      * PERFORMANCE_FIX_LIVE_OEE_SHARED_V1
+ 16324:     const machineOeeLiveOeePendingV1 =
+ 16328:     async function machineOeeGetLiveOeeSharedV1(
+ 16409:     async function machineOeeRefreshLiveV32() {
+ 16411:         /* MACHINE_OEE_LIVE_RUN_REHYDRATE_V42 */
+ 16757:     window.machineOeeRefreshLiveCalcV1 =
+ 16767:     function machineOeeSyncSaveFeedbackV32() {
+ 16963: /* MACHINE_OEE_JMS_TOAST_BRIDGE_V33 */
+ 16967:     window.machineOeeShowDbToastV32 =
+ 17015: /* MACHINE_OEE_DURATION_HMS_V34 */
+ 17473:              * OEE_CYCLE_LOAD_TIME_ENTRY_V111
+ 17872:     window.machineOeeWireDurationsV34 =
+ 17892: /* OEE_CORE_CURRENT_SESSION_KPI_FRONTEND_V47 */
+ 18493:     window.machineOeeRefreshLiveCalcV1 =
+ 18497:     window.machineOeeRefreshStoredSessionV47 =
+ 18574: /* OEE_CORE_CURRENT_SESSION_KPI_FRONTEND_V47_END */
+ 18577: /* OEE_CORE_TYPED_KPI_PREVIEW_FRONTEND_V48 */
+ 18899:          * MACHINE_OEE_LOCAL_KPI_PREVIEW_V1
+ 19601:     window.machineOeeRefreshTypedKpiV48 =
+ 19612: /* OEE_CORE_TYPED_KPI_PREVIEW_FRONTEND_V48_END */
+ 19615: /* OEE_CORE_REASON_STATE_V49 */
+ 19626:         window.machineOeeReasonStateV49
+ 19640:     window.machineOeeReasonStateV49 =
+ 19833:         window.machineOeeBuildReasonControlV9;
+ 19836:     window.machineOeeBuildReasonControlV9 =
+ 19871:         window.machineOeeReasonValueV9;
+ 19874:     window.machineOeeReasonValueV9 =
+ 19926:         window.machineOeeResetReasonV9;
+ 19929:     window.machineOeeResetReasonV9 =
+ 19959: /* OEE_CORE_REASON_STATE_V49_END */
+ 19962: /* OEE_CORE_REASON_RUN_STORAGE_V50 */
+ 20031:             "nmtg_oee_reason_v50_"
+ 20228:     window.machineOeeCoreReasonValueV50 =
+ 20377: /* OEE_CORE_REASON_RUN_STORAGE_V50_END */
+ 20380: /* OEE_UI_CLEANUP_V58 */
+ 20701:             window.machineOeeUiDataV58
+ 20761:                     window.machineOeeUiDataV58 = {
+ 21348:        Receive Material warning is deliberately untouched
+ 21603:     window.machineOeeUiApplyV58 =
+ 21626: /* OEE_UI_CLEANUP_V58_END */
+ 21630:    OEE_COMPACT_MACHINE_KPI_BAR_V59
+ 21864: /* OEE_COMPACT_MACHINE_KPI_BAR_V59_END */
+ 21867: /* OEE_FIRST_TWO_SECTIONS_V61 */
+ 22138:                         window.machineOeeReadApiResponseV2
+ 22460: /* MACHINE_OEE_TOOL_ENTRY_V1_START */
+... OUTPUT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: _to_delete\oee_operator_for_claude\oee_machine_operator.js
+------------------------------------------------------------------------------
+    21: /* MACHINE_OEE_JC_FETCH_V1_START */
+    34: function machineOeeEscapeV1(value) {
+    50: function machineOeeProcessCategoryV1(
+    83: function machineOeeRequiredQtyV1(
+   120: function machineOeeSetSearchEnabledV1(
+   180:  * MACHINE_OEE_SHARED_PENDING_READ_V1
+   185: const machineOeePendingReadCacheV1 =
+   189: async function machineOeeGetPendingSharedV1(
+   297: window.machineOeeGetPendingSharedV1 =
+   301: async function machineOeeCheckPendingV1() {
+   474:             /* MACHINE_OEE_VOID_BUTTON_V1 */
+   575: async function machineOeeFetchJcV1() {
+   663:          * OEE_UI_CLEANUP_V57
+   668:         window.machineOeeUiFetchedDetailsV57 =
+   996:                             Receive Material Required
+  1088:                                 machineOeeReceiveMaterialV1()
+  1091:                             Receive Material
+  1125: /* MACHINE_OEE_JC_FETCH_V1_END */
+  1130: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_START */
+  1132: async function machineOeeReceiveMaterialV1() {
+  1286:                 || "Receive Material failed."
+  1310:                     || "Receive Material failed."
+  1323: const machineOeeFetchButtonV1 =
+  1329: const machineOeeJcInputV1 =
+  1411: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_END */
+  1416: /* MACHINE_OEE_START_RUN_V1_START */
+  1418: const MACHINE_OEE_SHIFT_STORAGE_V1 =
+  1419:     "jms_machine_oee_shift_v1";
+  1430: /* MACHINE_OEE_TWO_SHIFT_V21 */
+  1432: const MACHINE_OEE_SHIFT_TIMES_V11 = {
+  1446: /* MACHINE_OEE_HMS_INPUT_V18 */
+  1448: function machineOeeNormalizeHmsV18(
+  1540: function machineOeeShiftTimeStorageKeyV11(
+  1563: function machineOeeShiftDurationMinutesV11(
+  1685: function machineOeeUpdateShiftDurationV11() {
+  1778: function machineOeeApplyShiftTimesV11(
+  1804:         MACHINE_OEE_SHIFT_TIMES_V11[
+  1833:     /* MACHINE_OEE_SHIFT_DEFAULT_REFRESH_V22 */
+  1865: function machineOeeSaveShiftTimeV11(
+  1929: function machineOeeInitShiftV1() {
+  1985:             MACHINE_OEE_SHIFT_STORAGE_V1
+  2025:                     MACHINE_OEE_SHIFT_STORAGE_V1,
+  2032:                     MACHINE_OEE_SHIFT_STORAGE_V1
+  2041:             if (typeof window.machineOeeEnsureSessionV1 === "function") {
+  2042:                 window.machineOeeEnsureSessionV1();
+  2083: window.machineOeeGetShiftTimingV11 =
+  2130: function machineOeeRenderRunningRunV1(
+  2463: async function machineOeeStartRunV1() {
+  2539:         MACHINE_OEE_SHIFT_STORAGE_V1,
+  2651:          * MACHINE_OEE_START_PERSISTENCE_GUARD_V37
+  2779: const machineOeeFetchJcBaseStartV1 =
+  2784:     async function machineOeeFetchJcStartEnhancedV1() {
+  2850: /* MACHINE_OEE_ENSURE_SESSION_V1 */
+  2851: async function machineOeeEnsureSessionV1() {
+  2866: window.machineOeeEnsureSessionV1 = machineOeeEnsureSessionV1;
+  2872: /* MACHINE_OEE_START_RUN_V1_END */
+  2877: /* MACHINE_OEE_PRODUCTION_ENTRY_V1_START */
+  2884: function machineOeeRenderProductionEntryV1(
+  2908:      * MACHINE_OEE_JMS_UI_CONSISTENCY_V33
+  3081: async function machineOeeSaveProductionV1() {
+  3249: const machineOeeRenderRunningRunBaseProdV1 =
+  3254:     function machineOeeRenderRunningWithProductionV1(
+  3276: const machineOeeCheckPendingBaseProdV1 =
+  3281:     async function machineOeeCheckPendingProductionV1() {
+  3301: /* MACHINE_OEE_PRODUCTION_ENTRY_V1_END */
+  3306: /* MACHINE_OEE_LOSS_ENTRY_V1_START */
+  3323: async function machineOeeLoadLossMasterV1() {
+  3371: async function machineOeeRenderLossEntryV1(
+  3398: async function machineOeeRefreshLossListV1() {
+  3403: async function machineOeeAddLossV1() {
+  3408: async function machineOeeRemoveLossV1(
+  3422: async function machineOeeDeleteLossV1(
+  3432: /* MACHINE_OEE_LOSS_ENTRY_V1_END */
+  3437: /* MACHINE_OEE_RESUME_RUNNING_UI_V1_START */
+  3447: async function machineOeeResumeRunningUiV1() {
+  3549: /* MACHINE_OEE_RESUME_RUNNING_UI_V1_END */
+  3554: /* MACHINE_OEE_LIVE_PANEL_V1_START */
+  3557: function machineOeePctV1(
+  3580: function machineOeeNumV1(
+  3604: async function machineOeeRefreshLiveCalcV1() {
+  3865: const machineOeeSaveProductionBaseCalcV1 =
+  3870:     async function machineOeeSaveProductionCalcV1() {
+  3882: const machineOeeAddLossBaseCalcV1 =
+  3887:     async function machineOeeAddLossCalcV1() {
+  3899: const machineOeeRemoveLossBaseCalcV1 =
+  3904:     async function machineOeeRemoveLossCalcV1(
+  3926: const machineOeeRenderRunningBaseCalcV1 =
+  3931:     function machineOeeRenderRunningCalcV1(
+  3947: /* MACHINE_OEE_LIVE_PANEL_V1_END */
+  3952: /* OEE_OPERATOR_TEXTBOX_AND_LIVE_KPI_V25 */
+  3959:     return "jms_oee_actual_operator_v1_m" + _mid;
+  3975: function machineOeeActualOperatorIdV1() {
+  3998: function machineOeeActualOperatorEmployeeNoV25() {
+  4008: function machineOeeNormalizeOperatorNameV25(
+  4025: function machineOeeSaveActualOperatorV25(
+  4052: function machineOeeFillOperatorFieldsV25(
+  4094: function machineOeeResolveCodeV25() {
+  4172: function machineOeeResolveNameV25() {
+  4248: async function machineOeeInitActualOperatorV1() {
+  4538: /* MACHINE_OEE_OPERATION_COMPLETE_V1_START */
+  4545: function machineOeeFinalProductionV1() {
+  4634: function machineOeeRenderCompleteActionV1(
+  4652: async function machineOeeCompletionContextV1(
+  4725: async function machineOeeCompleteOperationV1() {
+  4764:      * OEE_CORE_REASON_RUN_STORAGE_V50
+  4829:     /* OEE_CORE_REMOVE_HOLD_ZERO_BLOCK_V51 */
+  5102:          * MACHINE_OEE_STAY_AFTER_COMPLETE_V12
+  5147: const machineOeeRenderLossBaseCompleteV1 =
+  5152:     async function machineOeeRenderLossCompleteV1(
+  5167: /* MACHINE_OEE_OPERATION_COMPLETE_V1_END */
+  5172: /* MACHINE_OEE_SAFE_JSON_V2_START */
+  5183: async function machineOeeReadApiResponseV2(
+  5251: /* MACHINE_OEE_SAFE_JSON_V2_END */
+  5256: /* MACHINE_OEE_RUN_COMPLETION_CONTEXT_V2_START */
+  5269:     async function machineOeeCompletionContextRunV2(
+  5326: /* MACHINE_OEE_RUN_COMPLETION_CONTEXT_V2_END */
+  5331: /* MACHINE_OEE_READY_BUTTON_FIX_V3 */
+  5342: function machineOeeWireReadyStartV3() {
+  5575: const machineOeeReadyObserverV3 =
+  5602: /* OEE_CORE_FLOW_CLEANUP_V1 - DUPLICATE_SMART_ACTION_REMOVED */
+  5605:    MACHINE_OEE_JOBCARD_NATIVE_V1
+  6505:    MACHINE_OEE_JOBCARD_NATIVE_V1_END
+  6522:    MACHINE_OEE_DIRECT_ENTRY_V3
+  6913:                         <!-- MACHINE_OEE_QTY_COUNTERS_V8 -->
+  7819:      * MACHINE_OEE_COMPLETION_CONTEXT_SHARED_V1
+  7827:     const machineOeeCompletionContextCacheSharedV1 =
+  7831:     async function machineOeeGetCompletionContextSharedV1(
+  7924:     window.machineOeeGetCompletionContextSharedV1 =
+  7940:          * MACHINE_OEE_CONTEXT_CACHE_V35
+  8498:     /* MACHINE_OEE_COMMON_LOSS_UI_V16 */
+  9108:                     /* MACHINE_OEE_LOSS_RENDER_MINUTES_V41 */
+  9690:     window.machineOeeDirectLoadMachineLossesV13 =
+  9694:     window.machineOeeDirectSaveMachineLossesV13 =
+  9698:     window.machineOeeDirectResetMachineLossesV13 =
+  9707:      * OEE_CORE_COMPLETE_SAVE_V44
+  9714:     window.machineOeeSaveCurrentRunLossesCoreV44 =
+  9737:              * OEE_COMPLETE_LOSSES_GUARD_V44
+ 10686:        MACHINE_OEE_REASON_AND_ACTIVE_LOCK_V9
+ 10690:     function machineOeeReasonOptionsV9(
+ 10725:     function machineOeeBuildReasonControlV9(
+ 10907:     function machineOeeEnsureReasonFieldsV9() {
+ 11098:     function machineOeeToggleReasonOtherV9(
+ 11151:     function machineOeeReasonValueV9(
+ 11204:     function machineOeeResetReasonV9(
+ 11248:     function machineOeeUpdateReasonRowsV9() {
+ 11372:     const machineOeeQtyUpdateBaseV9 =
+ 11406:     function machineOeeApplyActiveMachineLockV9() {
+ 11658:     const machineOeeLockHostV9 =
+ 11666:         const machineOeeLockObserverV9 =
+ 11941:     /* MACHINE_OEE_DIRECT_RUN_BRIDGE_V38 */
+ 12079:     window.machineOeeBuildReasonControlV9 =
+ 12082:     window.machineOeeReasonValueV9 =
+ 12085:     window.machineOeeResetReasonV9 =
+ 12093:    MACHINE_OEE_DIRECT_ENTRY_V3_END
+ 12110: /* MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13 */
+ 12544:             /* OEE_NO_JC_LOSS_TOAST_V52 */
+ 12739: /* MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13_END */
+ 12743: /* MACHINE_OEE_HMS_CUSTOM_V20 */
+ 12747:     function machineOeeHmsPrefixValidV20(
+ 12800:     function machineOeeHmsFormatDigitsV20(
+ 12862:     function machineOeeHmsDigitsV20(
+ 12874:     function machineOeeMoveCaretEndV20(
+ 12901:     function machineOeeWireHmsV20(
+ 13174:     function machineOeeApplyHmsV20(
+ 13291: /* MACHINE_OEE_JC_FETCH_MODE_LOCK_V26 */
+ 13299:     function machineOeeNoJcStartV26() {
+ 13307:     function machineOeeNoJcEndV26() {
+ 13315:     function machineOeeJcInputV26() {
+ 13323:     function machineOeeFetchButtonV26() {
+ 13331:     function machineOeeHasNoJcTimeV26() {
+ 13357:     function machineOeeHasJcModeV26() {
+ 13402:     function machineOeeSetLossTimeDisabledV26(
+ 13439:     function machineOeeSetJcDisabledV26(
+ 13506:     function machineOeeApplyEntryModeV26() {
+ 13780:     window.machineOeeApplyEntryModeV26 =
+ 13787: /* MACHINE_OEE_INLINE_MACHINE_SWITCH_V27 */
+ 13791:     function machineOeeEscapeMachineV27(
+ 13825:     function machineOeeMachineHostV27() {
+ 13875:     function machineOeeSwitchV27(
+ 13947:     async function machineOeeLoadMachinesV27() {
+ 14252:     window.machineOeeSwitchV27 =
+ 14265: /* MACHINE_OEE_RUNNING_UI_REPAIR_V29 */
+ 14269:     function machineOeeRunningRunV29() {
+ 14288:     function machineOeeRepairRunningUiV29() {
+ 14457:     window.machineOeeRepairRunningUiV29 =
+ 14476: /* MACHINE_OEE_MANUAL_RUN_TIME_V30 */
+ 14650: /* MACHINE_OEE_MODE_VISIBILITY_AND_LIVE_RIGHT_V31 */
+ 14710:          * MACHINE_OEE_START_PERSISTENCE_GUARD_V37
+ 14948:         typeof window.machineOeeApplyEntryModeV26
+ 14953:             window.machineOeeApplyEntryModeV26;
+ 14956:         window.machineOeeApplyEntryModeV26 =
+ 14990:     window.machineOeeSyncModeVisibilityV31 =
+ 15015: /* MACHINE_OEE_SAVE_CONFIRM_AND_KPI_V32 */
+ 15023:     function machineOeePctV32(
+ 15063:     function machineOeeShowDbToastV32(
+ 15142:      * PERFORMANCE_FIX_LIVE_OEE_SHARED_V1
+ 15149:     const machineOeeLiveOeePendingV1 =
+ 15153:     async function machineOeeGetLiveOeeSharedV1(
+ 15234:     async function machineOeeRefreshLiveV32() {
+ 15236:         /* MACHINE_OEE_LIVE_RUN_REHYDRATE_V42 */
+ 15608:     window.machineOeeRefreshLiveCalcV1 =
+ 15618:     function machineOeeSyncSaveFeedbackV32() {
+ 15810: /* MACHINE_OEE_JMS_TOAST_BRIDGE_V33 */
+ 15814:     window.machineOeeShowDbToastV32 =
+ 15862: /* MACHINE_OEE_DURATION_HMS_V34 */
+ 16537:     window.machineOeeWireDurationsV34 =
+ 16557: /* OEE_CORE_CURRENT_SESSION_KPI_FRONTEND_V47 */
+ 17158:     window.machineOeeRefreshLiveCalcV1 =
+ 17162:     window.machineOeeRefreshStoredSessionV47 =
+ 17239: /* OEE_CORE_CURRENT_SESSION_KPI_FRONTEND_V47_END */
+ 17242: /* OEE_CORE_TYPED_KPI_PREVIEW_FRONTEND_V48 */
+ 17564:          * MACHINE_OEE_LOCAL_KPI_PREVIEW_V1
+ 18266:     window.machineOeeRefreshTypedKpiV48 =
+ 18277: /* OEE_CORE_TYPED_KPI_PREVIEW_FRONTEND_V48_END */
+ 18280: /* OEE_CORE_REASON_STATE_V49 */
+ 18291:         window.machineOeeReasonStateV49
+ 18305:     window.machineOeeReasonStateV49 =
+ 18498:         window.machineOeeBuildReasonControlV9;
+ 18501:     window.machineOeeBuildReasonControlV9 =
+ 18536:         window.machineOeeReasonValueV9;
+ 18539:     window.machineOeeReasonValueV9 =
+ 18591:         window.machineOeeResetReasonV9;
+ 18594:     window.machineOeeResetReasonV9 =
+ 18624: /* OEE_CORE_REASON_STATE_V49_END */
+ 18627: /* OEE_CORE_REASON_RUN_STORAGE_V50 */
+ 18696:             "nmtg_oee_reason_v50_"
+ 18893:     window.machineOeeCoreReasonValueV50 =
+ 19042: /* OEE_CORE_REASON_RUN_STORAGE_V50_END */
+ 19045: /* OEE_UI_CLEANUP_V58 */
+ 19342:             window.machineOeeUiDataV58
+ 19402:                     window.machineOeeUiDataV58 = {
+ 19989:        Receive Material warning is deliberately untouched
+ 20244:     window.machineOeeUiApplyV58 =
+ 20267: /* OEE_UI_CLEANUP_V58_END */
+ 20271:    OEE_COMPACT_MACHINE_KPI_BAR_V59
+ 20505: /* OEE_COMPACT_MACHINE_KPI_BAR_V59_END */
+ 20508: /* OEE_FIRST_TWO_SECTIONS_V61 */
+ 20779:                         window.machineOeeReadApiResponseV2
+ 21101: /* MACHINE_OEE_TOOL_ENTRY_V1_START */
+ 21105:     const TOOL_HOST_ID_V1 =
+ 21109:     function machineOeeToolEscapeV1(
+ 21127:     function machineOeeToolRowHtmlV1(
+ 21275:     function machineOeeToolRenumberV1(
+ 21348:     function machineOeeToolBindRowV1(
+ 21398:     function machineOeeToolAddRowV1(
+ 21469:     function machineOeeToolBuildV1() {
+ 21478:             TOOL_HOST_ID_V1;
+ 21599:     function machineOeeToolFindAnchorV1() {
+ 21673:     function machineOeeToolSyncV1() {
+ 21681:                 TOOL_HOST_ID_V1
+... OUTPUT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: routes\quality_check.py
+------------------------------------------------------------------------------
+    32: def _can_access_tool_uid_register():
+    58: def _inject_can_tool_uid():
+   674: @quality_check_bp.route("/api/quality_check/fetch/<path:job_card_no>", methods=["GET"])
+  1058: # @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+  2211:         # MACHINE_OEE_OPERATION_COMPLETE_V1_PREP
+  2243:                 _get_oee_zone_login_v1(
+  2445:         # OEE_COMPLETION_INTEGRATION_V1
+  2449:         # OEE_PROCESS_PREFIX_SUPPORT_V1
+  3210:         # MACHINE_OEE_OPERATION_COMPLETE_V1_FINALIZE
+  3329: @quality_check_bp.route(
+  3489: @quality_check_bp.route("/api/wip/update", methods=["POST"])
+  3491:     # MACHINE_OEE_WIP_JSON_SAFETY_V2
+  3512: @quality_check_bp.route(
+  3635: @quality_check_bp.route(
+  4218:             # OEE_UNDO_INTEGRATION_V1
+  4372: @quality_check_bp.route("/api/quality_check", methods=["POST"])
+  4503: @quality_check_bp.route(
+  4532: @quality_check_bp.route("/api/wip/subcontract", methods=["POST"])
+  4810: @quality_check_bp.route("/api/wip/subcontract_complete", methods=["POST"])
+  4999: @quality_check_bp.route("/api/wip/rollback", methods=["POST"])
+  5128: @quality_check_bp.route("/api/revoke/list/<path:job_card_no>", methods=["GET"])
+  5169: @quality_check_bp.route("/api/revoke/advance-rework", methods=["POST"])
+  5237: @quality_check_bp.route("/api/revoke/merge", methods=["POST"])
+  5322: @quality_check_bp.route("/api/wip/remove_process", methods=["POST"])
+  5625: @quality_check_bp.route("/api/dashboard/overdue-c-parent-status", methods=["GET"])
+  5924: @quality_check_bp.route("/api/wip/check-c-child-gate/<job_card_no>", methods=["GET"])
+  6298: @quality_check_bp.route("/api/operator/job_cards", methods=["GET"])
+  7039: # MACHINE_OEE_WORKSPACE_V1
+  7040: @quality_check_bp.route(
+  7044: def oee_machine_workspace_v1():
+  7215: @quality_check_bp.route(
+  7219: def oee_machine_selection_v1():
+  7511: # MACHINE_OEE_OPERATOR_PAGE_V1
+  7512: @quality_check_bp.route(
+  7516: def machine_oee_operator_page_v1():
+  7572:                 _zone = _get_oee_zone_login_v1(_zcursor)
+  7585:                                 "quality_check.machine_oee_operator_page_v1",
+  7695:         # OEE_ZONE_MACHINE_PAGE_ACCESS_V1
+  7697:             _get_oee_zone_login_v1(
+  7884: # OEE_SELECTED_MACHINE_SUPERVISOR_UI_V98
+  7887: # MACHINE_OEE_PENDING_CHECK_V1
+  7888: @quality_check_bp.route(
+  7892: def machine_oee_pending_check_v1(machine_id):
+  8135: # MACHINE_OEE_START_RUN_V1
+  8136: @quality_check_bp.route(
+  8140: def machine_oee_start_run_v1():
+  8247:         # MACHINE_OEE_DATABASE_GUARD_V37
+  8338:         # OEE_OPERATOR_MASTER_START_RUN_V24
+  8354:             _get_oee_zone_login_v1(
+  8389:                     _oee_operator_master_resolve_v24(
+  8940:         # MACHINE_OEE_START_PERSISTENCE_GUARD_V37
+  9034: # MACHINE_OEE_RUN_VOID_V1
+  9035: @quality_check_bp.route(
+  9039: def machine_oee_void_run_v1(run_id):
+  9133: # MACHINE_OEE_RUN_PRODUCTION_V1
+  9134: @quality_check_bp.route(
+  9138: def machine_oee_run_production_v1(run_id):
+  9214:         # MACHINE_OEE_MANUAL_RUN_TIME_V30
+  9638: # MACHINE_OEE_RUN_LOSSES_V1
+  9641: def _machine_oee_loss_master_row_v1(row):
+  9706: # OEE_ACTIVITY_RUN_LOSSES_V87
+  9707: @quality_check_bp.route(
+  9711: def machine_oee_activity_run_losses_v87(activity_run_id):
+  9901: # OEE_ACTIVITY_RUN_COMPLETE_API_V86
+  9902: @quality_check_bp.route(
+  9906: def machine_oee_activity_run_complete_v86():
+ 10245: # OEE_ACTIVITY_RUN_START_API_V85
+ 10246: @quality_check_bp.route(
+ 10250: def machine_oee_activity_run_start_v85():
+ 10495:         # OEE_ACTIVITY_OPERATOR_IDENTITY_V92
+ 10520:             _get_oee_zone_login_v1(
+ 10562:                 _oee_operator_master_resolve_v24(
+ 10771: # OEE_TOOLING_MASTER_API_V3
+ 10772: @quality_check_bp.route(
+ 10776: def machine_oee_tooling_master_v3():
+ 10955: # OEE_TOOL_ENTRY_PERSISTENCE_V4
+ 10956: # OEE_TOOL_INDEPENDENT_SCHEMA_CODE_V124A
+ 10958: def _ensure_oee_tool_entries_v4(cursor):
+ 10966:         CREATE TABLE IF NOT EXISTS oee_tool_entries (
+ 10975:             tool_entry_batch_id VARCHAR(64) NULL,
+ 11021:                 tool_entry_batch_id,
+ 11033:                 tool_entry_batch_id
+ 11041:             INDEX idx_oee_tool_uid (
+ 11063: def _oee_tool_entry_rows_v4(
+ 11068:     tool_entry_batch_id="",
+ 11070:     tool_entry_batch_id = str(
+ 11071:         tool_entry_batch_id
+ 11087:     elif tool_entry_batch_id:
+ 11088:         where_sql = "tool_entry_batch_id = %s"
+ 11089:         where_value = tool_entry_batch_id
+ 11103:             tool_entry_batch_id,
+ 11134:         FROM oee_tool_entries
+ 11164: # OEE_TOOL_INDEPENDENT_API_V124B
+ 11165: @quality_check_bp.route(
+ 11166:     "/api/oee-machine/tooling-entries",
+ 11169: def machine_oee_tooling_entries_v4():
+ 11233:         tool_entry_batch_id = str(
+ 11234:             data.get("tool_entry_batch_id")
+ 11238:         if len(tool_entry_batch_id) > 64:
+ 11263:         if tool_entry_batch_id:
+ 11296:         _ensure_oee_tool_entries_v4(
+ 11306:             and not tool_entry_batch_id
+ 11313:                 "table": "oee_tool_entries",
+ 11324:             and not tool_entry_batch_id
+ 11430:         elif tool_entry_batch_id:
+ 11445:                 FROM oee_tool_entries
+ 11447:                 WHERE tool_entry_batch_id = %s
+ 11452:                 tool_entry_batch_id,
+ 11479:                 _oee_v15_parse_entry_date(
+ 11500:                 _oee_v13_machine_access(
+ 11536:                     _oee_operator_master_resolve_v24(
+ 11565:                 ) = _oee_v13_operator_identity(
+ 11573:             tool_entry_batch_id = (
+ 11649:             rows = _oee_tool_entry_rows_v4(
+ 11654:                 tool_entry_batch_id=
+ 11655:                     tool_entry_batch_id,
+ 11666:                 "tool_entry_batch_id":
+ 11667:                     tool_entry_batch_id or None,
+ 12059:                 "tool_entry_batch_id":
+ 12060:                     tool_entry_batch_id or None,
+ 12183:         # OEE_TOOL_UID_BACKEND_GUARD_V123
+ 12184:         # Every submitted Tool UID must exist in oee_tool_uid AND be
+ 12185:         # linked to an ACTIVE oee_tool_master.  Independent of the
+ 12202:                 "  FROM oee_tool_uid u "
+ 12203:                 "  JOIN oee_tool_master m "
+ 12239:                 DELETE FROM oee_tool_entries
+ 12247:                 DELETE FROM oee_tool_entries
+ 12255:                 DELETE FROM oee_tool_entries
+ 12263:                 DELETE FROM oee_tool_entries
+ 12264:                 WHERE tool_entry_batch_id = %s
+ 12266:                 tool_entry_batch_id,
+ 12279:                     row["tool_entry_batch_id"],
+ 12309:                 INSERT INTO oee_tool_entries (
+ 12315:                     tool_entry_batch_id,
+ 12357:         rows = _oee_tool_entry_rows_v4(
+ 12362:             tool_entry_batch_id=
+ 12363:                 tool_entry_batch_id,
+ 12374:             "tool_entry_batch_id":
+ 12375:                 tool_entry_batch_id or None,
+ 12421: # OEE_TOOL_ENTRY_PERSISTENCE_V4_END
+ 12425: # OEE_TOOL_STANDALONE_HISTORY_API_V124E
+ 12435: @quality_check_bp.route(
+ 12439: def machine_oee_tooling_history_v124e():
+ 12562:             _oee_v13_machine_access(
+ 12579:             "te.tool_entry_batch_id IS NOT NULL",
+ 12580:             "TRIM(te.tool_entry_batch_id) <> ''",
+ 12634:                 te.tool_entry_batch_id,
+ 12669:             FROM oee_tool_entries te
+ 12671:             LEFT JOIN oee_tool_uid u
+ 12675:             LEFT JOIN oee_tool_master m
+ 12684:                 te.tool_entry_batch_id DESC,
+ 12712:                     "tool_entry_batch_id"
+ 12778:                     "tool_entry_batch_id":
+ 13013: # OEE_TOOL_STANDALONE_HISTORY_API_V124E_END
+ 13016: # OEE_ACTIVITY_MASTER_API_V84
+ 13019: # OEE_TOOL_UID_LOOKUP_API_V112
+ 13025: @quality_check_bp.route(
+ 13029: def machine_oee_tool_master_lookup_v112():
+ 13096:             "FROM oee_tool_master "
+ 13176: # OEE_TOOL_UID_LOOKUP_API_V112_END
+ 13179: # OEE_TOOL_UID_REGISTER_PAGE_V115
+ 13182: @quality_check_bp.route(
+ 13186: def machine_oee_tool_list_page_v1():
+ 13193: @quality_check_bp.route(
+ 13197: def machine_oee_tool_master_list_v126():
+ 13224:             FROM oee_tool_master
+ 13251: # OEE_TOOL_MASTER_LIST_API_V126_END
+ 13255: # OEE_TOOL_MASTER_CREATE_API_V127
+ 13256: # Create a new oee_tool_master row (Admin/Supervisor only).
+ 13260: @quality_check_bp.route(
+ 13264: def machine_oee_tool_master_create_v127():
+ 13337:             "SELECT id FROM oee_tool_master "
+ 13348:             "SELECT id FROM oee_tool_master "
+ 13359:             INSERT INTO oee_tool_master (
+ 13399: # OEE_TOOL_MASTER_CREATE_API_V127_END
+ 13403: # OEE_TOOL_UID_GENERATE_API_V113
+ 13416: @quality_check_bp.route(
+ 13420: def machine_oee_tool_uid_generate_v113():
+ 13568:             "FROM oee_tool_master "
+ 13629:             "INSERT INTO oee_tool_uid "
+ 13715:             "UPDATE oee_tool_uid "
+ 13753:             "FROM oee_tool_uid "
+ 13869:                 "UPDATE oee_tool_uid SET status = 'IN_USE' "
+ 13949: # OEE_TOOL_UID_GENERATE_API_V113_END
+ 13951: # OEE_TOOL_UID_OPERATOR_LOOKUP_V116
+ 13962: @quality_check_bp.route(
+ 13966: def machine_oee_tool_uid_lookup_v116():
+ 14033:             "FROM oee_tool_uid u "
+ 14034:             "INNER JOIN oee_tool_master m "
+ 14133: # OEE_TOOL_UID_OPERATOR_LOOKUP_V116_END
+ 14140: @quality_check_bp.route(
+ 14144: def machine_oee_activity_master_v84():
+ 14289: @quality_check_bp.route(
+ 14293: def machine_oee_loss_master_v1():
+ 14337:                 _machine_oee_loss_master_row_v1(
+ 14399: # MACHINE_OEE_RUN_LINKED_LOSS_GRID_V40
+ 14400: @quality_check_bp.route(
+ 14404: def machine_oee_run_losses_v1(run_id):
+ 14664: @quality_check_bp.route(
+ 14668: def machine_oee_delete_run_loss_v1(run_id, event_id):
+ 14722: # MACHINE_OEE_LIVE_SESSION_CALC_V1
+ 14723: @quality_check_bp.route(
+ 14727: def machine_oee_live_session_calc_v1(session_id):
+ 14872: @quality_check_bp.route(
+ 14876: def machine_oee_typed_kpi_preview_v1():
+ 15171: # MACHINE_OEE_CURRENT_SESSION_KPI_V1
+ 15173: # (Identical OEE calculation to machine_oee_live_session_calc_v1;
+ 15175: @quality_check_bp.route(
+ 15179: def machine_oee_current_session_kpi_v1(machine_id):
+ 15405: def _get_oee_zone_login_v1(cursor):
+ 15502: # OEE_ZONE_MACHINE_SELECTION_V1
+ 15503: @quality_check_bp.route(
+ 15507: def oee_zone_machine_workspace_v1():
+ 15546:             _get_oee_zone_login_v1(
+ 15650: # OEE_OPERATOR_MASTER_LOOKUP_V23
+ 15651: @quality_check_bp.route(
+ 15655: def oee_operator_master_lookup_v23():
+ 15855: # OEE_OPERATOR_MASTER_BRIDGE_V24
+ 15856: def _oee_operator_master_resolve_v24(
+ 15972: # OEE_ACTUAL_OPERATOR_OPTIONS_V1
+ 15973: @quality_check_bp.route(
+ 15977: def oee_actual_operator_options_v1():
+ 16009:             _get_oee_zone_login_v1(
+ 16164: # MACHINE_OEE_RUN_COMPLETION_CONTEXT_V2
+ 16165: @quality_check_bp.route(
+ 16169: def machine_oee_run_completion_context_v2(run_id):
+ 16270:             _get_oee_zone_login_v1(
+ 16472:         # OEE_DOWNSTREAM_AVAILABLE_QTY_V125
+ 16618: # MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13
+ 16632: def _oee_v13_meta_value(row, *keys):
+ 16642: def _oee_v13_machine_access(
+ 16701:     if "_get_oee_zone_login_v1" in globals():
+ 16704:             _get_oee_zone_login_v1(
+ 16775: def _oee_v13_operator_identity(
+ 16852: def _oee_v14_loss_time_text(value):
+ 16879: def _oee_v15_parse_entry_date(value):
+ 16902: def _oee_v15_parse_loss_period(
+ 16925:     # MACHINE_OEE_HMS_SECONDS_V20
+ 16995: @quality_check_bp.route(
+ 16999: def machine_oee_machine_losses_v13(machine_id):
+ 17017:         machine, formula_profile, zone_login = _oee_v13_machine_access(cursor, machine_id)
+ 17029:             entry_date = _oee_v15_parse_entry_date(
+ 17080:                 # OEE_MACHINE_LOSS_TIME_JSON_V120
+ 17134:         entry_date = _oee_v15_parse_entry_date(
+ 17138:         loss_started_at, loss_ended_at, loss_period_minutes = _oee_v15_parse_loss_period(
+ 17154:             master_operator = _oee_operator_master_resolve_v24(
+ 17162:             operator_user_id, operator_name = _oee_v13_operator_identity(
+ 17383: @quality_check_bp.route("/oee-machine/summary", methods=["GET"])
+ 17384: def oee_machine_summary_page_v1():
+ 17432: @quality_check_bp.route(
+... OUTPUT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: _to_delete\oee_operator_for_claude\quality_check_oee_extract.py
+------------------------------------------------------------------------------
+   205: @quality_check_bp.route("/api/quality_check/fetch/<path:job_card_no>", methods=["GET"])
+   589: # @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+  1742:         # MACHINE_OEE_OPERATION_COMPLETE_V1_PREP
+  1774:                 _get_oee_zone_login_v1(
+  1978:         # OEE_COMPLETION_INTEGRATION_V1
+  1982:         # OEE_PROCESS_PREFIX_SUPPORT_V1
+  2743:         # MACHINE_OEE_OPERATION_COMPLETE_V1_FINALIZE
+  2859: @quality_check_bp.route(
+  2863: def oee_machine_workspace_v1():
+  3462: @quality_check_bp.route(
+  3466: def oee_machine_selection_v1():
+  3758: # MACHINE_OEE_OPERATOR_PAGE_V1
+  3760: @quality_check_bp.route(
+  3764: def machine_oee_operator_page_v1():
+  3820:                 _zone = _get_oee_zone_login_v1(_zcursor)
+  3833:                                 "quality_check.machine_oee_operator_page_v1",
+  3943:         # OEE_ZONE_MACHINE_PAGE_ACCESS_V1
+  3945:             _get_oee_zone_login_v1(
+  4129: # MACHINE_OEE_PENDING_CHECK_V1
+  4131: @quality_check_bp.route(
+  4135: def machine_oee_pending_check_v1(machine_id):
+  4384: # MACHINE_OEE_START_RUN_V1
+  4386: @quality_check_bp.route(
+  4390: def machine_oee_start_run_v1():
+  4497:         # MACHINE_OEE_DATABASE_GUARD_V37
+  4588:         # OEE_OPERATOR_MASTER_START_RUN_V24
+  4604:             _get_oee_zone_login_v1(
+  4639:                     _oee_operator_master_resolve_v24(
+  5240:             # OEE_MACHINE_RUN_SQL_FIX_V28
+  5311:         # MACHINE_OEE_START_PERSISTENCE_GUARD_V37
+  5405: # MACHINE_OEE_RUN_VOID_V1
+  5407: @quality_check_bp.route(
+  5411: def machine_oee_void_run_v1(run_id):
+  5503: # MACHINE_OEE_RUN_PRODUCTION_V1
+  5505: @quality_check_bp.route(
+  5509: def machine_oee_run_production_v1(run_id):
+  5585:         # MACHINE_OEE_MANUAL_RUN_TIME_V30
+  6014:         _machine_oee_recalculate_session_v43(
+  6061: # MACHINE_OEE_RUN_LOSSES_V1
+  6064: def _machine_oee_loss_master_row_v1(row):
+  6126: @quality_check_bp.route(
+  6130: def machine_oee_loss_master_v1():
+  6174:                 _machine_oee_loss_master_row_v1(
+  6236: # MACHINE_OEE_RUN_LINKED_LOSS_GRID_V40
+  6238: @quality_check_bp.route(
+  6242: def machine_oee_run_losses_v1(run_id):
+  6584:                 _oee_v15_parse_entry_date(
+  6625:             ) = _oee_v15_parse_loss_period(
+  6732:                     _oee_v13_dynamic_insert(
+  6836:             _machine_oee_recalculate_session_v43(
+  7080:                 _oee_v13_dynamic_insert(
+  7089:         _machine_oee_recalculate_session_v43(
+  7131: @quality_check_bp.route(
+  7135: def machine_oee_delete_run_loss_v1(
+  7256: # MACHINE_OEE_SESSION_METRICS_PERSIST_V43
+  7257: def _machine_oee_recalculate_session_v43(
+  7313:     # OEE_MACHINE_NO_NORMALIZE_V43
+  7976: # MACHINE_OEE_LIVE_SESSION_CALC_V1
+  7978: @quality_check_bp.route(
+  7982: def machine_oee_live_session_calc_v1(session_id):
+  8064:         # OEE_MACHINE_NO_NORMALIZE_V43 (live-oee route)
+  8315:         # MACHINE_OEE_LIVE_KPI_V32
+  8650: # MACHINE_OEE_TYPED_KPI_PREVIEW_V1
+  8654: @quality_check_bp.route(
+  8658: def machine_oee_typed_kpi_preview_v1():
+  8953: # MACHINE_OEE_CURRENT_SESSION_KPI_V1
+  8955: # (Identical OEE calculation to machine_oee_live_session_calc_v1;
+  8958: @quality_check_bp.route(
+  8962: def machine_oee_current_session_kpi_v1(machine_id):
+  9455: # OEE_ZONE_LOGIN_HELPER_V1
+  9456: def _get_oee_zone_login_v1(cursor):
+  9553: # OEE_ZONE_MACHINE_SELECTION_V1
+  9555: @quality_check_bp.route(
+  9559: def oee_zone_machine_workspace_v1():
+  9598:             _get_oee_zone_login_v1(
+  9702: # OEE_OPERATOR_MASTER_LOOKUP_V23
+  9704: @quality_check_bp.route(
+  9708: def oee_operator_master_lookup_v23():
+  9907: # OEE_OPERATOR_MASTER_BRIDGE_V24
+  9908: def _oee_operator_master_resolve_v24(
+ 10024: # OEE_ACTUAL_OPERATOR_OPTIONS_V1
+ 10026: @quality_check_bp.route(
+ 10030: def oee_actual_operator_options_v1():
+ 10062:             _get_oee_zone_login_v1(
+ 10217: # MACHINE_OEE_RUN_COMPLETION_CONTEXT_V2
+ 10219: @quality_check_bp.route(
+ 10223: def machine_oee_run_completion_context_v2(run_id):
+ 10326:             _get_oee_zone_login_v1(
+ 10636: # MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13
+ 10650: def _oee_v13_table_columns(cursor, table_name):
+ 10685: def _oee_v13_meta_value(row, *keys):
+ 10695: def _oee_v13_dynamic_insert(
+ 10701:     columns = _oee_v13_table_columns(
+ 10726:             _oee_v13_meta_value(
+ 10734:         default_value = _oee_v13_meta_value(
+ 10741:             _oee_v13_meta_value(
+ 10802: def _oee_v13_machine_access(
+ 10861:     if "_get_oee_zone_login_v1" in globals():
+ 10864:             _get_oee_zone_login_v1(
+ 10935: def _oee_v13_operator_identity(
+ 11012: def _oee_v13_find_session(
+ 11036: def _oee_v13_get_or_create_session(
+ 11050:     existing = _oee_v13_find_session(
+ 11126:     session_id = _oee_v13_dynamic_insert(
+ 11134:         existing = _oee_v13_find_session(
+ 11169: def _oee_v13_loss_field_names(cursor):
+ 11171:     columns = _oee_v13_table_columns(
+ 11226: # MACHINE_OEE_LOSS_TIME_V14
+ 11227: def _oee_v14_loss_time_text(value):
+ 11254: def _oee_v13_read_machine_losses(
+ 11263:     ) = _oee_v13_loss_field_names(
+ 11305:                 _oee_v14_loss_time_text(
+ 11310:                 _oee_v14_loss_time_text(
+ 11318: # MACHINE_OEE_COMMON_LOSS_BLOCK_V15
+ 11320: def _oee_v15_parse_entry_date(value):
+ 11343: def _oee_v15_parse_loss_period(
+ 11366:     # MACHINE_OEE_HMS_SECONDS_V20
+ 11436: def _oee_v15_find_session_on_date(
+ 11461: def _oee_v15_get_or_create_session_on_date(
+ 11472:         _oee_v15_find_session_on_date(
+ 11556:         _oee_v13_dynamic_insert(
+ 11567:             _oee_v15_find_session_on_date(
+ 11612: @quality_check_bp.route(
+ 11616: def machine_oee_machine_losses_v13(
+ 11656:         ) = _oee_v13_machine_access(
+ 11690:                 _oee_v15_parse_entry_date(
+ 11702:                 _oee_v15_find_session_on_date(
+ 11739:                 _oee_v13_read_machine_losses(
+ 11807:             _oee_v15_parse_entry_date(
+ 11822:         ) = _oee_v15_parse_loss_period(
+ 11876:                 _oee_operator_master_resolve_v24(
+ 11918:             ) = _oee_v13_operator_identity(
+ 12160:             _oee_v15_get_or_create_session_on_date(
+ 12179:         _oee_v13_loss_field_names(
+ 12340:             _oee_v13_dynamic_insert(
+ 12354:             _oee_v13_read_machine_losses(
+ 12524: # MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13_END
+ 12526: # OEE_MACHINE_SUMMARY_V1_START
+ 12529: @quality_check_bp.route("/api/oee-machine/summary-data", methods=["GET"])
+ 12530: def oee_machine_summary_data_v1():
+ 12660: # OEE_MACHINE_SUMMARY_V1_END
+ 12665: @quality_check_bp.route(
+ 12669: def machine_oee_shift_capacity_v1(machine_id):
+
+------------------------------------------------------------------------------
+FILE: routes\oee_machine_summary.py
+------------------------------------------------------------------------------
+   210: def _oee_from_sums(planned, ar_loss, pr_loss, run, ok, rej, hold, target_qty=None):
+   268: @oee_machine_summary_bp.route("/oee-machine-summary")
+   269: def oee_machine_summary_page():
+   285: @oee_machine_summary_bp.route("/api/oee-machine-summary/filters")
+   286: def api_oee_machine_summary_filters():
+   345: @oee_machine_summary_bp.route("/api/oee-machine-summary/kpi")
+   346: def api_oee_machine_summary_kpi():
+   476: @oee_machine_summary_bp.route("/api/oee-machine-summary/machine-wise")
+   477: def api_oee_machine_summary_machine_wise():
+   604: @oee_machine_summary_bp.route("/api/oee-machine-summary/operator-wise")
+   605: def api_oee_machine_summary_operator_wise():
+   742: @oee_machine_summary_bp.route("/api/oee-machine-summary/drill-down")
+   743: def api_oee_machine_summary_drill_down():
+   980:             FROM oee_tool_entries t
+  1194: @oee_machine_summary_bp.route("/api/oee-machine-summary/export-excel")
+  1195: def api_oee_machine_summary_export_excel():
+  1607: # OEE_MACHINE_SUMMARY_FLAT_API_V129
+  1614: @oee_machine_summary_bp.route("/api/oee-machine-summary/flat")
+  1615: def api_oee_machine_summary_flat_v129():
+  1709:         # OEE_SUMMARY_STANDALONE_TOOL_V130
+  1717:         #       tool_entry_batch_id + entry_date + shift_name
+  1763:                 t.tool_entry_batch_id,
+  1825:             FROM oee_tool_entries t
+  2003:                     "tool_entry_batch_id"
+  2020:                 "tool_entry_batch_id":
+  2079:                 "FROM oee_tool_uid u "
+  2080:                 "LEFT JOIN oee_tool_master m ON m.id = u.tool_master_id "
+  2103:             # OEE_SUMMARY_STANDALONE_RECENT_USE_V131
+  2113:                 "  t.tool_entry_batch_id, "
+  2142:                 "FROM oee_tool_entries t "
+  2168:                         "tool_entry_batch_id"
+  2203:                     "tool_entry_batch_id":
+  2275: # OEE_MACHINE_SUMMARY_FLAT_API_V129_END
+
+------------------------------------------------------------------------------
+FILE: patch_tooling_frontend_persistence_v5.py
+------------------------------------------------------------------------------
+     7: MARKER = "MACHINE_OEE_TOOL_PERSISTENCE_UI_V5"
+    23:     "MACHINE_OEE_TOOL_DB_MASTER_V3",
+    24:     "window.machineOeeGetToolRowsV1",
+    27:     "async function machineOeeCompleteOperationV1",
+    43: /* MACHINE_OEE_TOOL_ENTRY_V1_END */'''
+    52:     /* MACHINE_OEE_TOOL_PERSISTENCE_UI_V5 */
+    58:     async function machineOeeToolReadApiV5(
+    97:     function machineOeeToolCurrentRunIdV5() {
+   123:     async function machineOeeToolSaveRowsV5(
+   154:             typeof window.machineOeeGetToolRowsV1
+   166:                 window.machineOeeGetToolRowsV1()
+   184:                 "/api/oee-machine/tooling-entries",
+   209:     async function machineOeeToolRenderSavedRowsV5(
+   219:                 TOOL_HOST_ID_V1
+   455:     async function machineOeeToolMaybeLoadRunV5() {
+   471:                 TOOL_HOST_ID_V1
+   497:                     "/api/oee-machine/tooling-entries"
+   536:     window.machineOeeSaveToolRowsV5 =
+   540:     window.machineOeeLoadToolRowsV5 =
+   556:     const machineOeeToolRestoreObserverV5 =
+   590:     "        };\n" + v5_block + "\n\n})();\n\n/* MACHINE_OEE_TOOL_ENTRY_V1_END */",
+   612:                 typeof window.machineOeeSaveToolRowsV5
+   616:                 await window.machineOeeSaveToolRowsV5({
+   662:             typeof window.machineOeeSaveToolRowsV5
+   666:             await window.machineOeeSaveToolRowsV5({
+   704:             typeof window.machineOeeSaveToolRowsV5
+   708:             await window.machineOeeSaveToolRowsV5({
+   731:     "window.machineOeeSaveToolRowsV5",
+   734:     "/api/oee-machine/tooling-entries",
+   777: print("PATCH APPLIED: OEE_TOOL_PERSISTENCE_UI_V5")
+
+------------------------------------------------------------------------------
+FILE: Claude outputs\oee_state_audit.py
+------------------------------------------------------------------------------
+   249:      "@oee_machine_summary_bp.route(\"/api/oee-machine-summary/export-excel\")",
+
+------------------------------------------------------------------------------
+FILE: static\js\page3.js
+------------------------------------------------------------------------------
+   162:        * Open proper Receive Material modal.
+   181:         openOperatorReceiveMaterialModalV3(
+  3641: /* OEE_OPERATOR_INPUT_UI_V1_START */
+  3647:   // OEE_PROCESS_PREFIX_SUPPORT_V1
+  3660:   // OEE_LOSS_3_COLUMN_UI_V1
+  3768: /* OEE_OPERATOR_INPUT_UI_V1_END */
+  4615: /* OEE_COMPLETION_PAYLOAD_V1_START */
+  4779: /* OEE_COMPLETION_PAYLOAD_V1_END */
+  6519: // OEE_MODAL_INPUT_UI_V3
+  7798: let operatorReceiveMaterialCardV3 = null;
+  7827: function operatorCloseReceiveMaterialModalV3() {
+  7829:   operatorReceiveMaterialCardV3 = null;
+  7832:     "operator-receive-material-overlay-v3"
+  7841: function openOperatorReceiveMaterialModalV3(card) {
+  7843:   operatorCloseReceiveMaterialModalV3();
+  7845:   operatorReceiveMaterialCardV3 = card;
+  7874:     "operator-receive-material-overlay-v3";
+  7941:             Receive Material
+  7958:           onclick="operatorCloseReceiveMaterialModalV3()"
+  8229:           onclick="operatorCloseReceiveMaterialModalV3()"
+  8247:           onclick="operatorSubmitReceiveMaterialV3()"
+  8272:           Receive Material
+  8303: async function operatorSubmitReceiveMaterialV3() {
+  8306:     operatorReceiveMaterialCardV3;
+  8468:         || "Unable to receive material."
+  8473:     operatorCloseReceiveMaterialModalV3();
+  8510:       || "Unable to receive material.",
+  8524:         Receive Material
+  8532: /* OEE_LIVE_CALC_PREVIEW_V1_START */
+  9726: /* OEE_LIVE_CALC_PREVIEW_V1_END */
+ 10741: /* MACHINE_OEE_PAGE_NAVIGATION_V1_START */
+ 10840: /* MACHINE_OEE_PAGE_NAVIGATION_V1_END */
+ 10842: /* OEE_ZONE_MACHINE_SELECTION_VIEW_V1_START */
+ 11190: /* OEE_ZONE_MACHINE_SELECTION_VIEW_V1_END */
+ 11195:    OEE_ZONE_NATIVE_JMS_VIEW_V2
+ 11670:    OEE_ZONE_NATIVE_JMS_VIEW_V2_END
+ 11676:    OEE_ZONE_MACHINE_CLICK_FIX_V4
+ 12130:    OEE_ZONE_MACHINE_CLICK_FIX_V4_END
+
+------------------------------------------------------------------------------
+FILE: apply_live_oee_fix.py
+------------------------------------------------------------------------------
+     2: Rewrite machine_oee_live_session_calc_v1 to compute live OEE
+    18: NEW_FN = '''def machine_oee_live_session_calc_v1(session_id):
+   166:     r"^def machine_oee_live_session_calc_v1\b.*?:\n",
+   183:     print("OK — machine_oee_live_session_calc_v1 replaced")
+
+------------------------------------------------------------------------------
+FILE: routes\oee.py
+------------------------------------------------------------------------------
+    18: @oee_bp.route("/api/oee/master-data", methods=["GET"])
+    19: def oee_master_data():
+   102: @oee_bp.route("/api/oee/context/<path:job_card_no>", methods=["GET"])
+   103: def oee_job_context(job_card_no):
+   211: # OEE_READ_ONLY_RESULTS_API_V1
+   212: def _oee_results_json_safe(value):
+   239: @oee_bp.route("/api/oee/results", methods=["GET"])
+   240: def oee_results():
+   745: # OEE_REPORT_MACHINE_SUPERVISOR_V97
+   753: # OEE_REPORT_MACHINE_SUPERVISOR_V97_END
+
+------------------------------------------------------------------------------
+FILE: routes\oee_dashboard.py
+------------------------------------------------------------------------------
+  1817: @oee_dashboard_bp.route(
+  1821: def oee_dashboard_overview():
+  2223: # OEE_DASHBOARD_PAGE_V1
+  2228: @oee_dashboard_bp.route(
+  2232: def oee_dashboard_page():
+  2326: # OEE_DASHBOARD_REMAINING_CHARTS_V1
+  2401: @oee_dashboard_bp.route(
+  2405: def oee_dashboard_losses():
+  3147: @oee_dashboard_bp.route(
+  3151: def oee_dashboard_machines():
+  3554: @oee_dashboard_bp.route("/api/oee-dashboard/production", methods=["GET"])
+  3555: def api_oee_dashboard_production_v1():
+  3626:         def _oee(p, u, r, ok, rj):
+
+------------------------------------------------------------------------------
+FILE: patch_tooling_save_message_v6.py
+------------------------------------------------------------------------------
+    15: if "OEE_TOOL_PERSISTENCE_UI_V5" not in text:
+    20: if "OEE_TOOL_SAVE_MESSAGE_V6" in text:
+    21:     print("ALREADY APPLIED: OEE_TOOL_SAVE_MESSAGE_V6")
+    37:         window.machineOeeLastToolSaveCountV6 =
+    53:             /* OEE_NO_JC_LOSS_TOAST_V52 */
+    83:             window.machineOeeLastToolSaveCountV6 =
+    93:                     window.machineOeeLastToolSaveCountV6
+   116:             /* OEE_NO_JC_LOSS_TOAST_V52 */
+   161:                         window.machineOeeLastToolSaveCountV6
+   222: /* OEE_TOOL_SAVE_MESSAGE_V6
+   229: /* OEE_TOOL_SAVE_MESSAGE_V6_END */
+   263: print("PATCH APPLIED: OEE_TOOL_SAVE_MESSAGE_V6")
+
+------------------------------------------------------------------------------
+FILE: routes\oee_persistence.py
+------------------------------------------------------------------------------
+     6: # OEE_MACHINE_FORMULA_PROFILES_V1
+   126: def get_oee_formula_profile(machine_no):
+   198: def save_oee_entry(
+
+------------------------------------------------------------------------------
+FILE: templates\base.html
+------------------------------------------------------------------------------
+   451:         <!-- OEE_TOOL_UID_REGISTER_SIDEBAR_V124 -->
+
+------------------------------------------------------------------------------
+FILE: _backup\traceability_oee_20260821_124913\routes\quality_check.py
+------------------------------------------------------------------------------
+   642: @quality_check_bp.route("/api/quality_check/fetch/<path:job_card_no>", methods=["GET"])
+  1026: # @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+  1974:         # OEE_COMPLETION_INTEGRATION_V1
+  1978:         # OEE_PROCESS_PREFIX_SUPPORT_V1
+  2777: @quality_check_bp.route(
+  2937: @quality_check_bp.route("/api/wip/update", methods=["POST"])
+  2942: @quality_check_bp.route(
+  3065: @quality_check_bp.route(
+  3648:             # OEE_UNDO_INTEGRATION_V1
+  3802: @quality_check_bp.route("/api/quality_check", methods=["POST"])
+  3933: @quality_check_bp.route(
+  3962: @quality_check_bp.route("/api/wip/subcontract", methods=["POST"])
+  4240: @quality_check_bp.route("/api/wip/subcontract_complete", methods=["POST"])
+  4429: @quality_check_bp.route("/api/wip/rollback", methods=["POST"])
+  4558: @quality_check_bp.route("/api/revoke/list/<path:job_card_no>", methods=["GET"])
+  4599: @quality_check_bp.route("/api/revoke/advance-rework", methods=["POST"])
+  4667: @quality_check_bp.route("/api/revoke/merge", methods=["POST"])
+  4752: @quality_check_bp.route("/api/wip/remove_process", methods=["POST"])
+  5055: @quality_check_bp.route("/api/dashboard/overdue-c-parent-status", methods=["GET"])
+  5354: @quality_check_bp.route("/api/wip/check-c-child-gate/<job_card_no>", methods=["GET"])
+  5728: @quality_check_bp.route("/api/operator/job_cards", methods=["GET"])
+
+------------------------------------------------------------------------------
+FILE: templates\oee_machine_summary.html
+------------------------------------------------------------------------------
+  1554:     //   static/js/oee_machine_operator.js  (MACHINE_OEE_SHIFT_TIMES_V11)
+  2219:   /* OEES_TABS_INJECT_V1 — merges Top Losses + Activities + Tool Entries into one tabbed card */
+
+------------------------------------------------------------------------------
+FILE: oee_excel_bulk_test_runner.py
+------------------------------------------------------------------------------
+    99: def is_oee_process(value):
+
+------------------------------------------------------------------------------
+FILE: static\css\oee_machine_operator.css
+------------------------------------------------------------------------------
+   556: /* MACHINE_OEE_JC_FETCH_V1_CSS */
+   768: /* MACHINE_OEE_START_RUN_V1_CSS */
+   895: /* MACHINE_OEE_PRODUCTION_ENTRY_V1_CSS */
+  1038: /* MACHINE_OEE_LOSS_ENTRY_V1_CSS */
+  1256: /* MACHINE_OEE_LIVE_PANEL_V1_CSS */
+  1509: /* MACHINE_OEE_SIMPLE_OPERATOR_FLOW_V1 */
+  1581:    MACHINE_OEE_EXISTING_JMS_THEME_V1
+  2051:    MACHINE_OEE_JOBCARD_NATIVE_V1
+  2388:    MACHINE_OEE_DIRECT_ENTRY_V3
+  3057: /* MACHINE_OEE_JMS_FONT_V6 */
+  3096: /* MACHINE_OEE_RUNTIME_REPAIR_V7_CSS */
+  3128:    MACHINE_OEE_QTY_COUNTERS_V8
+  3362:    MACHINE_OEE_REASON_AND_ACTIVE_LOCK_V9
+  3520:    MACHINE_OEE_AUTO_OK_REASON_ROWS_V10
+  3619:    MACHINE_OEE_SHIFT_TIMING_V11
+  3802: /* MACHINE_OEE_MACHINE_LEVEL_LOSSES_V13_CSS */
+  3894: /* MACHINE_OEE_LOSS_UI_CLEANUP_V17 */
+  4059: /* OEE_OPERATOR_TEXTBOX_V25_CSS */
+  4220: /* MACHINE_OEE_INLINE_MACHINE_SWITCH_V27 */
+  4380: /* MACHINE_OEE_MODE_VISIBILITY_AND_LIVE_RIGHT_V31 */
+  4424: /* MACHINE_OEE_SAVE_CONFIRM_AND_KPI_V32 */
+  4645: /* MACHINE_OEE_JMS_UI_CONSISTENCY_V33 */
+  4726: /* MACHINE_OEE_DURATION_HMS_V34 */
+  4754:    OEE_UI_CLEANUP_V58
+  5542:    OEE_COMPACT_MACHINE_KPI_BAR_V59
+  5826: /* OEE_COMPACT_MACHINE_KPI_BAR_V59_END */
+  5829: /* OEE_FIRST_TWO_SECTIONS_V61 */
+  6418:    OEE_V60_MACHINE_ROW_OVERRIDE_V61
+  6677:     /* OEE_MACHINE_HEADER_STICKY_V1 */
+  6715: /* OEE_V60_MACHINE_ROW_OVERRIDE_V61_END */
+  6718:    OEE_MACHINE_TABS_BOX_REMOVE_V62
+  6793: /* OEE_MACHINE_TABS_BOX_REMOVE_V62_END */
+  6796: /* MACHINE_OEE_TOOL_ENTRY_V1_CSS_START */
+  7186: /* MACHINE_OEE_TOOL_ENTRY_V1_CSS_END */
+  7190: /* OEE_FIXED_KPI_VISIBILITY_V2 */
+  7298: /* OEE_LOSS_TITLE_TOGGLE_V62 */
+  7333: /* OEE_TIME_GRID_4_IN_ONE_ROW_V65 */
+  7503: /* OEE_RUNNING_JC_SINGLE_VISUAL_V66 */
+  7653: /* OEE_CANCEL_WRONG_JC_UX_V68 */
+  7799: /* OEE_JC_COMPACT_3_COLUMN_V70 */
+  7997: /* OEE_NO_JC_LOSS_TOGGLE_MATCH_V73 */
+  8024: /* OEE_NO_JC_TIME_ROW_V74 */
+  8026: /* OEE_NO_JC_TIME_ROW_SPAN_V77 */
+  8044: /* OEE_ACTIVITY_SINGLE_CARD_V81 */
+  8149: /* OEE_ACTIVITY_SINGLE_CARD_V81_END */
+  8151: /* OEE_ACTIVITY_PILL_GRID_V82 */
+  8280: /* OEE_ACTIVITY_PILL_GRID_V82_END */
+  8283: /* MACHINE_OEE_TOOL_DB_MASTER_V3 */
+  8312: /* MACHINE_OEE_TOOL_DB_MASTER_V3_END */
+  8329:    OEE_OPSHIFT_BOTTOM_ALIGN_V103
+  8846: /* OEE_OPSHIFT_BOTTOM_ALIGN_V103_END */
+  8855:    OEE_OPERATOR_TOOL_UID_LOOKUP_V117
+  8945: /* OEE_OPERATOR_TOOL_UID_LOOKUP_V117_END */
+
+==============================================================================
+6. OEE / TOOL DATABASE OBJECT NAMES REFERENCED BY SOURCE
+==============================================================================
+OEE_ACTIVITY_DB_MASTER_V84
+OEE_ACTIVITY_DB_MASTER_V84_END
+oee_activity_master
+OEE_ACTIVITY_MASTER_API_V84
+OEE_ACTIVITY_OPERATOR_IDENTITY_V92
+OEE_ACTIVITY_OPERATOR_PAYLOAD_V92
+OEE_ACTIVITY_PILL_GRID_V82
+OEE_ACTIVITY_PILL_GRID_V82_END
+OEE_ACTIVITY_RUN_COMPLETE_API_V86
+OEE_ACTIVITY_RUN_LOSSES_V87
+OEE_ACTIVITY_RUN_START_API_V85
+oee_activity_runs
+OEE_ACTIVITY_SELECTION_BRIDGE_V89
+OEE_ACTIVITY_SELECTION_PERSIST_V90
+OEE_ACTIVITY_SHARED_NO_JC_SAVE_V91
+OEE_ACTIVITY_SINGLE_CARD_V81
+OEE_ACTIVITY_SINGLE_CARD_V81_END
+OEE_ACTUAL_OPERATOR_OPTIONS_V1
+oee_actual_operator_options_v1
+OEE_ALL_TIME_TEXT_ENTRY_V79
+OEE_ALL_TIME_TEXT_ENTRY_V79_END
+oee_bp
+OEE_Bulk_Test_Report_
+oee_calculations
+OEE_CANCEL_WRONG_JC_UX_V68
+oee_cnt
+OEE_COMPACT_MACHINE_KPI_BAR_V59
+OEE_COMPACT_MACHINE_KPI_BAR_V59_END
+OEE_COMPLETE_LOSSES_GUARD_V44
+OEE_COMPLETION_INTEGRATION_V1
+OEE_COMPLETION_PAYLOAD_V1_END
+OEE_COMPLETION_PAYLOAD_V1_START
+OEE_CORE_COMPLETE_SAVE_V44
+OEE_CORE_CURRENT_SESSION_KPI_FRONTEND_V47
+OEE_CORE_CURRENT_SESSION_KPI_FRONTEND_V47_END
+OEE_CORE_FLOW_CLEANUP_V1
+OEE_CORE_REASON_RUN_STORAGE_V50
+OEE_CORE_REASON_RUN_STORAGE_V50_END
+OEE_CORE_REASON_STATE_V49
+OEE_CORE_REASON_STATE_V49_END
+OEE_CORE_REMOVE_HOLD_ZERO_BLOCK_V51
+OEE_CORE_TYPED_KPI_PREVIEW_FRONTEND_V48
+OEE_CORE_TYPED_KPI_PREVIEW_FRONTEND_V48_END
+OEE_CREATED_AND_VERIFIED
+OEE_CYCLE_LOAD_TIME_ENTRY_V111
+OEE_CYCLE_LOAD_TIME_ENTRY_V111_END
+oee_dashboard
+oee_dashboard_bp
+oee_dashboard_losses
+oee_dashboard_machines
+oee_dashboard_overview
+oee_dashboard_page
+OEE_DASHBOARD_PAGE_V1
+OEE_DASHBOARD_REMAINING_CHARTS_V1
+OEE_DOWNSTREAM_AVAILABLE_QTY_V125
+oee_end_time
+oee_entries
+oee_entry_id
+oee_entry_losses
+oee_error
+OEE_FIRST_TWO_SECTIONS_V61
+OEE_FIXED_KPI_VISIBILITY_V2
+OEE_FOCUS_STEAL_FIX_V107
+OEE_FOCUS_STEAL_FIX_V107_END
+oee_id
+OEE_ID_MISSING
+OEE_JC_COMPACT_3_COLUMN_V70
+oee_job_context
+OEE_LIVE_CALC_PREVIEW_V1_END
+OEE_LIVE_CALC_PREVIEW_V1_START
+OEE_LOSS_3_COLUMN_UI_V1
+oee_loss_master
+oee_loss_master_rows
+OEE_LOSS_TITLE_TOGGLE_V62
+oee_loss_types
+oee_machine
+OEE_MACHINE_FORMULA_PROFILES_V1
+OEE_MACHINE_HEADER_STICKY_V1
+oee_machine_id
+oee_machine_loss_events
+OEE_MACHINE_LOSS_TIME_JSON_V120
+OEE_MACHINE_LOSS_TOOLING_V122
+OEE_MACHINE_NO_NORMALIZE_V43
+oee_machine_operator
+OEE_MACHINE_PROFILE_MAP
+OEE_MACHINE_RUN_SQL_FIX_V28
+oee_machine_runs
+oee_machine_selection_v1
+oee_machine_sessions
+oee_machine_summary
+oee_machine_summary_bp
+oee_machine_summary_data_v1
+OEE_MACHINE_SUMMARY_FLAT_API_V129
+OEE_MACHINE_SUMMARY_FLAT_API_V129_END
+oee_machine_summary_page
+oee_machine_summary_page_v1
+OEE_MACHINE_SUMMARY_V1_END
+OEE_MACHINE_SUMMARY_V1_START
+OEE_MACHINE_TABS_BOX_REMOVE_V62
+OEE_MACHINE_TABS_BOX_REMOVE_V62_END
+oee_machine_workspace_v1
+oee_machines
+oee_master_data
+OEE_MODAL_INPUT_UI_V3
+OEE_NO_JC_LOSS_TOAST_V52
+OEE_NO_JC_LOSS_TOGGLE_MATCH_V73
+OEE_NO_JC_TIME_ROW_SPAN_V77
+OEE_NO_JC_TIME_ROW_V74
+OEE_OPERATOR_INPUT_UI_V1_END
+OEE_OPERATOR_INPUT_UI_V1_START
+oee_operator_master
+OEE_OPERATOR_MASTER_BRIDGE_V24
+OEE_OPERATOR_MASTER_LOOKUP_V23
+oee_operator_master_lookup_v23
+OEE_OPERATOR_MASTER_START_RUN_V24
+OEE_OPERATOR_TEXTBOX_AND_LIVE_KPI_V25
+OEE_OPERATOR_TEXTBOX_V25_CSS
+OEE_OPERATOR_TOOL_UID_LOOKUP_V117
+OEE_OPERATOR_TOOL_UID_LOOKUP_V117_END
+OEE_OPSHIFT_BOTTOM_ALIGN_V103
+OEE_OPSHIFT_BOTTOM_ALIGN_V103_END
+OEE_ORIGINAL_TWO_COLUMN_UI_RESTORE
+oee_page
+oee_payload
+oee_pct
+oee_persistence
+OEE_PROCESS_PREFIX_SUPPORT_V1
+OEE_PROCESS_PREFIXES
+OEE_PRODUCTION_SAVE_LOSSES_TOOLING_V119_END
+oee_ratio
+OEE_READ_ONLY_RESULTS_API_V1
+oee_reference_master
+OEE_REPORT_MACHINE_SUPERVISOR_V97
+OEE_REPORT_MACHINE_SUPERVISOR_V97_END
+oee_required
+oee_resolved_losses
+oee_result
+oee_results
+OEE_ROOT
+OEE_RUNNING_JC_SINGLE_VISUAL_V66
+OEE_SELECTED_MACHINE_SUPERVISOR_UI_V98
+OEE_SELECTED_MACHINE_SUPERVISOR_UI_V98_END
+oee_sidebar_access
+oee_start_time
+oee_sum
+OEE_SUMMARY_STANDALONE_RECENT_USE_V131
+OEE_SUMMARY_STANDALONE_TOOL_V130
+oee_test_reports
+OEE_TIME_ARROW_NAV_V68
+OEE_TIME_ARROW_NAV_V68_END
+OEE_TIME_GRID_4_IN_ONE_ROW_V65
+OEE_TIME_SMART_ENTRY_V69
+OEE_TIME_SMART_ENTRY_V69_END
+OEE_TOOL_BUTTON_ALIGN_V124G
+OEE_TOOL_DOM_ANCHOR_FIX_V108
+OEE_TOOL_DOM_ANCHOR_FIX_V108_END
+oee_tool_entries
+OEE_TOOL_ENTRY_PERSISTENCE_V4
+OEE_TOOL_ENTRY_PERSISTENCE_V4_END
+OEE_TOOL_INDEPENDENT_API_V124B
+OEE_TOOL_INDEPENDENT_SCHEMA_CODE_V124A
+oee_tool_list
+oee_tool_master
+OEE_TOOL_MASTER_CREATE_API_V127
+OEE_TOOL_MASTER_CREATE_API_V127_END
+OEE_TOOL_MASTER_LIST_API_V126_END
+oee_tool_movements
+OEE_TOOL_PERSISTENCE_UI_V5
+OEE_TOOL_RECEIVE_FIX_V124D
+OEE_TOOL_SAVE_MESSAGE_V6
+OEE_TOOL_SAVE_MESSAGE_V6_END
+OEE_TOOL_STANDALONE_HISTORY_API_V124E
+OEE_TOOL_STANDALONE_HISTORY_API_V124E_END
+OEE_TOOL_STANDALONE_UI_V124C
+OEE_TOOL_TOAST_ONLY_V124F
+oee_tool_uid
+OEE_TOOL_UID_BACKEND_GUARD_V123
+OEE_TOOL_UID_GENERATE_API_V113
+OEE_TOOL_UID_GENERATE_API_V113_END
+OEE_TOOL_UID_LOOKUP_API_V112
+OEE_TOOL_UID_LOOKUP_API_V112_END
+OEE_TOOL_UID_OPERATOR_LOOKUP_V116
+OEE_TOOL_UID_OPERATOR_LOOKUP_V116_END
+OEE_TOOL_UID_REGISTER_PAGE_V115
+OEE_TOOL_UID_REGISTER_SIDEBAR_V124
+OEE_TOOL_UID_SAVE_GUARD_V118
+OEE_TOOL_UID_SAVE_GUARD_V118_END
+OEE_TOOLING_MASTER_API_V3
+oee_trend
+OEE_UI_CLEANUP_V57
+OEE_UI_CLEANUP_V58
+OEE_UI_CLEANUP_V58_END
+OEE_UNDO_INTEGRATION_V1
+OEE_V60_MACHINE_ROW_OVERRIDE_V61
+OEE_V60_MACHINE_ROW_OVERRIDE_V61_END
+OEE_ZONE_LOGIN_HELPER_V1
+oee_zone_logins
+OEE_ZONE_MACHINE_CLICK_FIX_V4
+OEE_ZONE_MACHINE_CLICK_FIX_V4_END
+OEE_ZONE_MACHINE_PAGE_ACCESS_V1
+OEE_ZONE_MACHINE_SELECTION_V1
+OEE_ZONE_MACHINE_SELECTION_VIEW_V1_END
+OEE_ZONE_MACHINE_SELECTION_VIEW_V1_START
+oee_zone_machine_workspace_v1
+OEE_ZONE_NATIVE_JMS_VIEW_V2
+OEE_ZONE_NATIVE_JMS_VIEW_V2_END
+OEE_ZONE_SUPERVISOR_COMPACT_UI_V100
+OEE_ZONE_SUPERVISOR_COMPACT_UI_V100_END
+
+==============================================================================
+7. BLUEPRINT / TEMPLATE / MODULE CROSS REFERENCES
+==============================================================================
+
+FILE: _backup\traceability_oee_20260821_124913\routes\quality_check.py
+    28: quality_check_bp = Blueprint("quality_check", __name__)
+   642: @quality_check_bp.route("/api/quality_check/fetch/<path:job_card_no>", methods=["GET"])
+  1026: # @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+  2777: @quality_check_bp.route(
+  2937: @quality_check_bp.route("/api/wip/update", methods=["POST"])
+  2942: @quality_check_bp.route(
+  3065: @quality_check_bp.route(
+  3802: @quality_check_bp.route("/api/quality_check", methods=["POST"])
+  3933: @quality_check_bp.route(
+  3962: @quality_check_bp.route("/api/wip/subcontract", methods=["POST"])
+  4240: @quality_check_bp.route("/api/wip/subcontract_complete", methods=["POST"])
+  4429: @quality_check_bp.route("/api/wip/rollback", methods=["POST"])
+  4558: @quality_check_bp.route("/api/revoke/list/<path:job_card_no>", methods=["GET"])
+  4599: @quality_check_bp.route("/api/revoke/advance-rework", methods=["POST"])
+  4667: @quality_check_bp.route("/api/revoke/merge", methods=["POST"])
+  4752: @quality_check_bp.route("/api/wip/remove_process", methods=["POST"])
+  5055: @quality_check_bp.route("/api/dashboard/overdue-c-parent-status", methods=["GET"])
+  5354: @quality_check_bp.route("/api/wip/check-c-child-gate/<job_card_no>", methods=["GET"])
+  5728: @quality_check_bp.route("/api/operator/job_cards", methods=["GET"])
+
+FILE: _to_delete\oee_operator_for_claude\quality_check_oee_extract.py
+    29: quality_check_bp = Blueprint("quality_check", __name__)
+   205: @quality_check_bp.route("/api/quality_check/fetch/<path:job_card_no>", methods=["GET"])
+   589: # @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+  2859: @quality_check_bp.route(
+  3462: @quality_check_bp.route(
+  3760: @quality_check_bp.route(
+  4131: @quality_check_bp.route(
+  4386: @quality_check_bp.route(
+  5407: @quality_check_bp.route(
+  5505: @quality_check_bp.route(
+  6126: @quality_check_bp.route(
+  6238: @quality_check_bp.route(
+  7131: @quality_check_bp.route(
+  7978: @quality_check_bp.route(
+  8654: @quality_check_bp.route(
+  8958: @quality_check_bp.route(
+  9555: @quality_check_bp.route(
+  9704: @quality_check_bp.route(
+ 10026: @quality_check_bp.route(
+ 10219: @quality_check_bp.route(
+ 11612: @quality_check_bp.route(
+ 12529: @quality_check_bp.route("/api/oee-machine/summary-data", methods=["GET"])
+ 12665: @quality_check_bp.route(
+
+FILE: app.py
+    30: from routes.oee_dashboard import oee_dashboard_bp
+    31: from routes.oee_machine_summary import oee_machine_summary_bp
+    33: from routes.quality_check import quality_check_bp
+   175: app.register_blueprint(oee_dashboard_bp)
+   176: app.register_blueprint(oee_machine_summary_bp)
+   179: app.register_blueprint(quality_check_bp)
+   180: app.register_blueprint(oee_bp)
+
+FILE: apply_live_oee_fix.py
+   175:         r"^(@quality_check_bp\.route\(|# MACHINE_OEE_[A-Z0-9_]+\n@quality_check_bp\.route\(|def [a-z_])",
+
+FILE: Claude outputs\oee_state_audit.py
+   249:      "@oee_machine_summary_bp.route(\"/api/oee-machine-summary/export-excel\")",
+   282:      "oee_machine_summary_bp",
+
+FILE: routes\oee.py
+     8: oee_bp = Blueprint("oee", __name__)
+
+FILE: routes\oee_dashboard.py
+    11: oee_dashboard_bp = Blueprint(
+  1817: @oee_dashboard_bp.route(
+  2228: @oee_dashboard_bp.route(
+  2401: @oee_dashboard_bp.route(
+  3147: @oee_dashboard_bp.route(
+  3554: @oee_dashboard_bp.route("/api/oee-dashboard/production", methods=["GET"])
+
+FILE: routes\oee_machine_summary.py
+    43: oee_machine_summary_bp = Blueprint("oee_machine_summary", __name__)
+   268: @oee_machine_summary_bp.route("/oee-machine-summary")
+   285: @oee_machine_summary_bp.route("/api/oee-machine-summary/filters")
+   345: @oee_machine_summary_bp.route("/api/oee-machine-summary/kpi")
+   476: @oee_machine_summary_bp.route("/api/oee-machine-summary/machine-wise")
+   604: @oee_machine_summary_bp.route("/api/oee-machine-summary/operator-wise")
+   742: @oee_machine_summary_bp.route("/api/oee-machine-summary/drill-down")
+  1194: @oee_machine_summary_bp.route("/api/oee-machine-summary/export-excel")
+  1614: @oee_machine_summary_bp.route("/api/oee-machine-summary/flat")
+
+FILE: routes\quality_check.py
+    28: quality_check_bp = Blueprint("quality_check", __name__)
+    57: @quality_check_bp.app_context_processor
+   674: @quality_check_bp.route("/api/quality_check/fetch/<path:job_card_no>", methods=["GET"])
+  1058: # @quality_check_bp.route("/api/page3/kanban_summary", methods=["GET"])
+  3329: @quality_check_bp.route(
+  3489: @quality_check_bp.route("/api/wip/update", methods=["POST"])
+  3512: @quality_check_bp.route(
+  3635: @quality_check_bp.route(
+  4372: @quality_check_bp.route("/api/quality_check", methods=["POST"])
+  4503: @quality_check_bp.route(
+  4532: @quality_check_bp.route("/api/wip/subcontract", methods=["POST"])
+  4810: @quality_check_bp.route("/api/wip/subcontract_complete", methods=["POST"])
+  4999: @quality_check_bp.route("/api/wip/rollback", methods=["POST"])
+  5128: @quality_check_bp.route("/api/revoke/list/<path:job_card_no>", methods=["GET"])
+  5169: @quality_check_bp.route("/api/revoke/advance-rework", methods=["POST"])
+  5237: @quality_check_bp.route("/api/revoke/merge", methods=["POST"])
+  5322: @quality_check_bp.route("/api/wip/remove_process", methods=["POST"])
+  5625: @quality_check_bp.route("/api/dashboard/overdue-c-parent-status", methods=["GET"])
+  5924: @quality_check_bp.route("/api/wip/check-c-child-gate/<job_card_no>", methods=["GET"])
+  6298: @quality_check_bp.route("/api/operator/job_cards", methods=["GET"])
+  7040: @quality_check_bp.route(
+  7215: @quality_check_bp.route(
+  7512: @quality_check_bp.route(
+  7888: @quality_check_bp.route(
+  8136: @quality_check_bp.route(
+  9035: @quality_check_bp.route(
+  9134: @quality_check_bp.route(
+  9707: @quality_check_bp.route(
+  9902: @quality_check_bp.route(
+ 10246: @quality_check_bp.route(
+ 10772: @quality_check_bp.route(
+ 11165: @quality_check_bp.route(
+ 12435: @quality_check_bp.route(
+ 13025: @quality_check_bp.route(
+ 13182: @quality_check_bp.route(
+ 13190:     return render_template("oee_tool_list.html")
+ 13193: @quality_check_bp.route(
+ 13260: @quality_check_bp.route(
+ 13416: @quality_check_bp.route(
+ 13962: @quality_check_bp.route(
+ 14140: @quality_check_bp.route(
+ 14289: @quality_check_bp.route(
+ 14400: @quality_check_bp.route(
+ 14664: @quality_check_bp.route(
+ 14723: @quality_check_bp.route(
+ 14872: @quality_check_bp.route(
+ 15175: @quality_check_bp.route(
+ 15503: @quality_check_bp.route(
+ 15651: @quality_check_bp.route(
+ 15973: @quality_check_bp.route(
+ 16165: @quality_check_bp.route(
+ 16995: @quality_check_bp.route(
+ 17383: @quality_check_bp.route("/oee-machine/summary", methods=["GET"])
+ 17432: @quality_check_bp.route(
+ 17506: @quality_check_bp.route(
+ 17611: @quality_check_bp.route(
+ 17643: @quality_check_bp.route(
+ 17676: @quality_check_bp.route(
+ 17828: @quality_check_bp.route(
+ 17880: @quality_check_bp.route(
+ 17991: @quality_check_bp.route(
+ 18043: @quality_check_bp.route(
+ 18091: @quality_check_bp.route(
+
+==============================================================================
+8. HIGH-VALUE TOOL / OEE SOURCE CONTEXT
+==============================================================================
+
+------------------------------------------------------------------------------
+FILE: static\js\oee_machine_operator.js
+------------------------------------------------------------------------------
+   538:                         <button
+   539:                             type="button"
+   540:                             class="oee-void-btn-v1"
+   541:                             data-run-id="${machineOeeEscapeV1(String(run.run_id || ""))}"
+   542:                         >
+   543:                             Wrong JC? Cancel this entry<i fa class="fa fa-times-circle" aria-hidden="true"></i>
+   544:                         </button>
+   545:                     </div>
+   546: 
+  1059:                     <div class="jc-state-head-v1">
+  1060: 
+  1061:                         <strong>
+  1062:                             Receive Material Required
+  1063:                         </strong>
+  1064: 
+  1065:                         <span class="jc-status-chip-v1">
+  1066:                             PREVIOUS PROCESS PENDING
+  1067:                         </span>
+  1151:                             type="button"
+  1152:                             class="jc-receive-btn-v1"
+  1153:                         >
+  1154:                             Receive Material
+  1155:                         </button>
+  1156: 
+  1157:                     </div>
+  1158: 
+  1159:                 </div>
+  1172:                     "click",
+  1173:                     function() {
+  1174: 
+  1175:                         machineOeeReceiveMaterialV1();
+  1176:                     }
+  1177:                 );
+  1178:             }
+  1179: 
+  1180: 
+  1204: 
+  1205: 
+  1206: 
+  1207: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_START */
+  1208: /* OEE_TOOL_RECEIVE_FIX_V124D */
+  1209: 
+  1210: async function machineOeeReceiveMaterialV1() {
+  1211: 
+  1212:     const card =
+  1213:         machineOeeIncomingCardV1;
+  1214: 
+  1215: 
+  1355:             throw new Error(
+  1356:                 data.error
+  1357:                 || data.message
+  1358:                 || "Receive Material failed."
+  1359:             );
+  1360:         }
+  1361: 
+  1362: 
+  1363:         machineOeeIncomingCardV1 =
+  1375: 
+  1376:         ERP.toast(
+  1377:             error.message
+  1378:             || "Receive Material failed.",
+  1379:             "error"
+  1380:         );
+  1381:     }
+  1382: }
+  1383: 
+  1384: 
+  1385: window.machineOeeReceiveMaterialV1 =
+  1386:     machineOeeReceiveMaterialV1;
+  1387: 
+  1388: 
+  1389: /* ---------------------------------------------------------
+  1390:  * EVENTS
+  1391:  * --------------------------------------------------------- */
+  1478: );
+  1479: 
+  1480: 
+  1481: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_END */
+  1482: 
+  1483: 
+  1484: 
+  1485: 
+  1486: /* MACHINE_OEE_START_RUN_V1_START */
+  2713:         !run
+  2714:         ||
+  2715:         !Number(
+  2716:             run.run_id
+  2717:             || 0
+  2718:         )
+  2719:     ) {
+  2720:         return;
+  2721:     }
+  2869:                     type="button"
+  2870:                     data-run-id="${
+  2871:                         machineOeeEscapeV1(
+  2872:                             String(run.run_id || "")
+  2873:                         )
+  2874:                     }"
+  2875:                     style="
+  2876:                         background:none;
+  2877:                         border:none;
+  3187: 
+  3188:         const startedRunId =
+  3189:             Number(
+  3190:                 startedRun?.run_id
+  3191:                 || 0
+  3192:             );
+  3193: 
+  3194: 
+  3195:         if (startedRunId <= 0) {
+  3247:             verifyData?.has_pending_run !== true
+  3248:             ||
+  3249:             Number(
+  3250:                 persistedRun?.run_id
+  3251:                 || 0
+  3252:             ) !== startedRunId
+  3253:             ||
+  3254:             String(
+  3255:                 persistedRun?.job_card_no
+  3621:     if (
+  3622:         !run
+  3623:         ||
+  3624:         !run.run_id
+  3625:     ) {
+  3626:         return;
+  3627:     }
+  3628: 
+  3629: 
+  3695: 
+  3696:         const response =
+  3697:             await fetch(
+  3698:                 `/api/oee-machine/run/${run.run_id}/production`,
+  3699:                 {
+  3700:                     method:"POST",
+  3701: 
+  3702:                     headers:{
+  3703:                         "Content-Type":
+  3905:     if (
+  3906:         run
+  3907:         &&
+  3908:         run.run_id
+  3909:     ) {
+  3910: 
+  3911:         machineOeeActiveRunV1 =
+  3912:             run;
+  3913:     }
+  3992:             if (
+  3993:                 run
+  3994:                 &&
+  3995:                 run.run_id
+  3996:             ) {
+  3997: 
+  3998:                 window.clearInterval(
+  3999:                     timer
+  4000:                 );
+  5277:     if (
+  5278:         !run
+  5279:         ||
+  5280:         !run.run_id
+  5281:         ||
+  5282:         !context
+  5283:     ) {
+  5284:         return;
+  5285:     }
+  5418:          */
+  5419:         const productionResponse =
+  5420:             await fetch(
+  5421:                 `/api/oee-machine/run/${run.run_id}/production`,
+  5422:                 {
+  5423:                     method:"POST",
+  5424: 
+  5425:                     headers:{
+  5426:                         "Content-Type":
+  5559:                         machine_oee_completion:
+  5560:                             true,
+  5561: 
+  5562:                         machine_run_id:
+  5563:                             run.run_id
+  5564:                     })
+  5565:                 }
+  5566:             );
+  5567: 
+  5568: 
+  5771: 
+  5772: 
+  5773: /*
+  5774:  * Completion context now comes directly from run_id.
+  5775:  *
+  5776:  * We no longer call:
+  5777:  * /api/oee-machine/jc-context/<machine>/<jc>
+  5778:  *
+  5779:  * That lookup is useful while scanning a NEW JC,
+  5787:         if (
+  5788:             !run
+  5789:             ||
+  5790:             !run.run_id
+  5791:         ) {
+  5792: 
+  5793:             throw new Error(
+  5794:                 "Valid Machine Run is required."
+  5795:             );
+  5798: 
+  5799:         const response =
+  5800:             await fetch(
+  5801:                 `/api/oee-machine/run/${run.run_id}/completion-context`,
+  5802:                 {
+  5803:                     cache:"no-store"
+  5804:                 }
+  5805:             );
+  5806: 
+  7113: 
+  7114: 
+  7115:         return Number(
+  7116:             run?.run_id
+  7117:             || run?.id
+  7118:             || 0
+  7119:         );
+  7120:     }
+  7121: 
+ 10870: 
+ 10871:          /*
+ 10872:          * Save A1-A27 using the same visible loss grid,
+ 10873:          * but link it to activity_run_id.
+ 10874:          */
+ 10875:         const lossResponse =
+ 10876:             await fetch(
+ 10877:                 "/api/oee-machine/activity-run/"
+ 10878:                 + encodeURIComponent(
+ 10949: 
+ 10950:                     body:
+ 10951:                         JSON.stringify({
+ 10952:                             activity_run_id:
+ 10953:                                 activityRunId,
+ 10954: 
+ 10955:                             ended_at:
+ 10956:                                 endedAt
+ 10957:                         })
+ 10985:             success:
+ 10986:                 true,
+ 10987: 
+ 10988:             activity_run_id:
+ 10989:                 activityRunId,
+ 10990: 
+ 10991:             activity:
+ 10992:                 completeData
+ 10993:                     .activity_run,
+ 11084:                 !run
+ 11085:                 ||
+ 11086:                 !Number(
+ 11087:                     run.run_id
+ 11088:                     || 0
+ 11089:                 )
+ 11090:             ) {
+ 11091: 
+ 11092:                 throw new Error(
+ 13347:                 if (
+ 13348:                     machineOeePendingRunV1
+ 13349:                     &&
+ 13350:                     machineOeePendingRunV1.run_id
+ 13351:                 ) {
+ 13352: 
+ 13353:                     window.setTimeout(
+ 13354:                         directInitV3,
+ 13355:                         0
+ 14730:         const active =
+ 14731:             Boolean(
+ 14732:                 machineOeeActiveRunV1
+ 14733:                 ?.run_id
+ 14734:             );
+ 14735: 
+ 14736: 
+ 14737:         const pending =
+ 14738:             Boolean(
+ 14739:                 machineOeePendingRunV1
+ 14740:                 ?.run_id
+ 14741:             );
+ 14742: 
+ 14743: 
+ 14744:         const fetched =
+ 14745:             Boolean(
+ 14815:         const machineLocked =
+ 14816:             Boolean(
+ 14817:                 machineOeeActiveRunV1
+ 14818:                     ?.run_id
+ 14819:                 ||
+ 14820:                 machineOeePendingRunV1
+ 14821:                     ?.run_id
+ 14822:             );
+ 14823: 
+ 14824: 
+ 14825:         const finalDisabled =
+ 14826:             Boolean(
+ 15018:                     ).trim()
+ 15019:                     &&
+ 15020:                     !machineOeeActiveRunV1
+ 15021:                         ?.run_id
+ 15022:                     &&
+ 15023:                     !machineOeePendingRunV1
+ 15024:                         ?.run_id
+ 15025:                 ) {
+ 15026: 
+ 15027:                     machineOeeCurrentFetchedJcV1 =
+ 15028:                         null;
+ 15029:                 }
+ 15645:         if (
+ 15646:             !run
+ 15647:             ||
+ 15648:             !run.run_id
+ 15649:         ) {
+ 15650: 
+ 15651:             return;
+ 15652:         }
+ 15653: 
+ 15841:             hasRun =
+ 15842:                 Boolean(
+ 15843:                     machineOeeActiveRunV1
+ 15844:                     ?.run_id
+ 15845:                     ||
+ 15846:                     machineOeePendingRunV1
+ 15847:                     ?.run_id
+ 15848:                 );
+ 15849: 
+ 15850:         } catch (_) {
+ 15851: 
+ 15852:             hasRun =
+ 16480:                         &&
+ 16481:                         persistedRun
+ 16482:                         &&
+ 16483:                         persistedRun.run_id
+ 16484:                         &&
+ 16485:                         persistedRun.session_id
+ 16486:                     ) {
+ 16487: 
+ 16488:                         machineOeePendingRunV1 =
+ 20017: 
+ 20018:         const runId =
+ 20019:             Number(
+ 20020:                 run?.run_id
+ 20021:                 || 0
+ 20022:             );
+ 20023: 
+ 20024: 
+ 20025:         if (runId <= 0) {
+ 21048:         if (
+ 21049:             !run
+ 21050:             ||
+ 21051:             !run.run_id
+ 21052:         ) {
+ 21053: 
+ 21054:             return null;
+... CONTEXT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: _to_delete\oee_operator_for_claude\oee_machine_operator.js
+------------------------------------------------------------------------------
+   462:                         <button
+   463:                             type="button"
+   464:                             class="oee-void-btn-v1"
+   465:                             data-run-id="${machineOeeEscapeV1(String(run.run_id || ""))}"
+   466:                         >
+   467:                             Wrong JC? Cancel this entry<i fa class="fa fa-times-circle" aria-hidden="true"></i>
+   468:                         </button>
+   469:                     </div>
+   470: 
+   993:                     <div class="jc-state-head-v1">
+   994: 
+   995:                         <strong>
+   996:                             Receive Material Required
+   997:                         </strong>
+   998: 
+   999:                         <span class="jc-status-chip-v1">
+  1000:                             PREVIOUS PROCESS PENDING
+  1001:                         </span>
+  1085:                             type="button"
+  1086:                             class="jc-receive-btn-v1"
+  1087:                             onclick="
+  1088:                                 machineOeeReceiveMaterialV1()
+  1089:                             "
+  1090:                         >
+  1091:                             Receive Material
+  1092:                         </button>
+  1093: 
+  1094:                     </div>
+  1095: 
+  1096:                 </div>
+  1127: 
+  1128: 
+  1129: 
+  1130: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_START */
+  1131: 
+  1132: async function machineOeeReceiveMaterialV1() {
+  1133: 
+  1134:     const card =
+  1135:         machineOeeIncomingCardV1;
+  1136: 
+  1137: 
+  1283:             throw new Error(
+  1284:                 data.error
+  1285:                 || data.message
+  1286:                 || "Receive Material failed."
+  1287:             );
+  1288:         }
+  1289: 
+  1290: 
+  1291:         machineOeeIncomingCardV1 =
+  1307: 
+  1308:                 ${machineOeeEscapeV1(
+  1309:                     error.message
+  1310:                     || "Receive Material failed."
+  1311:                 )}
+  1312: 
+  1313:             </div>
+  1314:         `;
+  1315:     }
+  1408: );
+  1409: 
+  1410: 
+  1411: /* MACHINE_OEE_RECEIVE_MATERIAL_V1_END */
+  1412: 
+  1413: 
+  1414: 
+  1415: 
+  1416: /* MACHINE_OEE_START_RUN_V1_START */
+  2143:         !run
+  2144:         ||
+  2145:         !Number(
+  2146:             run.run_id
+  2147:             || 0
+  2148:         )
+  2149:     ) {
+  2150:         return;
+  2151:     }
+  2299:                     type="button"
+  2300:                     data-run-id="${
+  2301:                         machineOeeEscapeV1(
+  2302:                             String(run.run_id || "")
+  2303:                         )
+  2304:                     }"
+  2305:                     style="
+  2306:                         background:none;
+  2307:                         border:none;
+  2634: 
+  2635:         const startedRunId =
+  2636:             Number(
+  2637:                 startedRun?.run_id
+  2638:                 || 0
+  2639:             );
+  2640: 
+  2641: 
+  2642:         if (startedRunId <= 0) {
+  2694:             verifyData?.has_pending_run !== true
+  2695:             ||
+  2696:             Number(
+  2697:                 persistedRun?.run_id
+  2698:                 || 0
+  2699:             ) !== startedRunId
+  2700:             ||
+  2701:             String(
+  2702:                 persistedRun?.job_card_no
+  3087:     if (
+  3088:         !run
+  3089:         ||
+  3090:         !run.run_id
+  3091:     ) {
+  3092:         return;
+  3093:     }
+  3094: 
+  3095: 
+  3161: 
+  3162:         const response =
+  3163:             await fetch(
+  3164:                 `/api/oee-machine/run/${run.run_id}/production`,
+  3165:                 {
+  3166:                     method:"POST",
+  3167: 
+  3168:                     headers:{
+  3169:                         "Content-Type":
+  3375:     if (
+  3376:         run
+  3377:         &&
+  3378:         run.run_id
+  3379:     ) {
+  3380: 
+  3381:         machineOeeActiveRunV1 =
+  3382:             run;
+  3383:     }
+  3462:             if (
+  3463:                 run
+  3464:                 &&
+  3465:                 run.run_id
+  3466:             ) {
+  3467: 
+  3468:                 window.clearInterval(
+  3469:                     timer
+  3470:                 );
+  4748:     if (
+  4749:         !run
+  4750:         ||
+  4751:         !run.run_id
+  4752:         ||
+  4753:         !context
+  4754:     ) {
+  4755:         return;
+  4756:     }
+  4889:          */
+  4890:         const productionResponse =
+  4891:             await fetch(
+  4892:                 `/api/oee-machine/run/${run.run_id}/production`,
+  4893:                 {
+  4894:                     method:"POST",
+  4895: 
+  4896:                     headers:{
+  4897:                         "Content-Type":
+  5030:                         machine_oee_completion:
+  5031:                             true,
+  5032: 
+  5033:                         machine_run_id:
+  5034:                             run.run_id
+  5035:                     })
+  5036:                 }
+  5037:             );
+  5038: 
+  5039: 
+  5257: 
+  5258: 
+  5259: /*
+  5260:  * Completion context now comes directly from run_id.
+  5261:  *
+  5262:  * We no longer call:
+  5263:  * /api/oee-machine/jc-context/<machine>/<jc>
+  5264:  *
+  5265:  * That lookup is useful while scanning a NEW JC,
+  5273:         if (
+  5274:             !run
+  5275:             ||
+  5276:             !run.run_id
+  5277:         ) {
+  5278: 
+  5279:             throw new Error(
+  5280:                 "Valid Machine Run is required."
+  5281:             );
+  5284: 
+  5285:         const response =
+  5286:             await fetch(
+  5287:                 `/api/oee-machine/run/${run.run_id}/completion-context`,
+  5288:                 {
+  5289:                     cache:"no-store"
+  5290:                 }
+  5291:             );
+  5292: 
+  6601: 
+  6602: 
+  6603:         return Number(
+  6604:             run?.run_id
+  6605:             || run?.id
+  6606:             || 0
+  6607:         );
+  6608:     }
+  6609: 
+  9722:                 !run
+  9723:                 ||
+  9724:                 !Number(
+  9725:                     run.run_id
+  9726:                     || 0
+  9727:                 )
+  9728:             ) {
+  9729: 
+  9730:                 throw new Error(
+ 12006:                 if (
+ 12007:                     machineOeePendingRunV1
+ 12008:                     &&
+ 12009:                     machineOeePendingRunV1.run_id
+ 12010:                 ) {
+ 12011: 
+ 12012:                     window.setTimeout(
+ 12013:                         directInitV3,
+ 12014:                         0
+ 13370:         const active =
+ 13371:             Boolean(
+ 13372:                 machineOeeActiveRunV1
+ 13373:                 ?.run_id
+ 13374:             );
+ 13375: 
+ 13376: 
+ 13377:         const pending =
+ 13378:             Boolean(
+ 13379:                 machineOeePendingRunV1
+ 13380:                 ?.run_id
+ 13381:             );
+ 13382: 
+ 13383: 
+ 13384:         const fetched =
+ 13385:             Boolean(
+ 13455:         const machineLocked =
+ 13456:             Boolean(
+ 13457:                 machineOeeActiveRunV1
+ 13458:                     ?.run_id
+ 13459:                 ||
+ 13460:                 machineOeePendingRunV1
+ 13461:                     ?.run_id
+ 13462:             );
+ 13463: 
+ 13464: 
+ 13465:         const finalDisabled =
+ 13466:             Boolean(
+ 13658:                     ).trim()
+ 13659:                     &&
+ 13660:                     !machineOeeActiveRunV1
+ 13661:                         ?.run_id
+ 13662:                     &&
+ 13663:                     !machineOeePendingRunV1
+ 13664:                         ?.run_id
+ 13665:                 ) {
+ 13666: 
+ 13667:                     machineOeeCurrentFetchedJcV1 =
+ 13668:                         null;
+ 13669:                 }
+ 14294:         if (
+ 14295:             !run
+ 14296:             ||
+ 14297:             !run.run_id
+ 14298:         ) {
+ 14299: 
+ 14300:             return;
+ 14301:         }
+ 14302: 
+ 14666:             hasRun =
+ 14667:                 Boolean(
+ 14668:                     machineOeeActiveRunV1
+ 14669:                     ?.run_id
+ 14670:                     ||
+ 14671:                     machineOeePendingRunV1
+ 14672:                     ?.run_id
+ 14673:                 );
+ 14674: 
+ 14675:         } catch (_) {
+ 14676: 
+ 14677:             hasRun =
+ 15305:                         &&
+ 15306:                         persistedRun
+ 15307:                         &&
+ 15308:                         persistedRun.run_id
+ 15309:                         &&
+ 15310:                         persistedRun.session_id
+ 15311:                     ) {
+ 15312: 
+ 15313:                         machineOeePendingRunV1 =
+ 18682: 
+ 18683:         const runId =
+ 18684:             Number(
+ 18685:                 run?.run_id
+ 18686:                 || 0
+ 18687:             );
+ 18688: 
+ 18689: 
+ 18690:         if (runId <= 0) {
+ 19689:         if (
+ 19690:             !run
+ 19691:             ||
+ 19692:             !run.run_id
+ 19693:         ) {
+ 19694: 
+ 19695:             return null;
+ 19696:         }
+ 19697: 
+ 19701:             const data =
+ 19702:                 await window
+ 19703:                     .machineOeeGetCompletionContextSharedV1(
+ 19704:                         run.run_id
+ 19705:                     );
+ 19706: 
+ 19707: 
+ 19708:             return (
+ 19709:                 data?.card
+ 19770: 
+ 19771:                 ${processCellV58(
+ 19772:                     currentProcess,
+ 19773:                     run?.run_id
+ 19774:                 )}
+ 19775: 
+ 19776: 
+ 19777:                 ${cellV58(
+ 19778:                     "Next Process",
+ 19823: 
+ 19824:         const key =
+ 19825:             String(
+ 19826:                 run.run_id
+ 19827:                 || run.job_card_no
+ 19828:             );
+ 19829: 
+ 19830: 
+ 19831:         if (
+ 19941: 
+ 19942:         function _wireProcV58(det) {
+ 19943:             var _pi = det.querySelector(".oee-process-input-v58");
+ 19944:             if (!_pi || !run || !run.run_id) { return; }
+ 19945:             _pi.addEventListener("change", async function () {
+ 19946:                 var _np = (_pi.value || "").trim();
+ 19947:                 if (!_np) { return; }
+ 19948:                 _pi.disabled = true;
+ 19949:                 try {
+ 19950:                     var _r = await fetch(
+ 19951:                         "/api/oee-machine/run/" + run.run_id + "/process",
+ 19952:                         {
+ 19953:                             method: "POST",
+... CONTEXT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: routes\quality_check.py
+------------------------------------------------------------------------------
+  2223:         )
+  2224: 
+  2225:         machine_oee_run = None
+  2226:         machine_oee_run_id = None
+  2227: 
+  2228: 
+  2229:         if machine_oee_completion:
+  2230: 
+  2231:             if role != "operator":
+  2258: 
+  2259: 
+  2260:             try:
+  2261:                 machine_oee_run_id = int(
+  2262:                     data.get(
+  2263:                         "machine_run_id"
+  2264:                     )
+  2265:                     or 0
+  2266:                 )
+  2267:             except (TypeError, ValueError):
+  2268:                 machine_oee_run_id = 0
+  2269: 
+  2270: 
+  2271:             if machine_oee_run_id <= 0:
+  2272: 
+  2273:                 return jsonify({
+  2274:                     "success": False,
+  2275:                     "error": (
+  2276:                         "Valid Machine Run is required."
+  2312: 
+  2313:                 FOR UPDATE
+  2314:             """, (
+  2315:                 machine_oee_run_id,
+  2316:             ))
+  2317: 
+  2318: 
+  2319:             machine_oee_run = (
+  2320:                 cursor.fetchone()
+  3240:                 submitted_ok,
+  3241:                 submitted_rej,
+  3242:                 submitted_hold,
+  3243:                 machine_oee_run_id,
+  3244:             ))
+  3245: 
+  3246: 
+  3247:             if cursor.rowcount != 1:
+  3248: 
+  3255:             # finalize the entry (compute planned, run min, ratios, etc.)
+  3256:             from .oee_persistence import finalize_completed_entry
+  3257:             finalize_completed_entry(
+  3258:                 cursor, machine_oee_run_id
+  3259:             )
+  3260: 
+  3261: 
+  3262:             #
+  3263:             # IMPORTANT:
+  3296:             "machine_oee_completion":
+  3297:                 machine_oee_completion,
+  3298: 
+  3299:             "machine_run_id": (
+  3300:                 machine_oee_run_id
+  3301:                 if machine_oee_completion
+  3302:                 else None
+  3303:             ),
+  3304: 
+  3305:             "cutting_plan": cutting_plan_result,
+  7095:         # ----- STEP 1: pending JC across all shifts (oee_entries) -----
+  7096:         cursor.execute("""
+  7097:             SELECT
+  7098:                 e.id                        AS run_id,
+  7099:                 e.id                        AS session_id,
+  7100:                 e.machine_id,
+  7101:                 e.job_card_no,
+  7102:                 NULL                        AS job_card_item_id,
+  7103:                 NULL                        AS process_day_id,
+  7995: 
+  7996:         cursor.execute("""
+  7997:             SELECT
+  7998:                 e.id                     AS run_id,
+  7999:                 e.id                     AS session_id,
+  8000:                 e.machine_id,
+  8001: 
+  8002:                 e.job_card_no,
+  8003:                 e.job_card_item_id,
+  8893:             machine.get("zone"),
+  8894:         ))
+  8895: 
+  8896:         run_id = cursor.lastrowid
+  8897:         machine_session_id = run_id   # kept as an alias so downstream code doesn't break
+  8898: 
+  8899: 
+  8900:         # ----------------------------------------------------
+  8901:         # READ CREATED ENTRY  (shape kept for JS compatibility)
+  8902:         # ----------------------------------------------------
+  8903: 
+  8904:         cursor.execute("""
+  8905:             SELECT
+  8906:                 id                     AS run_id,
+  8907:                 id                     AS session_id,
+  8908:                 machine_id,
+  8909:                 job_card_no,
+  8910:                 process_name,
+  8911:                 entry_state            AS run_status,
+  8927:             WHERE id = %s
+  8928:             LIMIT 1
+  8929:         """, (
+  8930:             run_id,
+  8931:         ))
+  8932: 
+  8933: 
+  8934:         created_run = (
+  8935:             cursor.fetchone()
+  8942:         # Never return success to the browser unless the inserted
+  8943:         # run can be read back inside the same transaction.
+  8944:         # This prevents a false RUNNING UI with an empty run object.
+  8945:         created_run_id = int(
+  8946:             created_run.get(
+  8947:                 "run_id"
+  8948:             )
+  8949:             or 0
+  8950:         )
+  8951: 
+  8952: 
+  8953:         if (
+  8954:             created_run_id <= 0
+  8955:             or created_run_id != int(run_id or 0)
+  8956:             or str(
+  8957:                 created_run.get(
+  8958:                     "run_status"
+  8959:                 )
+  8960:                 or ""
+  9033: 
+  9034: # MACHINE_OEE_RUN_VOID_V1
+  9035: @quality_check_bp.route(
+  9036:     "/api/oee-machine/run/<int:run_id>/void",
+  9037:     methods=["POST"]
+  9038: )
+  9039: def machine_oee_void_run_v1(run_id):
+  9040:     """
+  9041:     Void a RUNNING machine run that was started on the wrong JC.
+  9042:     Only allowed if no production has been saved yet (ok+rej+hold = 0).
+  9043:     """
+  9044:     conn = None
+  9064:               AND activity_type IS NULL
+  9065:             LIMIT 1
+  9066:             """,
+  9067:             (run_id,)
+  9068:         )
+  9069:         run = cursor.fetchone()
+  9070: 
+  9071:         if not run:
+  9072:             return jsonify({
+  9106:               AND activity_type IS NULL
+  9107:               AND UPPER(TRIM(entry_state)) = 'RUNNING'
+  9108:             """,
+  9109:             (run_id,)
+  9110:         )
+  9111:         conn.commit()
+  9112: 
+  9113:         return jsonify({"success": True})
+  9114: 
+  9132: 
+  9133: # MACHINE_OEE_RUN_PRODUCTION_V1
+  9134: @quality_check_bp.route(
+  9135:     "/api/oee-machine/run/<int:run_id>/production",
+  9136:     methods=["POST"]
+  9137: )
+  9138: def machine_oee_run_production_v1(run_id):
+  9139:     """
+  9140:     Save production details against one RUNNING
+  9141:     machine-wise OEE JC run.
+  9142: 
+  9143:     Does NOT:
+  9394:             LIMIT 1
+  9395:             FOR UPDATE
+  9396:         """, (
+  9397:             run_id,
+  9398:         ))
+  9399: 
+  9400: 
+  9401:         run = cursor.fetchone()
+  9402: 
+  9547:             rejected_qty,
+  9548:             hold_qty,
+  9549: 
+  9550:             run_id,
+  9551:         ))
+  9552: 
+  9553: 
+  9554:         # -------------------------------------------------
+  9555:         # Planned Minutes from operator-entered JC times.
+  9590:                   AND start_time IS NOT NULL
+  9591:                   AND end_time   IS NOT NULL
+  9592:             """, (
+  9593:                 run_id,
+  9594:             ))
+  9595: 
+  9596:         conn.commit()
+  9597: 
+  9598: 
+  9599:         return jsonify({
+  9600:             "success": True,
+  9601: 
+  9602:             "run_id":
+  9603:                 run_id,
+  9604: 
+  9605:             "job_card_no":
+  9606:                 run.get("job_card_no"),
+  9607: 
+  9608:             "required_qty":
+  9705: 
+  9706: # OEE_ACTIVITY_RUN_LOSSES_V87
+  9707: @quality_check_bp.route(
+  9708:     "/api/oee-machine/activity-run/<int:activity_run_id>/losses",
+  9709:     methods=["GET", "POST"]
+  9710: )
+  9711: def machine_oee_activity_run_losses_v87(activity_run_id):
+  9712:     """
+  9713:     Losses for a Tool Room / Development activity entry.
+  9714:     Consolidated: reads/writes oee_entry_losses only.
+  9715:     """
+  9716:     conn = None
+  9744:             WHERE e.id = %s
+  9745:               AND e.activity_type IS NOT NULL
+  9746:             LIMIT 1
+  9747:         """, (activity_run_id,))
+  9748:         run = cursor.fetchone()
+  9749:         if not run:
+  9750:             return jsonify({"success": False, "error": "Activity run was not found."}), 404
+  9751: 
+  9752:         expected_codes = {"A" + str(i) for i in range(1, 28)}
+  9756:             cursor.execute("""
+  9757:                 SELECT
+  9758:                     id,
+  9759:                     oee_entry_id            AS activity_run_id,
+  9760:                     loss_type_id,
+  9761:                     loss_code_snapshot      AS loss_code,
+  9762:                     loss_name_snapshot      AS loss_name,
+  9763:                     loss_category_snapshot  AS loss_category,
+  9764:                     loss_minutes,
+  9766:                 FROM oee_entry_losses
+  9767:                 WHERE oee_entry_id = %s
+  9768:                 ORDER BY CAST(SUBSTRING(loss_code_snapshot, 2) AS UNSIGNED), id
+  9769:             """, (activity_run_id,))
+  9770:             rows = cursor.fetchall() or []
+  9771:             for row in rows:
+  9772:                 if row.get("loss_minutes") is not None:
+  9773:                     row["loss_minutes"] = float(row["loss_minutes"])
+  9774:             return jsonify({
+  9775:                 "success": True,
+  9776:                 "activity_run_id": activity_run_id,
+  9777:                 "losses": rows,
+  9778:             })
+  9779: 
+  9780:         # ---- POST validation ----
+  9781:         status = str(run.get("status") or "").strip().upper()
+  9829:         # Replace saved grid for this activity
+  9830:         cursor.execute(
+  9831:             "DELETE FROM oee_entry_losses WHERE oee_entry_id = %s",
+  9832:             (activity_run_id,),
+  9833:         )
+  9834: 
+  9835:         for code in sorted(expected_codes, key=lambda v: int(v[1:])):
+  9836:             minutes = float(submitted_map.get(code, 0) or 0)
+  9837:             if minutes <= 0:
+  9845:                 )
+  9846:                 VALUES (%s, %s, %s, %s, %s, %s, %s)
+  9847:             """, (
+  9848:                 activity_run_id,
+  9849:                 master_row.get("id"),
+  9850:                 code,
+  9851:                 master_row.get("loss_name"),
+  9852:                 (master_row.get("loss_category") or "AR").upper(),
+  9853:                 minutes,
+  9857:         cursor.execute("""
+  9858:             SELECT
+  9859:                 id,
+  9860:                 oee_entry_id            AS activity_run_id,
+  9861:                 loss_type_id,
+  9862:                 loss_code_snapshot      AS loss_code,
+  9863:                 loss_name_snapshot      AS loss_name,
+  9864:                 loss_category_snapshot  AS loss_category,
+  9865:                 loss_minutes
+  9866:             FROM oee_entry_losses
+  9867:             WHERE oee_entry_id = %s
+  9868:             ORDER BY CAST(SUBSTRING(loss_code_snapshot, 2) AS UNSIGNED), id
+  9869:         """, (activity_run_id,))
+  9870:         saved_rows = cursor.fetchall() or []
+  9871:         for row in saved_rows:
+  9872:             if row.get("loss_minutes") is not None:
+  9873:                 row["loss_minutes"] = float(row["loss_minutes"])
+  9874: 
+  9881: 
+  9882:         return jsonify({
+  9883:             "success": True,
+  9884:             "activity_run_id": activity_run_id,
+  9885:             "total_loss_minutes": total_loss_minutes,
+  9886:             "losses": saved_rows,
+  9887:             "message": "Activity OEE losses saved.",
+  9888:         })
+  9889: 
+  9930: 
+  9931: 
+  9932:         try:
+  9933:             activity_run_id = int(
+  9934:                 data.get(
+  9935:                     "activity_run_id"
+  9936:                 )
+  9937:             )
+  9938: 
+  9939:         except (
+  9940:             TypeError,
+  9944:             return jsonify({
+  9945:                 "success": False,
+  9946:                 "error":
+  9947:                     "Valid activity_run_id is required."
+  9948:             }), 400
+  9949: 
+  9950: 
+  9951:         ended_at = str(
+  9952:             data.get("ended_at")
+  9992:             LIMIT 1
+  9993:             """,
+  9994:             (
+  9995:                 activity_run_id,
+  9996:             )
+  9997:         )
+  9998: 
+  9999: 
+ 10000:         run = (
+ 10092:               AND UPPER(TRIM(entry_state)) = 'RUNNING'
+ 10093:         """, (
+ 10094:             _end_time_str,
+ 10095:             activity_run_id,
+ 10096:         ))
+ 10097: 
+ 10098:         if cursor.rowcount != 1:
+ 10099:             conn.rollback()
+ 10100:             return jsonify({
+ 10116:             FROM oee_entries
+ 10117:             WHERE id = %s
+ 10118:             LIMIT 1
+ 10119:         """, (activity_run_id, activity_run_id))
+ 10120:         row = cursor.fetchone() or {}
+ 10121: 
+ 10122:         def _sec(v):
+ 10123:             if v is None:
+ 10124:                 return None
+ 10166:             round(utilization, 2),
+ 10167:             round(ar_loss, 2),
+ 10168:             round(ar_ratio, 8),
+... CONTEXT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: _to_delete\oee_operator_for_claude\quality_check_oee_extract.py
+------------------------------------------------------------------------------
+  1754:         )
+  1755: 
+  1756:         machine_oee_run = None
+  1757:         machine_oee_run_id = None
+  1758: 
+  1759: 
+  1760:         if machine_oee_completion:
+  1761: 
+  1762:             if role != "operator":
+  1789: 
+  1790: 
+  1791:             try:
+  1792:                 machine_oee_run_id = int(
+  1793:                     data.get(
+  1794:                         "machine_run_id"
+  1795:                     )
+  1796:                     or 0
+  1797:                 )
+  1798:             except (TypeError, ValueError):
+  1799:                 machine_oee_run_id = 0
+  1800: 
+  1801: 
+  1802:             if machine_oee_run_id <= 0:
+  1803: 
+  1804:                 return jsonify({
+  1805:                     "success": False,
+  1806:                     "error": (
+  1807:                         "Valid Machine Run is required."
+  1845: 
+  1846:                 FOR UPDATE
+  1847:             """, (
+  1848:                 machine_oee_run_id,
+  1849:             ))
+  1850: 
+  1851: 
+  1852:             machine_oee_run = (
+  1853:                 cursor.fetchone()
+  2776:                 submitted_ok,
+  2777:                 submitted_rej,
+  2778:                 submitted_hold,
+  2779:                 machine_oee_run_id,
+  2780:             ))
+  2781: 
+  2782: 
+  2783:             if cursor.rowcount != 1:
+  2784: 
+  2825:             "machine_oee_completion":
+  2826:                 machine_oee_completion,
+  2827: 
+  2828:             "machine_run_id": (
+  2829:                 machine_oee_run_id
+  2830:                 if machine_oee_completion
+  2831:                 else None
+  2832:             ),
+  2833: 
+  2834:             "cutting_plan": cutting_plan_result,
+  3025: 
+  3026:         cursor.execute("""
+  3027:             SELECT
+  3028:                 r.id AS run_id,
+  3029:                 r.session_id,
+  3030:                 r.machine_id,
+  3031: 
+  3032:                 r.job_card_no,
+  3033:                 r.job_card_item_id,
+  4238: 
+  4239:         cursor.execute("""
+  4240:             SELECT
+  4241:                 r.id AS run_id,
+  4242:                 r.session_id,
+  4243:                 r.machine_id,
+  4244: 
+  4245:                 r.job_card_no,
+  4246:                 r.job_card_item_id,
+  5256:         ))
+  5257: 
+  5258: 
+  5259:         run_id = cursor.lastrowid
+  5260: 
+  5261: 
+  5262:         # ----------------------------------------------------
+  5263:         # READ CREATED RUN
+  5264:         # ----------------------------------------------------
+  5265: 
+  5266:         cursor.execute("""
+  5267:             SELECT
+  5268:                 r.id AS run_id,
+  5269:                 r.session_id,
+  5270:                 r.machine_id,
+  5271:                 r.job_card_no,
+  5272:                 r.process_name,
+  5273:                 r.run_status,
+  5298: 
+  5299:             LIMIT 1
+  5300:         """, (
+  5301:             run_id,
+  5302:         ))
+  5303: 
+  5304: 
+  5305:         created_run = (
+  5306:             cursor.fetchone()
+  5313:         # Never return success to the browser unless the inserted
+  5314:         # run can be read back inside the same transaction.
+  5315:         # This prevents a false RUNNING UI with an empty run object.
+  5316:         created_run_id = int(
+  5317:             created_run.get(
+  5318:                 "run_id"
+  5319:             )
+  5320:             or 0
+  5321:         )
+  5322: 
+  5323: 
+  5324:         if (
+  5325:             created_run_id <= 0
+  5326:             or created_run_id != int(run_id or 0)
+  5327:             or str(
+  5328:                 created_run.get(
+  5329:                     "run_status"
+  5330:                 )
+  5331:                 or ""
+  5405: # MACHINE_OEE_RUN_VOID_V1
+  5406: 
+  5407: @quality_check_bp.route(
+  5408:     "/api/oee-machine/run/<int:run_id>/void",
+  5409:     methods=["POST"]
+  5410: )
+  5411: def machine_oee_void_run_v1(run_id):
+  5412:     """
+  5413:     Void a RUNNING machine run that was started on the wrong JC.
+  5414:     Only allowed if no production has been saved yet (ok+rej+hold = 0).
+  5415:     """
+  5416:     conn = None
+  5435:             WHERE id = %s
+  5436:             LIMIT 1
+  5437:             """,
+  5438:             (run_id,)
+  5439:         )
+  5440:         run = cursor.fetchone()
+  5441: 
+  5442:         if not run:
+  5443:             return jsonify({
+  5476:             WHERE id = %s
+  5477:               AND UPPER(TRIM(run_status)) = 'RUNNING'
+  5478:             """,
+  5479:             (run_id,)
+  5480:         )
+  5481:         conn.commit()
+  5482: 
+  5483:         return jsonify({"success": True})
+  5484: 
+  5503: # MACHINE_OEE_RUN_PRODUCTION_V1
+  5504: 
+  5505: @quality_check_bp.route(
+  5506:     "/api/oee-machine/run/<int:run_id>/production",
+  5507:     methods=["POST"]
+  5508: )
+  5509: def machine_oee_run_production_v1(run_id):
+  5510:     """
+  5511:     Save production details against one RUNNING
+  5512:     machine-wise OEE JC run.
+  5513: 
+  5514:     Does NOT:
+  5764:             LIMIT 1
+  5765:             FOR UPDATE
+  5766:         """, (
+  5767:             run_id,
+  5768:         ))
+  5769: 
+  5770: 
+  5771:         run = cursor.fetchone()
+  5772: 
+  5916:             rejected_qty,
+  5917:             hold_qty,
+  5918: 
+  5919:             run_id,
+  5920:         ))
+  5921: 
+  5922: 
+  5923:         # -------------------------------------------------
+  5924:         # Planned Minutes from operator-entered JC times.
+  6022:         return jsonify({
+  6023:             "success": True,
+  6024: 
+  6025:             "run_id":
+  6026:                 run_id,
+  6027: 
+  6028:             "job_card_no":
+  6029:                 run.get("job_card_no"),
+  6030: 
+  6031:             "required_qty":
+  6236: # MACHINE_OEE_RUN_LINKED_LOSS_GRID_V40
+  6237: 
+  6238: @quality_check_bp.route(
+  6239:     "/api/oee-machine/run/<int:run_id>/losses",
+  6240:     methods=["GET", "POST"]
+  6241: )
+  6242: def machine_oee_run_losses_v1(run_id):
+  6243: 
+  6244:     conn = None
+  6245:     cursor = None
+  6246: 
+  6247:     try:
+  6297: 
+  6298:             LIMIT 1
+  6299:         """, (
+  6300:             run_id,
+  6301:         ))
+  6302: 
+  6303: 
+  6304:         run = cursor.fetchone()
+  6305: 
+  6322:                 SELECT
+  6323:                     id,
+  6324:                     session_id,
+  6325:                     run_id,
+  6326:                     machine_id,
+  6327: 
+  6328:                     loss_type_id,
+  6329:                     loss_code,
+  6330:                     loss_name,
+  6337: 
+  6338:                 FROM oee_machine_loss_events
+  6339: 
+  6340:                 WHERE run_id = %s
+  6341: 
+  6342:                 ORDER BY id
+  6343:             """, (
+  6344:                 run_id,
+  6345:             ))
+  6346: 
+  6347: 
+  6348:             rows = cursor.fetchall() or []
+  6349: 
+  6378: 
+  6379:             return jsonify({
+  6380:                 "success": True,
+  6381:                 "run_id": run_id,
+  6382:                 "losses": rows,
+  6383:             })
+  6384: 
+  6385: 
+  6386:         # ----------------------------------------------------
+  6634: 
+  6635:             cursor.execute("""
+  6636:                 DELETE FROM oee_machine_loss_events
+  6637:                 WHERE run_id = %s
+  6638:             """, (
+  6639:                 run_id,
+  6640:             ))
+  6641: 
+  6642: 
+  6643:             for code in sorted(
+  6644:                 expected_codes,
+  6670:                             "session_id"
+  6671:                         ),
+  6672: 
+  6673:                     "run_id":
+  6674:                         run_id,
+  6675: 
+  6676:                     "machine_id":
+  6677:                         run.get(
+  6678:                             "machine_id"
+  6679:                         ),
+  6750:                 SELECT
+  6751:                     id,
+  6752:                     session_id,
+  6753:                     run_id,
+  6754:                     machine_id,
+  6755: 
+  6756:                     loss_type_id,
+  6757:                     loss_code,
+  6758:                     loss_name,
+  6763: 
+  6764:                 FROM oee_machine_loss_events
+  6765: 
+  6766:                 WHERE run_id = %s
+  6767: 
+  6768:                 ORDER BY
+  6769:                     CAST(
+  6770:                         SUBSTRING(
+  6771:                             loss_code,
+  6775:                     ),
+  6776:                     id
+  6777:             """, (
+  6778:                 run_id,
+  6779:             ))
+  6780: 
+  6781: 
+  6782:             saved_rows = (
+  6783:                 cursor.fetchall()
+  6844:             return jsonify({
+  6845:                 "success": True,
+  6846: 
+  6847:                 "run_id":
+  6848:                     run_id,
+  6849: 
+  6850:                 "session_id":
+  6851:                     run.get(
+  6852:                         "session_id"
+  6853:                     ),
+  6976: 
+  6977:             FROM oee_machine_loss_events
+  6978: 
+  6979:             WHERE run_id = %s
+  6980:               AND loss_type_id = %s
+  6981: 
+  6982:             ORDER BY id
+  6983: 
+  6984:             LIMIT 1
+  6985: 
+  6986:             FOR UPDATE
+  6987:         """, (
+  6988:             run_id,
+  6989:             loss_type_id,
+  6990:         ))
+  6991: 
+  6992: 
+  6993:         existing = cursor.fetchone()
+  7029:                         "session_id"
+  7030:                     ),
+  7031: 
+  7032:                 "run_id":
+  7033:                     run_id,
+  7034: 
+  7035:                 "machine_id":
+  7036:                     run.get(
+  7037:                         "machine_id"
+  7038:                     ),
+  7129: 
+  7130: 
+  7131: @quality_check_bp.route(
+  7132:     "/api/oee-machine/run/<int:run_id>/losses/<int:event_id>",
+  7133:     methods=["DELETE"]
+  7134: )
+  7135: def machine_oee_delete_run_loss_v1(
+  7136:     run_id,
+  7137:     event_id,
+  7138: ):
+  7139: 
+  7140:     conn = None
+  7141:     cursor = None
+  7169:             FROM oee_machine_loss_events l
+  7170: 
+  7171:             JOIN oee_machine_runs r
+  7172:               ON r.id = l.run_id
+  7173: 
+  7174:             WHERE l.id = %s
+  7175:               AND l.run_id = %s
+  7176: 
+  7177:             LIMIT 1
+... CONTEXT CAPPED FOR THIS FILE ...
+
+------------------------------------------------------------------------------
+FILE: routes\oee_machine_summary.py
+------------------------------------------------------------------------------
+   957:             f"""
+   958:             SELECT
+   959:                 t.id                    AS tool_id,
+   960:                 t.run_id                AS entry_id,
+   961:                 t.tool_position,
+   962:                 t.tool_uid,
+   963:                 t.tool_action_code,
+   964:                 t.tool_action_name,
+   965:                 t.corner_code,
+   977:                 e.machine_name,
+   978:                 e.operator_name,
+   979:                 e.operator_employee_no
+   980:             FROM oee_tool_entries t
+   981:             JOIN oee_entries e ON e.id = t.run_id
+   982:             WHERE e.record_status = 'active'
+   983:               AND e.entry_date BETWEEN %s AND %s
+   984:               {tool_scope_sql}
+   985:             ORDER BY e.entry_date DESC, e.shift_name, t.run_id, t.tool_position, t.id
+   986:             """,
+   987:             [str(fd), str(td), row_id],
+   988:         )
+   989:         tool_rows = []
+   990:         for r in cur3.fetchall():
+  1711:         # Tool entries may now be either:
+  1712:         #
+  1713:         # 1. Legacy OEE-linked:
+  1714:         #       run_id / activity_run_id / machine_loss_entry_id
+  1715:         #
+  1716:         # 2. Independent:
+  1717:         #       tool_entry_batch_id + entry_date + shift_name
+  1718:         #
+  1719:         # Never require an oee_entries parent for independent Tool Entry.
+  1720:         #
+  1721:         tw = [
+  1722:             "(e.id IS NULL OR e.record_status = 'active')",
+  1757:             SELECT
+  1758:                 t.id AS tool_id,
+  1759: 
+  1760:                 t.run_id AS entry_id,
+  1761:                 t.activity_run_id,
+  1762:                 t.machine_loss_entry_id,
+  1763:                 t.tool_entry_batch_id,
+  1764: 
+  1765:                 t.tool_position,
+  1766:                 t.tool_uid,
+  1767: 
+  1768:                 t.tool_action_code,
+  1822:                     ''
+  1823:                 ) AS operator_employee_no
+  1824: 
+  1825:             FROM oee_tool_entries t
+  1826: 
+  1827:             LEFT JOIN oee_entries e
+  1828:               ON e.id = COALESCE(
+  1829:                     t.run_id,
+  1830:                     t.activity_run_id,
+  1831:                     t.machine_loss_entry_id
+  1832:                  )
+  1833: 
+  1834:             LEFT JOIN oee_machines m
+  1835:               ON m.id = t.machine_id
+  1836: 
+  1863:         # index tools by their parent entry so sessions & activities can carry inline tools
+  1864:         tools_by_entry = {}
+  1865:         for t in raw_tools:
+  1866:             parent = t["entry_id"] or t.get("activity_run_id") or t.get("machine_loss_entry_id")
+  1867:             if not parent: continue
+  1868:             tools_by_entry.setdefault(parent, []).append({
+  1869:                 "tool_id":     t["tool_id"],
+  1870:                 "position":    t["tool_position"],
+  1871:                 "uid":         t["tool_uid"] or "",
+  1991:             linked_entry_id = (
+  1992:                 t["entry_id"]
+  1993:                 or t.get(
+  1994:                     "activity_run_id"
+  1995:                 )
+  1996:                 or t.get(
+  1997:                     "machine_loss_entry_id"
+  1998:                 )
+  1999:             )
+  2000: 
+  2001:             standalone_batch_id = str(
+  2002:                 t.get(
+  2003:                     "tool_entry_batch_id"
+  2004:                 )
+  2005:                 or ""
+  2006:             ).strip()
+  2007: 
+  2008:             is_standalone = bool(
+  2017:                 "entry_id":
+  2018:                     linked_entry_id,
+  2019: 
+  2020:                 "tool_entry_batch_id":
+  2021:                     standalone_batch_id,
+  2022: 
+  2023:                 "is_standalone":
+  2024:                     is_standalone,
+  2025: 
+  2076:                 "  u.created_regrind_date, u.remark, u.actual_dia_mm, u.working_length_mm, "
+  2077:                 "  u.opening_stage_life, "
+  2078:                 "  m.tool_item_code, m.tool_item_name, m.uid_prefix "
+  2079:                 "FROM oee_tool_uid u "
+  2080:                 "LEFT JOIN oee_tool_master m ON m.id = u.tool_master_id "
+  2081:                 "WHERE u.tool_uid IN (" + ph + ")",
+  2082:                 unique_uids,
+  2083:             )
+  2084:             for r in cur2.fetchall() or []:
+  2085:                 uid_info[r["tool_uid"]] = {
+  2110:                 "SELECT "
+  2111:                 "  t.id AS tool_id, "
+  2112:                 "  t.tool_uid, "
+  2113:                 "  t.tool_entry_batch_id, "
+  2114:                 "  t.tool_action_code, "
+  2115:                 "  t.tool_action_name, "
+  2116:                 "  t.corner_code, "
+  2117:                 "  t.corner_name, "
+  2118:                 "  t.change_reason_code, "
+  2139:                 "  COALESCE(e.operator_name, t.operator_name, '') "
+  2140:                 "    AS operator_name "
+  2141: 
+  2142:                 "FROM oee_tool_entries t "
+  2143: 
+  2144:                 "LEFT JOIN oee_entries e "
+  2145:                 "  ON e.id = COALESCE("
+  2146:                 "       t.run_id, "
+  2147:                 "       t.activity_run_id, "
+  2148:                 "       t.machine_loss_entry_id"
+  2149:                 "     ) "
+  2150: 
+  2151:                 "LEFT JOIN oee_machines m "
+  2152:                 "  ON m.id = t.machine_id "
+  2153: 
+  2165:                     continue
+  2166:                 standalone_batch_id = str(
+  2167:                     r.get(
+  2168:                         "tool_entry_batch_id"
+  2169:                     )
+  2170:                     or ""
+  2171:                 ).strip()
+  2172: 
+  2173:                 lst.append({
+  2200:                             )
+  2201:                         ),
+  2202: 
+  2203:                     "tool_entry_batch_id":
+  2204:                         standalone_batch_id,
+  2205: 
+  2206:                     "activity_type":
+  2207:                         r["activity_type"]
+  2208:                         or "",
+
+------------------------------------------------------------------------------
+FILE: patch_tooling_frontend_persistence_v5.py
+------------------------------------------------------------------------------
+   113: 
+   114: 
+   115:         return Number(
+   116:             run?.run_id
+   117:             || run?.id
+   118:             || 0
+   119:         );
+   120:     }
+   121: 
+   126: 
+   127:         const runId =
+   128:             Number(
+   129:                 context?.run_id
+   130:                 || 0
+   131:             );
+   132: 
+   133: 
+   134:         const activityRunId =
+   135:             Number(
+   136:                 context?.activity_run_id
+   137:                 || 0
+   138:             );
+   139: 
+   140: 
+   141:         if (
+   169: 
+   170:         if (runId > 0) {
+   171: 
+   172:             payload.run_id =
+   173:                 runId;
+   174: 
+   175:         } else {
+   176: 
+   177:             payload.activity_run_id =
+   178:                 activityRunId;
+   179:         }
+   180: 
+   181: 
+   182:         const response =
+   183:             await fetch(
+   184:                 "/api/oee-machine/tooling-entries",
+   185:                 {
+   186:                     method:
+   187:                         "POST",
+   188: 
+   189:                     headers: {
+   494: 
+   495:             const response =
+   496:                 await fetch(
+   497:                     "/api/oee-machine/tooling-entries"
+   498:                     + "?run_id="
+   499:                     + encodeURIComponent(
+   500:                         runId
+   501:                     ),
+   502:                     {
+   503:                         cache:
+   614:             ) {
+   615: 
+   616:                 await window.machineOeeSaveToolRowsV5({
+   617:                     run_id:
+   618:                         directRunIdV3()
+   619:                 });
+   620:             }
+   621: 
+   622:             if (
+   664:         ) {
+   665: 
+   666:             await window.machineOeeSaveToolRowsV5({
+   667:                 activity_run_id:
+   668:                     activityRunId
+   669:             });
+   670:         }
+   671: 
+   672: 
+   706:         ) {
+   707: 
+   708:             await window.machineOeeSaveToolRowsV5({
+   709:                 run_id:
+   710:                     Number(
+   711:                         run.run_id
+   712:                         || 0
+   713:                     )
+   714:             });
+   715:         }
+   716: 
+   729: checks = [
+   730:     MARKER,
+   731:     "window.machineOeeSaveToolRowsV5",
+   732:     "activity_run_id:",
+   733:     "run_id:",
+   734:     "/api/oee-machine/tooling-entries",
+   735: ]
+   736: 
+   737: for check in checks:
+   738:     if check not in text:
+   739:         raise SystemExit(
+
+------------------------------------------------------------------------------
+FILE: Claude outputs\oee_state_audit.py
+------------------------------------------------------------------------------
+    95: FEATURE_TABLES = ["oee_activity_master", "oee_activity_runs"]
+    96: 
+    97: # Column Claude added / that the new feature would need
+    98: FEATURE_COLUMNS_ON_LOSSES = ["activity_run_id"]
+    99: 
+   100: 
+   101: print("=" * 72)
+   102: print(" 1. DATABASE — EXPECTED TABLES")
+   103: print("=" * 72)
+   178:     for r in cur.fetchall():
+   179:         print(f"  oee_machine_runs status={r['run_status']!r:15s} count={r['c']}")
+   180: 
+   181: # Orphan losses (no run_id AND no activity_run_id)
+   182: if table_exists("oee_machine_loss_events"):
+   183:     cols = columns_of("oee_machine_loss_events")
+   184:     if "activity_run_id" in cols:
+   185:         cur.execute(
+   186:             "SELECT COUNT(*) AS c FROM oee_machine_loss_events "
+   187:             "WHERE run_id IS NULL AND activity_run_id IS NULL"
+   188:         )
+   189:     else:
+   190:         cur.execute(
+   191:             "SELECT COUNT(*) AS c FROM oee_machine_loss_events "
+   192:             "WHERE run_id IS NULL"
+   193:         )
+   194:     orphan = (cur.fetchone() or {}).get("c") or 0
+   195:     print(f"  Orphan loss events (no parent link): {orphan}")
+   196:     if orphan > 0:
+   197:         rec("WARN", "db.data",
+   337:                   errors="ignore") as f:
+   338:             src = f.read()
+   339:         for pat in ("oee_activity_master", "oee_activity_runs",
+   340:                     "activity_run_id", "TOOL_ROOM", "DEVELOPMENT"):
+   341:             for m in re.finditer(re.escape(pat), src):
+   342:                 line_no = src.count("\n", 0, m.start()) + 1
+   343:                 activity_hits.append((fn, line_no, pat))
+   344: 
+   345: if activity_hits:
+
+------------------------------------------------------------------------------
+FILE: static\js\page3.js
+------------------------------------------------------------------------------
+   159:        * previous process, and its NEXT
+   160:        * process belongs to this operator.
+   161:        *
+   162:        * Open proper Receive Material modal.
+   163:        */
+   164:       const incomingCard =
+   165:         queueCards.find(
+   166:           function(card) {
+   167: 
+   178: 
+   179:       if (incomingCard) {
+   180: 
+   181:         openOperatorReceiveMaterialModalV3(
+   182:           incomingCard
+   183:         );
+   184: 
+   185:         return;
+   186:       }
+  7795: 
+  7796: /* OPERATOR_SEARCH_RECEIPT_MODAL_V3_START */
+  7797: 
+  7798: let operatorReceiveMaterialCardV3 = null;
+  7799: 
+  7800: 
+  7801: function operatorIncomingRequiredQtyV3(card) {
+  7802: 
+  7803:   const jcQty = Math.max(
+  7824: }
+  7825: 
+  7826: 
+  7827: function operatorCloseReceiveMaterialModalV3() {
+  7828: 
+  7829:   operatorReceiveMaterialCardV3 = null;
+  7830: 
+  7831:   const overlay = document.getElementById(
+  7832:     "operator-receive-material-overlay-v3"
+  7833:   );
+  7834: 
+  7835:   if (overlay) {
+  7836:     overlay.remove();
+  7837:   }
+  7838: }
+  7839: 
+  7840: 
+  7841: function openOperatorReceiveMaterialModalV3(card) {
+  7842: 
+  7843:   operatorCloseReceiveMaterialModalV3();
+  7844: 
+  7845:   operatorReceiveMaterialCardV3 = card;
+  7846: 
+  7847: 
+  7848:   const requiredQty =
+  7849:     operatorIncomingRequiredQtyV3(
+  7850:       card
+  7871: 
+  7872: 
+  7873:   overlay.id =
+  7874:     "operator-receive-material-overlay-v3";
+  7875: 
+  7876: 
+  7877:   overlay.style.cssText = `
+  7878:     position:fixed;
+  7879:     inset:0;
+  7938:               font-weight:900;
+  7939:             "
+  7940:           >
+  7941:             Receive Material
+  7942:           </div>
+  7943: 
+  7944:           <div style="
+  7945:             margin-top:2px;
+  7946:             color:#64748b;
+  7955: 
+  7956:         <button
+  7957:           type="button"
+  7958:           onclick="operatorCloseReceiveMaterialModalV3()"
+  7959:           style="
+  7960:             width:36px;
+  7961:             height:36px;
+  7962:             border:1px solid #e2e8f0;
+  7963:             border-radius:10px;
+  8226: 
+  8227:         <button
+  8228:           type="button"
+  8229:           onclick="operatorCloseReceiveMaterialModalV3()"
+  8230:           style="
+  8231:             padding:10px 18px;
+  8232:             border:1px solid #cbd5e1;
+  8233:             border-radius:10px;
+  8234:             background:#fff;
+  8244:         <button
+  8245:           type="button"
+  8246:           id="operator-receive-submit-v3"
+  8247:           onclick="operatorSubmitReceiveMaterialV3()"
+  8248:           ${requiredQty <= 0 ? "disabled" : ""}
+  8249:           style="
+  8250:             padding:10px 20px;
+  8251:             border:0;
+  8252:             border-radius:10px;
+  8269:             class="fa fa-check"
+  8270:             style="margin-right:6px;"
+  8271:           ></i>
+  8272:           Receive Material
+  8273:         </button>
+  8274: 
+  8275:       </div>
+  8276: 
+  8277:     </div>
+  8300: }
+  8301: 
+  8302: 
+  8303: async function operatorSubmitReceiveMaterialV3() {
+  8304: 
+  8305:   const card =
+  8306:     operatorReceiveMaterialCardV3;
+  8307: 
+  8308: 
+  8309:   if (!card) {
+  8310:     showToast(
+  8311:       "Incoming Job Card information is missing.",
+  8465:     ) {
+  8466:       throw new Error(
+  8467:         result.error
+  8468:         || "Unable to receive material."
+  8469:       );
+  8470:     }
+  8471: 
+  8472: 
+  8473:     operatorCloseReceiveMaterialModalV3();
+  8474: 
+  8475: 
+  8476:     showToast(
+  8477:       `Material received successfully. `
+  8478:       + `Current WIP: ${result.new_stage || incomingProcess}`,
+  8507: 
+  8508:     showToast(
+  8509:       error.message
+  8510:       || "Unable to receive material.",
+  8511:       "error"
+  8512:     );
+  8513: 
+  8514: 
+  8515:     if (submitButton) {
+  8521:           class="fa fa-check"
+  8522:           style="margin-right:6px;"
+  8523:         ></i>
+  8524:         Receive Material
+  8525:       `;
+  8526:     }
+  8527:   }
+  8528: }
+  8529: 
+
+------------------------------------------------------------------------------
+FILE: apply_live_oee_fix.py
+------------------------------------------------------------------------------
+     4: 
+     5: The route path stays /api/oee-machine/session/<id>/live-oee, but the
+     6: <id> is now the oee_entries.id (which is what Phase 3a returns as both
+     7: run_id and session_id).
+     8: """
+     9: 
+    10: import re
+    11: 
+    12: TARGET = r"D:\Het\demo2\routes\quality_check.py"
+
+------------------------------------------------------------------------------
+FILE: templates\base.html
+------------------------------------------------------------------------------
+   448:         {% endif %}
+   449:         {% endif %}
+   450: 
+   451:         <!-- OEE_TOOL_UID_REGISTER_SIDEBAR_V124 -->
+   452:         {% if session.get("role") in ["admin", "plant_head", "supervisor"] %}
+   453:         {% if can_tool_uid %}
+   454:           <a
+   455:           href="/oee-tool-list"
+   456:           class="sidebar-link {{ 'active' if request.path == '/oee-tool-list' else '' }}"
+
+==============================================================================
+9. AUDIT SUMMARY
+==============================================================================
+Total source files scanned: 175
+Files containing OEE / Tool signals: 37
+OEE / Tool DB object names referenced: 208
+
+IMPORTANT:
+This is a source-code audit only.
+Database schema and current database records have NOT been inspected.
+Before Tool Issue / Usage / Return DB changes, perform a separate read-only database audit.
+NO APPLICATION FILE WAS MODIFIED.
+NO DATABASE WRITE WAS PERFORMED.

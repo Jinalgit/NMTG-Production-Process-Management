@@ -1,4 +1,4 @@
-﻿{# ============================================================ Base layout -
+{# ============================================================ Base layout -
 Demo 2 ============================================================ #}
 <!doctype html>
 <html lang="en">
@@ -33,6 +33,7 @@ Demo 2 ============================================================ #}
       rel="stylesheet"
       href="{{ url_for('static', filename='css/skeleton.css') }}?v={{ version }}"
     />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-components.css') }}?v={{ version }}">
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
@@ -155,6 +156,37 @@ Demo 2 ============================================================ #}
     } catch (e) {}
   })();
 </script>
+
+<style>
+/* ERPNext-style thin scrollbar (added by patch) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 39, 46, 0.18) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(31, 39, 46, 0.18);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(31, 39, 46, 0.30);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+</style>
+    <script src="{{ url_for('static', filename='js/base.js') }}?v={{ version }}"></script>
+    <script src="{{ url_for('static', filename='js/erp-lib.js') }}?v={{ version }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar_erp.js') }}?v={{ version }}"></script>
 </head>
   <body class="{{ 'has-sidebar' if session.get('username') else 'auth-page' }}">
     {% if session.get("username") %} {% set is_gaurang_special =
@@ -318,7 +350,7 @@ Demo 2 ============================================================ #}
     <span class="sidebar-text">Home</span>
   </a>
 
-        {% if session.get("role") == "admin" or is_gaurang_special %}
+        {% if session.get("role") in ["admin", "plant_head"] or is_gaurang_special %}
         <a
         is_gaurang_special %}
         <a
@@ -334,7 +366,7 @@ Demo 2 ============================================================ #}
         </a>
         {% endif %}
 
-        {% if session.get("role") == "admin" or is_gaurang_special %}
+        {% if session.get("role") in ["admin", "plant_head"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.cutting_plan') }}"
           class="sidebar-link {{ 'active' if active_page == 'cutting_plan' else '' }}"
@@ -347,7 +379,7 @@ Demo 2 ============================================================ #}
         {% endif %}
 
         <!-- RAW_MATERIAL_SHORTAGE_SIDEBAR_V1 -->
-        {% if session.get("role") == "admin" or is_gaurang_special %}
+        {% if session.get("role") in ["admin", "plant_head"] or is_gaurang_special %}
         <a
           href="{{ url_for('raw_material_shortage.index') }}"
           class="sidebar-link {{ 'active' if active_page == 'raw_material_shortage' else '' }}"
@@ -359,7 +391,7 @@ Demo 2 ============================================================ #}
         </a>
         {% endif %}
 
-        {% if session.get("role") in ["admin"] or is_gaurang_special
+        {% if session.get("role") in ["admin", "plant_head"] or is_gaurang_special
         %}
         <a
           href="{{ url_for('pages.page2') }}"
@@ -370,7 +402,7 @@ Demo 2 ============================================================ #}
 </span>
 <span class="sidebar-text">Process Master</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "supervisor",
+        {% endif %} {% if session.get("role") in ["admin", "plant_head", "supervisor",
         "operator"] or is_gaurang_special %}
         <a
           href="{{ url_for('pages.page3') }}"
@@ -382,19 +414,9 @@ Demo 2 ============================================================ #}
 <span class="sidebar-text">Traceability</span>
         </a>
 
-        {% if oee_sidebar_access %}
-        <a
-          id="sidebar-oee-link"
-          href="{{ url_for('pages.oee_page') }}"
-          class="sidebar-link {{ 'active' if active_page == 'oee_page' else '' }}"
-        >
-          <span class="sidebar-icon">
-  <i class="fa fa-tachometer" aria-hidden="true"></i>
-</span>
-<span class="sidebar-text">OEE</span>
-        </a>
+        {% if oee_sidebar_access or session.get("role") == "plant_head" %}
 
-                {% if session.get("role") in ["admin", "supervisor"] %}
+                {% if session.get("role") in ["admin", "plant_head", "supervisor"] %}
         
           <a
           id="sidebar-oee-dashboard-link"
@@ -408,7 +430,7 @@ Demo 2 ============================================================ #}
         </a>
         {% endif %}
 
-                {% if session.get("role") in ["admin", "supervisor", "operator"] %}
+                {% if session.get("role") in ["admin", "plant_head", "supervisor", "operator"] %}
         
           
           <a id="sidebar-oee-summary-link"
@@ -426,19 +448,20 @@ Demo 2 ============================================================ #}
         {% endif %}
 
         <!-- OEE_TOOL_UID_REGISTER_SIDEBAR_V124 -->
-        {% if session.get("role") in ["admin", "supervisor"] %}
-        <a
-          href="/oee-tool-uid-register"
-          class="sidebar-link {{ 'active' if request.path == '/oee-tool-uid-register' else '' }}"
+        {% if session.get("role") in ["admin", "plant_head", "supervisor"] %}
+        {% if can_tool_uid %}
+          <a
+          href="/oee-tool-list"
+          class="sidebar-link {{ 'active' if request.path == '/oee-tool-list' else '' }}"
         >
           <span class="sidebar-icon">
-            <i class="fa fa-tag" aria-hidden="true"></i>
+            <i class="fa fa-list-alt" aria-hidden="true"></i>
           </span>
-          <span class="sidebar-text">Tool UID Register</span>
-        </a>
+          <span class="sidebar-text">Tool List</span>
+        </a>{% endif %}
         {% endif %}
 
-        {% if session.get("role") in ["admin", "supervisor"] or
+        {% if session.get("role") in ["admin", "plant_head", "supervisor"] or
         is_gaurang_special %}
         <a
           href="{{ url_for('pages.page4') }}"
@@ -449,7 +472,7 @@ Demo 2 ============================================================ #}
 </span>
 <span class="sidebar-text">Analytics</span>
         </a>
-        {% endif %} {% if session.get("role") in ["admin", "supervisor"] or
+        {% endif %} {% if session.get("role") in ["admin", "plant_head", "supervisor"] or
         is_gaurang_special %}
         <a
           href="{{ url_for('pages.page5') }}"
@@ -461,7 +484,7 @@ Demo 2 ============================================================ #}
 <span class="sidebar-text">Data View</span>
         </a>
         {% endif %}
-        {% if session.get("role") == "admin" or
+        {% if session.get("role") in ["admin", "plant_head"] or
         session.get("username")|lower == "hema" %}
         <a
           href="{{ url_for('pages.dispatch_tracker') }}"
@@ -483,11 +506,29 @@ Demo 2 ============================================================ #}
 </span>
 <span class="sidebar-text">User Management</span>
         </a>
+
+        <!-- LOGIN_ACTIVITY_SIDEBAR_V1 -->
+        <a
+          href="{{ url_for('pages.login_activity') }}"
+          class="sidebar-link {{ 'active' if active_page == 'login_activity' else '' }}"
+        >
+          <span class="sidebar-icon">
+            <i
+              class="fa fa-history"
+              aria-hidden="true"
+            ></i>
+          </span>
+
+          <span class="sidebar-text">
+            Login Activity
+          </span>
+        </a>
+
         {% endif %}
       </div>
 
       {% if (
-        (session.get("role") in ["admin", "supervisor"] or is_gaurang_special)
+        (session.get("role") in ["admin", "plant_head", "supervisor"] or is_gaurang_special)
         and
         (request.path.startswith('/page5') or request.path.startswith('/page4'))
       ) or (
@@ -591,7 +632,9 @@ Demo 2 ============================================================ #}
           <div class="sidebar-user-name">
             {{ session.get("full_name") or session.get("username") }}
           </div>
-          <div class="sidebar-user-role">{{ session.get("role") }}</div>
+          <div class="sidebar-user-role">
+          {{ "Plant Head" if session.get("role") == "plant_head" else session.get("role")|capitalize }}
+        </div>
         </div>
         <a
           href="{{ url_for('auth.logout') }}"
@@ -686,9 +729,6 @@ Demo 2 ============================================================ #}
     {% endif %} {% block content %}{% endblock %}
 
     <div class="toast" id="toast"></div>
-    <script src="{{ url_for('static', filename='js/base.js') }}?v={{ version }}"></script>
-    <script src="{{ url_for('static', filename='js/sidebar_erp.js') }}?v={{ version }}"></script>
-    <script src="{{ url_for('static', filename='js/hidden_backup.js') }}?v={{ version }}"></script>
     <script>
       (function () {
         var FILTER_KEY = "jms_filter_date";

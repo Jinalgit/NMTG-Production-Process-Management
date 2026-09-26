@@ -7,28 +7,34 @@ from permission_utils import is_gaurang_special_user
 PAGE_ACCESS = {
     "page1": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "full",
     },
     "page2": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "full",
         "operator": "full",
     },
     "page3": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "full",
         "operator": "read",
     },
     "page4": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "full",
     },
     "page5": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "read",
     },
     "oee_page": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "read",
         "operator": "read",
     },
@@ -46,6 +52,7 @@ PAGE_ACCESS = {
     },
     "dispatch_tracker": {
         "admin": "full",
+        "plant_head": "full",
         "supervisor": "full",
     },
 }

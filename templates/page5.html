@@ -17,7 +17,7 @@ View | NMTG{% endblock %} {% block extra_head %}
     background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
     border: 1px solid #bfdbfe;
     border-left: 4px solid #2563eb;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 12px 14px;
     margin-top: 12px;
     color: #0f2a4d;
@@ -29,7 +29,7 @@ View | NMTG{% endblock %} {% block extra_head %}
     min-width: 36px;
     border-radius: 50%;
     background: #2563eb;
-    color: #ffffff;
+    color: var(--card);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -116,6 +116,12 @@ View | NMTG{% endblock %} {% block extra_head %}
           <i class="fa fa-times" aria-hidden="true"></i>
         </button>
       </div>
+
+      <!-- AUTO_OEE_ONLY_FILTER_V1 -->
+      <label id="filter-auto-oee-only-wrap" title="Show only auto-created OEE Job Cards" style="display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;font-weight:700;color:#334155;cursor:pointer;user-select:none;margin:0 8px;">
+        <input type="checkbox" id="filter-auto-oee-only" onchange="if(typeof loadData==='function'){currentPage=1;loadData();}" style="cursor:pointer;margin:0;" />
+        <i class="fa fa-magic" aria-hidden="true"></i> Auto-created only
+      </label>
 
       <div class="export-btns">
         <button

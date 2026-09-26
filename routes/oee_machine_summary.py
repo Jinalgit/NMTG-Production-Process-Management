@@ -80,9 +80,14 @@ def _pct(x):
 
 def _access_role():
     role = (session.get("role") or "").strip().lower()
-    if role not in ("admin", "supervisor", "operator"):
+    if role not in (
+        "admin",
+        "supervisor",
+        "operator",
+        "plant_head",
+    ):
         raise PermissionError(
-            "OEE Summary is available to Admin, Supervisor and Operator only."
+            "OEE Summary is available to Admin, Plant Head, Supervisor and Operator only."
         )
     return role
 
@@ -263,7 +268,7 @@ def _oee_from_sums(planned, ar_loss, pr_loss, run, ok, rej, hold, target_qty=Non
 @oee_machine_summary_bp.route("/oee-machine-summary")
 def oee_machine_summary_page():
     role = (session.get("role") or "").strip().lower()
-    if role not in ("admin", "supervisor", "operator"):
+    if role not in ("admin", "supervisor", "operator", "plant_head"):
         return redirect(url_for("auth.login"))
 
     return render_template(
@@ -1606,6 +1611,44 @@ def api_oee_machine_summary_export_excel():
 # needs zero extra requests.
 # =========================================================================
 
+# AUTO_OEE_ENTRY_CAN_EDIT_HELPERS_V1
+def _oee_entry_can_edit_flat(row):
+    """Row-level can_edit for OEE Summary sessions list."""
+    from flask import session as _session
+    from datetime import datetime
+    role = str(_session.get("role") or "").strip().lower()
+    user_id = _session.get("user_id")
+    if role in ("supervisor", "admin", "plant_head"):
+        return True
+    if role != "operator":
+        return False
+    op_uid = row.get("operator_user_id")
+    if not user_id or not op_uid:
+        return False
+    try:
+        if int(user_id) != int(op_uid):
+            return False
+    except (TypeError, ValueError):
+        return False
+    created = row.get("created_at")
+    if created is None:
+        return False
+    try:
+        if isinstance(created, str):
+            created = datetime.strptime(created[:19], "%Y-%m-%d %H:%M:%S")
+        elapsed = (datetime.now() - created).total_seconds() / 3600.0
+        return elapsed < 24.0
+    except Exception:
+        return False
+
+
+def _oee_entry_can_delete_flat():
+    """Only supervisor/admin can delete."""
+    from flask import session as _session
+    role = str(_session.get("role") or "").strip().lower()
+    return role in ("supervisor", "admin")
+
+
 @oee_machine_summary_bp.route("/api/oee-machine-summary/flat")
 def api_oee_machine_summary_flat_v129():
     try:
@@ -1630,8 +1673,8 @@ def api_oee_machine_summary_flat_v129():
 
         cur.execute(
             "SELECT e.id AS entry_id, e.entry_date, e.shift_name, "
-            "  e.machine_no, e.machine_name, e.zone, "
-            "  e.operator_name, e.operator_employee_no, "
+            "  e.machine_id, e.machine_no, e.machine_name, e.zone, "
+            "  e.operator_user_id, e.operator_name, e.operator_employee_no, "
             "  e.job_card_no, e.item_name, e.process_name, "
             "  e.cycle_minutes, e.cycle_seconds, "
             "  e.load_unload_minutes, e.load_unload_seconds, "
@@ -1641,7 +1684,8 @@ def api_oee_machine_summary_flat_v129():
             "  e.run_minutes, e.ar_loss_minutes, e.pr_loss_minutes, "
             "  e.target_qty, e.plan_vs_actual, e.formula_profile, "
             "  e.detailed_ar_ratio AS ar, e.detailed_pr_ratio AS pr, "
-            "  e.detailed_qr_ratio AS qr, e.detailed_oee_ratio AS oee "
+            "  e.detailed_qr_ratio AS qr, e.detailed_oee_ratio AS oee, "
+            "  e.created_at "
             "FROM oee_entries e "
             "WHERE " + " AND ".join(w) + " "
             "ORDER BY e.entry_date DESC, e.shift_name, e.start_time, e.id",
@@ -1700,31 +1744,166 @@ def api_oee_machine_summary_flat_v129():
                 })
 
         # ------- Tool entries -------
+        #
+        # OEE_SUMMARY_STANDALONE_TOOL_V130
+        #
+        # Tool entries may now be either:
+        #
+        # 1. Legacy OEE-linked:
+        #       run_id / activity_run_id / machine_loss_entry_id
+        #
+        # 2. Independent:
+        #       tool_entry_batch_id + entry_date + shift_name
+        #
+        # Never require an oee_entries parent for independent Tool Entry.
+        #
         tw = [
-            "e.record_status = 'active'",
-            "e.entry_date BETWEEN %s AND %s",
+            "(e.id IS NULL OR e.record_status = 'active')",
+            # OEE_SUMMARY_TOOL_CURRENT_MODEL_V132
+            "COALESCE(t.entry_date, DATE(t.created_at)) BETWEEN %s AND %s",
         ]
-        tp = [str(fd), str(td)]
-        if zone:               tw.append("e.zone = %s");                tp.append(zone)
-        if machine_id:         tw.append("t.machine_id = %s");          tp.append(machine_id)
-        if operator_master_id: tw.append("t.operator_master_id = %s");  tp.append(operator_master_id)
+
+        tp = [
+            str(fd),
+            str(td),
+        ]
+
+        if zone:
+            tw.append(
+                "COALESCE(e.zone, m.zone) = %s"
+            )
+            tp.append(
+                zone
+            )
+
+        if machine_id:
+            tw.append(
+                "t.machine_id = %s"
+            )
+            tp.append(
+                machine_id
+            )
+
+        if operator_master_id:
+            tw.append(
+                "t.operator_master_id = %s"
+            )
+            tp.append(
+                operator_master_id
+            )
 
         cur.execute(
-            "SELECT t.id AS tool_id, t.run_id AS entry_id, t.activity_run_id, "
-            "  t.machine_loss_entry_id, t.tool_position, t.tool_uid, "
-            "  t.tool_action_code, t.tool_action_name, "
-            "  t.corner_code, t.corner_name, "
-            "  t.change_reason_code, t.change_reason_name, t.reason_group, "
-            "  t.usage_per_part, t.created_at, "
-            "  e.entry_date, e.shift_name, e.job_card_no, e.item_name, "
-            "  e.machine_no, e.machine_name, e.operator_name, e.operator_employee_no "
-            "FROM oee_tool_entries t "
-            "JOIN oee_entries e ON e.id = COALESCE(t.run_id, t.activity_run_id, t.machine_loss_entry_id) "
-            "WHERE " + " AND ".join(tw) + " "
-            "ORDER BY e.entry_date DESC, e.shift_name, t.tool_position, t.id",
+            """
+            SELECT
+                t.id AS tool_id,
+
+                t.run_id AS entry_id,
+                t.activity_run_id,
+                t.machine_loss_entry_id,
+                t.tool_entry_batch_id,
+
+                t.tool_position,
+                t.tool_position_code,
+                rmpos.reference_name AS tool_position_name,
+                t.tool_uid,
+                t.tool_life,
+                t.remark,
+
+                tm.tool_item_name AS tool_name,
+
+                t.created_at,
+
+                COALESCE(
+                    t.entry_date,
+                    DATE(t.created_at)
+                ) AS entry_date,
+
+                COALESCE(
+                    t.shift_name,
+                    e.shift_name
+                ) AS shift_name,
+
+                COALESCE(
+                    e.job_card_no,
+                    ''
+                ) AS job_card_no,
+
+                COALESCE(
+                    e.item_name,
+                    ''
+                ) AS item_name,
+
+                COALESCE(
+                    e.machine_no,
+                    m.machine_no,
+                    ''
+                ) AS machine_no,
+
+                COALESCE(
+                    e.machine_name,
+                    m.machine_name,
+                    ''
+                ) AS machine_name,
+
+                COALESCE(
+                    e.operator_name,
+                    t.operator_name,
+                    ''
+                ) AS operator_name,
+
+                COALESCE(
+                    e.operator_employee_no,
+                    t.operator_employee_no,
+                    ''
+                ) AS operator_employee_no
+
+            FROM oee_tool_entries t
+
+            LEFT JOIN oee_entries e
+              ON e.id = COALESCE(
+                    t.run_id,
+                    t.activity_run_id,
+                    t.machine_loss_entry_id
+                 )
+
+            LEFT JOIN oee_machines m
+              ON m.id = t.machine_id
+
+            LEFT JOIN oee_tool_uid tu
+              ON tu.tool_uid = t.tool_uid
+
+            LEFT JOIN oee_tool_master tm
+              ON tm.id = tu.tool_master_id
+
+            LEFT JOIN oee_reference_master rmpos
+              ON rmpos.reference_type = 'TOOL_POSITION'
+              AND rmpos.reference_code = t.tool_position_code
+
+            WHERE
+            """ + " AND ".join(tw) + """
+
+            ORDER BY
+                COALESCE(
+                    t.entry_date,
+                    DATE(t.created_at)
+                ) DESC,
+
+                COALESCE(
+                    e.shift_name,
+                    t.shift_name
+                ),
+
+                t.created_at DESC,
+                t.tool_position,
+                t.id
+            """,
             tp,
         )
-        raw_tools = cur.fetchall() or []
+
+        raw_tools = (
+            cur.fetchall()
+            or []
+        )
 
         # index tools by their parent entry so sessions & activities can carry inline tools
         tools_by_entry = {}
@@ -1732,16 +1911,33 @@ def api_oee_machine_summary_flat_v129():
             parent = t["entry_id"] or t.get("activity_run_id") or t.get("machine_loss_entry_id")
             if not parent: continue
             tools_by_entry.setdefault(parent, []).append({
-                "tool_id":     t["tool_id"],
-                "position":    t["tool_position"],
-                "uid":         t["tool_uid"] or "",
-                "action_code": t["tool_action_code"] or "",
-                "action_name": t["tool_action_name"] or "",
-                "corner_code": t["corner_code"] or "",
-                "corner_name": t["corner_name"] or "",
-                "reason_code": t["change_reason_code"] or "",
-                "reason_name": t["change_reason_name"] or "",
-                "usage":       t["usage_per_part"] or "",
+                "tool_id":
+                    t["tool_id"],
+
+                "position":
+                    t["tool_position"],
+
+                "position_code":
+                    t.get("tool_position_code") or "",
+
+                "position_name":
+                    t.get("tool_position_name") or "",
+
+                "uid":
+                    t["tool_uid"] or "",
+
+                "tool_name":
+                    t["tool_name"] or "",
+
+                "tool_life":
+                    (
+                        float(t["tool_life"])
+                        if t["tool_life"] is not None
+                        else None
+                    ),
+
+                "remark":
+                    t["remark"] or "",
             })
 
         # ------- Top losses aggregate (over sessions in scope) -------
@@ -1826,6 +2022,10 @@ def api_oee_machine_summary_flat_v129():
                 "oee_pct":             _pct(r["oee"]),
                 "losses":              losses_by_entry.get(r["entry_id"], []),
                 "tools":               tools_by_entry.get(r["entry_id"], []),
+                "operator_user_id":    r.get("operator_user_id"),
+                "created_at":          str(r.get("created_at")) if r.get("created_at") else None,
+                "can_edit":            _oee_entry_can_edit_flat(r),
+                "can_delete":          _oee_entry_can_delete_flat(),
             })
 
         activities = []
@@ -1851,27 +2051,105 @@ def api_oee_machine_summary_flat_v129():
             })
 
         tool_entries = []
+
         for t in raw_tools:
+
+            linked_entry_id = (
+                t["entry_id"]
+                or t.get(
+                    "activity_run_id"
+                )
+                or t.get(
+                    "machine_loss_entry_id"
+                )
+            )
+
+            standalone_batch_id = str(
+                t.get(
+                    "tool_entry_batch_id"
+                )
+                or ""
+            ).strip()
+
+            is_standalone = bool(
+                standalone_batch_id
+                and not linked_entry_id
+            )
+
             tool_entries.append({
-                "tool_id":       t["tool_id"],
-                "entry_id":      t["entry_id"] or t.get("activity_run_id") or t.get("machine_loss_entry_id"),
-                "entry_date":    str(t["entry_date"]) if t["entry_date"] else "",
-                "shift_name":    _shift_display(t["shift_name"]),
-                "job_card_no":   t["job_card_no"] or "",
-                "item_name":     t["item_name"] or "",
-                "machine_no":    t["machine_no"] or "",
-                "machine_name":  t["machine_name"] or "",
-                "operator_name": t["operator_name"] or "",
-                "employee_no":   t["operator_employee_no"] or "",
-                "position":      t["tool_position"],
-                "uid":           t["tool_uid"] or "",
-                "action_code":   t["tool_action_code"] or "",
-                "action_name":   t["tool_action_name"] or "",
-                "corner_code":   t["corner_code"] or "",
-                "corner_name":   t["corner_name"] or "",
-                "reason_code":   t["change_reason_code"] or "",
-                "reason_name":   t["change_reason_name"] or "",
-                "usage":         t["usage_per_part"] or "",
+                "tool_id":
+                    t["tool_id"],
+
+                "entry_id":
+                    linked_entry_id,
+
+                "tool_entry_batch_id":
+                    standalone_batch_id,
+
+                "is_standalone":
+                    is_standalone,
+
+                "entry_date":
+                    (
+                        str(t["entry_date"])
+                        if t["entry_date"]
+                        else ""
+                    ),
+
+                "shift_name":
+                    _shift_display(
+                        t["shift_name"]
+                    ),
+
+                "job_card_no":
+                    (
+                        "STANDALONE"
+                        if is_standalone
+                        else (
+                            t["job_card_no"]
+                            or ""
+                        )
+                    ),
+
+                "item_name":
+                    t["item_name"] or "",
+
+                "machine_no":
+                    t["machine_no"] or "",
+
+                "machine_name":
+                    t["machine_name"] or "",
+
+                "operator_name":
+                    t["operator_name"] or "",
+
+                "employee_no":
+                    t["operator_employee_no"] or "",
+
+                "position":
+                    t["tool_position"],
+
+                "position_code":
+                    t.get("tool_position_code") or "",
+
+                "position_name":
+                    t.get("tool_position_name") or "",
+
+                "uid":
+                    t["tool_uid"] or "",
+
+                "tool_name":
+                    t["tool_name"] or "",
+
+                "tool_life":
+                    (
+                        float(t["tool_life"])
+                        if t["tool_life"] is not None
+                        else None
+                    ),
+
+                "remark":
+                    t["remark"] or "",
             })
 
         return _jsonify({

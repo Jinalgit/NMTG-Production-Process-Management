@@ -310,6 +310,9 @@ def data_job_card_filter_options():
 
         params = []
         where = ["COALESCE(ji.is_deleted, 0) = 0"]
+        # AUTO_OEE_ONLY_FILTER_V1
+        if auto_oee_only:
+            where.append("COALESCE(ji.is_auto_oee, 0) = 1")
 
         if search:
             where.append("""
@@ -736,6 +739,10 @@ def data_job_cards():
         include_dependencies = (
             request.args.get("include_dependencies", "").strip() == "1"
         )
+        # AUTO_OEE_ONLY_FILTER_V1
+        auto_oee_only = (
+            request.args.get("auto_oee_only", "").strip() == "1"
+        )
 
         allowed_sorts = {
             "is_priority": "COALESCE(ji.is_priority, 0)",
@@ -820,6 +827,9 @@ def data_job_cards():
 
         params = []
         where = ["COALESCE(ji.is_deleted, 0) = 0"]
+        # AUTO_OEE_ONLY_FILTER_V1
+        if auto_oee_only:
+            where.append("COALESCE(ji.is_auto_oee, 0) = 1")
         excel_filter_columns = {
             "is_priority": "CASE WHEN COALESCE(ji.is_priority, 0) = 1 THEN 'Yes' ELSE 'No' END",
             "job_card_no": "jc.job_card_no",
@@ -1341,7 +1351,7 @@ def data_job_cards():
             where.append("jc.so_date <= %s")
             params.append(date_to)
         if supervisor_user_id:
-            if role != "admin" and not is_gaurang_special_user():
+            if role not in ("admin", "plant_head") and not is_gaurang_special_user():
                 return jsonify({"success": False, "error": "Admin access required for supervisor filter"}), 403
             try:
                 selected_supervisor_user_id = int(supervisor_user_id)

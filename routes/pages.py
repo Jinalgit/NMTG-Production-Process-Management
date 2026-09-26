@@ -98,51 +98,6 @@ def page3():
     return render_template("page3.html", active_page="page3")
 
 
-@pages_bp.route("/oee")
-@page_required("oee_page")
-def oee_page():
-    role = (session.get("role") or "").strip().lower()
-
-    # Supervisors may open OEE only when they are assigned
-    # to at least one CNC/VMC machining process.
-    if role == "supervisor":
-        conn = None
-        cursor = None
-
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute(
-                """
-                SELECT 1
-                FROM supervisor_process_access
-                WHERE user_id = %s
-                  AND (
-                    LOWER(TRIM(process_name)) LIKE 'cnc machining%%'
-                    OR LOWER(TRIM(process_name)) LIKE 'vmc machining%%'
-                  )
-                LIMIT 1
-                """,
-                (session.get("user_id"),),
-            )
-
-            if cursor.fetchone() is None:
-                return redirect(url_for("pages.page3"))
-
-        finally:
-            if cursor:
-                cursor.close()
-
-            if conn:
-                conn.close()
-
-    return render_template(
-        "oee.html",
-        active_page="oee_page",
-    )
-
-
 @pages_bp.route("/page4")
 @page_required("page4")
 def page4():
@@ -216,7 +171,7 @@ def cutting_plan():
         or username == "gaurang"
     )
 
-    if role != "admin" and not is_gaurang:
+    if role not in {"admin", "plant_head"} and not is_gaurang:
         return redirect(url_for("pages.page5"))
 
     return render_template(
@@ -242,6 +197,30 @@ def smart_upload():
     return render_template(
         "smart_upload.html",
         active_page="smart_upload"
+    )
+
+
+
+# LOGIN_ACTIVITY_PAGE_V1
+@pages_bp.route("/login-activity")
+@page_required("user_management")
+def login_activity():
+
+    from flask import abort, session
+
+    from permission_utils import (
+        is_gaurang_special_user,
+    )
+
+    if (
+        session.get("role") != "admin"
+        or is_gaurang_special_user()
+    ):
+        abort(403)
+
+    return render_template(
+        "login_activity.html",
+        active_page="login_activity",
     )
 
 
@@ -282,7 +261,7 @@ def dispatch_tracker():
         dispatch_access = cursor.fetchone() is not None
         cursor.close()
         conn.close()
-    elif session.get("role") == "admin":
+    elif session.get("role") in {"admin", "plant_head"}:
         dispatch_access = True
     return render_template("dispatch_tracker.html", active_page="dispatch_tracker", dispatch_access=dispatch_access)
 @pages_bp.route('/jc_review')

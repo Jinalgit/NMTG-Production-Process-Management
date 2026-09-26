@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Raw Material Shortage{% endblock %}
+
+{% block content %}
+
+<style>
+.raw-shortage-page {
+    padding: 22px;
+}
+
+.raw-shortage-header {
+    margin-bottom: 18px;
+}
+
+.raw-shortage-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.raw-shortage-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.raw-stock-upload-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.raw-stock-file {
+    max-width: 255px;
+    font-size: 13px;
+}
+
+.raw-stock-upload-btn {
+    border: 0;
+    border-radius: 6px;
+    padding: 9px 16px;
+    background: #198754;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.raw-stock-upload-btn:hover {
+    opacity: 0.92;
+}
+
+.raw-stock-info {
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    background: #eef4fa;
+    color: #334155;
+    font-size: 13px;
+}
+
+.raw-stock-message-success {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.raw-stock-message-error {
+    background: #fdecec;
+    color: #8b1e1e;
+}
+.raw-shortage-excel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    background: #173f6b;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.raw-shortage-excel-btn:hover {
+    color: #ffffff;
+    text-decoration: none;
+    opacity: 0.92;
+}
+
+.raw-shortage-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.raw-shortage-subtitle {
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.raw-shortage-card {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.raw-shortage-table-wrap {
+    overflow-x: auto;
+}
+
+.raw-shortage-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.raw-shortage-table th,
+.raw-shortage-table td {
+    border: 1px solid #b8b8b8;
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+.raw-shortage-table th {
+    background: #f2f2f2;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.raw-shortage-table td:first-child {
+    font-weight: 500;
+}
+
+.raw-shortage-uom,
+.raw-shortage-qty,
+.raw-shortage-days {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.raw-shortage-qty {
+    font-weight: 700;
+}
+
+.raw-shortage-empty {
+    padding: 35px;
+    text-align: center;
+    color: #6c757d;
+}
+</style>
+
+
+<div class="raw-shortage-page">
+
+    <!-- RAW_MATERIAL_SHORTAGE_EXCEL_BUTTON_V1 -->
+    <div class="raw-shortage-header">
+
+        <div class="raw-shortage-header-row">
+
+            <div>
+                <h2 class="raw-shortage-title">
+                    <i class="fa fa-cubes" aria-hidden="true"></i>
+                    Raw Material Shortage
+                </h2>
+
+                <div class="raw-shortage-subtitle">
+                    Raw material requirement for Job Cards currently at Raw Material stage.
+                </div>
+            </div>
+
+            <div class="raw-shortage-actions">
+
+                <!-- RAW_MATERIAL_STOCK_UPLOAD_UI_V1 -->
+                <form
+                    action="{{ url_for('raw_material_shortage.upload_stock') }}"
+                    method="post"
+                    enctype="multipart/form-data"
+                    class="raw-stock-upload-form"
+                >
+                    <input
+                        type="file"
+                        name="stock_file"
+                        accept=".xls"
+                        required
+                        class="raw-stock-file"
+                    >
+
+                    <button
+                        type="submit"
+                        class="raw-stock-upload-btn"
+                    >
+                        <i class="fa fa-upload" aria-hidden="true"></i>
+                        Upload ERP Stock
+                    </button>
+                </form>
+
+                <a
+                    href="{{ url_for('raw_material_shortage.export_excel') }}"
+                    class="raw-shortage-excel-btn"
+                >
+                    <i class="fa fa-download" aria-hidden="true"></i>
+                    Excel
+                </a>
+
+            </div>
+
+        </div>
+
+        {% if stock_upload_status == "success" %}
+        <div class="raw-stock-info raw-stock-message-success">
+            ERP stock uploaded successfully.
+            {{ stock_upload_rows }} stock rows are now active.
+        </div>
+        {% elif stock_upload_status == "error" %}
+        <div class="raw-stock-info raw-stock-message-error">
+            ERP stock upload failed:
+            {{ stock_upload_message }}
+        </div>
+        {% endif %}
+
+        {% if active_stock_upload %}
+        <div class="raw-stock-info">
+            <strong>Active ERP Stock:</strong>
+            {{ active_stock_upload.original_filename }}
+            |
+            {{ active_stock_upload.row_count }} rows
+            |
+            Uploaded
+            {% if active_stock_upload.uploaded_at %}
+                {{ active_stock_upload.uploaded_at.strftime('%d-%m-%Y %I:%M %p') }}
+            {% endif %}
+            {% if active_stock_upload.uploaded_by_name %}
+                by {{ active_stock_upload.uploaded_by_name }}
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="raw-stock-info">
+            No ERP stock snapshot has been uploaded yet.
+        </div>
+        {% endif %}
+
+    </div>
+
+
+    <div class="raw-shortage-card">
+
+        {% if shortage_rows %}
+
+        <div class="raw-shortage-table-wrap">
+
+            <table class="raw-shortage-table">
+
+                <thead>
+                    <tr>
+                        <th>Raw Material-Pending</th>
+                        <th>UOM</th>
+                        <!-- RAW_MATERIAL_SHORTAGE_COLUMN_ORDER_V2 -->
+                        <!-- RAW_MATERIAL_ERP_STOCK_TABLE_V1 -->
+                        <th>Required</th>
+                        <th>ERP Stock</th>
+                        <th>Shortage {{ shortage_date }}</th>
+                        <th>Items</th>
+                        <th>Qty (Nos.)</th>
+                        <th>JC Plan</th>
+                        <th>Days in Stage</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for row in shortage_rows %}
+
+                    <tr{% if row.is_total %} style="font-weight:700;background:#f3f4f6;"{% endif %}>
+                        <td>
+                            {{ row.material }}
+                        </td>
+
+                        <td class="raw-shortage-uom">
+                            {{ row.uom }}
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {{ row.required_display }}
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {% if row.erp_stock_display == "Not Matched" %}
+                                <span style="color:#b45309;font-weight:700;">
+                                    Not Matched
+                                </span>
+                            {% else %}
+                                {{ row.erp_stock_display }}
+                            {% endif %}
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {{ row.shortage_display }}
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {{ row.item_count_display }} <!-- RAW_MATERIAL_SHORTAGE_ITEM_TOTAL_V1 -->
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {{ row.input_qty_display }}
+                        </td>
+
+                        <td class="raw-shortage-qty">
+                            {{ row.jc_plan_display }}
+                        </td>
+
+                        <td class="raw-shortage-days">
+                            {{ row.days_in_stage }}
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="raw-shortage-empty">
+            No Raw Material pending Job Cards found.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

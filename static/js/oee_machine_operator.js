@@ -585,11 +585,11 @@ async function machineOeeCheckPendingV1() {
                             }
                         } else {
                             var _j = await _r.json().catch(function () { return {}; });
-                            alert(_j.error || "Could not void. Please try again.");
+                            ERP.toast(_j.error || "Could not void. Please try again.", "error");
                             _b.disabled = false;
                         }
                     } catch (_e) {
-                        alert("Network error. Please try again.");
+                        ERP.toast("Network error. Please try again.", "error");
                         _b.disabled = false;
                     }
                 });
@@ -628,15 +628,11 @@ async function machineOeeCheckPendingV1() {
         );
 
 
-        resultHost.innerHTML = `
-
-            <div class="machine-page-error-v1">
-                ${machineOeeEscapeV1(
-                    error.message
-                    || "Unable to check machine status."
-                )}
-            </div>
-        `;
+        ERP.toast(
+            error.message
+            || "Unable to check machine status.",
+            "error"
+        );
     }
 }
 
@@ -680,19 +676,33 @@ async function machineOeeFetchJcV1() {
 
     if (!enteredJc) {
 
-        resultHost.innerHTML = `
-
-            <div class="jc-state-v1 error">
-
-                Please enter Job Card number.
-
-            </div>
-        `;
+        resultHost.innerHTML = "";
+        ERP.toast("Please enter Job Card number.", "warn");
 
         input?.focus();
 
         return;
     }
+
+
+    /* AUTO_OEE_ITEM_MODE_GUARD_V1_START */
+    if (
+        typeof machineOeeItemEntryStateV1 !== "undefined"
+        &&
+        machineOeeItemEntryStateV1
+        &&
+        typeof machineOeeItemLookupV1 === "function"
+    ) {
+
+        await machineOeeItemLookupV1(
+            enteredJc,
+            resultHost,
+            input
+        );
+
+        return;
+    }
+    /* AUTO_OEE_ITEM_MODE_GUARD_V1_END */
 
 
     resultHost.innerHTML = `
@@ -752,11 +762,46 @@ async function machineOeeFetchJcV1() {
             fetchData.success === false
         ) {
 
+            /* AUTO_OEE_JC_FALLBACK_TRIGGER_V1_START */
+            const notFoundMessageV1 =
+                String(
+                    fetchData.error
+                    || fetchData.message
+                    || ""
+                ).toLowerCase();
+
+
+            const isNotFoundV1 =
+                fetchResponse.status === 404
+                ||
+                notFoundMessageV1.includes("not found")
+                ||
+                notFoundMessageV1.includes("no job card");
+
+
+            if (
+                isNotFoundV1
+                &&
+                typeof machineOeeAutoJcFallbackV1
+                === "function"
+            ) {
+
+                await machineOeeAutoJcFallbackV1(
+                    enteredJc,
+                    resultHost,
+                    input
+                );
+
+                return;
+            }
+
+
             throw new Error(
                 fetchData.error
                 || fetchData.message
                 || "Job Card not found."
             );
+            /* AUTO_OEE_JC_FALLBACK_TRIGGER_V1_END */
         }
 
 
@@ -808,8 +853,9 @@ async function machineOeeFetchJcV1() {
             || [];
 
 
-        const currentCard =
-            queueCards.find(
+        // SPLIT_QTY_STAGE_SELECTOR_V1
+        const currentCards =
+            queueCards.filter(
                 function(card) {
 
                     return (
@@ -823,6 +869,11 @@ async function machineOeeFetchJcV1() {
                     );
                 }
             );
+
+
+        const currentCard =
+            currentCards[0]
+            || null;
 
 
         const incomingCard =
@@ -853,6 +904,57 @@ async function machineOeeFetchJcV1() {
                     || currentCard.wip_status
                     || ""
                 ).trim();
+
+
+            const stageSelectorHtml =
+                (
+                    currentCards.length > 1
+                )
+                ?
+                `
+                    <select
+                        id="machine-oee-stage-select-v1"
+                        class="form-control"
+                    >
+                        ${
+                            currentCards.map(
+                                function(card, index) {
+
+                                    const process =
+                                        String(
+                                            card.current_process
+                                            || card.wip_status
+                                            || ""
+                                        ).trim();
+
+                                    const qty =
+                                        card.available_qty
+                                        ??
+                                        card.stage_qty_available
+                                        ??
+                                        card.job_card_qty
+                                        ??
+                                        "-";
+
+                                    return `
+                                        <option value="${index}">
+                                            ${machineOeeEscapeV1(process)}
+                                            ? Qty ${machineOeeEscapeV1(qty)}
+                                        </option>
+                                    `;
+                                }
+                            ).join("")
+                        }
+                    </select>
+                `
+                :
+                `
+                    <strong>
+                        ${machineOeeEscapeV1(
+                            currentProcess
+                        )}
+                    </strong>
+                `;
 
 
             const requiredCategory =
@@ -932,18 +1034,23 @@ async function machineOeeFetchJcV1() {
 
 
                         <div class="jc-info-v1">
-                            <span>Current Process</span>
-                            <strong>
-                                ${machineOeeEscapeV1(
-                                    currentProcess
-                                )}
-                            </strong>
+                            <span>
+                                ${
+                                    currentCards.length > 1
+                                    ? "Select Process / Qty"
+                                    : "Current Process"
+                                }
+                            </span>
+
+                            ${stageSelectorHtml}
                         </div>
 
 
                         <div class="jc-info-v1">
                             <span>Next Process</span>
-                            <strong>
+                            <strong
+                                id="machine-oee-next-process-v1"
+                            >
                                 ${machineOeeEscapeV1(
                                     currentCard.next_process
                                     || "Store"
@@ -954,7 +1061,9 @@ async function machineOeeFetchJcV1() {
 
                         <div class="jc-info-v1">
                             <span>Available Qty</span>
-                            <strong>
+                            <strong
+                                id="machine-oee-available-qty-v1"
+                            >
                                 ${machineOeeEscapeV1(
                                     currentCard.available_qty
                                     ??
@@ -1001,6 +1110,81 @@ async function machineOeeFetchJcV1() {
 
                 </div>
             `;
+
+
+            const stageSelect =
+                resultHost.querySelector(
+                    "#machine-oee-stage-select-v1"
+                );
+
+
+            if (stageSelect) {
+
+                stageSelect.addEventListener(
+                    "change",
+                    function() {
+
+                        const selectedIndex =
+                            Number(
+                                stageSelect.value
+                            );
+
+
+                        const selectedCard =
+                            currentCards[
+                                selectedIndex
+                            ];
+
+
+                        if (!selectedCard) {
+                            return;
+                        }
+
+
+                        machineOeeCurrentFetchedJcV1 =
+                            selectedCard;
+
+
+                        const nextProcessHost =
+                            resultHost.querySelector(
+                                "#machine-oee-next-process-v1"
+                            );
+
+
+                        if (nextProcessHost) {
+
+                            nextProcessHost.textContent =
+                                String(
+                                    selectedCard.next_process
+                                    || "Store"
+                                );
+                        }
+
+
+                        const availableQtyHost =
+                            resultHost.querySelector(
+                                "#machine-oee-available-qty-v1"
+                            );
+
+
+                        if (availableQtyHost) {
+
+                            availableQtyHost.textContent =
+                                String(
+                                    selectedCard.available_qty
+                                    ??
+                                    selectedCard.stage_qty_available
+                                    ??
+                                    selectedCard.job_card_qty
+                                    ??
+                                    selectedCard.so_qty
+                                    ??
+                                    "-"
+                                );
+                        }
+                    }
+                );
+            }
 
 
             return;
@@ -1160,9 +1344,6 @@ async function machineOeeFetchJcV1() {
                         <button
                             type="button"
                             class="jc-receive-btn-v1"
-                            onclick="
-                                machineOeeReceiveMaterialV1()
-                            "
                         >
                             Receive Material
                         </button>
@@ -1171,6 +1352,24 @@ async function machineOeeFetchJcV1() {
 
                 </div>
             `;
+
+
+            const receiveButtonV124D =
+                resultHost.querySelector(
+                    ".jc-receive-btn-v1"
+                );
+
+
+            if (receiveButtonV124D) {
+
+                receiveButtonV124D.addEventListener(
+                    "click",
+                    function() {
+
+                        machineOeeReceiveMaterialV1();
+                    }
+                );
+            }
 
 
             return;
@@ -1185,15 +1384,11 @@ async function machineOeeFetchJcV1() {
 
     } catch (error) {
 
-        resultHost.innerHTML = `
-
-            <div class="jc-state-v1 error">
-                ${machineOeeEscapeV1(
-                    error.message
-                    || "Unable to fetch Job Card."
-                )}
-            </div>
-        `;
+        ERP.toast(
+            error.message
+            || "Unable to fetch Job Card.",
+            "error"
+        );
     }
 }
 
@@ -1201,9 +1396,967 @@ async function machineOeeFetchJcV1() {
 /* MACHINE_OEE_JC_FETCH_V1_END */
 
 
+/* MACHINE_OEE_AUTO_JC_FALLBACK_V1_START */
+/* Phase 2 Auto-JC for OEE - item-code fallback flow */
+
+let machineOeeItemEntryStateV1 = null;
+
+
+async function machineOeeAutoJcFallbackV1(enteredJc, resultHost, input) {
+
+    machineOeeItemEntryStateV1 = {
+        enteredJc: enteredJc,
+        itemCode: null,
+        itemData: null
+    };
+
+
+    resultHost.innerHTML = `
+
+        <div class="jc-state-v1 warning">
+
+            <div class="jc-state-head-v1">
+
+                <strong>
+                    Job Card ${machineOeeEscapeV1(enteredJc)} not found in MES.
+                </strong>
+
+                <span class="jc-status-chip-v1">
+                    ITEM CODE ENTRY
+                </span>
+
+            </div>
+
+
+            <div class="upcoming">
+
+                <span>
+                    Please enter the item code from the physical Job Card copy in the box above and click Fetch again.
+                </span>
+
+                <div style="margin-top:10px;">
+                    <a href="#" id="machine-oee-item-cancel-v1" style="color:#0d6efd;text-decoration:underline;font-size:0.9em;">Cancel and enter a different Job Card</a>
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+
+    if (input) {
+        input.value = "";
+        input.placeholder = "Enter item code from physical copy";
+        input.focus();
+    }
+
+
+    machineOeeBindItemCancelV1();
+
+
+    ERP.toast(
+        "JC not in MES. Enter item code to auto-create.",
+        "warn"
+    );
+}
+
+
+function machineOeeBindItemCancelV1() {
+
+    const cancelLink =
+        document.getElementById("machine-oee-item-cancel-v1");
+
+    if (cancelLink) {
+        cancelLink.addEventListener(
+            "click",
+            function (ev) {
+                ev.preventDefault();
+                machineOeeItemEntryResetV1();
+            }
+        );
+    }
+}
+
+
+function machineOeeItemEntryResetV1() {
+
+    machineOeeItemEntryStateV1 = null;
+
+    const input =
+        document.getElementById("machine-oee-jc-input");
+
+    const resultHost =
+        document.getElementById("machine-oee-jc-result-v1");
+
+    if (input) {
+        input.value = "";
+        input.placeholder = "";
+        input.focus();
+    }
+
+    if (resultHost) {
+        resultHost.innerHTML = "";
+    }
+}
+
+
+async function machineOeeItemLookupV1(itemCode, resultHost, input) {
+
+    if (!machineOeeItemEntryStateV1) {
+        return;
+    }
+
+
+    const trimmedCode = String(itemCode || "").trim();
+
+
+    if (!trimmedCode) {
+        ERP.toast("Please enter item code.", "warn");
+        input?.focus();
+        return;
+    }
+
+
+    resultHost.innerHTML = `
+        <div class="upcoming">
+            <strong>Looking up item ${machineOeeEscapeV1(trimmedCode)}...</strong>
+            <span>Please wait.</span>
+        </div>
+    `;
+
+
+    try {
+
+        const lookupResponse =
+            await fetch(
+                "/api/oee/item-lookup?item_code="
+                + encodeURIComponent(trimmedCode),
+                { cache: "no-store" }
+            );
+
+
+        const lookupData = await lookupResponse.json();
+
+
+        const itemMissing =
+            !lookupResponse.ok
+            ||
+            (lookupData.found === false && lookupData.stage === "item")
+            ||
+            lookupData.success === false;
+
+        if (itemMissing) {
+
+            const msg =
+                lookupData.error
+                || lookupData.message
+                || `Item ${trimmedCode} not found.`;
+
+            ERP.toast(msg, "error");
+
+            resultHost.innerHTML = `
+                <div class="jc-state-v1 warning">
+                    <div class="jc-state-head-v1">
+                        <strong>Item ${machineOeeEscapeV1(trimmedCode)} not found.</strong>
+                        <span class="jc-status-chip-v1">TRY AGAIN</span>
+                    </div>
+                    <div class="upcoming">
+                        <span>${machineOeeEscapeV1(msg)}</span>
+                        <div style="margin-top:10px;">
+                            <a href="#" id="machine-oee-item-cancel-v1" style="color:#0d6efd;text-decoration:underline;font-size:0.9em;">Cancel and enter a different Job Card</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            machineOeeBindItemCancelV1();
+
+            if (input) {
+                input.value = "";
+                input.focus();
+            }
+            return;
+        }
+
+
+        machineOeeItemEntryStateV1.itemCode = trimmedCode;
+        machineOeeItemEntryStateV1.itemData = lookupData;
+
+
+        const processes = Array.isArray(lookupData.processes) ? lookupData.processes : [];
+
+        const hasProcessMaster =
+            lookupData.has_process_master === true
+            ||
+            processes.length > 0;
+
+
+        if (!hasProcessMaster) {
+
+            machineOeeItemEntryStateV1.mode = "manual";
+            machineOeeItemEntryStateV1.manualChain = [];
+
+            machineOeeManualEntryRenderV1(
+                trimmedCode,
+                lookupData,
+                resultHost,
+                input
+            );
+
+            return;
+        }
+
+
+        const itemDesc     = lookupData.item_description || lookupData.model_name || "";
+        const itemMaterial = lookupData.material || "";
+        const itemSize     = lookupData.size || "";
+        const paddedJc     = String(machineOeeItemEntryStateV1.enteredJc).padStart(10, "0");
+
+
+        /* Auto-select process by operator machine category */
+        const machineCategory =
+            String(
+                (window.NMTG_MACHINE_OEE_CONTEXT
+                    && window.NMTG_MACHINE_OEE_CONTEXT.machine_category)
+                || ""
+            ).trim().toUpperCase();
+
+
+        let autoProcessName = null;
+        let autoProcessIndex = -1;
+
+        for (let i = 0; i < processes.length; i++) {
+            const pName =
+                typeof processes[i] === "string"
+                    ? processes[i]
+                    : (processes[i].process_name || processes[i].name || "");
+            const cat =
+                typeof machineOeeProcessCategoryV1 === "function"
+                    ? String(machineOeeProcessCategoryV1(pName) || "").trim().toUpperCase()
+                    : "";
+            if (cat && machineCategory && cat === machineCategory) {
+                autoProcessName = pName;
+                autoProcessIndex = i;
+                break;
+            }
+        }
+
+
+        if (!autoProcessName) {
+
+            const chainText =
+                processes
+                    .map(function (p, idx) {
+                        const nm = typeof p === "string" ? p : (p.process_name || p.name || "");
+                        return `${idx + 1}. ${machineOeeEscapeV1(nm)}`;
+                    })
+                    .join(" &rarr; ");
+
+            resultHost.innerHTML = `
+                <div class="jc-state-v1 warning">
+                    <div class="jc-state-head-v1">
+                        <strong>Item ${machineOeeEscapeV1(trimmedCode)} has no ${machineOeeEscapeV1(machineCategory)} process in its chain.</strong>
+                        <span class="jc-status-chip-v1">WRONG MACHINE</span>
+                    </div>
+                    <div class="upcoming">
+                        <span>This item's chain has no ${machineOeeEscapeV1(machineCategory)}-category stage. Run it on a suitable machine or ask your supervisor.</span>
+                        <div style="margin-top:6px;font-size:0.85em;color:#666;">Chain: ${chainText}</div>
+                        <div style="margin-top:10px;">
+                            <a href="#" id="machine-oee-item-cancel-v1" style="color:#0d6efd;text-decoration:underline;font-size:0.9em;">Cancel and enter a different Job Card</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            machineOeeBindItemCancelV1();
+            return;
+        }
+
+
+        const precedingList =
+            processes
+                .slice(0, autoProcessIndex)
+                .map(function (p) {
+                    return typeof p === "string" ? p : (p.process_name || p.name || "");
+                })
+                .filter(function (s) { return s && s.length > 0; });
+
+        const precedingText =
+            precedingList.length > 0
+                ? precedingList.join(", ")
+                : "None";
+
+
+        const machineNo =
+            String(
+                (window.NMTG_MACHINE_OEE_CONTEXT
+                    && window.NMTG_MACHINE_OEE_CONTEXT.machine_no)
+                || "Machine"
+            );
+
+        /* Strip a repeated "Size:" prefix if present in the DB value */
+        const cleanSize =
+            String(itemSize || "").replace(/^\s*Size\s*:\s*/i, "");
+
+        const inlineInputStyle =
+            "width:100%;border:0;background:transparent;padding:0;margin:0;"
+            + "font-family:inherit;font-size:12px;font-weight:700;color:#172235;outline:none;";
+
+
+        resultHost.innerHTML = `
+            <div class="jc-state-v1 success">
+
+                <div class="jc-state-head-v1">
+                    <strong>Item ${machineOeeEscapeV1(trimmedCode)} found. Confirm and start.</strong>
+                    <span class="jc-status-chip-v1">AUTO-JC READY</span>
+                </div>
+
+
+                <div class="jc-state-grid-v1">
+
+                    <div class="jc-info-v1">
+                        <span>Item</span>
+                        <strong>${machineOeeEscapeV1(itemDesc || "-")}</strong>
+                    </div>
+
+                    <div class="jc-info-v1">
+                        <span>Size</span>
+                        <strong>${machineOeeEscapeV1(cleanSize || "-")}</strong>
+                    </div>
+
+                    <div class="jc-info-v1">
+                        <span>Current Process</span>
+                        <strong>${machineOeeEscapeV1(autoProcessName)}</strong>
+                    </div>
+
+                    <div class="jc-info-v1">
+                        <span>JC No</span>
+                        <strong><input type="text" id="machine-oee-auto-jc-v1" value="${machineOeeEscapeV1(paddedJc)}" style="${inlineInputStyle}" /></strong>
+                    </div>
+
+                    <div class="jc-info-v1">
+                        <span>Quantity</span>
+                        <strong><input type="number" id="machine-oee-auto-qty-v1" min="1" step="1" placeholder="Enter qty" style="${inlineInputStyle}" /></strong>
+                    </div>
+
+                    <div class="jc-info-v1">
+                        <span>Machine</span>
+                        <strong>${machineOeeEscapeV1(machineNo)}</strong>
+                    </div>
+
+                </div>
+
+                <input type="hidden" id="machine-oee-auto-process-v1" value="${machineOeeEscapeV1(autoProcessName)}" />
+
+                <div class="jc-action-v1">
+                    <a href="#" id="machine-oee-item-cancel-v1" style="align-self:center;color:#64748b;text-decoration:underline;font-size:11px;font-weight:700;">Cancel</a>
+                    <button type="button" id="machine-oee-auto-submit-v1" class="machine-start-btn-v1">
+                        <i class="fa fa-play-circle" style="margin-right:6px;" aria-hidden="true"></i>Start on ${machineOeeEscapeV1(machineNo)}
+                    </button>
+                </div>
+
+            </div>
+        `;
+
+
+        const submitBtn =
+            document.getElementById("machine-oee-auto-submit-v1");
+        if (submitBtn) {
+            submitBtn.addEventListener("click", function () {
+                machineOeeAutoJcSubmitV1();
+            });
+        }
+
+        machineOeeBindItemCancelV1();
+
+        const qtyInput =
+            document.getElementById("machine-oee-auto-qty-v1");
+        if (qtyInput) {
+            qtyInput.focus();
+        }
+
+    } catch (err) {
+
+        ERP.toast(
+            err.message
+            || `Unable to look up item ${trimmedCode}.`,
+            "error"
+        );
+    }
+}
+
+
+async function machineOeeAutoJcSubmitV1() {
+
+    const state = machineOeeItemEntryStateV1;
+
+    if (!state || !state.itemCode) {
+        ERP.toast("No item selected.", "error");
+        return;
+    }
+
+
+    /* Read the editable JC from the item panel (falls back to originally entered JC) */
+    const jcInputEditableEl =
+        document.getElementById("machine-oee-auto-jc-v1");
+    const editableJc =
+        String((jcInputEditableEl && jcInputEditableEl.value) || state.enteredJc || "").trim();
+
+    if (!editableJc || !/\d/.test(editableJc)) {
+        ERP.toast("Please enter a valid Job Card number.", "warn");
+        if (jcInputEditableEl) { jcInputEditableEl.focus(); }
+        return;
+    }
+
+
+    const processSel =
+        document.getElementById("machine-oee-auto-process-v1");
+    const qtyInput =
+        document.getElementById("machine-oee-auto-qty-v1");
+    const submitBtn =
+        document.getElementById("machine-oee-auto-submit-v1");
+
+
+    const currentProcess =
+        String(processSel?.value || "").trim();
+
+    const qty =
+        parseInt(String(qtyInput?.value || "0").trim(), 10);
+
+
+    if (!currentProcess) {
+        ERP.toast("Please select the current process.", "warn");
+        processSel?.focus();
+        return;
+    }
+
+    if (!qty || qty < 1) {
+        ERP.toast("Please enter a valid quantity.", "warn");
+        qtyInput?.focus();
+        return;
+    }
+
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:6px;" aria-hidden="true"></i>Starting...';
+    }
+
+
+    try {
+
+        const context = window.NMTG_MACHINE_OEE_CONTEXT || {};
+
+
+        const createResponse =
+            await fetch(
+                "/api/oee/auto-jc/create",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    cache: "no-store",
+                    body: JSON.stringify({
+                        job_card_no: editableJc,
+                        item_code: state.itemCode,
+                        item_description: (state.itemData && (state.itemData.item_description || state.itemData.model_name)) || "",
+                        material: (state.itemData && state.itemData.material) || "",
+                        size: (state.itemData && state.itemData.size) || "",
+                        processes: (state.itemData && Array.isArray(state.itemData.processes))
+                            ? state.itemData.processes.map(function (p) {
+                                return typeof p === "string" ? p : (p.process_name || p.name || "");
+                            }).filter(function (s) { return s && s.length > 0; })
+                            : [],
+                        current_process: currentProcess,
+                        qty: qty,
+                        is_manual: false,
+                        zone: context.zone || "",
+                        machine_code: context.machine_code || null,
+                        machine_category: context.machine_category || null
+                    })
+                }
+            );
+
+
+        const createData = await createResponse.json();
+
+
+        if (
+            !createResponse.ok
+            ||
+            createData.success === false
+        ) {
+            throw new Error(
+                createData.error
+                || createData.message
+                || "Failed to create Auto-JC."
+            );
+        }
+
+
+        const newJcNo =
+            String(
+                createData.job_card_no
+                || createData.jc_no
+                || String(editableJc).padStart(10, "0")
+            ).trim();
+
+
+        ERP.toast(
+            `Auto-JC ${newJcNo} created. Loading...`,
+            "success"
+        );
+
+
+        machineOeeItemEntryStateV1 = null;
+
+        const input =
+            document.getElementById("machine-oee-jc-input");
+
+        if (input) {
+            input.placeholder = "";
+            input.value = newJcNo;
+        }
+
+
+        await machineOeeFetchJcV1();
+
+    } catch (err) {
+
+        ERP.toast(
+            err.message || "Failed to create Auto-JC.",
+            "error"
+        );
+
+        if (submitBtn) {
+            const _restoreMachineNo =
+                String(
+                    (window.NMTG_MACHINE_OEE_CONTEXT
+                        && window.NMTG_MACHINE_OEE_CONTEXT.machine_no)
+                    || "Machine"
+                );
+            submitBtn.disabled = false;
+            submitBtn.innerHTML =
+                '<i class="fa fa-play-circle" style="margin-right:6px;" aria-hidden="true"></i>Start on '
+                + machineOeeEscapeV1(_restoreMachineNo);
+        }
+    }
+}
+
+/* AUTO_OEE_MANUAL_ENTRY_V1_START */
+
+const MACHINE_OEE_MANUAL_PROCESS_SUGGESTIONS_V1 = [
+    "Cutting",
+    "Rough Turning",
+    "CNC Machining",
+    "VMC Machining",
+    "Grinding",
+    "Inspection",
+    "Assembly",
+    "Store"
+];
+
+
+function machineOeeManualEntryRenderV1(itemCode, lookupData, resultHost, input) {
+
+    const machineNo =
+        String(
+            (window.NMTG_MACHINE_OEE_CONTEXT
+                && window.NMTG_MACHINE_OEE_CONTEXT.machine_no)
+            || "Machine"
+        );
+
+    const paddedJc =
+        String(machineOeeItemEntryStateV1.enteredJc).padStart(10, "0");
+
+    const itemNamePrefill =
+        String(lookupData.item_description || lookupData.model_name || "").trim();
+
+    const inlineInputStyle =
+        "width:100%;border:0;background:transparent;padding:0;margin:0;"
+        + "font-family:inherit;font-size:12px;font-weight:700;color:#172235;outline:none;";
+
+    const datalistOptions =
+        MACHINE_OEE_MANUAL_PROCESS_SUGGESTIONS_V1
+            .map(function (name) {
+                return `<option value="${machineOeeEscapeV1(name)}"></option>`;
+            })
+            .join("");
+
+    const quickAddChips =
+        MACHINE_OEE_MANUAL_PROCESS_SUGGESTIONS_V1
+            .map(function (name) {
+                return `<button type="button" class="oee-manual-quickadd-v1" data-process="${machineOeeEscapeV1(name)}" style="padding:4px 10px;border:1px solid #cbd5e1;border-radius:999px;background:#f8fafc;font-size:11px;font-weight:700;color:#334155;cursor:pointer;">+ ${machineOeeEscapeV1(name)}</button>`;
+            })
+            .join(" ");
+
+
+    resultHost.innerHTML = `
+        <div class="jc-state-v1 warning">
+
+            <div class="jc-state-head-v1">
+                <strong>Item ${machineOeeEscapeV1(itemCode)} - Manual Entry</strong>
+                <span class="jc-status-chip-v1" style="background:#fef3c7;color:#92400e;">MANUAL - SUPERVISOR REVIEW</span>
+            </div>
+
+
+            <div class="jc-state-grid-v1">
+
+                <div class="jc-info-v1">
+                    <span>Item Name</span>
+                    <strong><input type="text" id="machine-oee-manual-item-name-v1" value="${machineOeeEscapeV1(itemNamePrefill)}" style="${inlineInputStyle}" /></strong>
+                </div>
+
+                <div class="jc-info-v1">
+                    <span>JC No</span>
+                    <strong><input type="text" id="machine-oee-manual-jc-v1" value="${machineOeeEscapeV1(paddedJc)}" style="${inlineInputStyle}" /></strong>
+                </div>
+
+                <div class="jc-info-v1">
+                    <span>Machine</span>
+                    <strong>${machineOeeEscapeV1(machineNo)}</strong>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top:12px;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:#ffffff;">
+
+                <div style="font-size:11px;font-weight:900;color:#475569;text-transform:uppercase;margin-bottom:8px;">
+                    Process Chain (add in order the operator ran them)
+                </div>
+
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+                    <input type="text" id="machine-oee-manual-process-input-v1" list="machine-oee-manual-process-datalist-v1" placeholder="Type or pick a process..." style="flex:1;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;" />
+                    <datalist id="machine-oee-manual-process-datalist-v1">${datalistOptions}</datalist>
+                    <button type="button" id="machine-oee-manual-process-add-btn-v1" style="padding:6px 12px;border:0;border-radius:6px;background:#173d68;color:#fff;font-weight:700;font-size:12px;cursor:pointer;">+ Add</button>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+                    ${quickAddChips}
+                </div>
+
+                <div id="machine-oee-manual-chain-list-v1"></div>
+
+                <input type="hidden" id="machine-oee-manual-current-process-v1" value="" />
+
+            </div>
+
+
+            <div class="jc-state-grid-v1" style="margin-top:10px;grid-template-columns:1fr;">
+                <div class="jc-info-v1">
+                    <span>Quantity</span>
+                    <strong><input type="number" id="machine-oee-manual-qty-v1" min="1" step="1" placeholder="Enter qty" style="${inlineInputStyle}" /></strong>
+                </div>
+            </div>
+
+
+            <div class="jc-action-v1">
+                <a href="#" id="machine-oee-item-cancel-v1" style="align-self:center;color:#64748b;text-decoration:underline;font-size:11px;font-weight:700;">Cancel</a>
+                <button type="button" id="machine-oee-manual-submit-v1" class="machine-start-btn-v1" disabled>
+                    <i class="fa fa-play-circle" style="margin-right:6px;" aria-hidden="true"></i>Start on ${machineOeeEscapeV1(machineNo)}
+                </button>
+            </div>
+
+
+            <div style="margin-top:10px;padding:8px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:6px;font-size:11px;color:#78350f;">
+                <strong>Note:</strong> This JC will be logged in the supervisor review queue.
+            </div>
+
+        </div>
+    `;
+
+
+    const addBtn = document.getElementById("machine-oee-manual-process-add-btn-v1");
+    const processInput = document.getElementById("machine-oee-manual-process-input-v1");
+    if (addBtn && processInput) {
+        addBtn.addEventListener("click", function () {
+            machineOeeManualChainAddV1(String(processInput.value || "").trim());
+            processInput.value = "";
+            processInput.focus();
+        });
+        processInput.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                addBtn.click();
+            }
+        });
+    }
+
+    document.querySelectorAll(".oee-manual-quickadd-v1").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            machineOeeManualChainAddV1(String(btn.dataset.process || "").trim());
+        });
+    });
+
+    const submitBtn = document.getElementById("machine-oee-manual-submit-v1");
+    if (submitBtn) {
+        submitBtn.addEventListener("click", function () {
+            machineOeeManualJcSubmitV1();
+        });
+    }
+
+    machineOeeBindItemCancelV1();
+
+    machineOeeManualChainRenderV1();
+
+    const itemNameInput = document.getElementById("machine-oee-manual-item-name-v1");
+    if (itemNameInput && !itemNamePrefill) {
+        itemNameInput.focus();
+    } else if (processInput) {
+        processInput.focus();
+    }
+}
+
+
+function machineOeeManualChainAddV1(name) {
+
+    const clean = String(name || "").trim();
+    if (!clean) {
+        ERP.toast("Type or pick a process name first.", "warn");
+        return;
+    }
+    if (!machineOeeItemEntryStateV1 || !Array.isArray(machineOeeItemEntryStateV1.manualChain)) {
+        return;
+    }
+    const already =
+        machineOeeItemEntryStateV1.manualChain.some(function (p) {
+            return String(p).trim().toLowerCase() === clean.toLowerCase();
+        });
+    if (already) {
+        ERP.toast(`"${clean}" is already in the chain.`, "warn");
+        return;
+    }
+
+    machineOeeItemEntryStateV1.manualChain.push(clean);
+    machineOeeManualChainRenderV1();
+}
+
+
+function machineOeeManualChainRemoveV1(index) {
+
+    if (!machineOeeItemEntryStateV1 || !Array.isArray(machineOeeItemEntryStateV1.manualChain)) {
+        return;
+    }
+    machineOeeItemEntryStateV1.manualChain.splice(index, 1);
+    machineOeeManualChainRenderV1();
+}
+
+
+function machineOeeManualChainRenderV1() {
+
+    const listEl = document.getElementById("machine-oee-manual-chain-list-v1");
+    const currentEl = document.getElementById("machine-oee-manual-current-process-v1");
+    const submitBtn = document.getElementById("machine-oee-manual-submit-v1");
+
+    if (!listEl) { return; }
+
+    const chain =
+        (machineOeeItemEntryStateV1 && Array.isArray(machineOeeItemEntryStateV1.manualChain))
+            ? machineOeeItemEntryStateV1.manualChain
+            : [];
+
+    const machineCategory =
+        String(
+            (window.NMTG_MACHINE_OEE_CONTEXT
+                && window.NMTG_MACHINE_OEE_CONTEXT.machine_category)
+            || ""
+        ).trim().toUpperCase();
+
+    let currentProcessName = "";
+    for (let i = 0; i < chain.length; i++) {
+        const cat =
+            typeof machineOeeProcessCategoryV1 === "function"
+                ? String(machineOeeProcessCategoryV1(chain[i]) || "").trim().toUpperCase()
+                : "";
+        if (cat && machineCategory && cat === machineCategory) {
+            currentProcessName = chain[i];
+            break;
+        }
+    }
+
+    if (currentEl) { currentEl.value = currentProcessName; }
+
+    if (chain.length === 0) {
+        listEl.innerHTML = `<div style="padding:8px;color:#94a3b8;font-size:11px;font-style:italic;">No processes yet. Add at least one machining stage.</div>`;
+    } else {
+        listEl.innerHTML = chain
+            .map(function (p, idx) {
+                const isCurrent = (p === currentProcessName);
+                const currentBadge = isCurrent
+                    ? ` <span style="color:#166534;font-weight:900;font-size:10px;margin-left:6px;">&larr; CURRENT</span>`
+                    : "";
+                return `
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:${isCurrent ? "#dcfce7" : "#f8fafc"};border:1px solid ${isCurrent ? "#86efac" : "#e2e8f0"};border-radius:6px;margin-bottom:4px;">
+                        <span style="font-weight:900;color:#475569;font-size:11px;min-width:20px;">${idx + 1}.</span>
+                        <span style="flex:1;font-size:12px;color:#172235;font-weight:700;">${machineOeeEscapeV1(p)}${currentBadge}</span>
+                        <button type="button" class="oee-manual-chain-remove-v1" data-index="${idx}" style="border:0;background:transparent;color:#dc2626;cursor:pointer;font-size:14px;padding:2px 6px;" title="Remove">&times;</button>
+                    </div>
+                `;
+            })
+            .join("");
+
+        listEl.querySelectorAll(".oee-manual-chain-remove-v1").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                machineOeeManualChainRemoveV1(parseInt(btn.dataset.index, 10));
+            });
+        });
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = !currentProcessName;
+        submitBtn.title = currentProcessName
+            ? ""
+            : `Add a ${machineCategory} Machining stage to enable Start.`;
+    }
+}
+
+
+async function machineOeeManualJcSubmitV1() {
+
+    const state = machineOeeItemEntryStateV1;
+    if (!state || state.mode !== "manual") {
+        ERP.toast("Manual entry state lost.", "error");
+        return;
+    }
+
+    const itemNameEl = document.getElementById("machine-oee-manual-item-name-v1");
+    const jcInputEl = document.getElementById("machine-oee-manual-jc-v1");
+    const qtyEl = document.getElementById("machine-oee-manual-qty-v1");
+    const currentEl = document.getElementById("machine-oee-manual-current-process-v1");
+    const submitBtn = document.getElementById("machine-oee-manual-submit-v1");
+
+    const itemName = String((itemNameEl && itemNameEl.value) || "").trim();
+    const editableJc = String((jcInputEl && jcInputEl.value) || state.enteredJc || "").trim();
+    const qty = parseInt(String((qtyEl && qtyEl.value) || "0").trim(), 10);
+    const currentProcess = String((currentEl && currentEl.value) || "").trim();
+    const chain =
+        Array.isArray(state.manualChain) ? state.manualChain.slice() : [];
+
+    if (!itemName) {
+        ERP.toast("Item name is required.", "warn");
+        if (itemNameEl) { itemNameEl.focus(); }
+        return;
+    }
+    if (!editableJc || !/\d/.test(editableJc)) {
+        ERP.toast("Please enter a valid Job Card number.", "warn");
+        if (jcInputEl) { jcInputEl.focus(); }
+        return;
+    }
+    if (chain.length === 0) {
+        ERP.toast("Add at least one process to the chain.", "warn");
+        return;
+    }
+    if (!currentProcess) {
+        const machineCategory =
+            String(
+                (window.NMTG_MACHINE_OEE_CONTEXT
+                    && window.NMTG_MACHINE_OEE_CONTEXT.machine_category)
+                || ""
+            ).trim().toUpperCase();
+        ERP.toast(`Add a ${machineCategory} Machining stage matching your machine.`, "warn");
+        return;
+    }
+    if (!qty || qty < 1) {
+        ERP.toast("Please enter a valid quantity.", "warn");
+        if (qtyEl) { qtyEl.focus(); }
+        return;
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right:6px;" aria-hidden="true"></i>Starting...';
+    }
+
+    try {
+        const context = window.NMTG_MACHINE_OEE_CONTEXT || {};
+
+        const createResponse =
+            await fetch(
+                "/api/oee/auto-jc/create",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    cache: "no-store",
+                    body: JSON.stringify({
+                        job_card_no: editableJc,
+                        item_code: state.itemCode,
+                        item_description: itemName,
+                        material: (state.itemData && state.itemData.material) || "",
+                        size: (state.itemData && state.itemData.size) || "",
+                        processes: chain,
+                        current_process: currentProcess,
+                        qty: qty,
+                        is_manual: true,
+                        zone: context.zone || "",
+                        machine_code: context.machine_code || null,
+                        machine_category: context.machine_category || null
+                    })
+                }
+            );
+
+        const createData = await createResponse.json();
+
+        if (!createResponse.ok || createData.success === false) {
+            throw new Error(
+                createData.error
+                || createData.message
+                || "Failed to create Manual Auto-JC."
+            );
+        }
+
+        const newJcNo =
+            String(
+                createData.job_card_no
+                || createData.jc_no
+                || String(editableJc).padStart(10, "0")
+            ).trim();
+
+        ERP.toast(
+            `Manual Auto-JC ${newJcNo} created and queued for supervisor review.`,
+            "success"
+        );
+
+        machineOeeItemEntryStateV1 = null;
+
+        const input = document.getElementById("machine-oee-jc-input");
+        if (input) {
+            input.placeholder = "";
+            input.value = newJcNo;
+        }
+
+        await machineOeeFetchJcV1();
+
+    } catch (err) {
+        ERP.toast(
+            err.message || "Failed to create Manual Auto-JC.",
+            "error"
+        );
+
+        if (submitBtn) {
+            const _restoreMachineNo =
+                String(
+                    (window.NMTG_MACHINE_OEE_CONTEXT
+                        && window.NMTG_MACHINE_OEE_CONTEXT.machine_no)
+                    || "Machine"
+                );
+            submitBtn.disabled = false;
+            submitBtn.innerHTML =
+                '<i class="fa fa-play-circle" style="margin-right:6px;" aria-hidden="true"></i>Start on '
+                + machineOeeEscapeV1(_restoreMachineNo);
+        }
+    }
+}
+
+/* AUTO_OEE_MANUAL_ENTRY_V1_END */
+
+
+/* MACHINE_OEE_AUTO_JC_FALLBACK_V1_END */
+
+
 
 
 /* MACHINE_OEE_RECEIVE_MATERIAL_V1_START */
+/* OEE_TOOL_RECEIVE_FIX_V124D */
 
 async function machineOeeReceiveMaterialV1() {
 
@@ -1243,9 +2396,7 @@ async function machineOeeReceiveMaterialV1() {
         receivedQty <= 0
     ) {
 
-        alert(
-            "Enter valid Received Qty."
-        );
+        ERP.toast("Enter valid Received Qty.", "warn");
 
         qtyInput?.focus();
 
@@ -1258,9 +2409,7 @@ async function machineOeeReceiveMaterialV1() {
         !== requiredQty
     ) {
 
-        alert(
-            `Full Qty ${requiredQty} must be received.`
-        );
+        ERP.toast(`Full Qty ${requiredQty} must be received.`, "warn");
 
         qtyInput?.focus();
 
@@ -1278,9 +2427,7 @@ async function machineOeeReceiveMaterialV1() {
 
     if (!incomingProcess) {
 
-        alert(
-            "Incoming CNC/VMC process was not found."
-        );
+        ERP.toast("Incoming CNC/VMC process was not found.", "error");
 
         return;
     }
@@ -1377,19 +2524,17 @@ async function machineOeeReceiveMaterialV1() {
 
     } catch (error) {
 
-        resultHost.innerHTML = `
-
-            <div class="jc-state-v1 error">
-
-                ${machineOeeEscapeV1(
-                    error.message
-                    || "Receive Material failed."
-                )}
-
-            </div>
-        `;
+        ERP.toast(
+            error.message
+            || "Receive Material failed.",
+            "error"
+        );
     }
 }
+
+
+window.machineOeeReceiveMaterialV1 =
+    machineOeeReceiveMaterialV1;
 
 
 /* ---------------------------------------------------------
@@ -1938,6 +3083,442 @@ function machineOeeApplyShiftTimesV11(
 }
 
 
+/* SHIFT1_OVERRIDE_FRONTEND_GET_V2 */
+
+async function machineOeeLoadShift1OverrideV2() {
+
+    const select =
+        document.getElementById(
+            "machine-oee-shift-v1"
+        );
+
+    const endInput =
+        document.getElementById(
+            "machine-oee-shift-end-v11"
+        );
+
+    const dateInput =
+        document.getElementById(
+            "oee-ui-date-v58"
+        );
+
+    const context =
+        window.NMTG_MACHINE_OEE_CONTEXT
+        || {};
+
+    const machineId =
+        Number(
+            context.machine_id
+            || 0
+        );
+
+    const shiftName =
+        String(
+            select?.value
+            || ""
+        ).trim();
+
+    const entryDate =
+        String(
+            dateInput?.value
+            || ""
+        ).trim();
+
+
+    /*
+     * Shift 2 is intentionally untouched.
+     */
+    if (
+        shiftName !== "Shift 1"
+    ) {
+        return;
+    }
+
+
+    if (
+        !machineId
+        ||
+        !entryDate
+        ||
+        !endInput
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const params =
+            new URLSearchParams({
+                machine_id:
+                    String(machineId),
+
+                entry_date:
+                    entryDate
+            });
+
+
+        const response =
+            await fetch(
+                "/api/oee-machine/shift-1-override?"
+                + params.toString(),
+                {
+                    method:
+                        "GET",
+
+                    credentials:
+                        "same-origin",
+
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok
+            ||
+            data.success === false
+        ) {
+            throw new Error(
+                data.error
+                || "Unable to load Shift 1 extension."
+            );
+        }
+
+
+        /*
+         * If no override exists for this machine/date,
+         * return Shift 1 to the official 19:00 end.
+         */
+        const effectiveEnd =
+            String(
+                data.shift_end_override
+                || MACHINE_OEE_SHIFT_TIMES_V11[
+                    "Shift 1"
+                ].end
+            ).trim();
+
+
+        /*
+         * Guard against an async response arriving after
+         * the operator already switched to Shift 2.
+         */
+        if (
+            String(
+                select?.value
+                || ""
+            ).trim()
+            !== "Shift 1"
+        ) {
+            return;
+        }
+
+
+        endInput.value =
+            machineOeeNormalizeHmsV18(
+                effectiveEnd
+            );
+
+
+        machineOeeUpdateShiftDurationV11();
+
+
+        /*
+         * Existing capacity API already reads the visible
+         * Shift Start / Shift End inputs.
+         */
+        if (
+            typeof window
+                .machineOeeRefreshShiftCapacityV71
+            === "function"
+        ) {
+
+            window
+                .machineOeeRefreshShiftCapacityV71();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Shift 1 override load failed:",
+            error
+        );
+    }
+}
+
+
+window.machineOeeLoadShift1OverrideV2 =
+    machineOeeLoadShift1OverrideV2;
+
+
+/*
+ * Changing the OEE date must reload that day's override.
+ */
+document.addEventListener(
+    "change",
+    function(event) {
+
+        if (
+            String(
+                event.target?.id
+                || ""
+            )
+            !== "oee-ui-date-v58"
+        ) {
+            return;
+        }
+
+
+        window.setTimeout(
+            machineOeeLoadShift1OverrideV2,
+            50
+        );
+    },
+    true
+);
+
+
+/* SHIFT1_OVERRIDE_FRONTEND_POST_V4 */
+
+async function machineOeePersistShift1OverrideV4() {
+
+    const select =
+        document.getElementById(
+            "machine-oee-shift-v1"
+        );
+
+    const endInput =
+        document.getElementById(
+            "machine-oee-shift-end-v11"
+        );
+
+    const dateInput =
+        document.getElementById(
+            "oee-ui-date-v58"
+        );
+
+    const fallbackDateInput =
+        document.getElementById(
+            "oee-loss-entry-date-v16"
+        );
+
+    const context =
+        window.NMTG_MACHINE_OEE_CONTEXT
+        || {};
+
+    const machineId =
+        Number(
+            context.machine_id
+            || 0
+        );
+
+    const shiftName =
+        String(
+            select?.value
+            || ""
+        ).trim();
+
+    const entryDate =
+        String(
+            dateInput?.value
+            ||
+            fallbackDateInput?.value
+            ||
+            ""
+        ).trim();
+
+    const rawEnd =
+        String(
+            endInput?.value
+            || ""
+        ).trim();
+
+
+    if (
+        shiftName !== "Shift 1"
+    ) {
+        return;
+    }
+
+
+    if (
+        !machineId
+        ||
+        !entryDate
+        ||
+        !rawEnd
+    ) {
+        return;
+    }
+
+
+    const normalizedEnd =
+        machineOeeNormalizeHmsV18(
+            rawEnd
+        );
+
+
+    const parts =
+        String(
+            normalizedEnd
+            || ""
+        )
+        .split(":")
+        .map(Number);
+
+
+    if (
+        parts.length !== 3
+        ||
+        parts.some(
+            function(value) {
+                return !Number.isFinite(value);
+            }
+        )
+    ) {
+        throw new Error(
+            "Invalid Shift 1 End Time."
+        );
+    }
+
+
+    const totalSeconds =
+        parts[0] * 3600
+        +
+        parts[1] * 60
+        +
+        parts[2];
+
+
+    if (
+        totalSeconds
+        <
+        19 * 3600
+    ) {
+        throw new Error(
+            "Shift 1 End Time cannot be earlier than 19:00."
+        );
+    }
+
+
+    const response =
+        await fetch(
+            "/api/oee-machine/shift-1-override",
+            {
+                method:
+                    "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                credentials:
+                    "same-origin",
+
+                body:
+                    JSON.stringify({
+                        machine_id:
+                            machineId,
+
+                        entry_date:
+                            entryDate,
+
+                        shift_end_override:
+                            normalizedEnd
+                    })
+            }
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if (
+        !response.ok
+        ||
+        data.success === false
+    ) {
+        throw new Error(
+            data.error
+            ||
+            "Unable to save Shift 1 End Time."
+        );
+    }
+
+
+    endInput.value =
+        normalizedEnd;
+
+
+    machineOeeUpdateShiftDurationV11();
+
+
+    if (
+        typeof window
+            .machineOeeRefreshShiftCapacityV71
+        === "function"
+    ) {
+        await window
+            .machineOeeRefreshShiftCapacityV71();
+    }
+
+
+    const displayTime =
+        normalizedEnd.slice(
+            0,
+            5
+        );
+
+
+    const message =
+        totalSeconds === 19 * 3600
+        ?
+        "Shift 1 extension cleared. End Time restored to 19:00."
+        :
+        "Shift 1 End Time updated to "
+        + displayTime
+        + ".";
+
+
+    if (
+        typeof showToast
+        === "function"
+    ) {
+
+        showToast(
+            message,
+            "success"
+        );
+
+    } else if (
+        typeof ERP !== "undefined"
+        &&
+        typeof ERP.toast
+        === "function"
+    ) {
+
+        ERP.toast(
+            message,
+            "success"
+        );
+    }
+
+
+    return data;
+}
+
+
+window.machineOeePersistShift1OverrideV4 =
+    machineOeePersistShift1OverrideV4;
+
+
 function machineOeeSaveShiftTimeV11(
     field
 ) {
@@ -1995,10 +3576,61 @@ function machineOeeSaveShiftTimeV11(
 
     /*
      * V22:
-     * Use the edited value only while this page is open.
-     * Do not persist it for refresh/reopen.
+     * Start Time remains page-local.
+     *
+     * SHIFT1_OVERRIDE_FRONTEND_POST_V4:
+     * Shift 1 End Time persists per machine/date.
      */
     machineOeeUpdateShiftDurationV11();
+
+
+    if (
+        field === "end"
+        &&
+        shift === "Shift 1"
+    ) {
+
+        machineOeePersistShift1OverrideV4()
+            .catch(
+                async function(error) {
+
+                    if (
+                        typeof showToast
+                        === "function"
+                    ) {
+
+                        showToast(
+                            error?.message
+                            ||
+                            "Unable to save Shift 1 End Time.",
+                            "error"
+                        );
+
+                    } else if (
+                        typeof ERP !== "undefined"
+                        &&
+                        typeof ERP.toast
+                        === "function"
+                    ) {
+
+                        ERP.toast(
+                            error?.message
+                            ||
+                            "Unable to save Shift 1 End Time.",
+                            "error"
+                        );
+                    }
+
+
+                    try {
+
+                        await machineOeeLoadShift1OverrideV2();
+
+                    } catch (_) {
+                    }
+                }
+            );
+    }
 }
 
 
@@ -2085,6 +3717,12 @@ function machineOeeInitShiftV1() {
     );
 
 
+    window.setTimeout(
+        machineOeeLoadShift1OverrideV2,
+        50
+    );
+
+
     select.addEventListener(
         "change",
         function() {
@@ -2113,6 +3751,13 @@ function machineOeeInitShiftV1() {
             machineOeeApplyShiftTimesV11(
                 value
             );
+
+
+            window.setTimeout(
+                machineOeeLoadShift1OverrideV2,
+                50
+            );
+
 
             if (typeof window.machineOeeEnsureSessionV1 === "function") {
                 window.machineOeeEnsureSessionV1();
@@ -2507,24 +4152,11 @@ function machineOeeRenderRunningRunV1(
                         "Cancel Wrong JC";
 
 
-                    if (
-                        typeof showToast
-                        === "function"
-                    ) {
-
-                        showToast(
-                            err.message
-                            || "Cancel failed.",
-                            "error"
-                        );
-
-                    } else {
-
-                        alert(
-                            err.message
-                            || "Cancel failed."
-                        );
-                    }
+                    ERP.toast(
+                        err.message
+                        || "Cancel failed.",
+                        "error"
+                    );
                 }
             }
         );
@@ -2577,9 +4209,7 @@ async function machineOeeStartRunV1() {
 
     if (!shiftName) {
 
-        alert(
-            "Please select Shift first."
-        );
+        ERP.toast("Please select Shift first.", "warn");
 
         shiftSelect?.focus();
 
@@ -2597,13 +4227,11 @@ async function machineOeeStartRunV1() {
         !machineOeeActualOperatorIdV1()
     ) {
 
-        alert(
-            "Please enter Operator Code or Operator Name."
-        );
+        ERP.toast("Please select Operator.", "warn");
 
 
         document.getElementById(
-            "machine-oee-operator-code-v25"
+            "machine-oee-operator-search-v130"
         )?.focus();
 
 
@@ -2665,6 +4293,28 @@ async function machineOeeStartRunV1() {
                         item_name:
                             card.item_name
                             || "",
+
+                        // SPLIT_QTY_START_PAYLOAD_V1
+                        process_name:
+                            card.current_process
+                            || card.wip_status
+                            || "",
+
+                        // SPLIT_QTY_START_PAYLOAD_ACTUAL_V3
+                        process_name:
+                            card.current_process
+                            || card.wip_status
+                            || "",
+
+            // COMBINED_SETUP_START_PAYLOAD_V1_SEND
+            combined_processes:
+                (
+                    window.machineOeeCombinedSetupDraftV1Payload
+                    ?
+                    window.machineOeeCombinedSetupDraftV1Payload()
+                    :
+                    null
+                ),
 
                         shift_name:
                             shiftName,
@@ -2820,30 +4470,11 @@ async function machineOeeStartRunV1() {
             null;
 
 
-        if (
-            typeof showToast
-            === "function"
-        ) {
-
-            showToast(
-                error.message
-                || "Unable to start Job Card.",
-                "error"
-            );
-        }
-
-
-        resultHost.innerHTML = `
-
-            <div class="jc-state-v1 error">
-
-                ${machineOeeEscapeV1(
-                    error.message
-                    || "Unable to start Job Card."
-                )}
-
-            </div>
-        `;
+        ERP.toast(
+            error.message
+            || "Unable to start Job Card.",
+            "error"
+        );
     }
 }
 
@@ -3305,15 +4936,11 @@ async function machineOeeSaveProductionV1() {
 
     } catch (error) {
 
-        if (feedback) {
-
-            feedback.style.color =
-                "#b91c1c";
-
-            feedback.textContent =
-                error.message
-                || "Save failed.";
-        }
+        ERP.toast(
+            error.message
+            || "Save failed.",
+            "error"
+        );
     }
 }
 
@@ -3910,26 +5537,11 @@ async function machineOeeRefreshLiveCalcV1() {
 
     } catch (error) {
 
-        host.innerHTML = `
-
-            <section
-                class="machine-live-oee-v1"
-            >
-
-                <div
-                    class="machine-live-note-v1"
-                >
-
-                    ${machineOeeEscapeV1(
-                        error.message
-                        ||
-                        "Unable to calculate Machine OEE."
-                    )}
-
-                </div>
-
-            </section>
-        `;
+        ERP.toast(
+            error.message
+            || "Unable to calculate Machine OEE.",
+            "error"
+        );
     }
 }
 
@@ -4029,10 +5641,23 @@ machineOeeRenderRunningRunV1 =
 
 /* ACTUAL_OPERATOR_SELECTION_V25_START */
 
+/* OEE_SINGLE_OPERATOR_SEARCH_V130 */
+
 const ACTUAL_OPERATOR_STORAGE_V1 = (function () {
-    const _ctx = window.NMTG_MACHINE_OEE_CONTEXT || {};
-    const _mid = _ctx.machine_id ? String(_ctx.machine_id) : "0";
-    return "jms_oee_actual_operator_v1_m" + _mid;
+
+    const context =
+        window.NMTG_MACHINE_OEE_CONTEXT
+        || {};
+
+    const machineId =
+        context.machine_id
+        ? String(context.machine_id)
+        : "0";
+
+    return (
+        "jms_oee_actual_operator_v1_m"
+        + machineId
+    );
 }());
 
 
@@ -4045,7 +5670,7 @@ let machineOeeOperatorMasterV25 =
 
 
 /* ---------------------------------------------------------
- * ACTUAL OPERATOR MASTER ID
+ * RESOLVED OPERATOR
  * --------------------------------------------------------- */
 
 function machineOeeActualOperatorIdV1() {
@@ -4125,19 +5750,69 @@ function machineOeeSaveActualOperatorV25(
 }
 
 
+/* ---------------------------------------------------------
+ * DISPLAY LABEL
+ * --------------------------------------------------------- */
+
+function machineOeeOperatorLabelV130(
+    operator
+) {
+
+    const code =
+        String(
+            operator?.employee_no
+            || ""
+        ).trim();
+
+
+    const name =
+        String(
+            operator?.operator_name
+            || ""
+        ).trim();
+
+
+    if (
+        code
+        &&
+        name
+    ) {
+
+        return (
+            code
+            + " - "
+            + name
+        );
+    }
+
+
+    return (
+        code
+        || name
+    );
+}
+
+
+/* ---------------------------------------------------------
+ * APPLY SELECTED OPERATOR
+ *
+ * Keep this existing function name because other OEE
+ * logic may already call it.
+ * --------------------------------------------------------- */
+
 function machineOeeFillOperatorFieldsV25(
     operator
 ) {
 
-    const codeInput =
+    const searchInput =
         document.getElementById(
-            "machine-oee-operator-code-v25"
+            "machine-oee-operator-search-v130"
         );
 
 
-    const nameInput =
+    const codeInput =
         document.getElementById(
-            "machine-oee-operator-name-v25"
+            "machine-oee-operator-code-v25"
         );
 
 
@@ -4149,11 +5824,14 @@ function machineOeeFillOperatorFieldsV25(
     }
 
 
-    if (nameInput) {
+    if (searchInput) {
 
-        nameInput.value =
-            operator?.operator_name
-            || "";
+        searchInput.value =
+            operator
+            ? machineOeeOperatorLabelV130(
+                operator
+            )
+            : "";
     }
 
 
@@ -4164,10 +5842,16 @@ function machineOeeFillOperatorFieldsV25(
 
 
 /* ---------------------------------------------------------
- * CODE -> NAME
+ * TYPEAHEAD SEARCH
  * --------------------------------------------------------- */
 
-function machineOeeResolveCodeV25() {
+function machineOeeBindOperatorSearchV130() {
+
+    const input =
+        document.getElementById(
+            "machine-oee-operator-search-v130"
+        );
+
 
     const codeInput =
         document.getElementById(
@@ -4175,150 +5859,437 @@ function machineOeeResolveCodeV25() {
         );
 
 
-    const nameInput =
+    const suggestionBox =
         document.getElementById(
-            "machine-oee-operator-name-v25"
+            "machine-oee-operator-suggestions-v130"
         );
 
 
-    const code =
-        String(
-            codeInput?.value
-            || ""
-        ).trim();
-
-
-    if (!code) {
-
-        if (nameInput) {
-            nameInput.value = "";
-        }
-
-
-        machineOeeSaveActualOperatorV25(
-            null
-        );
+    if (
+        !input
+        ||
+        !codeInput
+        ||
+        !suggestionBox
+    ) {
 
         return;
     }
 
 
-    const operator =
-        machineOeeOperatorMasterV25.find(
-            function(row) {
-
-                return (
-                    String(
-                        row.employee_no
-                        || ""
-                    ).trim()
-                    === code
-                );
-            }
-        );
+    let visibleRows = [];
+    let activeIndex = -1;
 
 
-    if (operator) {
+    function closeSuggestions() {
+
+        suggestionBox.hidden = true;
+        activeIndex = -1;
+    }
+
+
+    function selectOperator(
+        operator
+    ) {
 
         machineOeeFillOperatorFieldsV25(
             operator
         );
 
-        return;
+        closeSuggestions();
     }
 
 
-    if (nameInput) {
+    function updateActive() {
 
-        nameInput.value =
+        const buttons =
+            suggestionBox.querySelectorAll(
+                ".oee-operator-suggestion-v130"
+            );
+
+
+        buttons.forEach(
+            function(
+                button,
+                index
+            ) {
+
+                button.classList.toggle(
+                    "active",
+                    index === activeIndex
+                );
+            }
+        );
+
+
+        if (
+            activeIndex >= 0
+            &&
+            buttons[activeIndex]
+        ) {
+
+            buttons[
+                activeIndex
+            ].scrollIntoView({
+                block:
+                    "nearest"
+            });
+        }
+    }
+
+
+    function renderSuggestions() {
+
+        const query =
+            machineOeeNormalizeOperatorNameV25(
+                input.value
+            );
+
+
+        visibleRows =
+            machineOeeOperatorMasterV25
+            .filter(
+                function(
+                    operator
+                ) {
+
+                    if (!query) {
+                        return true;
+                    }
+
+
+                    const employeeNo =
+                        String(
+                            operator.employee_no
+                            || ""
+                        );
+
+
+                    const operatorName =
+                        String(
+                            operator.operator_name
+                            || ""
+                        );
+
+
+                    const searchText =
+                        machineOeeNormalizeOperatorNameV25(
+                            employeeNo
+                            + " "
+                            + operatorName
+                        );
+
+
+                    return searchText.includes(
+                        query
+                    );
+                }
+            )
+            .slice(
+                0,
+                20
+            );
+
+
+        suggestionBox.innerHTML =
             "";
-    }
 
 
-    machineOeeSaveActualOperatorV25(
-        null
-    );
-}
+        if (!visibleRows.length) {
 
+            closeSuggestions();
 
-/* ---------------------------------------------------------
- * NAME -> CODE
- * --------------------------------------------------------- */
-
-function machineOeeResolveNameV25() {
-
-    const codeInput =
-        document.getElementById(
-            "machine-oee-operator-code-v25"
-        );
-
-
-    const nameInput =
-        document.getElementById(
-            "machine-oee-operator-name-v25"
-        );
-
-
-    const name =
-        machineOeeNormalizeOperatorNameV25(
-            nameInput?.value
-        );
-
-
-    if (!name) {
-
-        if (codeInput) {
-            codeInput.value = "";
+            return;
         }
 
 
-        machineOeeSaveActualOperatorV25(
-            null
-        );
+        visibleRows.forEach(
+            function(
+                operator
+            ) {
 
-        return;
-    }
+                const button =
+                    document.createElement(
+                        "button"
+                    );
 
 
-    const operator =
-        machineOeeOperatorMasterV25.find(
-            function(row) {
+                button.type =
+                    "button";
 
-                return (
-                    machineOeeNormalizeOperatorNameV25(
-                        row.operator_name
+
+                button.className =
+                    "oee-operator-suggestion-v130";
+
+
+                button.innerHTML =
+                    '<span class="oee-operator-code-v130">'
+                    + machineOeeEscapeV1(
+                        operator.employee_no
+                        || ""
                     )
-                    === name
+                    + '</span>'
+                    + '<span class="oee-operator-name-v130">'
+                    + machineOeeEscapeV1(
+                        operator.operator_name
+                        || ""
+                    )
+                    + '</span>';
+
+
+                button.addEventListener(
+                    "mousedown",
+                    function(
+                        event
+                    ) {
+
+                        event.preventDefault();
+
+
+                        selectOperator(
+                            operator
+                        );
+                    }
+                );
+
+
+                suggestionBox.appendChild(
+                    button
                 );
             }
         );
 
 
-    if (operator) {
-
-        machineOeeFillOperatorFieldsV25(
-            operator
-        );
-
-        return;
+        activeIndex = -1;
+        suggestionBox.hidden = false;
     }
 
 
-    if (codeInput) {
+    function tryExactMatch() {
+
+        const entered =
+            machineOeeNormalizeOperatorNameV25(
+                input.value
+            );
+
+
+        if (!entered) {
+
+            codeInput.value =
+                "";
+
+            machineOeeSaveActualOperatorV25(
+                null
+            );
+
+            return;
+        }
+
+
+        const exact =
+            machineOeeOperatorMasterV25.find(
+                function(
+                    operator
+                ) {
+
+                    const employeeNo =
+                        machineOeeNormalizeOperatorNameV25(
+                            operator.employee_no
+                        );
+
+
+                    const operatorName =
+                        machineOeeNormalizeOperatorNameV25(
+                            operator.operator_name
+                        );
+
+
+                    const fullLabel =
+                        machineOeeNormalizeOperatorNameV25(
+                            machineOeeOperatorLabelV130(
+                                operator
+                            )
+                        );
+
+
+                    return (
+                        entered
+                        === employeeNo
+                        ||
+                        entered
+                        === operatorName
+                        ||
+                        entered
+                        === fullLabel
+                    );
+                }
+            );
+
+
+        if (exact) {
+
+            selectOperator(
+                exact
+            );
+
+            return;
+        }
+
 
         codeInput.value =
             "";
+
+        machineOeeSaveActualOperatorV25(
+            null
+        );
     }
 
 
-    machineOeeSaveActualOperatorV25(
-        null
+    input.addEventListener(
+        "input",
+        function() {
+
+            codeInput.value =
+                "";
+
+            machineOeeSaveActualOperatorV25(
+                null
+            );
+
+
+            renderSuggestions();
+        }
+    );
+
+
+    input.addEventListener(
+        "focus",
+        function() {
+
+            renderSuggestions();
+        }
+    );
+
+
+    input.addEventListener(
+        "keydown",
+        function(
+            event
+        ) {
+
+            if (
+                event.key
+                === "ArrowDown"
+            ) {
+
+                if (
+                    suggestionBox.hidden
+                ) {
+
+                    renderSuggestions();
+                }
+
+
+                if (
+                    visibleRows.length
+                ) {
+
+                    event.preventDefault();
+
+
+                    activeIndex =
+                        Math.min(
+                            activeIndex + 1,
+                            visibleRows.length - 1
+                        );
+
+
+                    updateActive();
+                }
+
+
+                return;
+            }
+
+
+            if (
+                event.key
+                === "ArrowUp"
+                &&
+                visibleRows.length
+            ) {
+
+                event.preventDefault();
+
+
+                activeIndex =
+                    Math.max(
+                        activeIndex - 1,
+                        0
+                    );
+
+
+                updateActive();
+
+                return;
+            }
+
+
+            if (
+                event.key
+                === "Enter"
+                &&
+                visibleRows.length
+            ) {
+
+                event.preventDefault();
+
+
+                selectOperator(
+                    visibleRows[
+                        activeIndex >= 0
+                        ? activeIndex
+                        : 0
+                    ]
+                );
+
+
+                return;
+            }
+
+
+            if (
+                event.key
+                === "Escape"
+            ) {
+
+                closeSuggestions();
+            }
+        }
+    );
+
+
+    input.addEventListener(
+        "blur",
+        function() {
+
+            tryExactMatch();
+
+
+            window.setTimeout(
+                function() {
+
+                    closeSuggestions();
+                },
+                120
+            );
+        }
     );
 }
 
 
 /* ---------------------------------------------------------
- * INITIALIZE OPERATOR INPUTS
+ * INITIALIZE OPERATOR
  * --------------------------------------------------------- */
 
 async function machineOeeInitActualOperatorV1() {
@@ -4361,58 +6332,55 @@ async function machineOeeInitActualOperatorV1() {
             >
 
                 <div
-                    class="actual-operator-field-v25"
+                    class="
+                        actual-operator-field-v25
+                        actual-operator-search-field-v130
+                    "
                 >
 
                     <label>
-                        Operator Code
+                        Operator
                     </label>
 
-                    <input
-                        id="machine-oee-operator-code-v25"
 
-                        type="text"
-
-                        inputmode="numeric"
-
-                        autocomplete="off"
-
-                        placeholder="Employee No."
+                    <div
+                        class="actual-operator-typeahead-v130"
                     >
 
-                </div>
+                        <input
+                            id="machine-oee-operator-search-v130"
+
+                            type="text"
+
+                            autocomplete="off"
+
+                            placeholder="Type operator code or name"
+                        >
 
 
-                <div
-                    class="actual-operator-field-v25"
-                >
+                        <input
+                            id="machine-oee-operator-code-v25"
 
-                    <label>
-                        Operator Name
-                    </label>
-
-                    <input
-                        id="machine-oee-operator-name-v25"
-
-                        type="text"
-
-                        autocomplete="off"
-
-                        list="machine-oee-operator-name-list-v25"
-
-                        placeholder="Operator Name"
-                    >
+                            type="hidden"
+                        >
 
 
-                    <datalist
-                        id="machine-oee-operator-name-list-v25"
-                    ></datalist>
+                        <div
+                            id="machine-oee-operator-suggestions-v130"
+
+                            class="oee-operator-suggestions-v130"
+
+                            hidden
+                        ></div>
+
+                    </div>
 
                 </div>
 
 
                 <div
                     class="oee-zone-supervisor-line-v100"
+
                     id="machine-oee-zone-supervisor-v98"
                 >
 
@@ -4421,6 +6389,7 @@ async function machineOeeInitActualOperatorV1() {
                     >
                         Zone Supervisor
                     </span>
+
 
                     <span
                         class="oee-zone-supervisor-value-v100"
@@ -4473,88 +6442,11 @@ async function machineOeeInitActualOperatorV1() {
             Array.isArray(
                 data.operators
             )
-            ?
-            data.operators
-            :
-            [];
+            ? data.operators
+            : [];
 
 
-        const datalist =
-            document.getElementById(
-                "machine-oee-operator-name-list-v25"
-            );
-
-
-        if (datalist) {
-
-            datalist.innerHTML =
-                "";
-
-
-            for (
-                const operator
-                of machineOeeOperatorMasterV25
-            ) {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    operator.operator_name
-                    || "";
-
-
-                option.label =
-                    String(
-                        operator.employee_no
-                        || ""
-                    );
-
-
-                datalist.appendChild(
-                    option
-                );
-            }
-        }
-
-
-        const codeInput =
-            document.getElementById(
-                "machine-oee-operator-code-v25"
-            );
-
-
-        const nameInput =
-            document.getElementById(
-                "machine-oee-operator-name-v25"
-            );
-
-
-        codeInput?.addEventListener(
-            "input",
-            machineOeeResolveCodeV25
-        );
-
-
-        codeInput?.addEventListener(
-            "change",
-            machineOeeResolveCodeV25
-        );
-
-
-        nameInput?.addEventListener(
-            "input",
-            machineOeeResolveNameV25
-        );
-
-
-        nameInput?.addEventListener(
-            "change",
-            machineOeeResolveNameV25
-        );
+        machineOeeBindOperatorSearchV130();
 
 
         let saved =
@@ -4578,15 +6470,22 @@ async function machineOeeInitActualOperatorV1() {
         }
 
 
-        if (saved?.id) {
+        if (
+            saved?.id
+        ) {
 
             const valid =
                 machineOeeOperatorMasterV25.find(
-                    function(row) {
+                    function(
+                        operator
+                    ) {
 
                         return (
-                            Number(row.id)
-                            === Number(
+                            Number(
+                                operator.id
+                            )
+                            ===
+                            Number(
                                 saved.id
                             )
                         );
@@ -4603,22 +6502,16 @@ async function machineOeeInitActualOperatorV1() {
         }
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
-        host.innerHTML = `
-
-            <div
-                class="machine-page-error-v1"
-            >
-
-                ${machineOeeEscapeV1(
-                    error.message
-                    ||
-                    "Unable to load Operator Master."
-                )}
-
-            </div>
-        `;
+        ERP.toast(
+            error.message
+            ||
+            "Unable to load Operator Master.",
+            "error"
+        );
     }
 }
 
@@ -4925,6 +6818,45 @@ async function machineOeeCompleteOperationV1() {
     }
 
 
+    /* REJECT_AT_UI_V1_GUARD */
+    if (production.rejected_qty > 0) {
+
+        const rejectAtSpanV1 =
+            await window.machineOeeRejectAtEnsureV1(run);
+
+        if (
+            Array.isArray(rejectAtSpanV1)
+            &&
+            rejectAtSpanV1.length >= 2
+        ) {
+
+            const rejectAtValueV1 =
+                String(
+                    document.getElementById(
+                        "machine-oee-reject-at-v1"
+                    )?.value
+                    || ""
+                ).trim();
+
+            if (!rejectAtValueV1) {
+
+                feedback.style.color =
+                    "#b91c1c";
+
+                feedback.textContent =
+                    "Select the operation where the pieces "
+                    + "were rejected.";
+
+                document.getElementById(
+                    "machine-oee-reject-at-v1"
+                )?.focus();
+
+                return;
+            }
+        }
+    }
+
+
     /* OEE_CORE_REMOVE_HOLD_ZERO_BLOCK_V51 */
 
     /*
@@ -5045,22 +6977,7 @@ async function machineOeeCompleteOperationV1() {
             .machineOeeSaveCurrentRunLossesCoreV44();
 
 
-        if (
-            typeof window.machineOeeSaveToolRowsV5
-            === "function"
-        ) {
-
-            await window.machineOeeSaveToolRowsV5({
-                run_id:
-                    Number(
-                        run.run_id
-                        || 0
-                    )
-            });
-        }
-
-
-        /*
+         /*
          * 2. Get Traceability's real next process.
          */
         const card =
@@ -5116,6 +7033,14 @@ async function machineOeeCompleteOperationV1() {
 
                         rejected_qty:
                             production.rejected_qty,
+
+                        reject_at:
+                            String(
+                                document.getElementById(
+                                    "machine-oee-reject-at-v1"
+                                )?.value
+                                || ""
+                            ).trim(),
 
                         hold_qty:
                             production.hold_qty,
@@ -5180,23 +7105,10 @@ async function machineOeeCompleteOperationV1() {
             null;
 
 
-        feedback.style.color =
-            "#15803d";
-
-
-        feedback.innerHTML = `
-
-            <i
-                class="fa fa-check-circle"
-                aria-hidden="true"
-            ></i>
-
-            Completed. Moved to
-            ${machineOeeEscapeV1(
-                data.new_stage
-                || nextProcess
-            )}.
-        `;
+        ERP.toast(
+            `Completed. Moved to ${data.new_stage || nextProcess}.`,
+            "success"
+        );
 
 
         /*
@@ -5243,13 +7155,11 @@ async function machineOeeCompleteOperationV1() {
             false;
 
 
-        feedback.style.color =
-            "#b91c1c";
-
-
-        feedback.textContent =
+        ERP.toast(
             error.message
-            || "Operation completion failed.";
+            || "Operation completion failed.",
+            "error"
+        );
     }
 }
 
@@ -5613,9 +7523,7 @@ document.addEventListener(
             !== "function"
         ) {
 
-            alert(
-                "Start Run function is not available."
-            );
+            ERP.toast("Start Run function is not available.", "info");
 
             return;
         }
@@ -7497,6 +9405,42 @@ window.setTimeout(
                                     type="text"
                                     placeholder="Enter only if required"
                                 >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- REJECT_AT_UI_V1_FIELD -->
+                        <div
+                            class="oee-direct-field-v3"
+                            id="oee-direct-reject-at-field-v1"
+                            style="display:none;"
+                        >
+
+                            <label>
+
+                                <i
+                                    class="fa fa-crosshairs"
+                                    aria-hidden="true"
+                                ></i>
+
+                                Rejected At
+
+                            </label>
+
+
+                            <div
+                                id="oee-direct-reject-at-slot-v1"
+                            >
+
+                                <select
+                                    id="machine-oee-reject-at-v1"
+                                >
+                                    <option value="">
+                                        Select operation
+                                    </option>
+                                </select>
 
                             </div>
 
@@ -10384,6 +12328,24 @@ window.setTimeout(
                                 String(
                                     selection.remarks
                                     || ""
+                                ).trim(),
+
+                            item_name:
+                                String(
+                                    selection.item_name
+                                    || ""
+                                ).trim(),
+
+                            item_qty:
+                                String(
+                                    selection.item_qty
+                                    || ""
+                                ).trim(),
+
+                            operation_name:
+                                String(
+                                    selection.operation_name
+                                    || ""
                                 ).trim()
                         })
                 }
@@ -10470,19 +12432,7 @@ window.setTimeout(
         }
 
 
-        if (
-            typeof window.machineOeeSaveToolRowsV5
-            === "function"
-        ) {
-
-            await window.machineOeeSaveToolRowsV5({
-                activity_run_id:
-                    activityRunId
-            });
-        }
-
-
-        /*
+         /*
          * Save A1-A27 using the same visible loss grid,
          * but link it to activity_run_id.
          */
@@ -10645,60 +12595,7 @@ window.setTimeout(
             mode === "PRODUCTION"
         ) {
 
-            /* OEE_PRODUCTION_SAVE_LOSSES_TOOLING_V119 */
-            /* OEE_MACHINE_LOSS_TOOLING_V121 */
-
-            const lossResult =
-                await directSaveLossesV3();
-
-
-            const runId =
-                Number(
-                    directRunIdV3()
-                    || 0
-                );
-
-
-            const machineLossEntryId =
-                Number(
-                    (
-                        lossResult
-                        &&
-                        lossResult.session_id
-                    )
-                    || 0
-                );
-
-
-            if (
-                runId > 0
-                &&
-                typeof window.machineOeeSaveToolRowsV5
-                === "function"
-            ) {
-
-                await window.machineOeeSaveToolRowsV5({
-                    run_id:
-                        runId
-                });
-
-            } else if (
-                runId <= 0
-                &&
-                machineLossEntryId > 0
-                &&
-                typeof window.machineOeeSaveToolRowsV5
-                === "function"
-            ) {
-
-                await window.machineOeeSaveToolRowsV5({
-                    machine_loss_entry_id:
-                        machineLossEntryId
-                });
-            }
-
-
-            return lossResult;
+            return await directSaveLossesV3();
         }
 
 
@@ -10837,18 +12734,7 @@ window.setTimeout(
 
             await directSaveProductionV3();
 
-            if (
-                typeof window.machineOeeSaveToolRowsV5
-                === "function"
-            ) {
-
-                await window.machineOeeSaveToolRowsV5({
-                    run_id:
-                        directRunIdV3()
-                });
-            }
-
-            if (
+             if (
                 directLossCurrentTotalV16()
                 > 0
             ) {
@@ -10903,32 +12789,11 @@ window.setTimeout(
 
         } catch (error) {
 
-            const saveErrorV39 =
+            ERP.toast(
                 error.message
-                || "Save failed.";
-
-
-            if (feedback) {
-
-                feedback.style.color =
-                    "#b42318";
-
-
-                feedback.textContent =
-                    saveErrorV39;
-            }
-
-
-            if (
-                typeof showToast
-                === "function"
-            ) {
-
-                showToast(
-                    saveErrorV39,
-                    "error"
-                );
-            }
+                || "Save failed.",
+                "error"
+            );
 
 
         } finally {
@@ -13503,16 +15368,11 @@ window.setTimeout(
 
         } catch (error) {
 
-            if (feedback) {
-
-                feedback.style.color =
-                    "#b42318";
-
-
-                feedback.textContent =
-                    error.message
-                    || "Unable to load machine losses.";
-            }
+            ERP.toast(
+                error.message
+                || "Unable to load machine losses.",
+                "error"
+            );
         }
     }
 
@@ -13535,12 +15395,7 @@ window.setTimeout(
 
             if (feedback) {
 
-                feedback.style.color =
-                    "#b42318";
-
-
-                feedback.textContent =
-                    "Please select Shift first.";
+                ERP.toast("Please select Shift first.", "warn");
             }
 
             return;
@@ -13577,40 +15432,11 @@ window.setTimeout(
 
         try {
 
-            /*
-             * Reset before each no-JC / Activity save so an old
-             * Tool Room count cannot leak into a later save message.
-             */
-            window.machineOeeLastToolSaveCountV6 =
-                0;
-
-
             await window
                 .machineOeeDirectSaveMachineLossesV13();
 
 
-            const toolCountV6 =
-                Number(
-                    window.machineOeeLastToolSaveCountV6
-                    || 0
-                );
-
-
             const saveMessageV6 =
-                toolCountV6 > 0
-                ?
-                (
-                    "Machine losses and "
-                    + toolCountV6
-                    + " Tool Position "
-                    + (
-                        toolCountV6 === 1
-                        ? "record"
-                        : "records"
-                    )
-                    + " saved successfully."
-                )
-                :
                 "Machine losses saved successfully.";
 
 
@@ -13670,16 +15496,11 @@ window.setTimeout(
 
         } catch (error) {
 
-            if (feedback) {
-
-                feedback.style.color =
-                    "#b42318";
-
-
-                feedback.textContent =
-                    error.message
-                    || "Unable to save machine losses.";
-            }
+            ERP.toast(
+                error.message
+                || "Unable to save machine losses.",
+                "error"
+            );
 
 
         } finally {
@@ -15334,20 +17155,11 @@ window.setTimeout(
 
         } catch (error) {
 
-            host.innerHTML = `
-
-                <div
-                    class="machine-page-error-v1"
-                >
-
-                    ${machineOeeEscapeMachineV27(
-                        error.message
-                        ||
-                        "Unable to load Zone machines."
-                    )}
-
-                </div>
-            `;
+            ERP.toast(
+                error.message
+                || "Unable to load Zone machines.",
+                "error"
+            );
         }
     }
 
@@ -16485,37 +18297,11 @@ window.setTimeout(
 
         } catch (error) {
 
-            host.innerHTML = `
-
-                <section
-                    class="machine-live-v32"
-                >
-
-                    <div
-                        class="machine-live-head-v32"
-                    >
-
-                        <strong>
-                            Live Machine OEE
-                        </strong>
-
-                    </div>
-
-
-                    <div
-                        class="machine-live-note-v32"
-                    >
-
-                        ${machineOeeEscapeV1(
-                            error.message
-                            ||
-                            "Unable to calculate Live OEE."
-                        )}
-
-                    </div>
-
-                </section>
-            `;
+            ERP.toast(
+                error.message
+                || "Unable to calculate Live OEE.",
+                "error"
+            );
         }
     }
 
@@ -16675,28 +18461,7 @@ window.setTimeout(
                 );
 
 
-                const toolCountV6 =
-                    Number(
-                        window.machineOeeLastToolSaveCountV6
-                        || 0
-                    );
-
-
                 const confirmedMessageV6 =
-                    toolCountV6 > 0
-                    ?
-                    (
-                        "Machine losses and "
-                        + toolCountV6
-                        + " Tool Position "
-                        + (
-                            toolCountV6 === 1
-                            ? "record"
-                            : "records"
-                        )
-                        + " saved to database."
-                    )
-                    :
                     "Machine losses saved to database";
 
 
@@ -20348,6 +22113,30 @@ window.setTimeout(
 
 
         syncDateV58();
+
+
+        /*
+         * SHIFT1_OVERRIDE_DATE_READY_V3
+         *
+         * OEE Date control is created after the original
+         * Shift initialization. Reload the Shift 1 override
+         * once the Date control is ready.
+         */
+        window.setTimeout(
+            function() {
+
+                if (
+                    typeof window
+                        .machineOeeLoadShift1OverrideV2
+                    === "function"
+                ) {
+
+                    window
+                        .machineOeeLoadShift1OverrideV2();
+                }
+            },
+            0
+        );
     }
 
 
@@ -21090,10 +22879,10 @@ window.setTimeout(
                         }
                     );
                     if (!_r.ok) {
-                        alert("Could not update process. Please try again.");
+                        ERP.toast("Could not update process. Please try again.", "error");
                     }
                 } catch (_e) {
-                    alert("Network error updating process.");
+                    ERP.toast("Network error updating process.", "error");
                 } finally {
                     _pi.disabled = false;
                 }
@@ -22233,11 +24022,99 @@ window.setTimeout(
 
 
 /* MACHINE_OEE_TOOL_ENTRY_V1_START */
+/* OEE_TOOL_STANDALONE_UI_V124C */
+/* OEE_TOOL_TOAST_ONLY_V124F */
 
 (function () {
 
     const TOOL_HOST_ID_V1 =
         "machine-oee-tool-entry-v1";
+
+
+    // TOOL_POSITION_AUTOCOMPLETE_V2
+    let machineOeeToolPositionCacheV1 = [];
+    async function machineOeeLoadToolPositionsV1() {
+        try {
+            const r = await fetch("/api/oee-machine/tool-position/list");
+            const d = await r.json();
+            if (r.ok && d.success && Array.isArray(d.positions)) {
+                machineOeeToolPositionCacheV1 = d.positions;
+            }
+        } catch (e) {}
+    }
+    function machineOeeRenderPositionSuggestionsV2(searchEl) {
+        const wrap = searchEl.closest(".machine-oee-tool-position-wrap-v134");
+        if (!wrap) return;
+        let box = wrap.querySelector(".machine-oee-tool-position-suggestions-v134");
+        if (!box) {
+            const oid = wrap.dataset.posOwnerV2 || "";
+            if (oid) box = document.getElementById(oid);
+        }
+        if (!box) return;
+        const q = String(searchEl.value || "").trim().toLowerCase();
+        const rows = machineOeeToolPositionCacheV1.filter(p => {
+            if (!q) return true;
+            const blob = (String(p.reference_code||"") + " " + String(p.reference_name||"")).toLowerCase();
+            return blob.indexOf(q) !== -1;
+        }).slice(0, 30);
+        if (!wrap.dataset.posOwnerV2) {
+            const id = "posSug_" + Math.random().toString(36).slice(2, 9);
+            box.id = id;
+            wrap.dataset.posOwnerV2 = id;
+            document.body.appendChild(box);
+        }
+        const wrapId = wrap.dataset.posOwnerV2 || "";
+        if (!rows.length) { box.hidden = true; box.innerHTML = ""; return; }
+        box.innerHTML = rows.map(p => {
+            const code = machineOeeToolEscapeV1(p.reference_code);
+            const name = machineOeeToolEscapeV1(p.reference_name);
+            return `<button type="button" class="machine-oee-tool-position-suggestion-v134" data-code="${code}" data-name="${name}" data-wrap-id="${wrapId}"><span class="n">${name}</span></button>`;
+        }).join("");
+        const r = searchEl.getBoundingClientRect();
+        box.style.top   = (r.bottom + 2) + "px";
+        box.style.left  = r.left + "px";
+        box.style.width = r.width + "px";
+        box.hidden = false;
+    }
+    function machineOeeSelectPositionV2(wrap, code, name) {
+        const searchEl = wrap.querySelector(".machine-oee-tool-position-search-v134");
+        const codeEl = wrap.querySelector(".machine-oee-tool-position-code-v134");
+        const ownerId = wrap.dataset.posOwnerV2 || "";
+        const box = ownerId ? document.getElementById(ownerId) : wrap.querySelector(".machine-oee-tool-position-suggestions-v134");
+        if (searchEl) searchEl.value = name;
+        if (codeEl) codeEl.value = code;
+        if (box) { box.hidden = true; box.innerHTML = ""; }
+    }
+    document.addEventListener("input", function (e) {
+        if (e.target && e.target.matches?.(".machine-oee-tool-position-search-v134")) {
+            machineOeeRenderPositionSuggestionsV2(e.target);
+        }
+    }, true);
+    document.addEventListener("focus", function (e) {
+        if (e.target && e.target.matches?.(".machine-oee-tool-position-search-v134")) {
+            machineOeeRenderPositionSuggestionsV2(e.target);
+        }
+    }, true);
+    document.addEventListener("mousedown", function (e) {
+        const btn = e.target && e.target.closest?.(".machine-oee-tool-position-suggestion-v134");
+        if (btn) {
+            e.preventDefault();
+            const wrapId = btn.dataset.wrapId || "";
+            const wrap = wrapId
+                ? document.querySelector(`[data-pos-owner-v2="${wrapId}"]`)
+                : btn.closest(".machine-oee-tool-position-wrap-v134");
+            if (wrap) machineOeeSelectPositionV2(wrap, btn.dataset.code || "", btn.dataset.name || "");
+            return;
+        }
+        document.querySelectorAll(".machine-oee-tool-position-suggestions-v134:not([hidden])").forEach(box => {
+            if (!box.contains(e.target)) box.hidden = true;
+        });
+    }, true);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", machineOeeLoadToolPositionsV1);
+    } else {
+        machineOeeLoadToolPositionsV1();
+    }
 
 
     function machineOeeToolEscapeV1(
@@ -22273,30 +24150,123 @@ window.setTimeout(
         return `
 
             <div
-                class="machine-oee-tool-row-v1"
+                class="machine-oee-tool-row-v1 machine-oee-tool-child-row-v125"
                 data-tool-position-v1="${number}"
             >
 
                 <div
-                    class="machine-oee-tool-row-head-v1"
+                    class="machine-oee-tool-child-no-v125"
+                >
+                    <span
+                        class="machine-oee-tool-position-number-v1"
+                    >
+                        ${number}
+                    </span>
+                </div>
+
+
+                <div
+                    class="machine-oee-tool-child-uid-v125"
                 >
 
-                    <div
-                        class="machine-oee-tool-position-v1"
+                    <input
+                        type="text"
+                        class="machine-oee-tool-uid-v1"
+                        autocomplete="off"
+                        placeholder="Scan / Enter Tool UID"
                     >
 
-                        <span
-                            class="machine-oee-tool-position-number-v1"
+                    <div
+                        class="machine-oee-tool-uid-error-v117"
+                        hidden
+                    ></div>
+
+                </div>
+
+
+                <div
+                    class="machine-oee-tool-child-name-v128"
+                >
+
+                    <!-- OEE_TOOL_NAME_TEXTBOX_V129 -->
+
+                    <input
+                        type="text"
+                        class="machine-oee-tool-uid-name-v117 machine-oee-tool-name-input-v129"
+                        value=""
+                        readonly
+                        tabindex="-1"
+                        aria-label="Tool Name"
+                    >
+
+                </div>
+
+
+                <div
+                    class="machine-oee-tool-child-position-v134"
+                >
+                    <div class="machine-oee-tool-position-wrap-v134">
+                        <input
+                            type="text"
+                            class="machine-oee-tool-position-search-v134"
+                            placeholder="Type position"
+                            autocomplete="off"
+                            aria-label="Tool Position Type"
                         >
-                            ${number}
-                        </span>
-
-                        <strong>
-                            Tool Position ${number}
-                        </strong>
-
+                        <input
+                            type="hidden"
+                            class="machine-oee-tool-position-code-v134"
+                        >
+                        <div
+                            class="machine-oee-tool-position-suggestions-v134"
+                            hidden
+                        ></div>
                     </div>
+                </div>
 
+
+                <div
+                    class="machine-oee-tool-life-wrap-v125"
+                >
+
+                    <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        inputmode="decimal"
+                        class="machine-oee-tool-life-v125"
+                        autocomplete="off"
+                        placeholder="Tool Life"
+                    >
+
+                    <span
+                        class="machine-oee-tool-uom-v125"
+                        data-tool-uom-v125="UOM"
+                    >
+                        UOM
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="machine-oee-tool-child-remark-v125"
+                >
+
+                    <input
+                        type="text"
+                        class="machine-oee-tool-remark-v125"
+                        autocomplete="off"
+                        maxlength="500"
+                        placeholder="Optional remark"
+                    >
+
+                </div>
+
+
+                <div
+                    class="machine-oee-tool-child-action-v125"
+                >
 
                     <button
                         type="button"
@@ -22306,8 +24276,8 @@ window.setTimeout(
                                 ? ""
                                 : "is-hidden"}
                         "
-                        title="Remove Tool Position"
-                        aria-label="Remove Tool Position"
+                        title="Remove Row"
+                        aria-label="Remove Row"
                     >
 
                         <i
@@ -22315,158 +24285,13 @@ window.setTimeout(
                             aria-hidden="true"
                         ></i>
 
-                        <span>
-                            Remove
-                        </span>
-
                     </button>
-
-                </div>
-
-
-                <div
-                    class="machine-oee-tool-fields-v1"
-                >
-
-                    <div
-                        class="machine-oee-tool-field-v1"
-                    >
-
-                        <label>
-                            Tool UID
-                        </label>
-
-                        <input
-                            type="text"
-                            class="machine-oee-tool-uid-v1"
-                            autocomplete="off"
-                            placeholder="Enter / Scan Tool UID"
-                        >
-
-                        <div
-                            class="machine-oee-tool-uid-info-v117"
-                            hidden
-                        >
-
-                            <div
-                                class="machine-oee-tool-uid-code-v117"
-                            ></div>
-
-                            <div
-                                class="machine-oee-tool-uid-name-v117"
-                            ></div>
-
-                            <div
-                                class="machine-oee-tool-uid-status-v117"
-                            ></div>
-
-                        </div>
-
-                        <div
-                            class="machine-oee-tool-uid-error-v117"
-                            hidden
-                        ></div>
-
-                    </div>
-
-                    <div
-                        class="machine-oee-tool-field-v1"
-                    >
-
-                        <label>
-                            Tool Action
-                        </label>
-
-                        <select
-                            class="
-                                machine-oee-tool-action-v1
-                                machine-oee-tool-select-v3
-                            "
-                            disabled
-                        >
-                            <option value="">
-                                Loading...
-                            </option>
-                        </select>
-
-                    </div>
-
-
-                    <div
-                        class="machine-oee-tool-field-v1"
-                    >
-
-                        <label>
-                            Corner
-                        </label>
-
-                        <select
-                            class="
-                                machine-oee-tool-corner-v1
-                                machine-oee-tool-select-v3
-                            "
-                            disabled
-                        >
-                            <option value="">
-                                -- Select Corner --
-                            </option>
-                        </select>
-
-                    </div>
-
-
-                    <div
-                        class="machine-oee-tool-field-v1"
-                    >
-
-                        <label>
-                            Usage / Part (Manual)
-                        </label>
-
-                        <input
-                            type="text"
-                            class="machine-oee-tool-usage-v1"
-                            autocomplete="off"
-                            placeholder="Enter Usage / Part"
-                        >
-
-                    </div>
-
-
-                    <div
-                        class="
-                            machine-oee-tool-field-v1
-                            machine-oee-tool-reason-wrap-v3
-                        "
-                        hidden
-                    >
-
-                        <label
-                            class="machine-oee-tool-reason-label-v3"
-                        >
-                            Change Reason
-                        </label>
-
-                        <select
-                            class="
-                                machine-oee-tool-reason-v3
-                                machine-oee-tool-select-v3
-                            "
-                        >
-                            <option value="">
-                                -- Select Reason --
-                            </option>
-                        </select>
-
-                    </div>
-
 
                 </div>
 
             </div>
         `;
     }
-
 
     function machineOeeToolRenumberV1(
         host
@@ -22664,6 +24489,8 @@ window.setTimeout(
 
     function machineOeeToolBuildV1() {
 
+        /* OEE_TOOL_CHILD_TABLE_V125 */
+
         const section =
             document.createElement(
                 "section"
@@ -22703,29 +24530,49 @@ window.setTimeout(
                     <div>
 
                         <strong>
-                            Tool
+                            Tool Entry
                         </strong>
 
                         <span>
-                            Record tools used for this operation
+                            Enter Tool UID, Tool Life and optional Remark
                         </span>
 
                     </div>
 
                 </div>
 
-
             </div>
 
 
             <div
-                id="machine-oee-tool-rows-v1"
-                class="machine-oee-tool-rows-v1"
+                class="machine-oee-tool-child-table-v125"
             >
 
-                ${machineOeeToolRowHtmlV1(
-                    1
-                )}
+                <div
+                    class="machine-oee-tool-child-head-v125"
+                >
+
+                    <div>No.</div>
+                    <div>Tool UID</div>
+                    <div>Tool Name</div>
+                    <div>Position</div>
+                    <div>Tool Life</div>
+                    <div>Remark</div>
+                    <div></div>
+
+                </div>
+
+
+                <div
+                    id="machine-oee-tool-rows-v1"
+                    class="machine-oee-tool-rows-v1"
+                >
+
+                    ${machineOeeToolRowHtmlV1(
+                        1
+                    )}
+
+                </div>
 
             </div>
 
@@ -22746,7 +24593,25 @@ window.setTimeout(
                     ></i>
 
                     <span>
-                        Add Tool Position
+                        Add Row
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    id="machine-oee-tool-save-v124c"
+                    class="machine-oee-tool-add-v1"
+                >
+
+                    <i
+                        class="fa fa-save"
+                        aria-hidden="true"
+                    ></i>
+
+                    <span>
+                        Save Tool Entry
                     </span>
 
                 </button>
@@ -22788,9 +24653,26 @@ window.setTimeout(
         }
 
 
+        const saveButton =
+            section.querySelector(
+                "#machine-oee-tool-save-v124c"
+            );
+
+
+        if (saveButton) {
+
+            saveButton.addEventListener(
+                "click",
+                function() {
+
+                    machineOeeToolSaveStandaloneV124C();
+                }
+            );
+        }
+
+
         return section;
     }
-
 
     function machineOeeToolFindAnchorV1() {
 
@@ -23698,6 +25580,8 @@ window.setTimeout(
      *
      * Nothing is currently saved.
      */
+    /* OEE_TOOL_CHILD_TABLE_SAVE_V126 */
+
     window.machineOeeGetToolRowsV1 =
         function() {
 
@@ -23712,103 +25596,79 @@ window.setTimeout(
             }
 
 
-            return Array.from(
-                host.querySelectorAll(
-                    ".machine-oee-tool-row-v1"
-                )
-            ).map(
-                function(row, index) {
+            const rows =
+                Array.from(
+                    host.querySelectorAll(
+                        ".machine-oee-tool-row-v1"
+                    )
+                );
+
+
+            return rows.map(
+                function(
+                    row,
+                    index
+                ) {
+
+                    const toolUid =
+                        String(
+                            row.querySelector(
+                                ".machine-oee-tool-uid-v1"
+                            )?.value
+                            || ""
+                        ).trim();
+
+
+                    const toolLife =
+                        String(
+                            row.querySelector(
+                                ".machine-oee-tool-life-v125"
+                            )?.value
+                            || ""
+                        ).trim();
+
+
+                    const remark =
+                        String(
+                            row.querySelector(
+                                ".machine-oee-tool-remark-v125"
+                            )?.value
+                            || ""
+                        ).trim();
+
+
+                    const toolPositionCode =
+                        String(
+                            row.querySelector(
+                                ".machine-oee-tool-position-code-v134"
+                            )?.value
+                            || ""
+                        ).trim();
 
                     return {
 
                         tool_position:
-                            index + 1,
+                            Number(
+                                row.dataset
+                                    .toolPositionV1
+                                || index + 1
+                            ),
+
+                        tool_position_code:
+                            toolPositionCode,
 
                         tool_uid:
-                            String(
-                                row.querySelector(
-                                    ".machine-oee-tool-uid-v1"
-                                )?.value
-                                || ""
-                            ).trim(),
+                            toolUid,
 
-                        corner:
-                            String(
-                                row.querySelector(
-                                    ".machine-oee-tool-corner-v1"
-                                )?.value
-                                || ""
-                            ).trim(),
+                        tool_life:
+                            toolLife,
 
-                        tool_action:
-                            String(
-                                row.querySelector(
-                                    ".machine-oee-tool-action-v1"
-                                )?.value
-                                || ""
-                            ).trim(),
-
-                        tool_action_master_id:
-                            Number(
-                                row.querySelector(
-                                    ".machine-oee-tool-action-v1"
-                                )?.selectedOptions?.[0]
-                                    ?.dataset
-                                    ?.masterIdV3
-                                || 0
-                            )
-                            || null,
-
-                        corner_master_id:
-                            Number(
-                                row.querySelector(
-                                    ".machine-oee-tool-corner-v1"
-                                )?.selectedOptions?.[0]
-                                    ?.dataset
-                                    ?.masterIdV3
-                                || 0
-                            )
-                            || null,
-
-                        change_reason_master_id:
-                            Number(
-                                row.querySelector(
-                                    ".machine-oee-tool-reason-v3"
-                                )?.selectedOptions?.[0]
-                                    ?.dataset
-                                    ?.masterIdV3
-                                || 0
-                            )
-                            || null,
-
-                        change_reason:
-                            String(
-                                row.querySelector(
-                                    ".machine-oee-tool-reason-v3"
-                                )?.selectedOptions?.[0]
-                                    ?.textContent
-                                || ""
-                            ).trim(),
-
-                        reason_group:
-                            String(
-                                row.dataset
-                                    .toolReasonGroupV3
-                                || ""
-                            ).trim(),
-
-                        usage_per_part:
-                            String(
-                                row.querySelector(
-                                    ".machine-oee-tool-usage-v1"
-                                )?.value
-                                || ""
-                            ).trim()
+                        remark:
+                            remark
                     };
                 }
             );
         };
-
 
     /* MACHINE_OEE_TOOL_PERSISTENCE_UI_V5 */
 
@@ -23852,6 +25712,343 @@ window.setTimeout(
 
 
         return data;
+    }
+
+
+    function machineOeeToolTodayLocalV124C() {
+
+        const now =
+            new Date();
+
+        const year =
+            String(
+                now.getFullYear()
+            );
+
+        const month =
+            String(
+                now.getMonth() + 1
+            ).padStart(2, "0");
+
+        const day =
+            String(
+                now.getDate()
+            ).padStart(2, "0");
+
+        return (
+            year
+            + "-"
+            + month
+            + "-"
+            + day
+        );
+    }
+
+
+    function machineOeeToolStandaloneContextV124C() {
+
+        const pageContext =
+            window.NMTG_MACHINE_OEE_CONTEXT
+            || {};
+
+
+        const machineId =
+            Number(
+                pageContext.machine_id
+                || 0
+            );
+
+
+        const shiftName =
+            String(
+                document.getElementById(
+                    "machine-oee-shift-v1"
+                )?.value
+                || ""
+            ).trim();
+
+
+        const entryDate =
+            String(
+                document.getElementById(
+                    "oee-ui-date-v58"
+                )?.value
+                ||
+                document.getElementById(
+                    "oee-loss-entry-date-v16"
+                )?.value
+                ||
+                machineOeeToolTodayLocalV124C()
+            ).trim();
+
+
+        let operatorMasterId =
+            null;
+
+
+        try {
+
+            if (
+                typeof machineOeeActualOperatorIdV1
+                === "function"
+            ) {
+
+                operatorMasterId =
+                    Number(
+                        machineOeeActualOperatorIdV1()
+                        || 0
+                    )
+                    || null;
+            }
+
+        } catch (_) {
+
+            operatorMasterId =
+                null;
+        }
+
+
+        return {
+            standalone_tool_entry:
+                true,
+
+            machine_id:
+                machineId,
+
+            entry_date:
+                entryDate,
+
+            shift_name:
+                shiftName,
+
+            operator_master_id:
+                operatorMasterId
+        };
+    }
+
+
+    function machineOeeToolHasEnteredRowsV124C() {
+
+        if (
+            typeof window.machineOeeGetToolRowsV1
+            !== "function"
+        ) {
+            return false;
+        }
+
+
+        const rows =
+            window.machineOeeGetToolRowsV1();
+
+
+        return rows.some(
+            function(row) {
+
+                return Boolean(
+                    String(
+                        row?.tool_uid
+                        || ""
+                    ).trim()
+                    ||
+                    String(
+                        row?.tool_action
+                        || ""
+                    ).trim()
+                    ||
+                    String(
+                        row?.corner
+                        || ""
+                    ).trim()
+                    ||
+                    String(
+                        row?.change_reason
+                        || ""
+                    ).trim()
+                    ||
+                    String(
+                        row?.usage_per_part
+                        || ""
+                    ).trim()
+                );
+            }
+        );
+    }
+
+
+    async function machineOeeToolSaveStandaloneV124C() {
+
+        const button =
+            document.getElementById(
+                "machine-oee-tool-save-v124c"
+            );
+
+         if (
+            button?.dataset
+                .saveBusyV124c
+            === "1"
+        ) {
+            return;
+        }
+
+
+        try {
+
+            if (
+                !machineOeeToolHasEnteredRowsV124C()
+            ) {
+                throw new Error(
+                    "Enter at least one Tool Entry row before saving."
+                );
+            }
+
+
+            const context =
+                machineOeeToolStandaloneContextV124C();
+
+
+            if (
+                Number(
+                    context.machine_id
+                    || 0
+                ) <= 0
+            ) {
+                throw new Error(
+                    "Selected machine is not available."
+                );
+            }
+
+
+            if (
+                context.shift_name !== "Shift 1"
+                &&
+                context.shift_name !== "Shift 2"
+            ) {
+                throw new Error(
+                    "Please select a valid Shift."
+                );
+            }
+
+
+            if (!context.entry_date) {
+                throw new Error(
+                    "Tool Entry Date is required."
+                );
+            }
+
+
+            if (button) {
+
+                button.dataset
+                    .saveBusyV124c =
+                    "1";
+
+                button.disabled =
+                    true;
+            }
+
+
+             const result =
+                await machineOeeToolSaveRowsV5(
+                    context
+                );
+
+
+            const savedCount =
+                Number(
+                    result?.saved_count
+                    || 0
+                );
+
+
+            if (savedCount <= 0) {
+                throw new Error(
+                    "No Tool Entry row was saved."
+                );
+            }
+
+
+            const batchId =
+                String(
+                    result?.tool_entry_batch_id
+                    || ""
+                ).trim();
+
+
+            const message =
+                savedCount
+                + " Tool Entry "
+                + (
+                    savedCount === 1
+                    ? "record"
+                    : "records"
+                )
+                + " saved independently from OEE."
+                + (
+                    batchId
+                    ? " Batch: " + batchId
+                    : ""
+                );
+
+
+             if (
+                typeof showToast
+                === "function"
+            ) {
+
+                showToast(
+                    message,
+                    "success"
+                );
+            }
+
+
+            await machineOeeToolRenderSavedRowsV5(
+                result?.entries || [],
+                0
+            );
+
+        } catch (error) {
+
+            const message =
+                error?.message
+                || "Unable to save Tool Entry.";
+
+
+             if (
+                typeof showToast
+                === "function"
+            ) {
+
+                showToast(
+                    message,
+                    "error"
+                );
+
+            } else if (
+                typeof ERP !== "undefined"
+                &&
+                typeof ERP.toast
+                === "function"
+            ) {
+
+                ERP.toast(
+                    message,
+                    "error"
+                );
+            }
+
+        } finally {
+
+            if (button) {
+
+                button.dataset
+                    .saveBusyV124c =
+                    "0";
+
+                button.disabled =
+                    false;
+            }
+        }
     }
 
 
@@ -23907,10 +26104,17 @@ window.setTimeout(
             );
 
 
+        const standaloneToolEntry =
+            Boolean(
+                context?.standalone_tool_entry
+            );
+
+
         const providedContexts =
             (runId > 0 ? 1 : 0)
             + (activityRunId > 0 ? 1 : 0)
-            + (machineLossEntryId > 0 ? 1 : 0);
+            + (machineLossEntryId > 0 ? 1 : 0)
+            + (standaloneToolEntry ? 1 : 0);
 
 
         if (providedContexts !== 1) {
@@ -24086,10 +26290,40 @@ window.setTimeout(
             payload.activity_run_id =
                 activityRunId;
 
-        } else {
+        } else if (machineLossEntryId > 0) {
 
             payload.machine_loss_entry_id =
                 machineLossEntryId;
+
+        } else {
+
+            payload.standalone_tool_entry =
+                true;
+
+            payload.machine_id =
+                Number(
+                    context?.machine_id
+                    || 0
+                );
+
+            payload.entry_date =
+                String(
+                    context?.entry_date
+                    || ""
+                ).trim();
+
+            payload.shift_name =
+                String(
+                    context?.shift_name
+                    || ""
+                ).trim();
+
+            payload.operator_master_id =
+                Number(
+                    context?.operator_master_id
+                    || 0
+                )
+                || null;
         }
 
 
@@ -24116,7 +26350,7 @@ window.setTimeout(
         const result =
             await machineOeeToolReadApiV5(
                 response,
-                "Save Tool Position entries"
+                "Save Tool entries"
             );
 
 
@@ -24153,13 +26387,11 @@ window.setTimeout(
 
         if (
             !host
-            || !rowsHost
+            ||
+            !rowsHost
         ) {
             return;
         }
-
-
-        await machineOeeToolLoadMasterV3();
 
 
         const savedRows =
@@ -24220,43 +26452,32 @@ window.setTimeout(
             );
 
 
-            await machineOeeToolHydrateRowV3(
-                row
-            );
-
-
             if (!saved) {
                 continue;
             }
 
 
-            const uid =
+            const uidInput =
                 row.querySelector(
                     ".machine-oee-tool-uid-v1"
                 );
 
 
-            const action =
+            const lifeInput =
                 row.querySelector(
-                    ".machine-oee-tool-action-v1"
+                    ".machine-oee-tool-life-v125"
                 );
 
 
-            const corner =
+            const remarkInput =
                 row.querySelector(
-                    ".machine-oee-tool-corner-v1"
+                    ".machine-oee-tool-remark-v125"
                 );
 
 
-            const usage =
-                row.querySelector(
-                    ".machine-oee-tool-usage-v1"
-                );
+            if (uidInput) {
 
-
-            if (uid) {
-
-                uid.value =
+                uidInput.value =
                     String(
                         saved.tool_uid
                         || ""
@@ -24264,105 +26485,50 @@ window.setTimeout(
             }
 
 
-            if (usage) {
+            if (lifeInput) {
 
-                usage.value =
+                lifeInput.value =
                     String(
-                        saved.usage_per_part
+                        saved.tool_life
+                        ?? ""
+                    );
+            }
+
+
+            if (remarkInput) {
+
+                remarkInput.value =
+                    String(
+                        saved.remark
                         || ""
                     );
             }
 
 
-            if (!action) {
-                continue;
-            }
-
-
-            action.value =
+            /*
+             * Re-resolve the registered UID after
+             * rendering a saved row.
+             *
+             * This restores Tool Item / Status display
+             * and the existing UID validity flag.
+             */
+            if (
+                uidInput
+                &&
                 String(
-                    saved.tool_action_code
+                    uidInput.value
                     || ""
-                );
+                ).trim()
+                &&
+                typeof window
+                    .machineOeeLookupToolUidV117
+                    === "function"
+            ) {
 
-
-            const selected =
-                action.selectedOptions?.[0]
-                || null;
-
-
-            const actionCode =
-                String(
-                    action.value
-                    || ""
-                ).trim().toUpperCase();
-
-
-            const enablesCorner =
-                Boolean(
-                    selected
-                    &&
-                    selected.dataset
-                        .enablesCornerV3
-                        === "1"
-                );
-
-
-            const reasonGroup =
-                String(
-                    selected?.dataset
-                        .reasonGroupV3
-                    || saved.reason_group
-                    || ""
-                ).trim().toUpperCase();
-
-
-            machineOeeToolHideReasonV3(
-                row
-            );
-
-
-            if (corner) {
-
-                corner.disabled =
-                    !enablesCorner;
-
-
-                corner.value =
-                    enablesCorner
-                    ? String(
-                        saved.corner_code
-                        || ""
-                      )
-                    : "";
-            }
-
-
-            if (reasonGroup) {
-
-                await machineOeeToolShowReasonV3(
-                    row,
-                    reasonGroup,
-                    actionCode === "TOOL_CHANGE"
-                        ? "Tool Change Reason"
-                        : "Corner Change Reason"
-                );
-
-
-                const reason =
-                    row.querySelector(
-                        ".machine-oee-tool-reason-v3"
+                await window
+                    .machineOeeLookupToolUidV117(
+                        uidInput
                     );
-
-
-                if (reason) {
-
-                    reason.value =
-                        String(
-                            saved.change_reason_code
-                            || ""
-                        );
-                }
             }
         }
 
@@ -24370,12 +26536,7 @@ window.setTimeout(
         machineOeeToolRenumberV1(
             host
         );
-
-
-        host.dataset.toolLoadedRunV5 =
-            String(runId);
     }
-
 
     async function machineOeeToolMaybeLoadRunV5() {
 
@@ -24466,48 +26627,11 @@ window.setTimeout(
         machineOeeToolMaybeLoadRunV5;
 
 
-    window.setTimeout(
-        machineOeeToolMaybeLoadRunV5,
-        250
-    );
-
-
-    window.setTimeout(
-        machineOeeToolMaybeLoadRunV5,
-        850
-    );
-
-
-    const machineOeeToolRestoreObserverV5 =
-        new MutationObserver(
-            function() {
-
-                window.clearTimeout(
-                    machineOeeToolRestoreObserverV5
-                        .timerV5
-                );
-
-
-                machineOeeToolRestoreObserverV5
-                    .timerV5 =
-                    window.setTimeout(
-                        machineOeeToolMaybeLoadRunV5,
-                        100
-                    );
-            }
-        );
-
-
-    machineOeeToolRestoreObserverV5.observe(
-        document.body,
-        {
-            childList:
-                true,
-
-            subtree:
-                true
-        }
-    );
+    /*
+     * OEE_TOOL_STANDALONE_UI_V124C:
+     * Tool Entry no longer auto-loads rows from an OEE run.
+     * Historical run-linked rows remain in the database.
+     */
 
 
 })();
@@ -26251,6 +28375,17 @@ window.setTimeout(
                 >
             </div>
 
+            <div id="oee-activity-toolroom-wrap-v134" class="oee-activity-reason-v81" hidden>
+                <label for="oee-activity-itemname-v134">Item Name</label>
+                <input id="oee-activity-itemname-v134" type="text" autocomplete="off" placeholder="Item name">
+
+                <label for="oee-activity-itemqty-v134" style="margin-top:8px;">Qty</label>
+                <input id="oee-activity-itemqty-v134" type="number" min="0" step="1" autocomplete="off" placeholder="Qty">
+
+                <label for="oee-activity-operation-v134" style="margin-top:8px;">Operation</label>
+                <input id="oee-activity-operation-v134" type="text" autocomplete="off" placeholder="e.g. CNC 1st">
+            </div>
+
 
             
         `;
@@ -27495,7 +29630,25 @@ window.machineOeeGetActivitySelectionV89 =
                     || ""
                 ).trim()
                 :
-                ""
+                "",
+
+            item_name:
+                String(
+                    document.getElementById("oee-activity-itemname-v134")?.value
+                    || ""
+                ).trim(),
+
+            item_qty:
+                String(
+                    document.getElementById("oee-activity-itemqty-v134")?.value
+                    || ""
+                ).trim(),
+
+            operation_name:
+                String(
+                    document.getElementById("oee-activity-operation-v134")?.value
+                    || ""
+                ).trim()
         };
     };
 
@@ -27707,7 +29860,18 @@ window.machineOeeGetActivitySelectionV89 =
 
 
         if (name) {
-            name.textContent = "";
+
+            if (
+                "value"
+                in name
+            ) {
+
+                name.value = "";
+
+            } else {
+
+                name.textContent = "";
+            }
         }
 
 
@@ -27894,9 +30058,21 @@ window.machineOeeGetActivitySelectionV89 =
 
             if (name) {
 
-                name.textContent =
-                    tool.tool_item_name
-                    || "-";
+                if (
+                    "value"
+                    in name
+                ) {
+
+                    name.value =
+                        tool.tool_item_name
+                        || "";
+
+                } else {
+
+                    name.textContent =
+                        tool.tool_item_name
+                        || "";
+                }
             }
 
 
@@ -28061,3 +30237,1138 @@ window.machineOeeGetActivitySelectionV89 =
 
 
 /* OEE_PRODUCTION_SAVE_LOSSES_TOOLING_V119_END */
+
+
+/* OEE_TOOL_NAME_TEXTBOX_V129 */
+
+
+/* TOOLROOM_FIELDS_VISIBILITY_V134 */
+(function () {
+    function toggleToolroomFieldsV134() {
+        try {
+            const label = document.getElementById("oee-activity-label-v81");
+            const wrap = document.getElementById("oee-activity-toolroom-wrap-v134");
+            if (!wrap) return;
+            const text = String(label?.textContent || "").trim().toLowerCase();
+            const on = text === "tool room" || text === "development";
+            wrap.hidden = !on;
+        } catch (e) {}
+    }
+    document.addEventListener("click", toggleToolroomFieldsV134, true);
+    document.addEventListener("change", toggleToolroomFieldsV134, true);
+    setInterval(toggleToolroomFieldsV134, 800);
+})();
+
+
+/* COMBINED_SETUP_DRAFT1_UI_V1_START */
+(function () {
+    "use strict";
+
+    const PANEL_ID = "machine-oee-combined-setup-draft-v1";
+    let requestToken = 0;
+    let draftState = null;
+
+    function norm(value) {
+        return String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[\s\/-]+/g, " ");
+    }
+
+    function escapeHtml(value) {
+        if (typeof machineOeeEscapeV1 === "function") {
+            return machineOeeEscapeV1(value);
+        }
+
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function isHardStop(row) {
+        const name = norm(row?.process_name);
+
+        return (
+            name === "quality check"
+            || name === "store"
+            || Number(row?.is_subcontract || 0) === 1
+        );
+    }
+
+    // COMBINED_SETUP_FREE_SELECTION_V1
+    function selectedRows() {
+        if (!draftState) {
+            return [];
+        }
+
+        return draftState.candidates.filter(
+            function (_, index) {
+                return (
+                    index === 0
+                    ||
+                    draftState.selectedIndexes.includes(
+                        index
+                    )
+                );
+            }
+        );
+    }
+
+    function updateSummary() {
+        const panel = document.getElementById(PANEL_ID);
+
+        if (!panel || !draftState) {
+            return;
+        }
+
+        const mode = panel.querySelector(
+            'input[name="machine-oee-processing-mode-draft-v1"]:checked'
+        )?.value || "single";
+
+        const combineHost = panel.querySelector(
+            "#machine-oee-combine-options-draft-v1"
+        );
+
+        if (combineHost) {
+            combineHost.hidden = mode !== "combine";
+        }
+
+        const rows = selectedRows();
+
+        const flow = rows.map(function (row) {
+            return row.process_name;
+        });
+
+        /*
+         * COMBINED_SETUP_SELECTION_SNAPSHOT_V1_SYNC
+         *
+         * null  = normal Single Setup
+         * array = exact Combined Setup selection
+         */
+        window.machineOeeCombinedSetupSelectedProcessesV1 =
+            (
+                mode === "combine"
+                ? flow.slice()
+                : null
+            );
+
+        const endRouteIndex = rows.length
+            ? rows[rows.length - 1].routeIndex
+            : draftState.currentRouteIndex;
+
+        const nextRow =
+            draftState.timeline[endRouteIndex + 1]
+            || null;
+
+        const flowEl = panel.querySelector(
+            "#machine-oee-combined-flow-draft-v1"
+        );
+
+        const nextEl = panel.querySelector(
+            "#machine-oee-combined-next-draft-v1"
+        );
+
+        const countEl = panel.querySelector(
+            "#machine-oee-combined-count-draft-v1"
+        );
+
+        if (flowEl) {
+            flowEl.textContent =
+                flow.join("  ?  ")
+                || "-";
+        }
+
+        if (nextEl) {
+            nextEl.textContent =
+                nextRow?.process_name
+                || "End of route";
+        }
+
+        if (countEl) {
+            countEl.textContent =
+                String(rows.length);
+        }
+    }
+
+    // COMBINED_SETUP_START_PAYLOAD_V1
+    // COMBINED_SETUP_SELECTION_SNAPSHOT_V1
+    //
+    // Keep the selected processes outside the rendered JC panel.
+    // Start Job may rebuild/remove that panel before creating its
+    // request body, so the payload must not depend on live DOM.
+    window.machineOeeCombinedSetupSelectedProcessesV1 = null;
+
+    window.machineOeeCombinedSetupDraftV1Payload =
+        function () {
+
+            const snapshot =
+                window
+                    .machineOeeCombinedSetupSelectedProcessesV1;
+
+            if (snapshot === null) {
+                return null;
+            }
+
+            if (!Array.isArray(snapshot)) {
+                return null;
+            }
+
+            return snapshot.slice();
+        };
+
+
+    function syncCheckboxes() {
+        const panel =
+            document.getElementById(PANEL_ID);
+
+        if (!panel || !draftState) {
+            return;
+        }
+
+        const boxes = Array.from(
+            panel.querySelectorAll(
+                ".machine-oee-combine-process-draft-v1"
+            )
+        );
+
+        boxes.forEach(function (box, index) {
+
+            if (index === 0) {
+                box.checked = true;
+                box.disabled = true;
+                return;
+            }
+
+            box.checked =
+                draftState.selectedIndexes.includes(
+                    index
+                );
+
+            box.disabled = false;
+        });
+
+        updateSummary();
+    }
+
+    function bindPanel(panel) {
+
+        panel.addEventListener(
+            "change",
+            function (event) {
+
+                const target = event.target;
+
+                if (
+                    target?.name
+                    ===
+                    "machine-oee-processing-mode-draft-v1"
+                ) {
+                    updateSummary();
+                    return;
+                }
+
+                if (
+                    !target?.classList?.contains(
+                        "machine-oee-combine-process-draft-v1"
+                    )
+                ) {
+                    return;
+                }
+
+                const index =
+                    Number(
+                        target.dataset.index
+                        || 0
+                    );
+
+                if (index <= 0) {
+                    syncCheckboxes();
+                    return;
+                }
+
+                if (target.checked) {
+
+                    if (
+                        !draftState.selectedIndexes.includes(
+                            index
+                        )
+                    ) {
+                        draftState.selectedIndexes.push(
+                            index
+                        );
+                    }
+
+                } else {
+
+                    draftState.selectedIndexes =
+                        draftState.selectedIndexes.filter(
+                            function (selectedIndex) {
+                                return (
+                                    selectedIndex !== index
+                                );
+                            }
+                        );
+                }
+
+                draftState.selectedIndexes.sort(
+                    function (a, b) {
+                        return a - b;
+                    }
+                );
+
+                syncCheckboxes();
+            }
+        );
+    }
+
+    function renderPanel(
+        card,
+        timeline,
+        currentRouteIndex,
+        candidates
+    ) {
+
+        const host =
+            document.getElementById(
+                "machine-oee-jc-result-v1"
+            );
+
+        const stateBox =
+            host?.querySelector(
+                ".jc-state-v1"
+            );
+
+        const actionBox =
+            stateBox?.querySelector(
+                ".jc-action-v1"
+            );
+
+        if (
+            !host
+            || !stateBox
+            || !actionBox
+            || candidates.length < 2
+        ) {
+            return;
+        }
+
+        document
+            .getElementById(PANEL_ID)
+            ?.remove();
+
+        draftState = {
+            jobCardNo:
+                String(
+                    card.job_card_no
+                    || ""
+                ),
+
+            currentProcess:
+                String(
+                    card.current_process
+                    || card.wip_status
+                    || ""
+                ),
+
+            timeline:
+                timeline,
+
+            currentRouteIndex:
+                currentRouteIndex,
+
+            candidates:
+                candidates,
+
+            selectedIndexes:
+                [0]
+        };
+
+        const panel =
+            document.createElement("div");
+
+        panel.id = PANEL_ID;
+
+        panel.style.cssText = [
+            "margin:16px 0 4px",
+            "padding:16px",
+            "border:1px solid #d7deea",
+            "border-radius:12px",
+            "background:#f8fafc"
+        ].join(";");
+
+        const rowsHtml =
+            candidates.map(
+                function (row, index) {
+
+                    const isCurrent =
+                        index === 0;
+
+                    const disabled =
+                        false;
+
+                    return `
+                        <label
+                            style="
+                                display:flex;
+                                align-items:center;
+                                gap:10px;
+                                padding:9px 10px;
+                                margin:6px 0;
+                                border:1px solid #e1e7ef;
+                                border-radius:9px;
+                                background:#fff;
+                            "
+                        >
+
+                            <input
+                                type="checkbox"
+                                class="
+                                    machine-oee-combine-process-draft-v1
+                                "
+                                data-index="${index}"
+                                ${
+                                    isCurrent
+                                    ? "checked disabled"
+                                    : ""
+                                }
+                                ${
+                                    disabled
+                                    ? "disabled"
+                                    : ""
+                                }
+                            >
+
+                            <span
+                                style="
+                                    font-weight:700;
+                                    flex:1;
+                                "
+                            >
+                                ${
+                                    escapeHtml(
+                                        row.process_name
+                                    )
+                                }
+                            </span>
+
+                            ${
+                                isCurrent
+                                ?
+                                `
+                                <span
+                                    style="
+                                        font-size:11px;
+                                        font-weight:800;
+                                        color:#2563eb;
+                                    "
+                                >
+                                    CURRENT
+                                </span>
+                                `
+                                :
+                                ""
+                            }
+
+                        </label>
+                    `;
+                }
+            ).join("");
+
+        panel.innerHTML = `
+
+            <div
+                style="
+                    display:flex;
+                    align-items:flex-start;
+                    justify-content:space-between;
+                    gap:12px;
+                    margin-bottom:12px;
+                "
+            >
+
+                <div>
+
+                    <div
+                        style="
+                            font-weight:900;
+                            font-size:15px;
+                            color:#172554;
+                        "
+                    >
+                        Processing Mode
+                    </div>
+
+                    <div
+                        style="
+                            font-size:12px;
+                            color:#64748b;
+                            margin-top:3px;
+                        "
+                    >
+                        Draft preview only ?
+                        combined setup will not be saved yet.
+                    </div>
+
+                </div>
+
+                <span
+                    style="
+                        font-size:11px;
+                        font-weight:900;
+                        padding:5px 8px;
+                        border-radius:999px;
+                        background:#fef3c7;
+                        color:#92400e;
+                    "
+                >
+                    DRAFT 1
+                </span>
+
+            </div>
+
+
+            <div
+                style="
+                    display:flex;
+                    gap:18px;
+                    flex-wrap:wrap;
+                    margin-bottom:12px;
+                "
+            >
+
+                <label
+                    style="
+                        font-weight:800;
+                        cursor:pointer;
+                    "
+                >
+                    <input
+                        type="radio"
+                        name="machine-oee-processing-mode-draft-v1"
+                        value="single"
+                        checked
+                    >
+                    Single Setup
+                </label>
+
+                <label
+                    style="
+                        font-weight:800;
+                        cursor:pointer;
+                    "
+                >
+                    <input
+                        type="radio"
+                        name="machine-oee-processing-mode-draft-v1"
+                        value="combine"
+                    >
+                    Combine Setups
+                </label>
+
+            </div>
+
+
+            <div
+                id="machine-oee-combine-options-draft-v1"
+                hidden
+            >
+
+                <div
+                    style="
+                        font-size:12px;
+                        color:#475569;
+                        margin-bottom:8px;
+                    "
+                >
+                    Select any later setup required for this operation.
+                    The current process is compulsory; intermediate
+                    processes may be skipped.
+                </div>
+
+                ${rowsHtml}
+
+                <div
+                    style="
+                        margin-top:12px;
+                        padding:12px;
+                        border-radius:10px;
+                        background:#eef2ff;
+                    "
+                >
+
+                    <div
+                        style="
+                            display:grid;
+                            grid-template-columns:
+                                minmax(130px,auto) 1fr;
+                            gap:7px 12px;
+                            font-size:13px;
+                        "
+                    >
+
+                        <strong>
+                            Selected setups
+                        </strong>
+
+                        <span
+                            id="machine-oee-combined-count-draft-v1"
+                        >
+                            1
+                        </span>
+
+
+                        <strong>
+                            Selected flow
+                        </strong>
+
+                        <span
+                            id="machine-oee-combined-flow-draft-v1"
+                        ></span>
+
+
+                        <strong>
+                            Next after combined
+                        </strong>
+
+                        <span
+                            id="machine-oee-combined-next-draft-v1"
+                        ></span>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+        actionBox.parentNode.insertBefore(
+            panel,
+            actionBox
+        );
+
+        bindPanel(panel);
+        updateSummary();
+    }
+
+    async function hydrate() {
+
+        const host =
+            document.getElementById(
+                "machine-oee-jc-result-v1"
+            );
+
+        const card =
+            machineOeeCurrentFetchedJcV1;
+
+        if (
+            !host
+            || !card
+            || !host.querySelector(
+                ".jc-state-v1"
+            )
+        ) {
+            return;
+        }
+
+        if (
+            document.getElementById(
+                PANEL_ID
+            )
+        ) {
+            return;
+        }
+
+        const jc =
+            String(
+                card.job_card_no
+                || ""
+            ).trim();
+
+        const currentProcess =
+            String(
+                card.current_process
+                || card.wip_status
+                || ""
+            ).trim();
+
+        if (
+            !jc
+            || !currentProcess
+        ) {
+            return;
+        }
+
+        const token =
+            ++requestToken;
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/quality_check/fetch/"
+                    +
+                    encodeURIComponent(jc),
+                    {
+                        cache:
+                            "no-store"
+                    }
+                );
+
+            const data =
+                await response.json();
+
+            if (
+                token !== requestToken
+                || !response.ok
+                || data?.success === false
+            ) {
+                return;
+            }
+
+            const items =
+                Array.isArray(
+                    data?.items
+                )
+                ?
+                data.items
+                :
+                [];
+
+            const cardItemId =
+                Number(
+                    card.job_card_item_id
+                    || card.id
+                    || 0
+                );
+
+            const cardItemName =
+                norm(
+                    card.item_name
+                );
+
+            const item =
+                items.find(
+                    function (row) {
+
+                        return (
+                            (
+                                cardItemId > 0
+                                &&
+                                Number(
+                                    row?.id
+                                    ||
+                                    row?.job_card_item_id
+                                    ||
+                                    0
+                                )
+                                ===
+                                cardItemId
+                            )
+                            ||
+                            (
+                                cardItemName
+                                &&
+                                norm(
+                                    row?.item_name
+                                )
+                                ===
+                                cardItemName
+                            )
+                        );
+                    }
+                )
+                ||
+                items[0];
+
+            if (!item) {
+                return;
+            }
+
+            const timeline =
+                Array.isArray(
+                    item.process_timeline
+                )
+                ?
+                item.process_timeline
+                :
+                (
+                    Array.isArray(
+                        item.processes
+                    )
+                    ?
+                    item.processes.map(
+                        function (name) {
+                            return {
+                                process_name:
+                                    name
+                            };
+                        }
+                    )
+                    :
+                    []
+                );
+
+            const currentRouteIndex =
+                timeline.findIndex(
+                    function (row) {
+
+                        return (
+                            norm(
+                                row?.process_name
+                            )
+                            ===
+                            norm(
+                                currentProcess
+                            )
+                        );
+                    }
+                );
+
+            if (
+                currentRouteIndex < 0
+            ) {
+                return;
+            }
+
+            const candidates = [];
+
+            for (
+                let i = currentRouteIndex;
+                i < timeline.length;
+                i += 1
+            ) {
+
+                const row =
+                    timeline[i];
+
+                if (
+                    isHardStop(row)
+                ) {
+                    break;
+                }
+
+                candidates.push({
+                    process_name:
+                        row.process_name,
+
+                    routeIndex:
+                        i
+                });
+            }
+
+            renderPanel(
+                card,
+                timeline,
+                currentRouteIndex,
+                candidates
+            );
+
+        } catch (_) {
+
+            /*
+             * Draft UI must never interfere
+             * with existing OEE operation.
+             */
+        }
+    }
+
+    function scheduleHydrate() {
+
+        window.setTimeout(
+            hydrate,
+            40
+        );
+    }
+
+    const resultHost =
+        document.getElementById(
+            "machine-oee-jc-result-v1"
+        );
+
+    if (resultHost) {
+
+        new MutationObserver(
+            function () {
+
+                if (
+                    !document.getElementById(
+                        PANEL_ID
+                    )
+                ) {
+                    scheduleHydrate();
+                }
+            }
+        ).observe(
+            resultHost,
+            {
+                childList:
+                    true,
+
+                subtree:
+                    true
+            }
+        );
+    }
+
+    document.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target?.id
+                ===
+                "machine-oee-stage-select-v1"
+            ) {
+
+                document
+                    .getElementById(
+                        PANEL_ID
+                    )
+                    ?.remove();
+
+                draftState = null;
+
+                scheduleHydrate();
+            }
+        }
+    );
+
+    /*
+     * SAFETY:
+     * Existing normal Single Setup Start remains unchanged.
+     *
+     * Combined Setup Start is blocked in Draft 1.
+     */
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const startButton =
+                event.target?.closest?.(
+                    ".machine-start-btn-v1"
+                );
+
+            if (!startButton) {
+                return;
+            }
+
+            const panel =
+                document.getElementById(
+                    PANEL_ID
+                );
+
+            const mode =
+                panel?.querySelector(
+                    'input[name="machine-oee-processing-mode-draft-v1"]:checked'
+                )?.value
+                ||
+                "single";
+
+            if (
+                mode !== "combine"
+            ) {
+                return;
+            }
+
+            const count =
+                selectedRows().length;
+
+            /*
+             * Approved Combined Setup:
+             * allow the existing Start Job handler to continue.
+             */
+            if (count >= 2) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            const message =
+                "Select at least one additional "
+                +
+                "consecutive setup.";
+
+            if (
+                window.ERP?.toast
+            ) {
+
+                ERP.toast(
+                    message,
+                    "warn"
+                );
+
+            } else {
+
+                window.alert(
+                    message
+                );
+            }
+        },
+        true
+    );
+
+    scheduleHydrate();
+
+})();
+/* COMBINED_SETUP_DRAFT1_UI_V1_END */
+
+
+/* REJECT_AT_UI_V1_START */
+(function () {
+    "use strict";
+
+    function rejectAtField() {
+        return document.getElementById(
+            "oee-direct-reject-at-field-v1"
+        );
+    }
+
+    function rejectAtSelect() {
+        return document.getElementById(
+            "machine-oee-reject-at-v1"
+        );
+    }
+
+    function esc(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    function renderRejectAt(span) {
+
+        const field = rejectAtField();
+        const sel = rejectAtSelect();
+
+        if (!field || !sel) {
+            return;
+        }
+
+        if (
+            !Array.isArray(span)
+            ||
+            span.length < 2
+        ) {
+            field.style.display = "none";
+            sel.innerHTML =
+                '<option value="">Select operation</option>';
+            return;
+        }
+
+        const previous = sel.value;
+
+        let html =
+            '<option value="">Select operation</option>';
+
+        span.forEach(function (name) {
+            const safe = esc(name);
+            html +=
+                '<option value="' + safe + '">'
+                + safe
+                + '</option>';
+        });
+
+        sel.innerHTML = html;
+
+        if (previous) {
+            sel.value = previous;
+        }
+
+        field.style.display = "";
+    }
+
+    /*
+     * Reads the combined setup's full operation list from the
+     * completion context. Returns null for a single setup.
+     */
+    window.machineOeeRejectAtEnsureV1 =
+        async function (run) {
+
+            try {
+
+                const runId =
+                    run?.run_id
+                    || run?.id
+                    || null;
+
+                if (!runId) {
+                    return null;
+                }
+
+                const response =
+                    await fetch(
+                        "/api/oee-machine/run/"
+                        + encodeURIComponent(runId)
+                        + "/completion-context",
+                        { cache: "no-store" }
+                    );
+
+                const data =
+                    await response.json();
+
+                const span =
+                    data?.card?.combined_span_processes
+                    || null;
+
+                renderRejectAt(span);
+
+                return span;
+
+            } catch (_) {
+                return null;
+            }
+        };
+
+    /*
+     * Reveal the dropdown as soon as a rejection quantity is
+     * typed, so Complete is not blocked on the first press.
+     */
+    document.addEventListener(
+        "input",
+        function (event) {
+
+            if (
+                event.target?.id
+                !==
+                "machine-oee-rejected-qty-v1"
+            ) {
+                return;
+            }
+
+            const qty =
+                Number(event.target.value || 0);
+
+            if (qty > 0) {
+
+                const run =
+                    (
+                        typeof machineOeePendingRunV1
+                        !== "undefined"
+                    )
+                    ? machineOeePendingRunV1
+                    : null;
+
+                if (run) {
+                    window.machineOeeRejectAtEnsureV1(run);
+                }
+
+            } else {
+
+                const field = rejectAtField();
+
+                if (field) {
+                    field.style.display = "none";
+                }
+            }
+        }
+    );
+
+})();
+/* REJECT_AT_UI_V1_END */
+

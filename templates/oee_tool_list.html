@@ -1,0 +1,1489 @@
+{% extends "base.html" %}
+{% block title %}Tool List | NMTG{% endblock %}
+{% block extra_head %}
+<style>
+.tolst-page { max-width: 1250px; margin: 0 auto; padding: 18px; }
+.tolst-header { margin-bottom: 16px; padding: 16px 18px; border-left: 4px solid var(--oee-accent);
+    border-radius: var(--radius-lg); background: linear-gradient(135deg,#f7fcff,#e5f4ff); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.tolst-header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 800; color: var(--oee-title); }
+.tolst-header p { margin: 0; font-size: 12px; color: var(--oee-text-mute); }
+.tolst-card { padding: 18px; border: 1px solid #d8e3ef; border-radius: 9px; background: var(--card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.tolst-head-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.tolst-head-row input, .tolst-head-row select { min-height: 34px; padding: 6px 10px; border: 1px solid var(--oee-border);
+    border-radius: var(--radius-md); background: var(--card); font-size: 13px; color: #172b3f; }
+.tolst-head-row input { flex: 1; min-width: 220px; }
+.tolst-head-row select { min-width: 160px; }
+.tolst-table-wrap { border: 1px solid #d8e3ef; border-radius: var(--radius-md); max-height: 560px; overflow: auto; }
+.tolst-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tolst-table thead { position: sticky; top: 0; background: #f2f7fc; z-index: 1; }
+.tolst-table th, .tolst-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ecf1f6; }
+.tolst-table th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--oee-text-sec); }
+.tolst-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.tolst-badge[data-s="AVAILABLE"]       { background: #e6f6ea; color: #28a745; }
+.tolst-badge[data-s="IN_USE"]          { background: #eaf3fc; color: #1665d8; }
+.tolst-badge[data-s="PENDING_REGRIND"] { background: #fff4e6; color: #b7791f; }
+.tolst-badge[data-s="SCRAPPED"]        { background: #fdecee; color: #dc3545; }
+.tolst-badge[data-s="BROKEN"]          { background: #fdecee; color: #dc3545; }
+.tolst-btn { padding: 4px 10px; border: 1px solid var(--oee-border); border-radius: var(--radius-md); background: var(--card);
+    font-size: 11px; font-weight: 700; cursor: pointer; color: var(--oee-title); }
+.tolst-btn:hover { background: var(--oee-tint); border-color: var(--oee-accent); color: var(--oee-accent); }
+.tolst-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tolst-empty { padding: 20px; text-align: center; color: var(--oee-text-mute); font-size: 12px; }
+.tolst-modal-overlay { position: fixed; inset: 0; background: rgba(15,30,60,0.45); display: flex; align-items: center;
+    justify-content: center; z-index: 1000; padding: 20px; }
+.tolst-modal-overlay[hidden] { display: none !important; }
+.tolst-modal-box { background: var(--card); border-radius: 10px; max-width: 620px; width: 100%; max-height: 90vh;
+    overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.25); padding: 20px; }
+.tolst-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--oee-border-soft); }
+.tolst-modal-head strong { font-size: 16px; color: var(--oee-title); }
+.tolst-modal-head button { background: none; border: 0; font-size: 22px; color: var(--oee-text-mute); cursor: pointer; }
+.tolst-modal-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tolst-modal-body > div { display: flex; flex-direction: column; }
+
+/* TOOL_RETURN_BREAKAGE_VISIBILITY_V2 */
+#tolst-return-brk-wrap[hidden] {
+    display: none !important;
+}
+.tolst-modal-body > div.full { grid-column: 1 / -1; }
+.tolst-modal-body label { font-size: 10px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase;
+    color: var(--oee-text-sec); margin-bottom: 5px; }
+.tolst-modal-body input, .tolst-modal-body select { min-height: 36px; padding: 6px 10px; border: 1px solid var(--oee-border);
+    border-radius: var(--radius-md); background: var(--card); font-family: inherit; font-size: 13px; color: #172b3f; }
+.tolst-modal-body input[readonly] { background: #f5f8fb; }
+.tolst-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid var(--oee-border-soft); }
+.tolst-primary { background: var(--oee-accent); color: var(--card); border: 0; padding: 8px 16px; border-radius: var(--radius-md);
+    font-weight: 700; cursor: pointer; font-size: 12px; }
+.tolst-ghost { background: var(--card); color: var(--oee-title); border: 1px solid var(--oee-border); padding: 8px 14px;
+    border-radius: var(--radius-md); font-weight: 700; cursor: pointer; font-size: 12px; }
+.tolst-msg { margin-top: 10px; font-size: 12px; font-weight: 700; color: #21723b; }
+.tolst-msg.error { color: #b42318; }
+.tolst-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--oee-border); margin-bottom: 16px; }
+.tolst-tab { padding: 10px 20px; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; font-weight: 700; font-size: 13px; color: var(--oee-text-mute); font-family: inherit; }
+.tolst-tab:hover { color: var(--oee-title); }
+.tolst-tab.active { color: var(--oee-accent); border-bottom-color: var(--oee-accent); }
+.tolst-tab-pane[hidden] { display: none; }
+
+/* TOOL_ISSUE_SINGLE_SEARCH_V5_CSS */
+.tolst-typeahead-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.tolst-typeahead-wrap > input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tolst-typeahead-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 1500;
+    max-height: 230px;
+    overflow-y: auto;
+    border: 1px solid var(--oee-border);
+    border-radius: var(--radius-md);
+    background: var(--card);
+    box-shadow: 0 8px 24px rgba(15,30,60,0.18);
+}
+
+.tolst-typeahead-list[hidden] {
+    display: none !important;
+}
+
+.tolst-typeahead-item {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-bottom: 1px solid var(--oee-border-soft);
+    background: var(--card);
+    text-align: left;
+    font-family: inherit;
+    font-size: 12px;
+    color: #172b3f;
+    cursor: pointer;
+}
+
+.tolst-typeahead-item:last-child {
+    border-bottom: 0;
+}
+
+.tolst-typeahead-item:hover,
+.tolst-typeahead-item.active {
+    background: var(--oee-tint);
+}
+
+.tolst-typeahead-code {
+    font-weight: 800;
+    color: var(--oee-title);
+}
+
+.tolst-typeahead-name {
+    margin-left: 7px;
+    color: var(--oee-text-sec);
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tolst-page">
+  <div class="tolst-header">
+    <h1>Tool UID List</h1>
+    <p>All physical tools registered in the system. Return or Re-issue from here.</p>
+  </div>
+
+  <div class="tolst-tabs">
+    <button class="tolst-tab" data-tab="uid" type="button">Tool UID List</button>
+    <button class="tolst-tab" data-tab="register" type="button">UID Register</button>
+    <button class="tolst-tab" data-tab="tm" type="button">Tool Master</button>
+  </div>
+
+  <div id="tab-tm" class="tolst-tab-pane" hidden>
+  <!-- Tool Master Section -->
+  <section class="tolst-card">
+    <div class="tolst-head-row">
+      <strong style="font-size: 15px; color: var(--oee-title); flex: 1;">Tool Master</strong>
+      <input id="tolst-tm-search" type="text" autocomplete="off" placeholder="Search Code / Name" style="max-width: 300px;">
+      <button id="tolst-tm-add" class="tolst-primary" type="button">+ Add New Tool</button>
+    </div>
+    <div class="tolst-table-wrap" style="max-height: 320px;">
+      <table class="tolst-table">
+        <thead><tr>
+          <th>Code</th><th>Name</th><th>UID Prefix</th><th style="width: 60px;">Active</th><th style="width: 130px;">Action</th>
+        </tr></thead>
+        <tbody id="tolst-tm-body"><tr><td colspan="5" class="tolst-empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+  </div>
+
+  <div id="tab-uid" class="tolst-tab-pane">
+  <!-- Tool UID List Section -->
+  <section class="tolst-card">
+    <div class="tolst-head-row">
+      <strong style="font-size: 15px; color: var(--oee-title); flex: 1;">Tool UID List</strong>
+      <input id="tolst-search" type="text" autocomplete="off" placeholder="Search UID / tool / machine / operator">
+      <select id="tolst-filter">
+        <option value="">All Statuses</option>
+        <option value="AVAILABLE">Available</option>
+        <option value="IN_USE">In Use</option>
+        <option value="PENDING_REGRIND">Pending Regrind</option>
+        <option value="SCRAPPED">Scrapped</option>
+        <option value="BROKEN">Broken</option>
+      </select>
+    </div>
+    <div class="tolst-table-wrap">
+      <table class="tolst-table">
+        <thead><tr>
+          <th>UID</th><th>Tool Item</th><th>Status</th>
+          <th>Last Machine</th><th>Last Operator</th><th>Last Date</th><th>Action</th>
+        </tr></thead>
+        <tbody id="tolst-body"><tr><td colspan="7" class="tolst-empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Return Modal -->
+<div id="tolst-return-modal" class="tolst-modal-overlay" hidden>
+  <div class="tolst-modal-box">
+    <div class="tolst-modal-head"><strong>Return Tool</strong><button id="tolst-return-close" type="button">&times;</button></div>
+    <div class="tolst-modal-body">
+      <div><label>Tool UID</label><input id="tolst-return-uid" readonly></div>
+      <div><label>Return Condition</label><select id="tolst-return-cond">
+        <option value="">-- Select --</option>
+        <option value="LIFE_COMPLETE">Life Complete (Scrap)</option>
+        <option value="JOB_COMPLETE">Job Complete</option>
+        <option value="SEND_FOR_REGRIND">Send for Regrind</option>
+        <option value="BREAKAGE">Breakage</option>
+      </select></div>
+      <div><label>Machine Code</label><input id="tolst-return-mc" autocomplete="off"></div>
+      <div><label>Machine Name</label><input id="tolst-return-mn" readonly></div>
+      <div><label>Operator Code</label><input id="tolst-return-oc" autocomplete="off"></div>
+      <div><label>Operator Name</label><input id="tolst-return-on" readonly></div>
+      <div id="tolst-return-brk-wrap" hidden><label>Breakage Reason</label><select id="tolst-return-brk">
+        <option value="">-- Select --</option>
+        <option value="CHIPPING">Chipping</option>
+        <option value="DAMAGE">Damage</option>
+        <option value="WEAR">Wear</option>
+        <option value="OTHER">Other</option>
+      </select></div>
+      <div class="full"><label>Remarks</label><input id="tolst-return-rem" maxlength="500" placeholder="Optional"></div>
+    </div>
+    <div id="tolst-return-msg" class="tolst-msg" hidden></div>
+    <div class="tolst-modal-actions">
+      <button id="tolst-return-cancel" class="tolst-ghost" type="button">Cancel</button>
+      <button id="tolst-return-submit" class="tolst-primary" type="button">Return Tool</button>
+    </div>
+  </div>
+</div>
+
+<!-- UID Register Tab Pane -->
+<div id="tab-register" class="tolst-tab-pane" hidden style="max-width: 1250px; margin: 0 auto; padding: 0 18px;">
+  <section class="tolst-card">
+    <div class="tolst-head-row">
+      <strong style="font-size: 15px; color: var(--oee-title); flex: 1;">Register New Physical Tool</strong>
+    </div>
+    <div class="tolst-modal-body">
+      <div><label>Tool Item Code</label>
+        <div style="display:flex;gap:6px;">
+          <input id="reg-code" type="text" autocomplete="off" placeholder="Example: DR-0001" style="flex:1;">
+          <button id="reg-lookup" class="tolst-ghost" type="button" style="min-height:36px;">Lookup</button>
+        </div>
+      </div>
+      <div><label>Tool Name</label><input id="reg-name" type="text" readonly></div>
+      <div><label>UID Prefix</label><input id="reg-prefix" type="text" readonly></div>
+      <div><label>Created Date</label><input id="reg-date" type="date"></div>
+      <!-- TOOL_ISSUE_SINGLE_SEARCH_V5_REGISTER -->
+      <div>
+        <label>Machine</label>
+        <div class="tolst-typeahead-wrap">
+
+          <input
+            id="reg-machine-search"
+            type="text"
+            autocomplete="off"
+            placeholder="Type machine code or name"
+          >
+
+          <input
+            id="reg-mc"
+            type="hidden"
+          >
+
+          <div
+            id="reg-machine-suggestions"
+            class="tolst-typeahead-list"
+            hidden
+          ></div>
+
+        </div>
+      </div>
+
+      <div>
+        <label>Operator</label>
+        <div class="tolst-typeahead-wrap">
+
+          <input
+            id="reg-operator-search"
+            type="text"
+            autocomplete="off"
+            placeholder="Type operator code or name"
+          >
+
+          <input
+            id="reg-oc"
+            type="hidden"
+          >
+
+          <div
+            id="reg-operator-suggestions"
+            class="tolst-typeahead-list"
+            hidden
+          ></div>
+
+        </div>
+      </div>
+      <div class="full"><label>Remark</label><input id="reg-remark" type="text" maxlength="500" placeholder="Optional"></div>
+    </div>
+    <div class="tolst-modal-actions" style="justify-content: flex-start;">
+      <button id="reg-generate" class="tolst-primary" type="button" disabled>Generate Tool UID</button>
+      <div id="reg-generated" hidden style="display:inline-flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #bfd5e8;border-radius:var(--radius-md);background:var(--oee-tint);min-height:38px;">
+        <span style="font-size:10px;font-weight:800;text-transform:uppercase;color:var(--oee-text-sec);">Generated UID</span>
+        <strong id="reg-generated-uid" style="font-size:15px;font-weight:800;color:#09336e;"></strong>
+      </div>
+    </div>
+    <div id="reg-msg" class="tolst-msg" hidden></div>
+  </section>
+</div>
+
+<!-- Tool Master Add/Edit Modal -->
+<div id="tolst-tm-modal" class="tolst-modal-overlay" hidden>
+  <div class="tolst-modal-box">
+    <div class="tolst-modal-head"><strong id="tolst-tm-title">Add New Tool</strong><button id="tolst-tm-close" type="button">&times;</button></div>
+    <div class="tolst-modal-body">
+      <div><label>Tool Item Code</label><input id="tolst-tm-code" maxlength="50" placeholder="Example: DR-9999"></div>
+      <div><label>UID Prefix</label><input id="tolst-tm-prefix" maxlength="50" placeholder="Example: DR"></div>
+      <div class="full"><label>Tool Item Name</label><input id="tolst-tm-name" maxlength="255" placeholder="Example: DRILL 15.5 mm HSS [ADDISON]"></div>
+      <div class="full"><label style="display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--oee-title);">
+        <input id="tolst-tm-active" type="checkbox" checked style="width: 16px; height: 16px; min-height: 16px;">
+        Active
+      </label></div>
+    </div>
+    <div id="tolst-tm-msg" class="tolst-msg" hidden></div>
+    <div class="tolst-modal-actions">
+      <button id="tolst-tm-cancel" class="tolst-ghost" type="button">Cancel</button>
+      <button id="tolst-tm-submit" class="tolst-primary" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Re-issue Modal -->
+<div id="tolst-reissue-modal" class="tolst-modal-overlay" hidden>
+  <div class="tolst-modal-box">
+    <div class="tolst-modal-head"><strong>Re-issue Tool</strong><button id="tolst-reissue-close" type="button">&times;</button></div>
+    <div class="tolst-modal-body">
+      <div class="full"><label>Tool UID</label><input id="tolst-reissue-uid" readonly></div>
+      <!-- TOOL_ISSUE_SINGLE_SEARCH_V5_REISSUE -->
+      <div>
+        <label>Machine</label>
+        <div class="tolst-typeahead-wrap">
+
+          <input
+            id="tolst-reissue-machine-search"
+            type="text"
+            autocomplete="off"
+            placeholder="Type machine code or name"
+          >
+
+          <input
+            id="tolst-reissue-mc"
+            type="hidden"
+          >
+
+          <div
+            id="tolst-reissue-machine-suggestions"
+            class="tolst-typeahead-list"
+            hidden
+          ></div>
+
+        </div>
+      </div>
+
+      <div>
+        <label>Operator</label>
+        <div class="tolst-typeahead-wrap">
+
+          <input
+            id="tolst-reissue-operator-search"
+            type="text"
+            autocomplete="off"
+            placeholder="Type operator code or name"
+          >
+
+          <input
+            id="tolst-reissue-oc"
+            type="hidden"
+          >
+
+          <div
+            id="tolst-reissue-operator-suggestions"
+            class="tolst-typeahead-list"
+            hidden
+          ></div>
+
+        </div>
+      </div>
+      <div class="full"><label>Remarks</label><input id="tolst-reissue-rem" maxlength="500" placeholder="Optional"></div>
+    </div>
+    <div id="tolst-reissue-msg" class="tolst-msg" hidden></div>
+    <div class="tolst-modal-actions">
+      <button id="tolst-reissue-cancel" class="tolst-ghost" type="button">Cancel</button>
+      <button id="tolst-reissue-submit" class="tolst-primary" type="button">Re-issue Tool</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const searchEl = document.getElementById("tolst-search");
+  const filterEl = document.getElementById("tolst-filter");
+  const bodyEl   = document.getElementById("tolst-body");
+  let cache = [];
+
+  function esc(s) {
+    return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function fmtDate(v) {
+    if (!v) return "-";
+    try {
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return String(v);
+      return String(d.getDate()).padStart(2,"0") + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + d.getFullYear();
+    } catch (e) { return String(v); }
+  }
+  /* TOOL_UID_ACTION_RULES_V1 */
+  function actionButtons(u) {
+    const s = u.status;
+
+    if (s === "IN_USE") {
+      return `<button class="tolst-btn" data-act="return" data-uid="${esc(u.tool_uid)}">Return</button>`;
+    }
+
+    if (s === "AVAILABLE") {
+      return `<button class="tolst-btn" data-act="reissue" data-uid="${esc(u.tool_uid)}">Re-issue</button>`;
+    }
+
+    return "";
+  }
+  function render() {
+    const q = String(searchEl.value || "").toLowerCase().trim();
+    const st = String(filterEl.value || "");
+    const rows = cache.filter(u => {
+      if (st && u.status !== st) return false;
+      if (!q) return true;
+      const blob = [u.tool_uid, u.tool_item_code, u.tool_item_name, u.last_machine_name, u.last_operator_name].join(" ").toLowerCase();
+      return blob.indexOf(q) !== -1;
+    });
+    if (!rows.length) { bodyEl.innerHTML = `<tr><td colspan="7" class="tolst-empty">No tools match.</td></tr>`; return; }
+    bodyEl.innerHTML = rows.map(u => `
+      <tr>
+        <td><strong>${esc(u.tool_uid)}</strong></td>
+        <td>${esc(u.tool_item_code||"")} - ${esc(u.tool_item_name||"")}</td>
+        <td><span class="tolst-badge" data-s="${esc(u.status)}">${esc(u.status)}</span></td>
+        <td>${esc(u.last_machine_name||"-")}</td>
+        <td>${esc(u.last_operator_name||"-")}</td>
+        <td>${fmtDate(u.last_movement_date)}</td>
+        <td>${actionButtons(u)}</td>
+      </tr>`).join("");
+  }
+  async function load() {
+    bodyEl.innerHTML = `<tr><td colspan="7" class="tolst-empty">Loading...</td></tr>`;
+    try {
+      const r = await fetch("/api/oee-machine/tool-uid/list");
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Failed to load.");
+      cache = d.uids || [];
+      render();
+    } catch (e) {
+      bodyEl.innerHTML = `<tr><td colspan="7" class="tolst-empty">${esc(e.message)}</td></tr>`;
+    }
+  }
+  searchEl.addEventListener("input", render);
+  filterEl.addEventListener("change", render);
+  bodyEl.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-act]");
+    if (!b) return;
+    const uid = b.getAttribute("data-uid");
+    const act = b.getAttribute("data-act");
+    if (act === "return") openReturn(uid);
+    if (act === "reissue") openReissue(uid);
+  });
+
+  // ---- Fetch helpers ----
+  async function fetchName(kind, code) {
+    if (!code) return "";
+    const url = kind === "machine"
+      ? "/api/oee-machine/machine/lookup?code=" + encodeURIComponent(code)
+      : "/api/oee-machine/operator/lookup?code=" + encodeURIComponent(code);
+    try {
+      const r = await fetch(url);
+      const d = await r.json();
+      if (r.ok && d.success) return kind === "machine" ? (d.machine.machine_name || "") : (d.operator.operator_name || "");
+    } catch (e) {}
+    return "";
+  }
+
+
+  /* TOOL_ISSUE_DROPDOWNS_V2 */
+
+  let toolIssueMachinesV2 = [];
+  let toolIssueOperatorsV2 = [];
+
+  /* TOOL_ISSUE_SINGLE_SEARCH_V5_MAIN */
+
+  function toolIssueNormalizeV5(value) {
+
+    return String(value || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  }
+
+
+  function toolIssueMachineLabelV5(machine) {
+
+    const code =
+      String(
+        machine.machine_no || ""
+      ).trim();
+
+    const name =
+      String(
+        machine.machine_name || ""
+      ).trim();
+
+    if (code && name) {
+      return code + " - " + name;
+    }
+
+    return code || name;
+  }
+
+
+  function toolIssueOperatorLabelV5(operator) {
+
+    const code =
+      String(
+        operator.employee_no || ""
+      ).trim();
+
+    const name =
+      String(
+        operator.operator_name || ""
+      ).trim();
+
+    if (code && name) {
+      return code + " - " + name;
+    }
+
+    return code || name;
+  }
+
+
+  function toolIssueBindSearchV5(config) {
+
+    const input =
+      document.getElementById(
+        config.inputId
+      );
+
+    const hiddenCode =
+      document.getElementById(
+        config.codeId
+      );
+
+    const suggestionBox =
+      document.getElementById(
+        config.suggestionId
+      );
+
+
+    if (
+      !input
+      ||
+      !hiddenCode
+      ||
+      !suggestionBox
+    ) {
+      return;
+    }
+
+
+    let filteredRows = [];
+    let activeIndex = -1;
+
+
+    function closeSuggestions() {
+
+      suggestionBox.hidden = true;
+      activeIndex = -1;
+    }
+
+
+    function selectRow(row) {
+
+      hiddenCode.value =
+        String(
+          config.getCode(row) || ""
+        ).trim();
+
+      input.value =
+        config.getLabel(row);
+
+      closeSuggestions();
+    }
+
+
+    function updateActiveItem() {
+
+      const buttons =
+        suggestionBox.querySelectorAll(
+          ".tolst-typeahead-item"
+        );
+
+      buttons.forEach(
+        function(button, index) {
+
+          button.classList.toggle(
+            "active",
+            index === activeIndex
+          );
+        }
+      );
+
+
+      if (
+        activeIndex >= 0
+        &&
+        buttons[activeIndex]
+      ) {
+
+        buttons[activeIndex]
+          .scrollIntoView({
+            block: "nearest"
+          });
+      }
+    }
+
+
+    function renderSuggestions() {
+
+      const query =
+        toolIssueNormalizeV5(
+          input.value
+        );
+
+      const source =
+        config.getRows();
+
+
+      filteredRows =
+        source
+          .filter(
+            function(row) {
+
+              if (!query) {
+                return true;
+              }
+
+              return toolIssueNormalizeV5(
+                config.getSearchText(row)
+              ).includes(query);
+            }
+          )
+          .slice(
+            0,
+            20
+          );
+
+
+      suggestionBox.innerHTML = "";
+
+
+      if (!filteredRows.length) {
+
+        closeSuggestions();
+
+        return;
+      }
+
+
+      filteredRows.forEach(
+        function(row) {
+
+          const button =
+            document.createElement(
+              "button"
+            );
+
+          button.type = "button";
+
+          button.className =
+            "tolst-typeahead-item";
+
+
+          button.innerHTML =
+            '<span class="tolst-typeahead-code">'
+            +
+            esc(
+              config.getCode(row)
+            )
+            +
+            '</span>'
+            +
+            '<span class="tolst-typeahead-name">'
+            +
+            esc(
+              config.getName(row)
+            )
+            +
+            '</span>';
+
+
+          button.addEventListener(
+            "mousedown",
+            function(event) {
+
+              event.preventDefault();
+
+              selectRow(row);
+            }
+          );
+
+
+          suggestionBox.appendChild(
+            button
+          );
+        }
+      );
+
+
+      activeIndex = -1;
+
+      suggestionBox.hidden = false;
+    }
+
+
+    function tryExactMatch() {
+
+      const value =
+        toolIssueNormalizeV5(
+          input.value
+        );
+
+      if (!value) {
+
+        hiddenCode.value = "";
+
+        return;
+      }
+
+
+      const exact =
+        config.getRows().find(
+          function(row) {
+
+            const code =
+              toolIssueNormalizeV5(
+                config.getCode(row)
+              );
+
+            const name =
+              toolIssueNormalizeV5(
+                config.getName(row)
+              );
+
+            const label =
+              toolIssueNormalizeV5(
+                config.getLabel(row)
+              );
+
+            return (
+              value === code
+              ||
+              value === name
+              ||
+              value === label
+            );
+          }
+        );
+
+
+      if (exact) {
+
+        selectRow(exact);
+      }
+    }
+
+
+    input.addEventListener(
+      "input",
+      function() {
+
+        hiddenCode.value = "";
+
+        renderSuggestions();
+      }
+    );
+
+
+    input.addEventListener(
+      "focus",
+      function() {
+
+        renderSuggestions();
+      }
+    );
+
+
+    input.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          event.key === "ArrowDown"
+        ) {
+
+          if (suggestionBox.hidden) {
+            renderSuggestions();
+          }
+
+
+          if (filteredRows.length) {
+
+            event.preventDefault();
+
+            activeIndex =
+              Math.min(
+                activeIndex + 1,
+                filteredRows.length - 1
+              );
+
+            updateActiveItem();
+          }
+
+          return;
+        }
+
+
+        if (
+          event.key === "ArrowUp"
+          &&
+          filteredRows.length
+        ) {
+
+          event.preventDefault();
+
+          activeIndex =
+            Math.max(
+              activeIndex - 1,
+              0
+            );
+
+          updateActiveItem();
+
+          return;
+        }
+
+
+        if (
+          event.key === "Enter"
+        ) {
+
+          if (
+            filteredRows.length
+          ) {
+
+            event.preventDefault();
+
+            selectRow(
+              filteredRows[
+                activeIndex >= 0
+                ? activeIndex
+                : 0
+              ]
+            );
+
+          } else {
+
+            tryExactMatch();
+          }
+
+          return;
+        }
+
+
+        if (
+          event.key === "Escape"
+        ) {
+
+          closeSuggestions();
+        }
+      }
+    );
+
+
+    input.addEventListener(
+      "blur",
+      function() {
+
+        tryExactMatch();
+
+        setTimeout(
+          function() {
+
+            closeSuggestions();
+          },
+          120
+        );
+      }
+    );
+  }
+
+
+  function toolIssueInitSearchV5() {
+
+    toolIssueBindSearchV5({
+
+      inputId:
+        "reg-machine-search",
+
+      codeId:
+        "reg-mc",
+
+      suggestionId:
+        "reg-machine-suggestions",
+
+      getRows:
+        function() {
+          return toolIssueMachinesV2;
+        },
+
+      getCode:
+        function(row) {
+          return String(
+            row.machine_no || ""
+          );
+        },
+
+      getName:
+        function(row) {
+          return String(
+            row.machine_name || ""
+          );
+        },
+
+      getLabel:
+        toolIssueMachineLabelV5,
+
+      getSearchText:
+        function(row) {
+
+          return (
+            String(
+              row.machine_no || ""
+            )
+            +
+            " "
+            +
+            String(
+              row.machine_name || ""
+            )
+          );
+        }
+    });
+
+
+    toolIssueBindSearchV5({
+
+      inputId:
+        "reg-operator-search",
+
+      codeId:
+        "reg-oc",
+
+      suggestionId:
+        "reg-operator-suggestions",
+
+      getRows:
+        function() {
+          return toolIssueOperatorsV2;
+        },
+
+      getCode:
+        function(row) {
+          return String(
+            row.employee_no || ""
+          );
+        },
+
+      getName:
+        function(row) {
+          return String(
+            row.operator_name || ""
+          );
+        },
+
+      getLabel:
+        toolIssueOperatorLabelV5,
+
+      getSearchText:
+        function(row) {
+
+          return (
+            String(
+              row.employee_no || ""
+            )
+            +
+            " "
+            +
+            String(
+              row.operator_name || ""
+            )
+          );
+        }
+    });
+
+
+    toolIssueBindSearchV5({
+
+      inputId:
+        "tolst-reissue-machine-search",
+
+      codeId:
+        "tolst-reissue-mc",
+
+      suggestionId:
+        "tolst-reissue-machine-suggestions",
+
+      getRows:
+        function() {
+          return toolIssueMachinesV2;
+        },
+
+      getCode:
+        function(row) {
+          return String(
+            row.machine_no || ""
+          );
+        },
+
+      getName:
+        function(row) {
+          return String(
+            row.machine_name || ""
+          );
+        },
+
+      getLabel:
+        toolIssueMachineLabelV5,
+
+      getSearchText:
+        function(row) {
+
+          return (
+            String(
+              row.machine_no || ""
+            )
+            +
+            " "
+            +
+            String(
+              row.machine_name || ""
+            )
+          );
+        }
+    });
+
+
+    toolIssueBindSearchV5({
+
+      inputId:
+        "tolst-reissue-operator-search",
+
+      codeId:
+        "tolst-reissue-oc",
+
+      suggestionId:
+        "tolst-reissue-operator-suggestions",
+
+      getRows:
+        function() {
+          return toolIssueOperatorsV2;
+        },
+
+      getCode:
+        function(row) {
+          return String(
+            row.employee_no || ""
+          );
+        },
+
+      getName:
+        function(row) {
+          return String(
+            row.operator_name || ""
+          );
+        },
+
+      getLabel:
+        toolIssueOperatorLabelV5,
+
+      getSearchText:
+        function(row) {
+
+          return (
+            String(
+              row.employee_no || ""
+            )
+            +
+            " "
+            +
+            String(
+              row.operator_name || ""
+            )
+          );
+        }
+    });
+  }
+
+
+  async function toolIssueLoadOptionsV2() {
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/oee-machine/tool-issue/options",
+          {
+            cache: "no-store"
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (
+        !response.ok
+        ||
+        !data.success
+      ) {
+
+        throw new Error(
+          data.error
+          ||
+          "Unable to load Machine / Operator lists."
+        );
+      }
+
+
+      toolIssueMachinesV2 =
+        Array.isArray(
+          data.machines
+        )
+        ? data.machines
+        : [];
+
+
+      toolIssueOperatorsV2 =
+        Array.isArray(
+          data.operators
+        )
+        ? data.operators
+        : [];
+
+
+      toolIssueInitSearchV5();
+
+
+    } catch (error) {
+
+      console.error(
+        "Tool Issue search load failed:",
+        error
+      );
+    }
+  }
+
+
+  // ---- Return modal ----
+  const rM = document.getElementById("tolst-return-modal");
+  const rUid = document.getElementById("tolst-return-uid");
+  const rMc = document.getElementById("tolst-return-mc");
+  const rMn = document.getElementById("tolst-return-mn");
+  const rOc = document.getElementById("tolst-return-oc");
+  const rOn = document.getElementById("tolst-return-on");
+  const rCond = document.getElementById("tolst-return-cond");
+  const rBrkWrap = document.getElementById("tolst-return-brk-wrap");
+  const rBrk = document.getElementById("tolst-return-brk");
+  const rRem = document.getElementById("tolst-return-rem");
+  const rMsg = document.getElementById("tolst-return-msg");
+
+  function openReturn(uid) {
+    const u = cache.find(x => x.tool_uid === uid) || {};
+    rUid.value = uid;
+    rMc.value = u.last_machine_code || ""; rMn.value = u.last_machine_name || "";
+    rOc.value = u.last_employee_no || "";  rOn.value = u.last_operator_name || "";
+    rCond.value = ""; rBrk.value = ""; rRem.value = ""; rBrkWrap.hidden = true;
+    rMsg.hidden = true; rMsg.textContent = ""; rMsg.classList.remove("error");
+    rM.hidden = false;
+  }
+  function closeReturn() { rM.hidden = true; }
+  document.getElementById("tolst-return-close").addEventListener("click", closeReturn);
+  document.getElementById("tolst-return-cancel").addEventListener("click", closeReturn);
+  rM.addEventListener("click", (e) => { if (e.target === rM) closeReturn(); });
+  rMc.addEventListener("blur", async () => { rMn.value = await fetchName("machine", rMc.value.trim()); });
+  rOc.addEventListener("blur", async () => { rOn.value = await fetchName("operator", rOc.value.trim()); });
+  rCond.addEventListener("change", () => { rBrkWrap.hidden = rCond.value !== "BREAKAGE"; });
+
+  document.getElementById("tolst-return-submit").addEventListener("click", async () => {
+    function say(t, err) { rMsg.hidden = !t; rMsg.textContent = t; rMsg.classList.toggle("error", !!err); }
+    const uid = rUid.value.trim(); const mc = rMc.value.trim(); const oc = rOc.value.trim(); const cond = rCond.value;
+    if (!mc || !oc) { say("Machine and Operator codes required.", true); return; }
+    if (!cond) { say("Select condition.", true); return; }
+    const body = { tool_uid: uid, machine_code: mc, operator_code: oc, condition_code: cond, remarks: rRem.value.trim() };
+    if (cond === "BREAKAGE") {
+      if (!rBrk.value) { say("Select breakage reason.", true); return; }
+      body.breakage_reason_code = rBrk.value;
+    }
+    say("Submitting...", false);
+    try {
+      const r = await fetch("/api/oee-machine/tool-uid/return", {
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
+      });
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Return failed.");
+      say("Returned. New status: " + d.new_status, false);
+      setTimeout(() => { closeReturn(); load(); }, 700);
+    } catch (e) { say(e.message, true); }
+  });
+
+  // ---- Re-issue modal ----
+  const riM = document.getElementById("tolst-reissue-modal");
+  const riUid = document.getElementById("tolst-reissue-uid");
+  const riMc = document.getElementById("tolst-reissue-mc");
+  const riMachineSearch = document.getElementById("tolst-reissue-machine-search");
+  const riOc = document.getElementById("tolst-reissue-oc");
+  const riOperatorSearch = document.getElementById("tolst-reissue-operator-search");
+  const riRem = document.getElementById("tolst-reissue-rem");
+  const riMsg = document.getElementById("tolst-reissue-msg");
+
+  function openReissue(uid) {
+    riUid.value = uid;
+    riMc.value = "";
+    riMachineSearch.value = "";
+    riOc.value = "";
+    riOperatorSearch.value = "";
+    riRem.value = "";
+    riMsg.hidden = true; riMsg.textContent = ""; riMsg.classList.remove("error");
+    riM.hidden = false;
+  }
+  function closeReissue() { riM.hidden = true; }
+  document.getElementById("tolst-reissue-close").addEventListener("click", closeReissue);
+  document.getElementById("tolst-reissue-cancel").addEventListener("click", closeReissue);
+  riM.addEventListener("click", (e) => { if (e.target === riM) closeReissue(); });
+
+  document.getElementById("tolst-reissue-submit").addEventListener("click", async () => {
+    function say(t, err) { riMsg.hidden = !t; riMsg.textContent = t; riMsg.classList.toggle("error", !!err); }
+    const uid = riUid.value.trim(); const mc = riMc.value.trim(); const oc = riOc.value.trim();
+    if (!mc || !oc) { say("Select Machine and Operator from suggestions.", true); return; }
+    say("Submitting...", false);
+    try {
+      const r = await fetch("/api/oee-machine/tool-uid/reissue", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ tool_uid: uid, machine_code: mc, operator_code: oc, remarks: riRem.value.trim() })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Re-issue failed.");
+      say("Re-issued. Status: IN_USE", false);
+      setTimeout(() => { closeReissue(); load(); }, 700);
+    } catch (e) { say(e.message, true); }
+  });
+
+  load();
+
+  // ==================== UID REGISTER ====================
+  const regCode = document.getElementById("reg-code");
+  const regLookup = document.getElementById("reg-lookup");
+  const regName = document.getElementById("reg-name");
+  const regPrefix = document.getElementById("reg-prefix");
+  const regDate = document.getElementById("reg-date");
+  const regMc = document.getElementById("reg-mc");
+  const regMachineSearch = document.getElementById("reg-machine-search");
+  const regOc = document.getElementById("reg-oc");
+  const regOperatorSearch = document.getElementById("reg-operator-search");
+  const regRemark = document.getElementById("reg-remark");
+  const regGenerate = document.getElementById("reg-generate");
+  const regGenerated = document.getElementById("reg-generated");
+  const regGeneratedUid = document.getElementById("reg-generated-uid");
+  const regMsg = document.getElementById("reg-msg");
+  let regResolvedCode = "";
+
+  function regSay(t, err) { regMsg.hidden = !t; regMsg.textContent = t; regMsg.classList.toggle("error", !!err); }
+  function regClearLookup() { regResolvedCode = ""; regName.value = ""; regPrefix.value = ""; regGenerate.disabled = true; }
+
+  // Default date = today
+  (function () {
+    const d = new Date();
+    const off = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+    regDate.value = off.toISOString().slice(0,10);
+  })();
+
+  async function regDoLookup() {
+    const code = String(regCode.value || "").trim();
+    regClearLookup(); regGenerated.hidden = true; regSay("", false);
+    if (!code) { regSay("Enter Tool Item Code.", true); return; }
+    regLookup.disabled = true;
+    try {
+      const r = await fetch("/api/oee-machine/tool-master/lookup?code=" + encodeURIComponent(code));
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Lookup failed.");
+      const t = d.tool || {};
+      regResolvedCode = String(t.tool_item_code || "").trim();
+      regCode.value = regResolvedCode;
+      regName.value = t.tool_item_name || "";
+      regPrefix.value = t.uid_prefix || "";
+      regGenerate.disabled = !(regResolvedCode && regPrefix.value);
+      regSay("Tool Item found.", false);
+    } catch (e) { regSay(e.message, true); }
+    finally { regLookup.disabled = false; }
+  }
+  regLookup.addEventListener("click", regDoLookup);
+  regCode.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); regDoLookup(); } });
+  regCode.addEventListener("input", () => {
+    if (regResolvedCode && String(regCode.value||"").trim().toUpperCase() !== regResolvedCode.toUpperCase()) {
+      regClearLookup(); regGenerated.hidden = true; regSay("", false);
+    }
+  });
+
+  regGenerate.addEventListener("click", async () => {
+    const currentCode = String(regCode.value||"").trim();
+    if (!regResolvedCode || currentCode.toUpperCase() !== regResolvedCode.toUpperCase()) {
+      regClearLookup(); regSay("Lookup Tool Item again.", true); return;
+    }
+    const createdDate = String(regDate.value||"").trim();
+    if (!createdDate) { regSay("Created Date required.", true); return; }
+    if (!regMc.value.trim() || !regOc.value.trim()) { regSay("Select Machine and Operator from suggestions.", true); return; }
+    if (!confirm("Generate new UID for " + regResolvedCode + "?")) return;
+    regGenerate.disabled = true; regSay("Generating...", false);
+    try {
+      const r = await fetch("/api/oee-machine/tool-uid/generate", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          tool_item_code: regResolvedCode,
+          created_regrind_date: createdDate,
+          remark: regRemark.value.trim(),
+          machine_code: regMc.value.trim(),
+          operator_code: regOc.value.trim()
+        })
+      });
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Generation failed.");
+      const uid = d.tool_uid || {};
+      regGeneratedUid.textContent = uid.tool_uid || "";
+      regGenerated.hidden = false;
+      regSay("UID generated. Status: " + (uid.status || ""), false);
+      regResolvedCode = "";
+      // refresh UID list in background
+      load();
+    } catch (e) { regGenerate.disabled = false; regSay(e.message, true); }
+  });
+
+  // ==================== TAB SWITCHER ====================
+  document.querySelectorAll(".tolst-tab").forEach(t => {
+    t.addEventListener("click", () => {
+      const target = t.getAttribute("data-tab");
+      document.querySelectorAll(".tolst-tab").forEach(x => x.classList.toggle("active", x === t));
+      document.querySelectorAll(".tolst-tab-pane").forEach(p => { p.hidden = p.id !== "tab-" + target; });
+    });
+  });
+
+  // ==================== TOOL MASTER CRUD ====================
+  const tmSearch = document.getElementById("tolst-tm-search");
+  const tmBody   = document.getElementById("tolst-tm-body");
+  const tmAddBtn = document.getElementById("tolst-tm-add");
+  const tmModal  = document.getElementById("tolst-tm-modal");
+  const tmTitle  = document.getElementById("tolst-tm-title");
+  const tmCode   = document.getElementById("tolst-tm-code");
+  const tmPrefix = document.getElementById("tolst-tm-prefix");
+  const tmName   = document.getElementById("tolst-tm-name");
+  const tmActive = document.getElementById("tolst-tm-active");
+  const tmMsg    = document.getElementById("tolst-tm-msg");
+  const tmSubmit = document.getElementById("tolst-tm-submit");
+  let tmCache = [];
+  let tmEditId = null;
+
+  function tmMsgSay(t, err) {
+    tmMsg.hidden = !t; tmMsg.textContent = t; tmMsg.classList.toggle("error", !!err);
+  }
+
+  function tmRender() {
+    const q = String(tmSearch.value || "").toLowerCase().trim();
+    const rows = q
+      ? tmCache.filter(t => (String(t.tool_item_code||"") + " " + String(t.tool_item_name||"")).toLowerCase().indexOf(q) !== -1)
+      : tmCache;
+    if (!rows.length) { tmBody.innerHTML = `<tr><td colspan="5" class="tolst-empty">No tools.</td></tr>`; return; }
+    tmBody.innerHTML = rows.map(t => `
+      <tr>
+        <td>${esc(t.tool_item_code||"")}</td>
+        <td>${esc(t.tool_item_name||"")}</td>
+        <td>${esc(t.uid_prefix||"")}</td>
+        <td>${t.is_active ? '<span class="tolst-badge" data-s="AVAILABLE">Yes</span>' : '<span class="tolst-badge" data-s="SCRAPPED">No</span>'}</td>
+        <td>
+          <button class="tolst-btn" data-tm-act="edit" data-id="${t.id}">Edit</button>
+          <button class="tolst-btn" data-tm-act="delete" data-id="${t.id}">Delete</button>
+        </td>
+      </tr>`).join("");
+  }
+
+  async function tmLoad() {
+    tmBody.innerHTML = `<tr><td colspan="5" class="tolst-empty">Loading...</td></tr>`;
+    try {
+      const r = await fetch("/api/oee-machine/tool-master/list?include_inactive=1", {cache: "no-store"});
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Load failed.");
+      tmCache = Array.isArray(d.tools) ? d.tools : [];
+      tmRender();
+    } catch (e) {
+      tmBody.innerHTML = `<tr><td colspan="5" class="tolst-empty">${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  function tmOpenAdd() {
+    tmEditId = null;
+    tmTitle.textContent = "Add New Tool";
+    tmCode.value = ""; tmPrefix.value = ""; tmName.value = ""; tmActive.checked = true;
+    tmCode.readOnly = false;
+    tmMsgSay("", false); tmModal.hidden = false;
+  }
+  function tmOpenEdit(id) {
+    const t = tmCache.find(x => x.id == id);
+    if (!t) return;
+    tmEditId = id;
+    tmTitle.textContent = "Edit Tool";
+    tmCode.value = t.tool_item_code || ""; tmPrefix.value = t.uid_prefix || ""; tmName.value = t.tool_item_name || "";
+    tmActive.checked = !!t.is_active;
+    tmCode.readOnly = true;  // code shouldn't change once created
+    tmMsgSay("", false); tmModal.hidden = false;
+  }
+  function tmClose() { tmModal.hidden = true; }
+
+  tmAddBtn.addEventListener("click", tmOpenAdd);
+  document.getElementById("tolst-tm-close").addEventListener("click", tmClose);
+  document.getElementById("tolst-tm-cancel").addEventListener("click", tmClose);
+  tmModal.addEventListener("click", (e) => { if (e.target === tmModal) tmClose(); });
+  tmSearch.addEventListener("input", tmRender);
+
+  tmBody.addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-tm-act]");
+    if (!b) return;
+    const id = parseInt(b.getAttribute("data-id"));
+    const act = b.getAttribute("data-tm-act");
+    if (act === "edit") tmOpenEdit(id);
+    if (act === "delete") {
+      if (!confirm("Delete this tool? Rows with generated UIDs cannot be deleted.")) return;
+      try {
+        const r = await fetch("/api/oee-machine/tool-master/delete", {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ id })
+        });
+        const d = await r.json();
+        if (!r.ok || !d.success) { alert(d.error || "Delete failed."); return; }
+        tmLoad();
+      } catch (err) { alert(err.message); }
+    }
+  });
+
+  tmSubmit.addEventListener("click", async () => {
+    const code = tmCode.value.trim();
+    const prefix = tmPrefix.value.trim();
+    const name = tmName.value.trim();
+    if (!code)   { tmMsgSay("Code required.", true); return; }
+    if (!name)   { tmMsgSay("Name required.", true); return; }
+    if (!prefix) { tmMsgSay("Prefix required.", true); return; }
+    const active = tmActive.checked ? 1 : 0;
+    tmMsgSay("Saving...", false);
+    try {
+      let url, body;
+      if (tmEditId) {
+        url = "/api/oee-machine/tool-master/update";
+        body = { id: tmEditId, tool_item_code: code, tool_item_name: name, uid_prefix: prefix, is_active: active };
+      } else {
+        url = "/api/oee-machine/tool-master/create";
+        body = { tool_item_code: code, tool_item_name: name, uid_prefix: prefix, is_active: active };
+      }
+      const r = await fetch(url, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body)
+      });
+      const d = await r.json();
+      if (!r.ok || !d.success) throw new Error(d.error || "Save failed.");
+      tmMsgSay("Saved.", false);
+      setTimeout(() => { tmClose(); tmLoad(); }, 400);
+    } catch (e) { tmMsgSay(e.message, true); }
+  });
+
+  tmLoad();
+  toolIssueLoadOptionsV2();
+})();
+</script>
+{% endblock %}

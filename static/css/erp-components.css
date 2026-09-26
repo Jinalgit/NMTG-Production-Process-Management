@@ -1,0 +1,191 @@
+/* ==========================================================================
+   erp-components.css
+   Global ERPNext-flavored design system for demo2 JMS.
+   Loaded before base.css so tokens are available to all page-specific CSS.
+   Do NOT redefine these tokens in individual templates going forward.
+   ========================================================================== */
+
+/* ---- Design tokens (authoritative) ---- */
+:root {
+  --tp: #1f272e;
+  --ts: #4c5966;
+  --tm: #8d97a1;
+  --bd: #e6ebf0;
+  --card: #ffffff;
+  --page-bg: #f5f7fa;
+  --rl: #ffffff;
+  --rh: #f8f9fb;
+  --list-row-height: 30px;
+  --ac: #1665d8;
+  --ac-soft: #eaf3fc;
+  --ac-strong: #0d54b8;
+  --status-ok: #28a745;   --status-ok-soft:   #e6f6ea;
+  --status-warn: #b7791f; --status-warn-soft: #fff4e6;
+  --status-err: #dc3545;  --status-err-soft:  #fdecee;
+  --status-info: #1665d8; --status-info-soft: #eaf3fc;
+  --status-muted: #8d97a1;--status-muted-soft:#eef1f4;
+  --radius-xs: 4px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --shadow-sm: 0 1px 2px rgba(31,39,46,0.06);
+  --shadow-md: 0 4px 12px rgba(31,39,46,0.10);
+  /* OEE palette tokens -- Step 3 */
+  --oee-title: #17365d;
+  --oee-accent: #0b5fa5;
+  --oee-text-sec: #53657a;
+  --oee-text-mute: #64748b;
+  --oee-border: #cbd9e7;
+  --oee-border-soft: #e4ebf2;
+  --oee-tint: #f5faff;
+}
+
+/* ---- Typography ---- */
+body {
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--tp);
+}
+
+/* ---- Frappe-style thin scrollbar (global) ---- */
+* { scrollbar-width: thin; scrollbar-color: rgba(31,39,46,0.18) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(31,39,46,0.18); border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Status badges / pills ---- */
+.erp-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--radius-sm);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  line-height: 1.4; white-space: nowrap;
+  background: var(--status-muted-soft); color: var(--status-muted);
+  border: 1px solid transparent;
+}
+.erp-badge[data-status="ok"], .erp-badge[data-status="success"],
+.erp-badge[data-status="available"] { background: var(--status-ok-soft); color: var(--status-ok); }
+.erp-badge[data-status="warn"], .erp-badge[data-status="warning"] {
+  background: var(--status-warn-soft); color: var(--status-warn); }
+.erp-badge[data-status="err"], .erp-badge[data-status="error"], .erp-badge[data-status="fail"] {
+  background: var(--status-err-soft); color: var(--status-err); }
+.erp-badge[data-status="info"] { background: var(--status-info-soft); color: var(--status-info); }
+.erp-badge .fa { font-size: 10px; }
+
+/* ---- Toast (ERPNext-style light tinted, bottom-right) ---- */
+.erp-toast-stack {
+  position: fixed; bottom: 20px; right: 20px; z-index: 100000;
+  display: flex; flex-direction: column-reverse; gap: 10px; pointer-events: none;
+}
+.erp-toast {
+  pointer-events: auto; min-width: 320px; max-width: 480px;
+  padding: 16px 48px 16px 56px; border-radius: var(--radius-md);
+  background: var(--status-muted-soft); color: var(--tp);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  font-size: 14px; font-weight: 500; line-height: 1.4;
+  position: relative; animation: erp-toast-in 0.2s ease-out;
+}
+.erp-toast .erp-toast-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #ffffff; font-size: 13px;
+  background: var(--status-muted);
+}
+.erp-toast .erp-toast-close {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; color: var(--tm);
+  font-size: 18px; cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 4px;
+}
+.erp-toast .erp-toast-close:hover { color: var(--tp); background: rgba(0,0,0,0.06); }
+.erp-toast[data-type="success"],
+.erp-toast[data-type="ok"] { background: var(--status-ok-soft); }
+.erp-toast[data-type="success"] .erp-toast-icon,
+.erp-toast[data-type="ok"] .erp-toast-icon { background: var(--status-ok); }
+.erp-toast[data-type="warn"],
+.erp-toast[data-type="warning"] { background: var(--status-warn-soft); }
+.erp-toast[data-type="warn"] .erp-toast-icon,
+.erp-toast[data-type="warning"] .erp-toast-icon { background: var(--status-warn); }
+.erp-toast[data-type="error"],
+.erp-toast[data-type="err"] { background: var(--status-err-soft); }
+.erp-toast[data-type="error"] .erp-toast-icon,
+.erp-toast[data-type="err"] .erp-toast-icon { background: var(--status-err); }
+.erp-toast[data-type="info"] { background: var(--status-info-soft); }
+.erp-toast[data-type="info"] .erp-toast-icon { background: var(--status-info); }
+@keyframes erp-toast-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Error modal (ERPNext-style center blocking) ---- */
+.erp-modal-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
+  z-index: 100001; display: flex; align-items: center; justify-content: center;
+  animation: erp-modal-fade 0.15s ease-out;
+}
+.erp-modal {
+  background: var(--card); border-radius: var(--radius-md);
+  min-width: 380px; max-width: 560px; padding: 18px 44px 18px 22px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.30); position: relative;
+  animation: erp-modal-scale 0.15s ease-out;
+}
+.erp-modal-title {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--status-err); font-size: 15px; font-weight: 600; margin-bottom: 12px;
+}
+.erp-modal-title::before {
+  content: ""; display: inline-block; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--status-err);
+}
+.erp-modal-body {
+  color: var(--tp); font-size: 14px; line-height: 1.5;
+}
+.erp-modal-close {
+  position: absolute; top: 10px; right: 10px; background: transparent; border: 0;
+  color: var(--tm); font-size: 22px; line-height: 1; cursor: pointer;
+  padding: 4px 10px; border-radius: 4px;
+}
+.erp-modal-close:hover { background: var(--rl); color: var(--tp); }
+@keyframes erp-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes erp-modal-scale {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ---- Empty-state mini card ---- */
+.erp-empty-mini {
+  height: 100%; min-height: 200px; padding: 24px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; color: var(--tm); font-size: 12px; text-align: center;
+}
+.erp-empty-mini .fa { font-size: 22px; color: #c8d0d8; margin-bottom: 2px; }
+.erp-empty-mini .hint { font-size: 11px; color: var(--tm); opacity: 0.85; }
+
+/* ---- Section drawer pattern ---- */
+.erp-section { padding: 14px 18px; border-bottom: 1px solid var(--bd); }
+.erp-section:last-child { border-bottom: none; }
+.erp-sec-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--tm); margin-bottom: 10px;
+}
+.erp-sec-title i, .erp-sec-title .fa { color: var(--ac); font-size: 12px; }
+
+/* ---- Copy-to-clipboard button ---- */
+.erp-copy-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  color: var(--tm); font-size: 11px; padding: 2px 6px; cursor: pointer;
+  vertical-align: middle; margin-left: 4px;
+}
+.erp-copy-btn:hover { color: var(--ac); border-color: var(--bd); background: var(--rh); }
+.erp-copy-btn .fa { font-size: 10px; }
+
+/* ---- Backward-compat aliases (removed later after migration) ---- */
+.od-empty-mini { height: 100%; min-height: 200px; padding: 24px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; color: var(--tm); font-size: 12px; text-align: center; }
+.od-empty-mini .fa { font-size: 22px; color: #c8d0d8; margin-bottom: 2px; }
+.od-empty-mini .hint { font-size: 11px; color: var(--tm); opacity: 0.85; }

@@ -89,6 +89,7 @@ OEE_MACHINE_PROFILE_MAP = {
     "CNC 05": PROFILE_P02,
     "CNC 06": PROFILE_P02,
     "CNC 31": PROFILE_P02,
+    "CNC 32": PROFILE_P02,
 
     # P06 - Zone B
     "CNC 15": PROFILE_P06,
@@ -131,12 +132,6 @@ def get_oee_formula_profile(machine_no):
         .upper()
         .split()
     )
-
-    if key == "CNC 32":
-        raise ValueError(
-            "OEE formula profile for CNC 32 is under review "
-            "because its Excel workbook uses a different BI:BQ structure."
-        )
 
     profile = OEE_MACHINE_PROFILE_MAP.get(
         key

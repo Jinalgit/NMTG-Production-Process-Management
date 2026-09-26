@@ -1,0 +1,173 @@
+﻿Full Push Manifest
+Timestamp: 20260922_092902
+Source: D:\Het\demo2
+File count: 130
+Zip size: 4201622
+Zip SHA256: 6B00E84670656FEB6B6FC6C8425A339D670AE00543BE3494E50135875A0E05B0
+
+=== Excluded folders ===
+_backups
+_backup
+.venv
+venv
+__pycache__
+.git
+.claude
+.agents
+.ruff_cache
+.vscode
+exports
+bom_rm_audit
+ui_ux_audit
+frontend
+
+=== Excluded files/patterns ===
+app.py
+db.py
+.env
+.env.example
+.gitignore
+auth.py
+pages.py
+job_cards.py
+base.html
+jc_review.html
+jc_review.js
+jc_review.css
+*.pyc
+*.bak_*
+*.bak-*
+*.BROKEN_*
+
+=== Included files (relative path, bytes) ===
+auth_utils.py	3571
+create_admin.py	2690
+db_process_days.sql	3313
+db_setup.sql	4956
+find_review_files.py	6956
+permission_utils.py	4886
+requirements.txt	98
+routes\__init__.py	60
+routes\analytics.py	46964
+routes\audit_trail.py	2109
+routes\bom.py	7367
+routes\cutting_plan.py	136205
+routes\data_view.py	198998
+routes\oee.py	20924
+routes\oee_calculations.py	5982
+routes\oee_dashboard.py	81320
+routes\oee_machine_summary.py	82461
+routes\oee_persistence.py	19436
+routes\process_master.py	87613
+routes\quality_check.py	535512
+routes\raw_material_shortage.py	20658
+routes\smart_upload.py	7665
+routes\system_backup.py	2154
+routes\users.py	38759
+schema.sql	6448
+static\css\admin_dashboard.css	10942
+static\css\base.css	25459
+static\css\cutting_plan.css	66235
+static\css\cutting_plan_print.css	21818
+static\css\erp-components.css	8312
+static\css\login_activity.css	6219
+static\css\oee_dashboard.css	993
+static\css\oee_machine_operator.css	164062
+static\css\oee_machine_summary.css	10690
+static\css\operator_dashboard.css	79730
+static\css\page1.css	20437
+static\css\page1_erp.css	34140
+static\css\page2.css	40802
+static\css\page3.css	48204
+static\css\page4.css	11319
+static\css\page5.css	42194
+static\css\responsive.css	6380
+static\css\sidebar_erp.css	38639
+static\css\skeleton.css	1199
+static\css\supervisor_dashboard.css	10794
+static\css\theme.css	15958
+static\css\user_management.css	17519
+static\css\welcome.css	8054
+static\icons\cutting_plan_favicon.svg	938
+static\img\image.png	94743
+static\img\nmtg_logo.svg	15496
+static\img\nmtg_logo_color_back.jpg	2011600
+static\img\nmtg_logo_color_back.svg	15496
+static\img\NMTG_logo_whiteBG.png	107965
+static\img\NMTGIndia_logo.svg	50826
+static\js\base.js	5567
+static\js\cutting_plan.js	315955
+static\js\dispatch_tracker.js	45954
+static\js\erp-lib.js	6672
+static\js\login_activity.js	12245
+static\js\oee.js	12059
+static\js\oee_dashboard.js	51643
+static\js\oee_machine_operator.js	602414
+static\js\oee_machine_summary.js	19804
+static\js\operator_dashboard.js	5399
+static\js\page1.js	29755
+static\js\page1_erp.js	28789
+static\js\page2.js	55618
+static\js\page3.js	307326
+static\js\page4.js	30799
+static\js\page5.js	127183
+static\js\sidebar_erp.js	26681
+static\js\upload.js	18336
+static\js\user_management.js	15506
+static\js\welcome.js	6948
+static\vendor\anime.min.js	17741
+static\vendor\chart.umd.min.js	208522
+static\vendor\frappe-charts.min.css	1757
+static\vendor\frappe-charts.min.iife.js	68459
+static\vue\analytics\analytics.css	19983
+static\vue\analytics\analytics.js	1645965
+static\vue\analytics\assets\primeicons-C6QP2o4f.woff2	35148
+static\vue\analytics\assets\primeicons-DMOk5skT.eot	85156
+static\vue\analytics\assets\primeicons-Dr5RGzOO.svg	342525
+static\vue\analytics\assets\primeicons-MpK4pl85.ttf	84980
+static\vue\analytics\assets\primeicons-WjwUDZjB.woff	85056
+static\vue\data-view\assets\primeicons-C6QP2o4f.woff2	35148
+static\vue\data-view\assets\primeicons-DMOk5skT.eot	85156
+static\vue\data-view\assets\primeicons-Dr5RGzOO.svg	342525
+static\vue\data-view\assets\primeicons-MpK4pl85.ttf	84980
+static\vue\data-view\assets\primeicons-WjwUDZjB.woff	85056
+static\vue\data-view\data-view.css	55054
+static\vue\data-view\data-view.js	464291
+static\vue\process-master\assets\primeicons-C6QP2o4f.woff2	35148
+static\vue\process-master\assets\primeicons-DMOk5skT.eot	85156
+static\vue\process-master\assets\primeicons-Dr5RGzOO.svg	342525
+static\vue\process-master\assets\primeicons-MpK4pl85.ttf	84980
+static\vue\process-master\assets\primeicons-WjwUDZjB.woff	85056
+static\vue\process-master\process-master.css	27507
+static\vue\process-master\process-master.js	483166
+static\vue\traceability\traceability.css	25558
+static\vue\traceability\traceability.js	348225
+static\vue\user-management\assets\app.css	24588
+static\vue\user-management\assets\app.js	92520
+templates\admin_dashboard.html	8270
+templates\bom_summary.html	19390
+templates\cutting_plan.html	14557
+templates\cutting_plan_print.html	10870
+templates\dispatch_tracker.html	45525
+templates\login.html	2607
+templates\login_activity.html	4805
+templates\oee_dashboard.html	36363
+templates\oee_machine_operator.html	6403
+templates\oee_machine_summary.html	70354
+templates\oee_tool_list.html	48357
+templates\operator_dashboard.html	3913
+templates\page1.html	21811
+templates\page2.html	44625
+templates\page2_vue.html	603
+templates\page3.html	20705
+templates\page3_vue.html	688
+templates\page4.html	7418
+templates\page4_vue.html	688
+templates\page5.html	23042
+templates\page5_vue.html	730
+templates\raw_material_shortage.html	4672
+templates\supervisor_dashboard.html	6056
+templates\user_management.html	7298
+templates\user_management_vue.html	534
+templates\welcome.html	10749
+
